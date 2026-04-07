@@ -1,0 +1,97 @@
+import { NavLink } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  Calendar,
+  FileText,
+  Receipt,
+  DollarSign,
+  Phone,
+  BarChart2,
+  CreditCard,
+  BookOpen,
+  Handshake,
+  Truck,
+  Settings,
+  LogOut,
+} from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import Avatar from './ui/Avatar';
+
+const navItems = [
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/jobs', icon: Briefcase, label: 'Jobs' },
+  { to: '/customers', icon: Users, label: 'Customers' },
+  { to: '/calendar', icon: Calendar, label: 'Calendar' },
+  { to: '/estimates', icon: FileText, label: 'Estimates' },
+  { to: '/invoices', icon: Receipt, label: 'Invoices' },
+  { to: '/payments', icon: DollarSign, label: 'Payments' },
+  { to: '/phone', icon: Phone, label: 'Phone / SMS' },
+  { to: '/reports', icon: BarChart2, label: 'Reports' },
+  { to: '/payroll', icon: CreditCard, label: 'Payroll' },
+  { to: '/pricebook', icon: BookOpen, label: 'Pricebook' },
+  { to: '/network', icon: Handshake, label: 'Network' },
+  { to: '/inventory', icon: Truck, label: 'Inventory' },
+  { to: '/settings', icon: Settings, label: 'Settings' },
+];
+
+export default function Sidebar() {
+  const { user, company, logout } = useAuth();
+
+  return (
+    <div className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-[240px] bg-[#0D1B2A] text-white z-20">
+      {/* Logo / Brand */}
+      <div className="px-5 py-5 border-b border-white/10">
+        <h1 className="text-xl font-bold text-white">UltimatePro</h1>
+        {company && (
+          <p className="text-xs text-white/50 mt-0.5 truncate">{company.name}</p>
+        )}
+      </div>
+
+      {/* Nav links */}
+      <nav className="flex-1 overflow-y-auto py-3">
+        {navItems.map(({ to, icon: Icon, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              `flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors ${
+                isActive
+                  ? 'text-white bg-white/10 border-l-4 border-[#1A73E8]'
+                  : 'text-white/60 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
+              }`
+            }
+          >
+            <Icon size={18} />
+            {label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* User section */}
+      <div className="p-4 border-t border-white/10">
+        <div className="flex items-center gap-3 mb-3">
+          <Avatar
+            name={user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : ''}
+            size="sm"
+            color="#1A73E8"
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-white truncate">
+              {user?.first_name} {user?.last_name}
+            </p>
+            <p className="text-xs text-white/40 truncate">{user?.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={logout}
+          className="flex items-center gap-2 w-full text-sm text-white/60 hover:text-white py-2 transition-colors"
+        >
+          <LogOut size={16} />
+          Sign Out
+        </button>
+      </div>
+    </div>
+  );
+}
