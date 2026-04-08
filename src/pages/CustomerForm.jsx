@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus, X } from 'lucide-react';
 import api from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+
+const CUSTOMER_TYPES = ['Residential', 'Commercial'];
 
 export default function CustomerForm() {
   const { id } = useParams();
@@ -21,7 +23,11 @@ export default function CustomerForm() {
     city: '',
     state: '',
     zip: '',
+    customer_type: 'Residential',
+    notes: '',
   });
+  const [extraPhones, setExtraPhones] = useState([]);
+  const [extraEmails, setExtraEmails] = useState([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
@@ -39,7 +45,11 @@ export default function CustomerForm() {
         city: c.city || '',
         state: c.state || '',
         zip: c.zip || '',
+        customer_type: c.customer_type || 'Residential',
+        notes: c.notes || '',
       });
+      setExtraPhones(c.extra_phones || []);
+      setExtraEmails(c.extra_emails || []);
     }
   }, [isEdit, data]);
 
@@ -58,12 +68,13 @@ export default function CustomerForm() {
 
     setSaving(true);
     try {
+      const payload = { ...form, extra_phones: extraPhones, extra_emails: extraEmails };
       if (isEdit) {
-        await api.put(`/customers/${id}`, form);
+        await api.put(`/customers/${id}`, payload);
         showSnack('Customer updated', 'success');
         navigate(`/customers/${id}`);
       } else {
-        const res = await api.post('/customers', form);
+        const res = await api.post('/customers', payload);
         showSnack('Customer created', 'success');
         navigate(`/customers/${res.data?.customer?.id || res.data?.id}`);
       }
@@ -86,17 +97,102 @@ export default function CustomerForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Customer Type chips */}
+        <Card>
+          <p className="text-xs text-gray-400 font-medium uppercase mb-2">Customer Type</p>
+          <div className="flex gap-2 flex-wrap">
+            {CUSTOMER_TYPES.map(type => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setForm(p => ({ ...p, customer_type: type }))}
+                className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors min-h-[44px] ${
+                  form.customer_type === type
+                    ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
+                    : 'bg-white text-gray-600 border-gray-300 hover:border-[#1A73E8]'
+                }`}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* Name + Contact */}
         <Card>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <Input label="First Name" name="first_name" value={form.first_name} onChange={handleChange} placeholder="John" error={errors.first_name} />
               <Input label="Last Name" name="last_name" value={form.last_name} onChange={handleChange} placeholder="Doe" />
             </div>
+
+            {/* Primary phone */}
             <Input label="Phone" type="tel" name="phone" value={form.phone} onChange={handleChange} placeholder="+1 (555) 000-0000" error={errors.phone} />
+
+            {/* Extra phones */}
+            {extraPhones.map((ph, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    label={`Phone ${i + 2}`}
+                    type="tel"
+                    value={ph}
+                    onChange={e => setExtraPhones(prev => prev.map((v, j) => j === i ? e.target.value : v))}
+                    placeholder="+1 (555) 000-0000"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setExtraPhones(prev => prev.filter((_, j) => j !== i))}
+                  className="mt-5 p-2 text-gray-400 hover:text-red-500 min-h-[44px]"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setExtraPhones(p => [...p, ''])}
+              className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium min-h-[44px]"
+            >
+              <Plus size={14} /> Add Phone
+            </button>
+
+            {/* Primary email */}
             <Input label="Email" type="email" name="email" value={form.email} onChange={handleChange} placeholder="john@example.com" />
+
+            {/* Extra emails */}
+            {extraEmails.map((em, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <div className="flex-1">
+                  <Input
+                    label={`Email ${i + 2}`}
+                    type="email"
+                    value={em}
+                    onChange={e => setExtraEmails(prev => prev.map((v, j) => j === i ? e.target.value : v))}
+                    placeholder="other@example.com"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setExtraEmails(prev => prev.filter((_, j) => j !== i))}
+                  className="mt-5 p-2 text-gray-400 hover:text-red-500 min-h-[44px]"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => setExtraEmails(p => [...p, ''])}
+              className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium min-h-[44px]"
+            >
+              <Plus size={14} /> Add Email
+            </button>
           </div>
         </Card>
 
+        {/* Address */}
         <Card>
           <div className="space-y-4">
             <Input label="Address" name="address" value={form.address} onChange={handleChange} placeholder="123 Main St" />
@@ -106,6 +202,19 @@ export default function CustomerForm() {
               <Input label="Zip" name="zip" value={form.zip} onChange={handleChange} placeholder="33601" />
             </div>
           </div>
+        </Card>
+
+        {/* Notes */}
+        <Card>
+          <p className="text-xs text-gray-400 font-medium uppercase mb-2">Notes</p>
+          <textarea
+            name="notes"
+            value={form.notes}
+            onChange={handleChange}
+            rows={4}
+            placeholder="Customer notes..."
+            className="w-full text-sm text-gray-800 resize-none focus:outline-none bg-transparent placeholder-gray-400"
+          />
         </Card>
 
         <div className="flex gap-3 pb-4">

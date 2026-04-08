@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check, Plus } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import api from '../lib/api';
-import { Card, Badge, Button, LoadingSpinner, Tabs, EmptyState, Modal } from '../components/ui';
+import { Card, Badge, Button, LoadingSpinner, Tabs, EmptyState, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { format } from 'date-fns';
 
@@ -25,8 +25,15 @@ export default function CustomerDetail() {
   const { data, loading } = useGet(`/customers/${id}`);
   const [activeTab, setActiveTab] = useState('jobs');
   const [deleteModal, setDeleteModal] = useState(false);
+  const [addMembershipModal, setAddMembershipModal] = useState(false);
+  const [membershipPlanId, setMembershipPlanId] = useState('');
+  const [addingMembership, setAddingMembership] = useState(false);
   const [portalCopied, setPortalCopied] = useState(false);
   const { mutate, loading: deleting } = useMutation();
+
+  // Notes
+  const [notes, setNotes] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
 
   // Messages state
   const [messages, setMessages] = useState([]);
@@ -47,6 +54,16 @@ export default function CustomerDetail() {
   const { data: invoicesData, loading: invoicesLoading } = useGet(
     activeTab === 'invoices' ? `/invoices?customer_id=${id}` : null, [activeTab, id]
   );
+  const { data: membershipsData, refetch: refetchMemberships } = useGet(`/customers/${id}/memberships`);
+  const { data: plansData } = useGet('/memberships/plans');
+
+  const memberships = membershipsData?.memberships || (Array.isArray(membershipsData) ? membershipsData : []);
+  const plans = plansData?.plans || (Array.isArray(plansData) ? plansData : []);
+
+  // Sync notes from customer
+  useEffect(() => {
+    if (customer?.notes != null) setNotes(customer.notes || '');
+  }, [customer?.id]);
 
   // Load messages when tab = 'messages'
   useEffect(() => {
@@ -76,6 +93,35 @@ export default function CustomerDetail() {
     }
   }
 
+  async function handleNotesBlur() {
+    if (!customer || notes === (customer.notes || '')) return;
+    setNotesSaving(true);
+    try {
+      await api.patch(`/customers/${id}`, { notes });
+      showSnack('Notes saved', 'success');
+    } catch {
+      showSnack('Failed to save notes', 'error');
+    } finally {
+      setNotesSaving(false);
+    }
+  }
+
+  async function handleAddMembership() {
+    if (!membershipPlanId) { showSnack('Select a plan', 'error'); return; }
+    setAddingMembership(true);
+    try {
+      await api.post(`/customers/${id}/memberships`, { plan_id: membershipPlanId });
+      showSnack('Membership added', 'success');
+      setAddMembershipModal(false);
+      setMembershipPlanId('');
+      refetchMemberships();
+    } catch {
+      showSnack('Failed to add membership', 'error');
+    } finally {
+      setAddingMembership(false);
+    }
+  }
+
   async function handleSendMessage(e) {
     e.preventDefault();
     if (!messageBody.trim() || !convId) return;
@@ -99,6 +145,12 @@ export default function CustomerDetail() {
     });
   }
 
+  function handleNavigate() {
+    const addr = [customer?.address, customer?.city, customer?.state, customer?.zip].filter(Boolean).join(', ');
+    if (!addr) return;
+    window.open('https://maps.google.com/?q=' + encodeURIComponent(addr), '_blank');
+  }
+
   if (loading) return <LoadingSpinner fullPage />;
   if (!customer) return <div className="p-4 text-gray-500">Customer not found.</div>;
 
@@ -111,14 +163,23 @@ export default function CustomerDetail() {
     ? `${import.meta.env.VITE_API_URL?.replace('/api', '') || ''}/portal/${customer.portal_token}`
     : null;
 
+  const hasAddress = customer.address || customer.city;
+
   return (
-    <div className="p-4 max-w-3xl mx-auto">
+    <div className="p-4 max-w-3xl mx-auto pb-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
           <ArrowLeft size={20} />
         </button>
         <h1 className="font-bold text-gray-900 text-lg flex-1 truncate">{name}</h1>
+        <button
+          onClick={() => navigate('/jobs/new', { state: { customer: { id, name } } })}
+          className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1A73E8]"
+          title="Add Job"
+        >
+          <Plus size={20} />
+        </button>
         <button onClick={() => navigate(`/customers/${id}/edit`)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
           <Edit size={20} />
         </button>
@@ -130,25 +191,106 @@ export default function CustomerDetail() {
       {/* Info Card */}
       <Card className="mb-4">
         <div className="space-y-2">
+          {customer.customer_type && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-[#1A73E8]">
+              {customer.customer_type}
+            </span>
+          )}
           {customer.phone && (
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <Phone size={14} className="text-gray-400" />
               {customer.phone}
             </div>
           )}
+          {(customer.extra_phones || []).map((ph, i) => ph ? (
+            <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+              <Phone size={14} className="text-gray-400" />
+              {ph}
+            </div>
+          ) : null)}
           {customer.email && (
             <div className="flex items-center gap-2 text-sm text-gray-700">
               <Mail size={14} className="text-gray-400" />
               {customer.email}
             </div>
           )}
-          {(customer.address || customer.city) && (
-            <div className="flex items-start gap-2 text-sm text-gray-700">
-              <MapPin size={14} className="text-gray-400 mt-0.5" />
-              <span>{[customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(', ')}</span>
+          {(customer.extra_emails || []).map((em, i) => em ? (
+            <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+              <Mail size={14} className="text-gray-400" />
+              {em}
             </div>
-          )}
+          ) : null)}
         </div>
+      </Card>
+
+      {/* Address card with Navigate */}
+      {hasAddress && (
+        <Card className="mb-4">
+          <div className="flex items-start gap-3">
+            <MapPin size={18} className="text-[#1A73E8] mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-400 font-medium uppercase mb-0.5">Address</p>
+              <p className="text-sm text-gray-800">
+                {[customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(', ')}
+              </p>
+            </div>
+            <button
+              onClick={handleNavigate}
+              className="text-sm text-[#1A73E8] font-semibold min-h-[44px] flex items-center px-2"
+            >
+              Navigate
+            </button>
+          </div>
+        </Card>
+      )}
+
+      {/* Memberships card */}
+      <Card className="mb-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-gray-400 font-medium uppercase">Memberships</p>
+          <button
+            onClick={() => setAddMembershipModal(true)}
+            className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[44px] px-2"
+          >
+            <Plus size={14} /> Add
+          </button>
+        </div>
+        {memberships.length === 0 ? (
+          <p className="text-sm text-gray-400">No active memberships.</p>
+        ) : (
+          <div className="space-y-2">
+            {memberships.map((m, i) => (
+              <div key={m.id || i} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">{m.plan_name || 'Membership'}</p>
+                  {m.renewal_date && (
+                    <p className="text-xs text-gray-400">Renews {m.renewal_date}</p>
+                  )}
+                </div>
+                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                  m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                }`}>
+                  {m.status || 'active'}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      {/* Notes card */}
+      <Card className="mb-4">
+        <p className="text-xs text-gray-400 font-medium uppercase mb-2">
+          Notes {notesSaving && <span className="text-[#1A73E8] ml-1">saving...</span>}
+        </p>
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          onBlur={handleNotesBlur}
+          placeholder="Add customer notes..."
+          rows={3}
+          className="w-full text-sm text-gray-800 resize-none focus:outline-none bg-transparent placeholder-gray-400"
+        />
       </Card>
 
       {/* Customer Portal */}
@@ -182,7 +324,18 @@ export default function CustomerDetail() {
         {/* Jobs tab */}
         {activeTab === 'jobs' && (
           jobsLoading ? <LoadingSpinner /> :
-          jobs.length === 0 ? <EmptyState icon={Briefcase} title="No jobs" description="No jobs found for this customer." /> :
+          jobs.length === 0 ? (
+            <EmptyState
+              icon={Briefcase}
+              title="No jobs"
+              description="No jobs found for this customer."
+              action={
+                <Button onClick={() => navigate('/jobs/new', { state: { customer: { id, name } } })} size="sm">
+                  Add Job
+                </Button>
+              }
+            />
+          ) :
           jobs.map(job => (
             <Card key={job.id || job._id} onClick={() => navigate(`/jobs/${job.id || job._id}`)}>
               <div className="flex items-center justify-between">
@@ -290,6 +443,29 @@ export default function CustomerDetail() {
           </div>
         )}
       </div>
+
+      {/* Add Membership Modal */}
+      <Modal
+        isOpen={addMembershipModal}
+        onClose={() => setAddMembershipModal(false)}
+        title="Add Membership"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setAddMembershipModal(false)}>Cancel</Button>
+            <Button loading={addingMembership} onClick={handleAddMembership}>Add</Button>
+          </>
+        }
+      >
+        <Select
+          label="Membership Plan"
+          value={membershipPlanId}
+          onChange={e => setMembershipPlanId(e.target.value)}
+          options={[
+            { value: '', label: 'Select a plan...' },
+            ...plans.map(p => ({ value: p.id || p._id, label: p.name })),
+          ]}
+        />
+      </Modal>
 
       {/* Delete Modal */}
       <Modal

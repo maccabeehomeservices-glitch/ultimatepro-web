@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit, Send } from 'lucide-react';
+import { ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import api from '../lib/api';
 import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select } from '../components/ui';
@@ -42,6 +42,51 @@ function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function SectionLabel({ children }) {
+  return <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{children}</p>;
+}
+
+// Photo lightbox
+function Lightbox({ photos, startIndex, onClose }) {
+  const [idx, setIdx] = useState(startIndex);
+  return (
+    <div
+      className="fixed inset-0 bg-black/90 z-50 flex flex-col items-center justify-center"
+      onClick={onClose}
+    >
+      <button
+        onClick={onClose}
+        className="absolute top-4 right-4 text-white p-2"
+        aria-label="Close"
+      >
+        <X size={28} />
+      </button>
+      <div className="flex items-center gap-4 w-full px-4" onClick={e => e.stopPropagation()}>
+        <button
+          onClick={() => setIdx(i => Math.max(0, i - 1))}
+          className="text-white p-2 disabled:opacity-30"
+          disabled={idx === 0}
+        >
+          <ChevronLeft size={32} />
+        </button>
+        <img
+          src={photos[idx]?.url || photos[idx]}
+          alt=""
+          className="flex-1 max-h-[70vh] object-contain rounded-xl"
+        />
+        <button
+          onClick={() => setIdx(i => Math.min(photos.length - 1, i + 1))}
+          className="text-white p-2 disabled:opacity-30"
+          disabled={idx === photos.length - 1}
+        >
+          <ChevronRight size={32} />
+        </button>
+      </div>
+      <p className="text-white/60 text-sm mt-3">{idx + 1} / {photos.length}</p>
+    </div>
+  );
+}
+
 export default function JobDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -56,6 +101,18 @@ export default function JobDetail() {
   const [depositModal, setDepositModal] = useState(false);
   const [depositForm, setDepositForm] = useState({ method: 'cash', amount: '' });
   const [reminderMethod, setReminderMethod] = useState('');
+
+  // Notes
+  const [notes, setNotes] = useState('');
+  const [notesSaving, setNotesSaving] = useState(false);
+
+  // Photos
+  const [beforePhotos, setBeforePhotos] = useState([]);
+  const [afterPhotos, setAfterPhotos] = useState([]);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [lightbox, setLightbox] = useState(null); // { photos, index }
+  const beforeInputRef = useRef(null);
+  const afterInputRef = useRef(null);
 
   // Send To state
   const [sendToRecipients, setSendToRecipients] = useState([]);
@@ -77,6 +134,14 @@ export default function JobDetail() {
   const messagesEndRef = useRef(null);
 
   const jobData = job?.job || job;
+
+  // Sync notes + photos from job
+  useEffect(() => {
+    if (!jobData) return;
+    if (jobData.notes != null) setNotes(jobData.notes || '');
+    setBeforePhotos(jobData.before_photos || []);
+    setAfterPhotos(jobData.after_photos || []);
+  }, [jobData?.id]);
 
   // Sync reminder method from job
   useEffect(() => {
@@ -186,7 +251,6 @@ export default function JobDetail() {
       } else if (selectedRecipient.type === 'app_user') {
         showSnack(`Notification sent to ${selectedRecipient.name}`, 'success');
       } else {
-        // roster_tech
         await api.post('/roster-techs/notify-tech', {
           job_id: id,
           tech_id: selectedRecipient.id,
@@ -229,6 +293,42 @@ export default function JobDetail() {
     }
   }
 
+  async function handleNotesBlur() {
+    if (!jobData || notes === (jobData.notes || '')) return;
+    setNotesSaving(true);
+    try {
+      await api.patch(`/jobs/${id}`, { notes });
+      showSnack('Notes saved', 'success');
+    } catch {
+      showSnack('Failed to save notes', 'error');
+    } finally {
+      setNotesSaving(false);
+    }
+  }
+
+  async function handlePhotoUpload(e, type) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo', file);
+      formData.append('type', type);
+      const res = await api.post(`/jobs/${id}/photos`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const photo = res.data?.photo || res.data;
+      if (type === 'before') setBeforePhotos(p => [...p, photo]);
+      else setAfterPhotos(p => [...p, photo]);
+      showSnack('Photo uploaded', 'success');
+    } catch {
+      showSnack('Failed to upload photo', 'error');
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = '';
+    }
+  }
+
   async function handleSendMessage(e) {
     e.preventDefault();
     if (!messageBody.trim() || !convId) return;
@@ -245,14 +345,23 @@ export default function JobDetail() {
     }
   }
 
+  function handleNavigate() {
+    const addr = jobData?.address || jobData?.service_address || '';
+    if (!addr) return;
+    window.open('https://maps.google.com/?q=' + encodeURIComponent(addr), '_blank');
+  }
+
   if (loading) return <LoadingSpinner fullPage />;
   if (!jobData) return <div className="p-4 text-gray-500">Job not found.</div>;
 
   const isDeletedOrCancelled = ['deleted', 'cancelled'].includes(jobData.status);
   const hasDeposit = jobData.deposit_required && !jobData.deposit_collected;
+  const address = jobData.address || jobData.service_address || '';
+  const lineItems = jobData.line_items || jobData.charges || [];
+  const lineItemsTotal = lineItems.reduce((sum, item) => sum + (Number(item.total || item.amount || 0)), 0);
 
   return (
-    <div className="p-4 max-w-3xl mx-auto">
+    <div className="p-4 max-w-3xl mx-auto pb-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <button
@@ -273,16 +382,50 @@ export default function JobDetail() {
         </button>
       </div>
 
+      {/* Partner banners */}
+      {jobData.sent_to_company_id && (
+        <div className="mb-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
+          <p className="text-sm font-semibold text-blue-800">
+            Sent to: {jobData.sent_to_company_name || 'Partner Company'}
+          </p>
+          <p className="text-xs text-blue-600">This job was forwarded to a network partner</p>
+        </div>
+      )}
+      {jobData.sent_by_company_id && (
+        <div className="mb-3 bg-green-50 border border-green-200 rounded-xl px-4 py-3">
+          <p className="text-sm font-semibold text-green-800">
+            Received from: {jobData.sent_by_company_name || 'Partner Company'}
+          </p>
+          <p className="text-xs text-green-600">This job was sent by a network partner</p>
+        </div>
+      )}
+
+      {/* Membership banner */}
+      {jobData.membership_id && (
+        <div className="mb-3 bg-amber-50 border border-amber-300 rounded-xl px-4 py-3">
+          <p className="text-sm font-semibold text-amber-800">
+            Membership: {jobData.membership_name || 'Active Member'}
+          </p>
+          <p className="text-xs text-amber-600">Customer has an active membership plan</p>
+        </div>
+      )}
+
       <Tabs tabs={tabList} active={activeTab} onChange={setActiveTab} />
 
       <div className="mt-4 space-y-4">
         {/* DETAILS TAB */}
         {activeTab === 'details' && (
           <>
+            {/* Status + info card */}
             <Card>
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Badge status={jobData.status} label={jobData.status?.replace(/_/g, ' ')} />
+                  {jobData.source_name && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
+                      Source: {jobData.source_name}
+                    </span>
+                  )}
                 </div>
                 {jobData.description && (
                   <p className="text-sm text-gray-600">{jobData.description}</p>
@@ -293,12 +436,6 @@ export default function JobDetail() {
                     <p className="text-sm text-gray-800">
                       {format(new Date(jobData.scheduled_date || jobData.scheduled_at), 'PPp')}
                     </p>
-                  </div>
-                )}
-                {(jobData.address || jobData.service_address) && (
-                  <div>
-                    <p className="text-xs text-gray-400 font-medium uppercase">Address</p>
-                    <p className="text-sm text-gray-800">{jobData.address || jobData.service_address}</p>
                   </div>
                 )}
                 {/* Reminder override */}
@@ -315,6 +452,25 @@ export default function JobDetail() {
               </div>
             </Card>
 
+            {/* Location card */}
+            {address && (
+              <Card>
+                <div className="flex items-start gap-3">
+                  <MapPin size={18} className="text-[#1A73E8] mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-400 font-medium uppercase mb-0.5">Location</p>
+                    <p className="text-sm text-gray-800">{address}</p>
+                  </div>
+                  <button
+                    onClick={handleNavigate}
+                    className="text-sm text-[#1A73E8] font-semibold min-h-[44px] flex items-center px-2"
+                  >
+                    Navigate
+                  </button>
+                </div>
+              </Card>
+            )}
+
             {/* Customer Card */}
             {(jobData.customer_id || jobData.customer) && (
               <Card onClick={() => navigate(`/customers/${jobData.customer_id || jobData.customer?.id}`)}>
@@ -327,6 +483,129 @@ export default function JobDetail() {
                 )}
               </Card>
             )}
+
+            {/* Line Items */}
+            {lineItems.length > 0 && (
+              <div>
+                <SectionLabel>Charges & Parts</SectionLabel>
+                <Card>
+                  <div className="space-y-2">
+                    {lineItems.map((item, i) => (
+                      <div key={item.id || i} className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{item.name || item.description}</p>
+                          {item.quantity != null && item.quantity !== 1 && (
+                            <p className="text-xs text-gray-400">Qty: {item.quantity}</p>
+                          )}
+                        </div>
+                        <p className="text-sm font-semibold text-gray-900 ml-3">
+                          {formatCurrency(item.total || item.amount || 0)}
+                        </p>
+                      </div>
+                    ))}
+                    <div className="border-t border-gray-100 pt-2 flex items-center justify-between">
+                      <p className="text-sm font-semibold text-gray-600">Total</p>
+                      <p className="text-sm font-bold text-gray-900">{formatCurrency(lineItemsTotal)}</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div>
+              <SectionLabel>Notes {notesSaving && <span className="text-[#1A73E8] ml-1">saving...</span>}</SectionLabel>
+              <Card>
+                <textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  onBlur={handleNotesBlur}
+                  placeholder="Add job notes..."
+                  rows={4}
+                  className="w-full text-sm text-gray-800 resize-none focus:outline-none bg-transparent placeholder-gray-400"
+                />
+              </Card>
+            </div>
+
+            {/* Before Photos */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <SectionLabel>Before Photos</SectionLabel>
+                <button
+                  onClick={() => beforeInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[44px] px-2"
+                >
+                  <Camera size={14} /> Add Photo
+                </button>
+                <input
+                  ref={beforeInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => handlePhotoUpload(e, 'before')}
+                />
+              </div>
+              {beforePhotos.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {beforePhotos.map((photo, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setLightbox({ photos: beforePhotos, index: i })}
+                      className="aspect-square rounded-xl overflow-hidden bg-gray-100"
+                    >
+                      <img
+                        src={photo?.url || photo}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-xl">No before photos yet</p>
+              )}
+            </div>
+
+            {/* After Photos */}
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <SectionLabel>After Photos</SectionLabel>
+                <button
+                  onClick={() => afterInputRef.current?.click()}
+                  disabled={uploadingPhoto}
+                  className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[44px] px-2"
+                >
+                  <Camera size={14} /> Add Photo
+                </button>
+                <input
+                  ref={afterInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={e => handlePhotoUpload(e, 'after')}
+                />
+              </div>
+              {afterPhotos.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2">
+                  {afterPhotos.map((photo, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setLightbox({ photos: afterPhotos, index: i })}
+                      className="aspect-square rounded-xl overflow-hidden bg-gray-100"
+                    >
+                      <img
+                        src={photo?.url || photo}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 text-center py-4 bg-gray-50 rounded-xl">No after photos yet</p>
+              )}
+            </div>
 
             {/* Actions */}
             <div className="flex flex-col gap-2">
@@ -477,6 +756,15 @@ export default function JobDetail() {
           </div>
         )}
       </div>
+
+      {/* Photo Lightbox */}
+      {lightbox && (
+        <Lightbox
+          photos={lightbox.photos}
+          startIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
+      )}
 
       {/* Status Modal */}
       <Modal isOpen={statusModal} onClose={() => setStatusModal(false)} title="Update Status">
