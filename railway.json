@@ -1,7 +1,7 @@
 {
   "build": { "builder": "NIXPACKS" },
   "deploy": {
-    "startCommand": "npx serve dist -l 8080",
+    "startCommand": "npx serve dist -s -l 8080",
     "healthcheckPath": "/"
   }
 }
