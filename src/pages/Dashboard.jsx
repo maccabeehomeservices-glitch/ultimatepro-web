@@ -147,7 +147,7 @@ export default function Dashboard() {
   const openInvoices   = raw?.invoices?.open || 0;
   const scheduledToday = raw?.jobs?.scheduled || 0;
   const missedCalls    = raw?.calls?.missed_calls || 0;
-  const secondChance   = raw?.second_chance?.count || raw?.second_chance || 0;
+  const secondChance   = raw?.second_chance?.total || 0;
 
   const activeJobs  = jobsData?.jobs  || (Array.isArray(jobsData) ? jobsData : []);
   const activeTechs = gpsData?.techs  || gpsData?.technicians || (Array.isArray(gpsData) ? gpsData : []);
