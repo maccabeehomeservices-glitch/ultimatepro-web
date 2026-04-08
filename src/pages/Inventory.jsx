@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Truck, Package } from 'lucide-react';
+import { Truck, Package, ArrowRight } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import { Card, LoadingSpinner, EmptyState, Tabs, StepperInput, Button, Select } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState, Tabs, StepperInput, Button, Select, Modal } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import api from '../lib/api';
 
 const tabList = [
   { id: 'warehouse', label: 'Warehouse' },
@@ -16,13 +17,21 @@ export default function Inventory() {
   const [itemQtys, setItemQtys] = useState({});
   const [saving, setSaving] = useState({});
 
+  // Truck stock editable qty
+  const [truckItemQtys, setTruckItemQtys] = useState({});
+  const [savingTruck, setSavingTruck] = useState({});
+
+  // Transfer modal
+  const [transferItem, setTransferItem] = useState(null); // warehouse item
+  const [transferTruckId, setTransferTruckId] = useState('');
+  const [transferQty, setTransferQty] = useState(1);
+  const [transferring, setTransferring] = useState(false);
+
   const { data: warehouseData, loading: warehouseLoading, refetch: refetchWarehouse } = useGet(
     activeTab === 'warehouse' ? '/inventory/warehouse' : null, [activeTab]
   );
-  const { data: trucksData, loading: trucksLoading } = useGet(
-    activeTab === 'trucks' ? '/inventory/trucks' : null, [activeTab]
-  );
-  const { data: truckStockData, loading: truckStockLoading } = useGet(
+  const { data: trucksData, loading: trucksLoading } = useGet('/inventory/trucks');
+  const { data: truckStockData, loading: truckStockLoading, refetch: refetchTruckStock } = useGet(
     activeTab === 'trucks' && selectedTruckId ? `/inventory/trucks/${selectedTruckId}/stock` : null,
     [selectedTruckId]
   );
@@ -44,7 +53,17 @@ export default function Inventory() {
     setItemQtys((prev) => ({ ...prev, [id]: qty }));
   }
 
-  async function saveItem(item) {
+  function getTruckQty(item) {
+    const id = item.id || item._id;
+    return truckItemQtys[id] !== undefined ? truckItemQtys[id] : Number(item.quantity || item.qty || 0);
+  }
+
+  function setTruckQty(item, qty) {
+    const id = item.id || item._id;
+    setTruckItemQtys((prev) => ({ ...prev, [id]: qty }));
+  }
+
+  async function saveWarehouseItem(item) {
     const id = item.id || item._id;
     const qty = getQty(item);
     setSaving((prev) => ({ ...prev, [id]: true }));
@@ -56,6 +75,47 @@ export default function Inventory() {
       showSnack('Failed to update', 'error');
     } finally {
       setSaving((prev) => ({ ...prev, [id]: false }));
+    }
+  }
+
+  async function saveTruckItem(item) {
+    const id = item.id || item._id;
+    const qty = getTruckQty(item);
+    setSavingTruck((prev) => ({ ...prev, [id]: true }));
+    try {
+      await mutate('put', `/inventory/truck-items/${id}`, { quantity: qty });
+      showSnack('Quantity updated', 'success');
+      refetchTruckStock();
+    } catch {
+      showSnack('Failed to update', 'error');
+    } finally {
+      setSavingTruck((prev) => ({ ...prev, [id]: false }));
+    }
+  }
+
+  function openTransfer(item) {
+    setTransferItem(item);
+    setTransferTruckId(trucks.length === 1 ? (trucks[0].id || trucks[0]._id) : '');
+    setTransferQty(1);
+  }
+
+  async function handleTransfer() {
+    if (!transferTruckId) { showSnack('Select a truck', 'error'); return; }
+    setTransferring(true);
+    try {
+      await api.post('/inventory/transfer', {
+        item_id: transferItem.id || transferItem._id,
+        truck_id: transferTruckId,
+        quantity: transferQty,
+      });
+      showSnack('Transferred', 'success');
+      setTransferItem(null);
+      refetchWarehouse();
+      if (selectedTruckId === transferTruckId) refetchTruckStock();
+    } catch {
+      showSnack('Failed to transfer', 'error');
+    } finally {
+      setTransferring(false);
     }
   }
 
@@ -81,17 +141,23 @@ export default function Inventory() {
                         <p className="font-medium text-gray-900">{item.name}</p>
                         {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <StepperInput value={getQty(item)} onChange={(v) => setQty(item, v)} min={0} />
                         <Button
                           size="sm"
                           variant="outlined"
                           loading={saving[id]}
-                          onClick={() => saveItem(item)}
+                          onClick={() => saveWarehouseItem(item)}
                           disabled={getQty(item) === Number(item.quantity || item.qty || 0)}
                         >
                           Save
                         </Button>
+                        <button
+                          onClick={() => openTransfer(item)}
+                          className="flex items-center gap-1 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+                        >
+                          <ArrowRight size={14} /> Truck
+                        </button>
                       </div>
                     </div>
                   </Card>
@@ -107,7 +173,7 @@ export default function Inventory() {
               <Select
                 label="Select Truck"
                 value={selectedTruckId}
-                onChange={(e) => setSelectedTruckId(e.target.value)}
+                onChange={(e) => { setSelectedTruckId(e.target.value); setTruckItemQtys({}); }}
                 options={truckOptions}
                 placeholder="Choose a truck..."
               />
@@ -117,17 +183,31 @@ export default function Inventory() {
                   <EmptyState icon={Truck} title="No stock" description="No inventory assigned to this truck." />
                 ) : (
                   <div className="space-y-2">
-                    {truckStock.map((item) => (
-                      <Card key={item.id || item._id}>
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium text-gray-900">{item.name}</p>
-                            {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
+                    {truckStock.map((item) => {
+                      const id = item.id || item._id;
+                      return (
+                        <Card key={id}>
+                          <div className="flex items-center justify-between gap-3 flex-wrap">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900">{item.name}</p>
+                              {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <StepperInput value={getTruckQty(item)} onChange={(v) => setTruckQty(item, v)} min={0} />
+                              <Button
+                                size="sm"
+                                variant="outlined"
+                                loading={savingTruck[id]}
+                                onClick={() => saveTruckItem(item)}
+                                disabled={getTruckQty(item) === Number(item.quantity || item.qty || 0)}
+                              >
+                                Save
+                              </Button>
+                            </div>
                           </div>
-                          <p className="font-semibold text-gray-900">Qty: {item.quantity || item.qty || 0}</p>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })}
                   </div>
                 )
               )}
@@ -138,6 +218,42 @@ export default function Inventory() {
           )
         )}
       </div>
+
+      {/* Transfer Modal */}
+      <Modal
+        isOpen={Boolean(transferItem)}
+        onClose={() => setTransferItem(null)}
+        title={transferItem ? `Transfer ${transferItem.name}` : 'Transfer'}
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setTransferItem(null)}>Cancel</Button>
+            <Button loading={transferring} onClick={handleTransfer}>Transfer</Button>
+          </>
+        }
+      >
+        {transferItem && (
+          <div className="space-y-4">
+            <Select
+              label="Destination Truck"
+              value={transferTruckId}
+              onChange={(e) => setTransferTruckId(e.target.value)}
+              options={[{ value: '', label: 'Select a truck...' }, ...truckOptions]}
+            />
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1">Quantity</p>
+              <StepperInput
+                value={transferQty}
+                onChange={setTransferQty}
+                min={1}
+                max={Number(transferItem.quantity || transferItem.qty || 0)}
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Available: {Number(transferItem.quantity || transferItem.qty || 0)}
+              </p>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }
