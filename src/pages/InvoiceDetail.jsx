@@ -4,9 +4,15 @@ import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { format } from 'date-fns';
 
 function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDate(d) {
+  if (!d) return '';
+  try { return format(new Date(d), 'MMM d, yyyy'); } catch { return d; }
 }
 
 const PAYMENT_METHODS = [
@@ -25,6 +31,8 @@ export default function InvoiceDetail() {
   const { mutate, loading: acting } = useMutation();
   const [paymentModal, setPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'cash', notes: '' });
+  const [stopModal, setStopModal] = useState(false);
+  const [resumeModal, setResumeModal] = useState(false);
 
   const invoice = data?.invoice || data;
 
@@ -43,12 +51,35 @@ export default function InvoiceDetail() {
     }
   }
 
+  async function handleStopReminders() {
+    try {
+      await mutate('patch', `/invoices/${id}/stop-followup`);
+      showSnack('Reminders stopped', 'success');
+      setStopModal(false);
+      refetch();
+    } catch {
+      showSnack('Failed to stop reminders', 'error');
+    }
+  }
+
+  async function handleResumeReminders() {
+    try {
+      await mutate('patch', `/invoices/${id}/reset-followup`);
+      showSnack('Reminders resumed', 'success');
+      setResumeModal(false);
+      refetch();
+    } catch {
+      showSnack('Failed to resume reminders', 'error');
+    }
+  }
+
   if (loading) return <LoadingSpinner fullPage />;
   if (!invoice) return <div className="p-4 text-gray-500">Invoice not found.</div>;
 
   const lineItems = invoice.line_items || invoice.items || [];
   const payments = invoice.payments || [];
   const isPaid = invoice.status === 'paid';
+  const hasFollowup = invoice.followup_count != null;
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
@@ -99,11 +130,42 @@ export default function InvoiceDetail() {
             <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
               <div>
                 <p className="text-sm font-medium text-gray-900">{p.method || 'Payment'}</p>
-                <p className="text-xs text-gray-400">{p.date || p.created_at}</p>
+                <p className="text-xs text-gray-400">{formatDate(p.date || p.created_at)}</p>
               </div>
               <p className="font-semibold text-green-600">{formatCurrency(p.amount)}</p>
             </div>
           ))}
+        </Card>
+      )}
+
+      {/* Follow-up reminders */}
+      {!isPaid && hasFollowup && (
+        <Card className="mb-4">
+          <p className="text-xs text-gray-400 uppercase font-medium mb-2">Follow-up Reminders</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm text-gray-700">
+              <strong>{invoice.followup_count || 0}</strong> reminder{invoice.followup_count !== 1 ? 's' : ''} sent
+            </p>
+            {invoice.followup_stopped && (
+              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">Stopped</span>
+            )}
+          </div>
+          {invoice.followup_last_sent_at && (
+            <p className="text-xs text-gray-400 mb-3">
+              Last sent: {formatDate(invoice.followup_last_sent_at)}
+            </p>
+          )}
+          <div className="flex gap-2">
+            {!invoice.followup_stopped ? (
+              <Button size="sm" variant="outlined" onClick={() => setStopModal(true)} className="flex-1">
+                Stop Reminders
+              </Button>
+            ) : (
+              <Button size="sm" variant="outlined" onClick={() => setResumeModal(true)} className="flex-1">
+                Resume Reminders
+              </Button>
+            )}
+          </div>
         </Card>
       )}
 
@@ -112,7 +174,7 @@ export default function InvoiceDetail() {
         <Card className="mb-4 border border-amber-200 bg-amber-50">
           <p className="text-sm font-medium text-amber-800">This invoice has an outstanding balance.</p>
           {invoice.due_date && (
-            <p className="text-xs text-amber-600 mt-0.5">Due: {invoice.due_date}</p>
+            <p className="text-xs text-amber-600 mt-0.5">Due: {formatDate(invoice.due_date)}</p>
           )}
         </Card>
       )}
@@ -141,22 +203,52 @@ export default function InvoiceDetail() {
             label="Amount"
             type="number"
             value={paymentForm.amount}
-            onChange={(e) => setPaymentForm((p) => ({ ...p, amount: e.target.value }))}
+            onChange={e => setPaymentForm(p => ({ ...p, amount: e.target.value }))}
             placeholder="0.00"
           />
           <Select
             label="Payment Method"
             value={paymentForm.method}
-            onChange={(e) => setPaymentForm((p) => ({ ...p, method: e.target.value }))}
+            onChange={e => setPaymentForm(p => ({ ...p, method: e.target.value }))}
             options={PAYMENT_METHODS}
           />
           <Input
             label="Notes (optional)"
             value={paymentForm.notes}
-            onChange={(e) => setPaymentForm((p) => ({ ...p, notes: e.target.value }))}
+            onChange={e => setPaymentForm(p => ({ ...p, notes: e.target.value }))}
             placeholder="Check #1234..."
           />
         </div>
+      </Modal>
+
+      {/* Stop Reminders Modal */}
+      <Modal
+        isOpen={stopModal}
+        onClose={() => setStopModal(false)}
+        title="Stop Reminders"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setStopModal(false)}>Cancel</Button>
+            <Button variant="danger" loading={acting} onClick={handleStopReminders}>Stop</Button>
+          </>
+        }
+      >
+        <p className="text-gray-600">Stop all follow-up reminders for this invoice?</p>
+      </Modal>
+
+      {/* Resume Reminders Modal */}
+      <Modal
+        isOpen={resumeModal}
+        onClose={() => setResumeModal(false)}
+        title="Resume Reminders"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setResumeModal(false)}>Cancel</Button>
+            <Button loading={acting} onClick={handleResumeReminders}>Resume</Button>
+          </>
+        }
+      >
+        <p className="text-gray-600">Resume automatic follow-up reminders for this invoice?</p>
       </Modal>
     </div>
   );

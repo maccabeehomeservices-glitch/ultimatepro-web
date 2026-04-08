@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Plus, BookOpen } from 'lucide-react';
+import { Plus, BookOpen, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Modal, Input, Button } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -9,6 +10,7 @@ function formatCurrency(v) {
 }
 
 export default function Pricebook() {
+  const navigate = useNavigate();
   const { showSnack } = useSnackbar();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [addModal, setAddModal] = useState(false);
@@ -43,7 +45,15 @@ export default function Pricebook() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Pricebook</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold text-gray-900">Pricebook</h1>
+        <button
+          onClick={() => navigate('/import?type=pricebook')}
+          className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+        >
+          <Upload size={14} /> Import
+        </button>
+      </div>
 
       {catLoading ? (
         <LoadingSpinner />

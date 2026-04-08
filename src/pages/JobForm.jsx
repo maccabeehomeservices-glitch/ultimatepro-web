@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import api from '../lib/api';
 import { useGet, useMutation } from '../hooks/useApi';
@@ -19,6 +19,7 @@ const STATUS_OPTIONS = [
 export default function JobForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { showSnack } = useSnackbar();
   const isEdit = Boolean(id);
 
@@ -42,6 +43,25 @@ export default function JobForm() {
 
   const { data: jobData, loading: jobLoading } = useGet(isEdit ? `/jobs/${id}` : null, [id]);
   const { data: techsData } = useGet('/users/technicians');
+
+  // Pre-fill from parsed ticket (AI parse-ticket flow)
+  useEffect(() => {
+    const parsed = location.state?.parsedData;
+    if (parsed && !isEdit) {
+      setForm(prev => ({
+        ...prev,
+        title: parsed.title || parsed.job_title || prev.title,
+        description: parsed.description || prev.description,
+        address: parsed.address || parsed.service_address || prev.address,
+        scheduled_date: parsed.scheduled_date ? parsed.scheduled_date.slice(0, 10) : prev.scheduled_date,
+        scheduled_time: parsed.scheduled_time || prev.scheduled_time,
+      }));
+      if (parsed.customer_name) {
+        setCustomerSearch(parsed.customer_name);
+        setForm(prev => ({ ...prev, customer_name: parsed.customer_name }));
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (isEdit && jobData) {

@@ -16,7 +16,8 @@ export default function Payroll() {
   const url = `/payroll/summary?from=${from}&to=${to}`;
   const { data, loading } = useGet(url, [from, to]);
 
-  const techs = data?.technicians || data?.payroll || data || [];
+  const rawTechs = data?.technicians || data?.payroll || data;
+  const techs = Array.isArray(rawTechs) ? rawTechs : [];
 
   return (
     <div className="p-4 max-w-3xl mx-auto">

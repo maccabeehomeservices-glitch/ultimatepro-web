@@ -14,11 +14,11 @@ import {
 const settingsItems = [
   { to: '/settings/company', icon: Building2, label: 'Company Profile' },
   { to: '/settings/team', icon: Users, label: 'Team Members' },
+  { to: '/settings/technicians', icon: UserCheck, label: 'Roster Technicians' },
   { to: '/settings/review-platforms', icon: Star, label: 'Review Platforms' },
   { to: '/settings/online-booking', icon: Globe, label: 'Online Booking' },
   { to: '/settings/job-sources', icon: Tag, label: 'Job Sources' },
-  { to: '/settings/membership', icon: CreditCard, label: 'Membership Plans' },
-  { to: '/settings/roster', icon: UserCheck, label: 'Roster Techs' },
+  { to: '/settings/membership-plans', icon: CreditCard, label: 'Membership Plans' },
   { to: '/settings/appearance', icon: Palette, label: 'Appearance' },
 ];
 

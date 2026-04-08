@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Users } from 'lucide-react';
+import { Plus, Search, Users, Upload } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState } from '../components/ui';
 
@@ -25,6 +25,12 @@ export default function Customers() {
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-900">Customers</h1>
+        <button
+          onClick={() => navigate('/import?type=customers')}
+          className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+        >
+          <Upload size={14} /> Import
+        </button>
       </div>
 
       {/* Search */}

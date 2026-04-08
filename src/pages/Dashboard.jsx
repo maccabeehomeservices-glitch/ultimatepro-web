@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGet } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
-import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
-import { Briefcase, DollarSign, Receipt, Calendar } from 'lucide-react';
+import { useSnackbar } from '../components/ui/Snackbar';
+import { Card, Badge, LoadingSpinner, EmptyState, Modal, Button } from '../components/ui';
+import api from '../lib/api';
+import { Briefcase, DollarSign, Receipt, Calendar, ClipboardList, Users } from 'lucide-react';
 
 function formatCurrency(amount) {
   if (amount == null) return '$0.00';
@@ -12,11 +15,41 @@ function formatCurrency(amount) {
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: dashData, loading: dashLoading } = useGet('/reports/dashboard');
-  const { data: jobsData, loading: jobsLoading } = useGet('/jobs?status=scheduled,en_route,in_progress&limit=10');
+  const { showSnack } = useSnackbar();
+  const [pasteModal, setPasteModal] = useState(false);
+  const [ticketText, setTicketText] = useState('');
+  const [parsing, setParsing] = useState(false);
 
-  const stats = dashData?.stats || dashData || {};
-  const activeJobs = jobsData?.jobs || jobsData || [];
+  const { data: dashData, loading: dashLoading } = useGet('/reports/dashboard');
+  const { data: jobsData, loading: jobsLoading } = useGet(
+    '/jobs?status=scheduled,en_route,in_progress,unscheduled&page=1&limit=10'
+  );
+  const { data: gpsData } = useGet('/gps/live');
+
+  // Handle both flat { stats: { today_jobs } } and nested { report: { jobs: { total } } } shapes
+  const raw = dashData?.report || dashData?.stats || dashData || {};
+  const todayJobs      = raw?.jobs?.total      ?? raw.today_jobs      ?? raw.todayJobs      ?? 0;
+  const monthRevenue   = raw?.revenue?.this_month ?? raw.month_revenue  ?? raw.monthRevenue   ?? 0;
+  const openInvoices   = raw?.invoices?.open    ?? raw.open_invoices   ?? raw.openInvoices   ?? 0;
+  const scheduledToday = raw?.jobs?.scheduled   ?? raw.scheduled_today ?? raw.scheduledToday ?? 0;
+
+  const activeJobs = jobsData?.jobs || (Array.isArray(jobsData) ? jobsData : []);
+  const activeTechs = gpsData?.techs || gpsData?.technicians || (Array.isArray(gpsData) ? gpsData : []);
+
+  async function handleParseTicket() {
+    if (!ticketText.trim()) return;
+    setParsing(true);
+    try {
+      const res = await api.post('/jobs/parse-ticket', { text: ticketText });
+      setPasteModal(false);
+      setTicketText('');
+      navigate('/jobs/new', { state: { parsedData: res.data?.job || res.data } });
+    } catch {
+      showSnack('Failed to parse ticket', 'error');
+    } finally {
+      setParsing(false);
+    }
+  }
 
   return (
     <div className="p-4 space-y-6 max-w-5xl mx-auto">
@@ -38,9 +71,7 @@ export default function Dashboard() {
               <div className="p-2 bg-blue-50 rounded-lg w-fit">
                 <Briefcase size={18} className="text-[#1A73E8]" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.today_jobs ?? stats.todayJobs ?? 0}
-              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{todayJobs}</p>
               <p className="text-xs text-gray-500">Today's Jobs</p>
             </div>
           </Card>
@@ -49,9 +80,7 @@ export default function Dashboard() {
               <div className="p-2 bg-green-50 rounded-lg w-fit">
                 <DollarSign size={18} className="text-green-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {formatCurrency(stats.month_revenue ?? stats.monthRevenue ?? 0)}
-              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(monthRevenue)}</p>
               <p className="text-xs text-gray-500">This Month</p>
             </div>
           </Card>
@@ -60,9 +89,7 @@ export default function Dashboard() {
               <div className="p-2 bg-purple-50 rounded-lg w-fit">
                 <Receipt size={18} className="text-purple-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.open_invoices ?? stats.openInvoices ?? 0}
-              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{openInvoices}</p>
               <p className="text-xs text-gray-500">Open Invoices</p>
             </div>
           </Card>
@@ -71,12 +98,32 @@ export default function Dashboard() {
               <div className="p-2 bg-amber-50 rounded-lg w-fit">
                 <Calendar size={18} className="text-amber-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">
-                {stats.scheduled_today ?? stats.scheduledToday ?? 0}
-              </p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{scheduledToday}</p>
               <p className="text-xs text-gray-500">Scheduled Today</p>
             </div>
           </Card>
+        </div>
+      )}
+
+      {/* Active Techs */}
+      {activeTechs.length > 0 && (
+        <div>
+          <h3 className="font-semibold text-gray-900 mb-3">Active Techs</h3>
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {activeTechs.map((tech, i) => {
+              const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || tech.name || 'Tech';
+              return (
+                <div key={tech.id || tech._id || i} className="flex-shrink-0 bg-white rounded-2xl shadow px-4 py-3 min-w-[140px]">
+                  <div className="w-8 h-8 rounded-full bg-[#1A73E8] text-white flex items-center justify-center text-sm font-semibold mb-2">
+                    {name[0]?.toUpperCase() || '?'}
+                  </div>
+                  <p className="font-medium text-sm text-gray-900 truncate">{name}</p>
+                  {tech.current_job_title && <p className="text-xs text-gray-400 truncate">{tech.current_job_title}</p>}
+                  {tech.last_updated && <p className="text-xs text-gray-300 mt-0.5">Updated {tech.last_updated}</p>}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -84,10 +131,7 @@ export default function Dashboard() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-semibold text-gray-900">Active Jobs</h3>
-          <button
-            onClick={() => navigate('/jobs')}
-            className="text-sm text-[#1A73E8] font-medium"
-          >
+          <button onClick={() => navigate('/jobs')} className="text-sm text-[#1A73E8] font-medium">
             View all
           </button>
         </div>
@@ -109,7 +153,7 @@ export default function Dashboard() {
                       {job.title || job.job_title || 'Untitled Job'}
                     </p>
                     <p className="text-sm text-gray-500 truncate">
-                      {job.customer_name || job.customer?.name || ''}
+                      {job.customer_name || job.customer?.name || 'No customer'}
                     </p>
                     {(job.address || job.service_address) && (
                       <p className="text-xs text-gray-400 truncate mt-0.5">
@@ -124,6 +168,40 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* Paste Ticket FAB */}
+      <button
+        onClick={() => setPasteModal(true)}
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-[#1A73E8] text-white rounded-full shadow-lg flex items-center gap-2 px-4 h-14 hover:bg-blue-700 transition-colors z-10 font-semibold"
+      >
+        <ClipboardList size={20} />
+        <span className="hidden sm:inline">Paste Ticket</span>
+      </button>
+
+      {/* Paste Ticket Modal */}
+      <Modal
+        isOpen={pasteModal}
+        onClose={() => { setPasteModal(false); setTicketText(''); }}
+        title="Paste Job Ticket"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => { setPasteModal(false); setTicketText(''); }}>Cancel</Button>
+            <Button loading={parsing} disabled={!ticketText.trim()} onClick={handleParseTicket}>Parse with AI</Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500">Paste any job ticket, email, or work order. AI will extract job details automatically.</p>
+          <textarea
+            value={ticketText}
+            onChange={e => setTicketText(e.target.value)}
+            rows={8}
+            placeholder="Paste any job ticket here..."
+            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
+            autoFocus
+          />
+        </div>
+      </Modal>
     </div>
   );
 }

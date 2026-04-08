@@ -4,6 +4,7 @@ import { AuthProvider } from './hooks/useAuth';
 import { SnackbarProvider } from './components/ui/Snackbar';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -29,6 +30,13 @@ import Pricebook from './pages/Pricebook';
 import Network from './pages/Network';
 import Inventory from './pages/Inventory';
 import Settings from './pages/Settings';
+import ImportWizard from './pages/ImportWizard';
+
+import RosterTechs from './pages/settings/RosterTechs';
+import MembershipPlans from './pages/settings/MembershipPlans';
+import JobSources from './pages/settings/JobSources';
+import ReviewPlatforms from './pages/settings/ReviewPlatforms';
+import OnlineBooking from './pages/settings/OnlineBooking';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +46,10 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+function Wrap({ children }) {
+  return <ErrorBoundary>{children}</ErrorBoundary>;
+}
 
 export default function App() {
   return (
@@ -54,31 +66,37 @@ export default function App() {
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
                 <Route element={<Layout />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/jobs" element={<Jobs />} />
-                  <Route path="/jobs/new" element={<JobForm />} />
-                  <Route path="/jobs/:id" element={<JobDetail />} />
-                  <Route path="/jobs/:id/edit" element={<JobForm />} />
-                  <Route path="/customers" element={<Customers />} />
-                  <Route path="/customers/new" element={<CustomerForm />} />
-                  <Route path="/customers/:id" element={<CustomerDetail />} />
-                  <Route path="/customers/:id/edit" element={<CustomerForm />} />
-                  <Route path="/calendar" element={<Calendar />} />
-                  <Route path="/estimates" element={<Estimates />} />
-                  <Route path="/estimates/new" element={<EstimateBuilder />} />
-                  <Route path="/estimates/:id" element={<EstimateDetail />} />
-                  <Route path="/estimates/:id/edit" element={<EstimateBuilder />} />
-                  <Route path="/invoices" element={<Invoices />} />
-                  <Route path="/invoices/:id" element={<InvoiceDetail />} />
-                  <Route path="/payments" element={<Payments />} />
-                  <Route path="/phone" element={<Phone />} />
-                  <Route path="/phone/thread/:id" element={<SmsThread />} />
-                  <Route path="/reports" element={<Reports />} />
-                  <Route path="/payroll" element={<Payroll />} />
-                  <Route path="/pricebook" element={<Pricebook />} />
-                  <Route path="/network" element={<Network />} />
-                  <Route path="/inventory" element={<Inventory />} />
-                  <Route path="/settings/*" element={<Settings />} />
+                  <Route path="/dashboard" element={<Wrap><Dashboard /></Wrap>} />
+                  <Route path="/jobs" element={<Wrap><Jobs /></Wrap>} />
+                  <Route path="/jobs/new" element={<Wrap><JobForm /></Wrap>} />
+                  <Route path="/jobs/:id" element={<Wrap><JobDetail /></Wrap>} />
+                  <Route path="/jobs/:id/edit" element={<Wrap><JobForm /></Wrap>} />
+                  <Route path="/customers" element={<Wrap><Customers /></Wrap>} />
+                  <Route path="/customers/new" element={<Wrap><CustomerForm /></Wrap>} />
+                  <Route path="/customers/:id" element={<Wrap><CustomerDetail /></Wrap>} />
+                  <Route path="/customers/:id/edit" element={<Wrap><CustomerForm /></Wrap>} />
+                  <Route path="/calendar" element={<Wrap><Calendar /></Wrap>} />
+                  <Route path="/estimates" element={<Wrap><Estimates /></Wrap>} />
+                  <Route path="/estimates/new" element={<Wrap><EstimateBuilder /></Wrap>} />
+                  <Route path="/estimates/:id" element={<Wrap><EstimateDetail /></Wrap>} />
+                  <Route path="/estimates/:id/edit" element={<Wrap><EstimateBuilder /></Wrap>} />
+                  <Route path="/invoices" element={<Wrap><Invoices /></Wrap>} />
+                  <Route path="/invoices/:id" element={<Wrap><InvoiceDetail /></Wrap>} />
+                  <Route path="/payments" element={<Wrap><Payments /></Wrap>} />
+                  <Route path="/phone" element={<Wrap><Phone /></Wrap>} />
+                  <Route path="/phone/thread/:id" element={<Wrap><SmsThread /></Wrap>} />
+                  <Route path="/reports" element={<Wrap><Reports /></Wrap>} />
+                  <Route path="/payroll" element={<Wrap><Payroll /></Wrap>} />
+                  <Route path="/pricebook" element={<Wrap><Pricebook /></Wrap>} />
+                  <Route path="/network" element={<Wrap><Network /></Wrap>} />
+                  <Route path="/inventory" element={<Wrap><Inventory /></Wrap>} />
+                  <Route path="/settings" element={<Wrap><Settings /></Wrap>} />
+                  <Route path="/settings/technicians" element={<Wrap><RosterTechs /></Wrap>} />
+                  <Route path="/settings/membership-plans" element={<Wrap><MembershipPlans /></Wrap>} />
+                  <Route path="/settings/job-sources" element={<Wrap><JobSources /></Wrap>} />
+                  <Route path="/settings/review-platforms" element={<Wrap><ReviewPlatforms /></Wrap>} />
+                  <Route path="/settings/online-booking" element={<Wrap><OnlineBooking /></Wrap>} />
+                  <Route path="/import" element={<Wrap><ImportWizard /></Wrap>} />
                 </Route>
               </Route>
 

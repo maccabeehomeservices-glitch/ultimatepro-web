@@ -2,15 +2,24 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
-import { Card, LoadingSpinner, EmptyState, Tabs } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState, Tabs, Select } from '../components/ui';
 
 const tabList = [
   { id: 'revenue', label: 'Revenue' },
   { id: 'sources', label: 'Job Sources' },
+  { id: 'timesheets', label: 'Timesheets' },
 ];
 
 function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatDuration(minutes) {
+  if (!minutes && minutes !== 0) return '—';
+  const hrs = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (hrs === 0) return `${mins}m`;
+  return `${hrs}h ${mins}m`;
 }
 
 export default function Reports() {
@@ -18,6 +27,7 @@ export default function Reports() {
   const [activeTab, setActiveTab] = useState('revenue');
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
   const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
+  const [techFilter, setTechFilter] = useState('');
 
   const { data: revenueData, loading: revenueLoading } = useGet(
     activeTab === 'revenue' ? `/reports/revenue?from=${from}&to=${to}` : null, [activeTab, from, to]
@@ -25,10 +35,24 @@ export default function Reports() {
   const { data: sourcesData, loading: sourcesLoading } = useGet(
     activeTab === 'sources' ? `/reports/jobs?from=${from}&to=${to}` : null, [activeTab, from, to]
   );
+  const { data: tsData, loading: tsLoading } = useGet(
+    activeTab === 'timesheets'
+      ? `/timesheets/report?start_date=${from}&end_date=${to}${techFilter ? `&tech_id=${techFilter}` : ''}`
+      : null,
+    [activeTab, from, to, techFilter]
+  );
+  const { data: techsData } = useGet(activeTab === 'timesheets' ? '/users/technicians' : null, [activeTab]);
 
   const revenueStats = revenueData?.stats || revenueData || {};
   const revenueList = revenueData?.data || revenueData?.items || [];
-  const sources = sourcesData?.sources || sourcesData || [];
+  const sources = sourcesData?.sources || (Array.isArray(sourcesData) ? sourcesData : []);
+  const tsRows = tsData?.rows || tsData?.entries || (Array.isArray(tsData) ? tsData : []);
+  const tsSummary = tsData?.summary || tsData?.technicians || [];
+  const techs = techsData?.technicians || (Array.isArray(techsData) ? techsData : []);
+  const techOptions = [
+    { value: '', label: 'All Technicians' },
+    ...techs.map(t => ({ value: t.id || t._id, label: `${t.first_name || ''} ${t.last_name || ''}`.trim() })),
+  ];
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
@@ -39,11 +63,11 @@ export default function Reports() {
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+            <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
           </div>
           <div className="flex-1">
             <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+            <input type="date" value={to} onChange={e => setTo(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
           </div>
         </div>
       </Card>
@@ -51,10 +75,10 @@ export default function Reports() {
       <Tabs tabs={tabList} active={activeTab} onChange={setActiveTab} />
 
       <div className="mt-4">
+        {/* Revenue tab */}
         {activeTab === 'revenue' && (
           revenueLoading ? <LoadingSpinner /> : (
             <div className="space-y-4">
-              {/* Stats */}
               <div className="grid grid-cols-2 gap-3">
                 <Card>
                   <p className="text-xs text-gray-400 uppercase">Total Revenue</p>
@@ -73,7 +97,6 @@ export default function Reports() {
                   <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(revenueStats.collected || revenueStats.paid || 0)}</p>
                 </Card>
               </div>
-              {/* Table */}
               {revenueList.length > 0 && (
                 <div className="bg-white rounded-2xl shadow overflow-hidden">
                   <table className="w-full">
@@ -100,6 +123,7 @@ export default function Reports() {
           )
         )}
 
+        {/* Sources tab */}
         {activeTab === 'sources' && (
           sourcesLoading ? <LoadingSpinner /> :
           sources.length === 0 ? (
@@ -119,6 +143,77 @@ export default function Reports() {
               ))}
             </div>
           )
+        )}
+
+        {/* Timesheets tab */}
+        {activeTab === 'timesheets' && (
+          <div className="space-y-4">
+            {techs.length > 0 && (
+              <Select value={techFilter} onChange={e => setTechFilter(e.target.value)} options={techOptions} />
+            )}
+            {tsLoading ? <LoadingSpinner /> : (
+              <>
+                {/* Summary cards */}
+                {tsSummary.length > 0 && (
+                  <div className="space-y-2 mb-2">
+                    {tsSummary.map((tech, i) => {
+                      const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || tech.name || 'Tech';
+                      return (
+                        <Card key={tech.id || tech._id || i}>
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-gray-900">{name}</p>
+                              <p className="text-sm text-gray-500">
+                                {tech.days_worked || 0} days · {tech.total_jobs || 0} jobs
+                              </p>
+                            </div>
+                            <p className="font-bold text-[#1A73E8] text-lg">
+                              {formatDuration(tech.total_minutes || tech.total_hours * 60)}
+                            </p>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Detail table */}
+                {tsRows.length === 0 ? (
+                  <EmptyState icon={BarChart2} title="No timesheet data" description="No clock-in records found for this period." />
+                ) : (
+                  <div className="bg-white rounded-2xl shadow overflow-hidden">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-100 bg-gray-50">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Tech</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Date</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">In</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Out</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Hours</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tsRows.map((row, i) => {
+                          const name = `${row.first_name || ''} ${row.last_name || ''}`.trim() || row.name || row.tech_name || '';
+                          return (
+                            <tr key={i} className="border-b border-gray-50 last:border-0">
+                              <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{name}</td>
+                              <td className="px-4 py-2.5 text-sm text-gray-600">{row.date || row.work_date || ''}</td>
+                              <td className="px-4 py-2.5 text-sm text-gray-600">{row.clock_in || row.clocked_in_at || '—'}</td>
+                              <td className="px-4 py-2.5 text-sm text-gray-600">{row.clock_out || row.clocked_out_at || '—'}</td>
+                              <td className="px-4 py-2.5 text-sm font-semibold text-[#1A73E8]">
+                                {formatDuration(row.total_minutes || row.duration_minutes)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         )}
       </div>
     </div>
