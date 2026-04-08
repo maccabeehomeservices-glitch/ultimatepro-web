@@ -101,8 +101,8 @@ export default function JobForm() {
     if (parsed && !isEdit) {
       setForm(prev => ({
         ...prev,
-        title: parsed.title || parsed.job_title || prev.title,
-        notes: parsed.description || parsed.notes || prev.notes,
+        title: parsed.job_title || prev.title,
+        notes: [parsed.job_description, parsed.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
         address: parsed.address || parsed.service_address || prev.address,
         city: parsed.city || prev.city,
         state: parsed.state || prev.state,
@@ -116,23 +116,23 @@ export default function JobForm() {
           || (parsed.scheduled_start ? parsed.scheduled_start.slice(11,16) : '')
           || prev.scheduled_time,
       }));
-      const phones = parsed.phone_numbers || (parsed.customer_phone ? [parsed.customer_phone] : []);
+      const phones = parsed.phone_numbers || (parsed.phone ? [parsed.phone] : []);
       if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
-      const searchTerm = parsed.customer_name || parsed.customer_phone;
-      if (searchTerm) {
-        setCustomerSearch(parsed.customer_name || searchTerm);
-        customersApi.list({ search: searchTerm, limit: 5 }).then(custRes => {
-          const customers = custRes.data?.customers || [];
-          if (customers.length === 1) {
-            selectCustomer(customers[0]);
-          } else if (customers.length > 1) {
-            setCustomerResults(customers);
-            setShowCustomerDropdown(true);
-          } else {
-            setForm(prev => ({ ...prev, customer_name: parsed.customer_name || '' }));
-          }
+      if (parsed.existing_customer_id && parsed.existing_customer) {
+        selectCustomer(parsed.existing_customer);
+      } else if (parsed.customer_name || parsed.phone) {
+        const nameParts = (parsed.customer_name || '').trim().split(' ');
+        const firstName = nameParts[0] || 'Customer';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        customersApi.create({
+          first_name: firstName,
+          last_name: lastName,
+          phone: parsed.phone || (parsed.phone_numbers?.[0]) || '',
+          type: 'residential',
+        }).then(createRes => {
+          selectCustomer(createRes.data?.customer || createRes.data);
         }).catch(() => {
-          setForm(prev => ({ ...prev, customer_name: parsed.customer_name || '' }));
+          setCustomerSearch(parsed.customer_name || '');
         });
       }
     }
@@ -277,8 +277,8 @@ export default function JobForm() {
       setTicketText('');
       setForm(prev => ({
         ...prev,
-        title: p.title || p.job_title || prev.title,
-        notes: p.description || p.notes || prev.notes,
+        title: p.job_title || prev.title,
+        notes: [p.job_description, p.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
         address: p.address || p.service_address || prev.address,
         city: p.city || prev.city,
         state: p.state || prev.state,
@@ -292,43 +292,29 @@ export default function JobForm() {
           || (p.scheduled_start ? p.scheduled_start.slice(11,16) : '')
           || prev.scheduled_time,
       }));
-      const phones = p.phone_numbers || (p.customer_phone ? [p.customer_phone] : []);
+      const phones = p.phone_numbers || (p.phone ? [p.phone] : []);
       if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
-      const searchTerm = p.customer_name || p.customer_phone;
-      if (searchTerm) {
-        setCustomerSearch(p.customer_name || searchTerm);
+      if (p.existing_customer_id && p.existing_customer) {
+        // Backend already resolved the customer — use it directly
+        selectCustomer(p.existing_customer);
+        showSnack(`Ticket parsed! Matched existing customer: ${p.existing_customer.first_name} ${p.existing_customer.last_name || ''}`.trim(), 'success');
+      } else if (p.customer_name || p.phone) {
+        // No match — auto-create from parsed data
+        const nameParts = (p.customer_name || '').trim().split(' ');
+        const firstName = nameParts[0] || 'Customer';
+        const lastName = nameParts.slice(1).join(' ') || '';
         try {
-          const custRes = await customersApi.list({ search: searchTerm, limit: 5 });
-          const customers = custRes.data?.customers || [];
-          if (customers.length === 1) {
-            selectCustomer(customers[0]);
-            showSnack(`Ticket parsed! Customer matched: ${(`${customers[0].first_name || ''} ${customers[0].last_name || ''}`).trim()}`, 'success');
-          } else if (customers.length > 1) {
-            setCustomerResults(customers);
-            setShowCustomerDropdown(true);
-            showSnack('Ticket parsed! Multiple customers found — select one below', 'success');
-          } else {
-            // 0 matches — silently create customer from parsed data
-            try {
-              const nameParts = (p.customer_name || '').trim().split(' ');
-              const firstName = nameParts[0] || 'Customer';
-              const lastName = nameParts.slice(1).join(' ') || '';
-              const phone = p.customer_phone || p.phone || (p.phone_numbers?.[0]) || '';
-              const createRes = await customersApi.create({
-                first_name: firstName,
-                last_name: lastName,
-                phone: phone,
-                type: 'residential',
-              });
-              selectCustomer(createRes.data?.customer || createRes.data);
-              showSnack(`Ticket parsed! Customer "${`${firstName} ${lastName}`.trim()}" created automatically`, 'success');
-            } catch {
-              setCustomerSearch(p.customer_name || '');
-              showSnack('Ticket parsed! Could not auto-create customer — please search or create manually', 'error');
-            }
-          }
+          const createRes = await customersApi.create({
+            first_name: firstName,
+            last_name: lastName,
+            phone: p.phone || (p.phone_numbers?.[0]) || '',
+            type: 'residential',
+          });
+          selectCustomer(createRes.data?.customer || createRes.data);
+          showSnack(`Ticket parsed! New customer created: ${`${firstName} ${lastName}`.trim()}`, 'success');
         } catch {
-          showSnack('Ticket parsed! Review and complete missing fields.', 'success');
+          setCustomerSearch(p.customer_name || '');
+          showSnack('Ticket parsed! Could not auto-create customer — please search manually', 'info');
         }
       } else {
         showSnack('Ticket parsed! Review and complete missing fields.', 'success');
