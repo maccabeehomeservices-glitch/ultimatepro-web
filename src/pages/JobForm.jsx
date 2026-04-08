@@ -262,20 +262,6 @@ export default function JobForm() {
     setFieldErrors(prev => ({ ...prev, customer_id: '' }));
   }
 
-  function handleCustomerQuickCreate(parsedData) {
-    setShowQuickCreate(true);
-    setQuickCreatePrefill({
-      first_name: parsedData?.first_name || '',
-      last_name: parsedData?.last_name || '',
-      phone: parsedData?.phone || parsedData?.customer_phone || '',
-      email: parsedData?.email || parsedData?.customer_email || '',
-      address: parsedData?.address || '',
-      city: parsedData?.city || '',
-      state: parsedData?.state || '',
-      zip: parsedData?.zip || '',
-    });
-  }
-
   function onCustomerCreated(customer) {
     setShowQuickCreate(false);
     selectCustomer(customer);
@@ -322,9 +308,24 @@ export default function JobForm() {
             setShowCustomerDropdown(true);
             showSnack('Ticket parsed! Multiple customers found — select one below', 'success');
           } else {
-            // No match — auto-open quick create with parsed data
-            showSnack('Ticket parsed! No customer found — creating new customer', 'success');
-            handleCustomerQuickCreate(p);
+            // 0 matches — silently create customer from parsed data
+            try {
+              const nameParts = (p.customer_name || '').trim().split(' ');
+              const firstName = nameParts[0] || 'Customer';
+              const lastName = nameParts.slice(1).join(' ') || '';
+              const phone = p.customer_phone || p.phone || (p.phone_numbers?.[0]) || '';
+              const createRes = await customersApi.create({
+                first_name: firstName,
+                last_name: lastName,
+                phone: phone,
+                type: 'residential',
+              });
+              selectCustomer(createRes.data?.customer || createRes.data);
+              showSnack(`Ticket parsed! Customer "${`${firstName} ${lastName}`.trim()}" created automatically`, 'success');
+            } catch {
+              setCustomerSearch(p.customer_name || '');
+              showSnack('Ticket parsed! Could not auto-create customer — please search or create manually', 'error');
+            }
           }
         } catch {
           showSnack('Ticket parsed! Review and complete missing fields.', 'success');
@@ -454,14 +455,14 @@ export default function JobForm() {
                       {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
                     </button>
                   ))}
-                  <button type="button" onClick={() => { setShowCustomerDropdown(false); handleCustomerQuickCreate({ first_name: customerSearch }); }}
+                  <button type="button" onClick={() => { setShowCustomerDropdown(false); setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
                     className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-[#1A73E8] font-medium flex items-center gap-2">
                     <Plus size={14} /> Create new customer
                   </button>
                 </div>
               )}
               {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
-                <button type="button" onClick={() => handleCustomerQuickCreate({ first_name: customerSearch })}
+                <button type="button" onClick={() => { setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
                   className="mt-1.5 text-sm text-[#1A73E8] font-medium flex items-center gap-1 min-h-[36px]">
                   <Plus size={14} /> Create new customer
                 </button>
