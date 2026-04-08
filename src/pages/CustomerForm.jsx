@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, X } from 'lucide-react';
-import api from '../lib/api';
+import { customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -70,11 +70,11 @@ export default function CustomerForm() {
     try {
       const payload = { ...form, extra_phones: extraPhones, extra_emails: extraEmails };
       if (isEdit) {
-        await api.put(`/customers/${id}`, payload);
+        await customersApi.update(id, payload);
         showSnack('Customer updated', 'success');
         navigate(`/customers/${id}`);
       } else {
-        const res = await api.post('/customers', payload);
+        const res = await customersApi.create(payload);
         showSnack('Customer created', 'success');
         navigate(`/customers/${res.data?.customer?.id || res.data?.id}`);
       }

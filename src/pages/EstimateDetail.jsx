@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import api from '../lib/api';
+import api, { estimatesApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 
@@ -122,10 +122,7 @@ export default function EstimateDetail() {
   async function handleCollectDeposit() {
     setCollectingDeposit(true);
     try {
-      await api.post(`/estimates/${id}/collect-deposit`, {
-        method: depositForm.method,
-        amount: Number(depositForm.amount),
-      });
+      await estimatesApi.collectDeposit(id, Number(depositForm.amount), depositForm.method);
       showSnack('Deposit collected', 'success');
       setDepositModal(false);
       refetch();

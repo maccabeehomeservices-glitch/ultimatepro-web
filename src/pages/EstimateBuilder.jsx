@@ -231,12 +231,15 @@ export default function EstimateBuilder() {
       if (action === 'get_signature') basePayload.action = 'get_signature';
 
       let estimateId = id;
+      let savedEstimate = null;
       if (isEdit) {
-        await api.put(`/estimates/${id}`, basePayload);
+        const res = await api.put(`/estimates/${id}`, basePayload);
+        savedEstimate = res.data?.estimate || res.data;
         showSnack('Estimate updated', 'success');
       } else {
         const res = await api.post('/estimates', basePayload);
         estimateId = res.data?.estimate?.id || res.data?.id;
+        savedEstimate = res.data?.estimate || res.data;
         showSnack('Estimate created', 'success');
       }
 
@@ -252,6 +255,18 @@ export default function EstimateBuilder() {
           ],
         }));
         await estimatesApi.saveTiers(estimateId, tiers);
+      }
+
+      if (action === 'get_signature' && estimateId) {
+        let publicToken = savedEstimate?.public_token;
+        if (!publicToken) {
+          const fullRes = await estimatesApi.get(estimateId);
+          publicToken = (fullRes.data?.estimate || fullRes.data)?.public_token;
+        }
+        if (publicToken) {
+          const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace('/api', '');
+          window.open(`${backendUrl}/sign/${publicToken}`, '_blank');
+        }
       }
 
       navigate(`/estimates/${estimateId}`);
