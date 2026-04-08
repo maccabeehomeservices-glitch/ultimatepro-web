@@ -429,18 +429,24 @@ export default function JobDetail() {
     if (!file) return;
     setUploadingPhoto(true);
     try {
+      // Step 1: Upload file to Cloudinary via /uploads
       const formData = new FormData();
-      formData.append('photo', file);
-      formData.append('type', type);
-      const res = await api.post(`/jobs/${id}/photos`, formData, {
+      formData.append('file', file);
+      formData.append('entity_type', 'job');
+      formData.append('entity_id', id);
+      formData.append('purpose', type);
+      const uploadRes = await api.post('/uploads', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      const photo = res.data?.photo || res.data;
-      if (type === 'before') setBeforePhotos(p => [...p, photo]);
-      else setAfterPhotos(p => [...p, photo]);
+      const photoUrl = uploadRes.data?.url;
+      if (!photoUrl) throw new Error('Upload failed');
+      // Step 2: Record URL on the job
+      await api.post(`/jobs/${id}/photos`, { photo_url: photoUrl });
+      // Step 3: Reload job to show new photo
+      refetch();
       showSnack('Photo uploaded', 'success');
-    } catch {
-      showSnack('Failed to upload photo', 'error');
+    } catch (err) {
+      showSnack(err?.response?.data?.error || 'Failed to upload photo', 'error');
     } finally {
       setUploadingPhoto(false);
       e.target.value = '';

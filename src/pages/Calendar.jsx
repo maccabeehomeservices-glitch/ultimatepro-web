@@ -27,13 +27,14 @@ export default function Calendar() {
 
   const from = format(startOfMonth(currentMonth), 'yyyy-MM-dd');
   const to = format(endOfMonth(currentMonth), 'yyyy-MM-dd');
-  const { data, loading } = useGet(`/schedules?from=${from}&to=${to}`, [from, to]);
+  const { data, loading } = useGet(`/jobs?from=${from}&to=${to}&limit=200`, [from, to]);
 
-  const schedules = data?.schedules || data || [];
+  const schedules = data?.jobs || data?.schedules || (Array.isArray(data) ? data : []);
 
   function getJobsForDay(day) {
     return schedules.filter((s) => {
-      const d = s.scheduled_date || s.date || s.start_date;
+      const d = s.scheduled_start ? s.scheduled_start.slice(0, 10)
+        : s.scheduled_date || s.date || s.start_date;
       if (!d) return false;
       try { return isSameDay(parseISO(d), day); } catch { return false; }
     });

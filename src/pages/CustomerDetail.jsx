@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check, Plus } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check, Plus, X } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import api from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Tabs, EmptyState, Modal, Input, Select } from '../components/ui';
@@ -22,7 +22,7 @@ export default function CustomerDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
-  const { data, loading } = useGet(`/customers/${id}`);
+  const { data, loading, refetch } = useGet(`/customers/${id}`);
   const [activeTab, setActiveTab] = useState('jobs');
   const [deleteModal, setDeleteModal] = useState(false);
   const [addMembershipModal, setAddMembershipModal] = useState(false);
@@ -34,6 +34,15 @@ export default function CustomerDetail() {
   // Notes
   const [notes, setNotes] = useState('');
   const [notesSaving, setNotesSaving] = useState(false);
+
+  // Contacts management
+  const [addPhoneInput, setAddPhoneInput] = useState('');
+  const [addEmailInput, setAddEmailInput] = useState('');
+  const [showAddPhone, setShowAddPhone] = useState(false);
+  const [showAddEmail, setShowAddEmail] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+  const { data: contactsData, refetch: refetchContacts } = useGet(`/customers/${id}/contacts`);
+  const contacts = contactsData?.contacts || (Array.isArray(contactsData) ? contactsData : []);
 
   // Messages state
   const [messages, setMessages] = useState([]);
@@ -99,6 +108,7 @@ export default function CustomerDetail() {
     try {
       await api.put(`/customers/${id}`, { ...customer, notes });
       showSnack('Notes saved', 'success');
+      refetch();
     } catch {
       showSnack('Failed to save notes', 'error');
     } finally {
@@ -119,6 +129,30 @@ export default function CustomerDetail() {
       showSnack('Failed to add membership', 'error');
     } finally {
       setAddingMembership(false);
+    }
+  }
+
+  async function handleAddContact(type, value) {
+    if (!value.trim()) return;
+    setSavingContact(true);
+    try {
+      await api.post(`/customers/${id}/contacts`, { type, value: value.trim(), label: type === 'phone' ? 'mobile' : 'email' });
+      if (type === 'phone') { setAddPhoneInput(''); setShowAddPhone(false); }
+      else { setAddEmailInput(''); setShowAddEmail(false); }
+      refetchContacts();
+    } catch {
+      showSnack('Failed to add contact', 'error');
+    } finally {
+      setSavingContact(false);
+    }
+  }
+
+  async function handleDeleteContact(contactId) {
+    try {
+      await api.delete(`/customers/contacts/${contactId}`);
+      refetchContacts();
+    } catch {
+      showSnack('Failed to delete contact', 'error');
     }
   }
 
@@ -222,6 +256,79 @@ export default function CustomerDetail() {
           ) : null)}
         </div>
       </Card>
+
+      {/* Additional Contacts */}
+      {(contacts.length > 0 || true) && (
+        <Card className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-xs text-gray-400 font-medium uppercase">Additional Contacts</p>
+          </div>
+          {contacts.filter(c => c.type === 'phone').length > 0 && (
+            <div className="mb-2">
+              {contacts.filter(c => c.type === 'phone').map(c => (
+                <div key={c.id} className="flex items-center gap-2 py-1">
+                  <Phone size={14} className="text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-700 flex-1">{c.value}</span>
+                  <button onClick={() => handleDeleteContact(c.id)} className="p-1 text-gray-400 hover:text-red-500 min-h-[32px] min-w-[32px] flex items-center justify-center">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {showAddPhone ? (
+            <div className="flex gap-2 mb-2">
+              <input
+                type="tel"
+                value={addPhoneInput}
+                onChange={e => setAddPhoneInput(e.target.value)}
+                placeholder="+1 (555) 000-0000"
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                autoFocus
+                onKeyDown={e => { if (e.key === 'Enter') handleAddContact('phone', addPhoneInput); if (e.key === 'Escape') setShowAddPhone(false); }}
+              />
+              <button onClick={() => handleAddContact('phone', addPhoneInput)} disabled={savingContact || !addPhoneInput.trim()} className="px-3 rounded-xl bg-[#1A73E8] text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
+              <button onClick={() => setShowAddPhone(false)} className="px-3 rounded-xl border border-gray-300 text-sm min-h-[44px]">Cancel</button>
+            </div>
+          ) : (
+            <button onClick={() => setShowAddPhone(true)} className="flex items-center gap-1 text-sm text-[#1A73E8] font-medium mb-2 min-h-[36px]">
+              <Plus size={14} /> Add Phone
+            </button>
+          )}
+          {contacts.filter(c => c.type === 'email').length > 0 && (
+            <div className="mb-2">
+              {contacts.filter(c => c.type === 'email').map(c => (
+                <div key={c.id} className="flex items-center gap-2 py-1">
+                  <Mail size={14} className="text-gray-400 flex-shrink-0" />
+                  <span className="text-sm text-gray-700 flex-1">{c.value}</span>
+                  <button onClick={() => handleDeleteContact(c.id)} className="p-1 text-gray-400 hover:text-red-500 min-h-[32px] min-w-[32px] flex items-center justify-center">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {showAddEmail ? (
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={addEmailInput}
+                onChange={e => setAddEmailInput(e.target.value)}
+                placeholder="email@example.com"
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                autoFocus
+                onKeyDown={e => { if (e.key === 'Enter') handleAddContact('email', addEmailInput); if (e.key === 'Escape') setShowAddEmail(false); }}
+              />
+              <button onClick={() => handleAddContact('email', addEmailInput)} disabled={savingContact || !addEmailInput.trim()} className="px-3 rounded-xl bg-[#1A73E8] text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
+              <button onClick={() => setShowAddEmail(false)} className="px-3 rounded-xl border border-gray-300 text-sm min-h-[44px]">Cancel</button>
+            </div>
+          ) : (
+            <button onClick={() => setShowAddEmail(true)} className="flex items-center gap-1 text-sm text-[#1A73E8] font-medium min-h-[36px]">
+              <Plus size={14} /> Add Email
+            </button>
+          )}
+        </Card>
+      )}
 
       {/* Address card with Navigate */}
       {hasAddress && (

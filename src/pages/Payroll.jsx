@@ -13,10 +13,10 @@ export default function Payroll() {
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
   const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
 
-  const url = `/payroll/summary?from=${from}&to=${to}`;
+  const url = `/reports/earnings?from=${from}&to=${to}`;
   const { data, loading } = useGet(url, [from, to]);
 
-  const rawTechs = data?.technicians || data?.payroll || data;
+  const rawTechs = data?.earnings || data?.technicians || data?.payroll || data;
   const techs = Array.isArray(rawTechs) ? rawTechs : [];
 
   return (
@@ -54,7 +54,7 @@ export default function Payroll() {
                       <p className="font-semibold text-gray-900">{name}</p>
                       <p className="text-sm text-gray-500">{tech.total_jobs || tech.jobs_completed || 0} jobs completed</p>
                     </div>
-                    <p className="font-bold text-[#1A73E8] text-lg">{formatCurrency(tech.earnings || tech.total_pay || tech.pay || 0)}</p>
+                    <p className="font-bold text-[#1A73E8] text-lg">{formatCurrency(tech.total_earned || tech.net_pay || tech.earnings || tech.total_pay || 0)}</p>
                   </div>
                 </Card>
               );
@@ -78,7 +78,7 @@ export default function Payroll() {
                     <tr key={i} className="border-b border-gray-50 last:border-0">
                       <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{name}</td>
                       <td className="px-4 py-2.5 text-sm text-gray-600">{tech.total_jobs || tech.jobs_completed || 0}</td>
-                      <td className="px-4 py-2.5 text-sm font-semibold text-[#1A73E8]">{formatCurrency(tech.earnings || tech.total_pay || 0)}</td>
+                      <td className="px-4 py-2.5 text-sm font-semibold text-[#1A73E8]">{formatCurrency(tech.total_earned || tech.net_pay || tech.earnings || tech.total_pay || 0)}</td>
                     </tr>
                   );
                 })}

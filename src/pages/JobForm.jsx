@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Search, ClipboardList, X } from 'lucide-react';
-import api from '../lib/api';
+import api, { jobsApi, customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -82,6 +82,7 @@ export default function JobForm() {
   const [lineItemModal, setLineItemModal] = useState(null);
   const [dupCustomer, setDupCustomer] = useState(null);
   const searchTO = useRef(null);
+  const streetInputRef = useRef(null);
 
   const { data: jobData, loading: jobLoading } = useGet(isEdit ? `/jobs/${id}` : null, [id]);
   const { data: techsData } = useGet('/users/technicians');
@@ -98,12 +99,36 @@ export default function JobForm() {
         title: parsed.title || parsed.job_title || prev.title,
         notes: parsed.description || parsed.notes || prev.notes,
         address: parsed.address || parsed.service_address || prev.address,
-        scheduled_date: parsed.scheduled_date ? parsed.scheduled_date.slice(0,10) : prev.scheduled_date,
-        scheduled_time: parsed.scheduled_time || prev.scheduled_time,
+        city: parsed.city || prev.city,
+        state: parsed.state || prev.state,
+        zip: parsed.zip || prev.zip,
+        job_type: parsed.type || parsed.job_type || prev.job_type,
+        priority: parsed.priority || prev.priority,
+        scheduled_date: parsed.scheduled_date ? parsed.scheduled_date.slice(0,10)
+          : parsed.scheduled_start ? parsed.scheduled_start.slice(0,10)
+          : prev.scheduled_date,
+        scheduled_time: parsed.scheduled_time
+          || (parsed.scheduled_start ? parsed.scheduled_start.slice(11,16) : '')
+          || prev.scheduled_time,
       }));
-      if (parsed.customer_name) {
-        setCustomerSearch(parsed.customer_name);
-        setForm(prev => ({ ...prev, customer_name: parsed.customer_name }));
+      const phones = parsed.phone_numbers || (parsed.customer_phone ? [parsed.customer_phone] : []);
+      if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
+      const searchTerm = parsed.customer_name || parsed.customer_phone;
+      if (searchTerm) {
+        setCustomerSearch(parsed.customer_name || searchTerm);
+        customersApi.list({ search: searchTerm, limit: 5 }).then(custRes => {
+          const customers = custRes.data?.customers || [];
+          if (customers.length === 1) {
+            selectCustomer(customers[0]);
+          } else if (customers.length > 1) {
+            setCustomerResults(customers);
+            setShowCustomerDropdown(true);
+          } else {
+            setForm(prev => ({ ...prev, customer_name: parsed.customer_name || '' }));
+          }
+        }).catch(() => {
+          setForm(prev => ({ ...prev, customer_name: parsed.customer_name || '' }));
+        });
       }
     }
     const preCustomer = location.state?.customer;
@@ -112,6 +137,34 @@ export default function JobForm() {
       setCustomerSearch(preCustomer.name || '');
     }
   }, []); // eslint-disable-line
+
+  // Google Places autocomplete for street address
+  useEffect(() => {
+    if (!streetInputRef.current || !window.google?.maps?.places) return;
+    const ac = new window.google.maps.places.Autocomplete(
+      streetInputRef.current,
+      { types: ['address'], componentRestrictions: { country: 'us' } }
+    );
+    ac.addListener('place_changed', () => {
+      const place = ac.getPlace();
+      if (!place.address_components) return;
+      let street = '', city = '', state = '', zip = '';
+      for (const c of place.address_components) {
+        const t = c.types;
+        if (t.includes('street_number')) street = c.long_name + ' ';
+        if (t.includes('route')) street += c.long_name;
+        if (t.includes('locality')) city = c.long_name;
+        if (t.includes('administrative_area_level_1')) state = c.short_name;
+        if (t.includes('postal_code')) zip = c.long_name;
+      }
+      setForm(prev => ({
+        ...prev,
+        address: street.trim() || place.formatted_address,
+        city, state, zip,
+      }));
+    });
+    return () => window.google?.maps?.event?.clearInstanceListeners(ac);
+  }, [!!window.google?.maps?.places]); // eslint-disable-line
 
   // Load existing job for edit
   useEffect(() => {
@@ -194,25 +247,55 @@ export default function JobForm() {
     if (!ticketText.trim()) return;
     setParsing(true);
     try {
-      const res = await api.post('/jobs/parse-ticket', { text: ticketText });
-      const parsed = res.data?.job || res.data;
+      const res = await jobsApi.parseTicket(ticketText);
+      const p = res.data?.job || res.data;
       setPasteModal(false);
       setTicketText('');
       setForm(prev => ({
         ...prev,
-        title: parsed.title || parsed.job_title || prev.title,
-        notes: parsed.description || parsed.notes || prev.notes,
-        address: parsed.address || parsed.service_address || prev.address,
-        scheduled_date: parsed.scheduled_date ? parsed.scheduled_date.slice(0,10) : prev.scheduled_date,
-        scheduled_time: parsed.scheduled_time || prev.scheduled_time,
+        title: p.title || p.job_title || prev.title,
+        notes: p.description || p.notes || prev.notes,
+        address: p.address || p.service_address || prev.address,
+        city: p.city || prev.city,
+        state: p.state || prev.state,
+        zip: p.zip || prev.zip,
+        job_type: p.type || p.job_type || prev.job_type,
+        priority: p.priority || prev.priority,
+        scheduled_date: p.scheduled_date ? p.scheduled_date.slice(0,10)
+          : p.scheduled_start ? p.scheduled_start.slice(0,10)
+          : prev.scheduled_date,
+        scheduled_time: p.scheduled_time
+          || (p.scheduled_start ? p.scheduled_start.slice(11,16) : '')
+          || prev.scheduled_time,
       }));
-      if (parsed.customer_name) {
-        setCustomerSearch(parsed.customer_name);
-        setForm(prev => ({ ...prev, customer_name: parsed.customer_name }));
+      const phones = p.phone_numbers || (p.customer_phone ? [p.customer_phone] : []);
+      if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
+      const searchTerm = p.customer_name || p.customer_phone;
+      if (searchTerm) {
+        setCustomerSearch(p.customer_name || searchTerm);
+        try {
+          const custRes = await customersApi.list({ search: searchTerm, limit: 5 });
+          const customers = custRes.data?.customers || [];
+          if (customers.length === 1) {
+            selectCustomer(customers[0]);
+            showSnack(`Ticket parsed! Customer matched: ${customers[0].first_name} ${customers[0].last_name || ''}`.trim(), 'success');
+          } else if (customers.length > 1) {
+            setCustomerResults(customers);
+            setShowCustomerDropdown(true);
+            showSnack('Ticket parsed! Multiple customers found — select one', 'success');
+          } else {
+            setForm(prev => ({ ...prev, customer_name: p.customer_name || '' }));
+            showSnack('Ticket parsed! Customer not found — search or create new', 'success');
+          }
+        } catch {
+          setForm(prev => ({ ...prev, customer_name: p.customer_name || '' }));
+          showSnack('Ticket parsed! Review and complete missing fields.', 'success');
+        }
+      } else {
+        showSnack('Ticket parsed! Review and complete missing fields.', 'success');
       }
-      showSnack('Ticket parsed!', 'success');
-    } catch {
-      showSnack('Failed to parse ticket', 'error');
+    } catch (err) {
+      showSnack(err?.response?.data?.error || 'Failed to parse ticket', 'error');
     } finally {
       setParsing(false);
     }
@@ -220,10 +303,8 @@ export default function JobForm() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    const errs = {};
-    if (!form.title.trim()) errs.title = 'Title is required';
-    if (!form.customer_id && !form.customer_name.trim()) errs.customer_name = 'Customer is required';
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (!form.title?.trim()) { showSnack('Please enter a job title', 'error'); return; }
+    if (!form.customer_id) { showSnack('Please select a customer from the search results', 'error'); return; }
 
     setSaving(true);
     try {
@@ -234,8 +315,7 @@ export default function JobForm() {
         title: form.title,
         notes: form.notes,
         description: form.notes,
-        customer_id: form.customer_id || undefined,
-        customer_name: !form.customer_id ? form.customer_name : undefined,
+        customer_id: form.customer_id,
         address: form.address, city: form.city, state: form.state, zip: form.zip,
         scheduled_start,
         assigned_to: form.assigned_roster_tech_id ? null : (form.assigned_tech_id || undefined),
@@ -253,16 +333,16 @@ export default function JobForm() {
         })),
       };
       if (isEdit) {
-        await api.put(`/jobs/${id}`, payload);
+        await jobsApi.update(id, payload);
         showSnack('Job updated', 'success');
         navigate(`/jobs/${id}`);
       } else {
-        const res = await api.post('/jobs', payload);
+        const res = await jobsApi.create(payload);
         showSnack('Job created', 'success');
         navigate(`/jobs/${res.data?.job?.id || res.data?.id}`);
       }
     } catch (err) {
-      showSnack(err?.response?.data?.message || 'Failed to save job', 'error');
+      showSnack(err?.response?.data?.error || err?.response?.data?.message || 'Failed to save job', 'error');
     } finally {
       setSaving(false);
     }
@@ -408,7 +488,16 @@ export default function JobForm() {
         {/* LOCATION */}
         <Card>
           <SectionLabel>Location</SectionLabel>
-          <Input label="Street Address" name="address" value={form.address} onChange={handleChange} placeholder="123 Main St" />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+            <input
+              ref={streetInputRef}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              placeholder="Start typing address..."
+              value={form.address}
+              onChange={e => setForm(prev => ({ ...prev, address: e.target.value }))}
+            />
+          </div>
           <div className="grid grid-cols-3 gap-2 mt-3">
             <div className="col-span-1">
               <Input label="City" name="city" value={form.city} onChange={handleChange} placeholder="Tampa" />

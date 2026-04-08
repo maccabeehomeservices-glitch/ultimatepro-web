@@ -217,27 +217,24 @@ export default function EstimateBuilder() {
         title,
         notes,
         terms,
-        tax_enabled: taxEnabled,
-        tax_rate: taxEnabled ? Number(taxRate) : 0,
-        deposit_required: depositRequired,
-        deposit_amount: depositRequired ? Number(depositAmount) : 0,
-        deposit_type: depositType,
-        gbb_mode: gbbMode,
-        line_items: gbbMode ? [] : allItems,
-        total: gbbMode ? Math.max(gbbTotals.good, gbbTotals.better, gbbTotals.best) : stdTotal,
+        line_items: gbbMode ? [] : allItems.map(item => ({
+          name: item.name,
+          quantity: item.qty || 1,
+          unit_price: Number(item.unit_price || 0),
+          total: (item.qty || 1) * Number(item.unit_price || 0),
+          item_type: item.item_type || 'service',
+        })),
+        discount_pct: 0,
       };
-
-      if (action === 'send') basePayload.action = 'send_for_signature';
-      if (action === 'get_signature') basePayload.action = 'get_signature';
 
       let estimateId = id;
       let savedEstimate = null;
       if (isEdit) {
-        const res = await api.put(`/estimates/${id}`, basePayload);
+        const res = await estimatesApi.update(id, basePayload);
         savedEstimate = res.data?.estimate || res.data;
         showSnack('Estimate updated', 'success');
       } else {
-        const res = await api.post('/estimates', basePayload);
+        const res = await estimatesApi.create(basePayload);
         estimateId = res.data?.estimate?.id || res.data?.id;
         savedEstimate = res.data?.estimate || res.data;
         showSnack('Estimate created', 'success');

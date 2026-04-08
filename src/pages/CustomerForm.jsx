@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, X } from 'lucide-react';
 import { customersApi } from '../lib/api';
@@ -30,6 +30,7 @@ export default function CustomerForm() {
   const [extraEmails, setExtraEmails] = useState([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const streetInputRef = useRef(null);
 
   const { data, loading } = useGet(isEdit ? `/customers/${id}` : null, [id]);
 
@@ -52,6 +53,34 @@ export default function CustomerForm() {
       setExtraEmails(c.extra_emails || []);
     }
   }, [isEdit, data]);
+
+  // Google Places autocomplete for street address
+  useEffect(() => {
+    if (!streetInputRef.current || !window.google?.maps?.places) return;
+    const ac = new window.google.maps.places.Autocomplete(
+      streetInputRef.current,
+      { types: ['address'], componentRestrictions: { country: 'us' } }
+    );
+    ac.addListener('place_changed', () => {
+      const place = ac.getPlace();
+      if (!place.address_components) return;
+      let street = '', city = '', state = '', zip = '';
+      for (const c of place.address_components) {
+        const t = c.types;
+        if (t.includes('street_number')) street = c.long_name + ' ';
+        if (t.includes('route')) street += c.long_name;
+        if (t.includes('locality')) city = c.long_name;
+        if (t.includes('administrative_area_level_1')) state = c.short_name;
+        if (t.includes('postal_code')) zip = c.long_name;
+      }
+      setForm(prev => ({
+        ...prev,
+        address: street.trim() || place.formatted_address,
+        city, state, zip,
+      }));
+    });
+    return () => window.google?.maps?.event?.clearInstanceListeners(ac);
+  }, [!!window.google?.maps?.places]); // eslint-disable-line
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -195,7 +224,16 @@ export default function CustomerForm() {
         {/* Address */}
         <Card>
           <div className="space-y-4">
-            <Input label="Address" name="address" value={form.address} onChange={handleChange} placeholder="123 Main St" />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <input
+                ref={streetInputRef}
+                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                placeholder="Start typing address..."
+                value={form.address}
+                onChange={e => setForm(prev => ({ ...prev, address: e.target.value }))}
+              />
+            </div>
             <div className="grid grid-cols-3 gap-3">
               <Input label="City" name="city" value={form.city} onChange={handleChange} placeholder="Tampa" className="col-span-1" />
               <Input label="State" name="state" value={form.state} onChange={handleChange} placeholder="FL" />

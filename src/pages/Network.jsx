@@ -19,7 +19,7 @@ export default function Network() {
   const [searchResults, setSearchResults] = useState(null);
 
   const { data: myIdData } = useGet('/network/my-id');
-  const { data: connectionsData, loading } = useGet('/network/connections');
+  const { data: connectionsData, loading, refetch: refetchConnections } = useGet('/network/connections');
   const { mutate, loading: searching } = useMutation();
 
   const ucmId = myIdData?.ucm_id || myIdData?.id || '';
@@ -51,9 +51,10 @@ export default function Network() {
   async function handleConnect(result) {
     try {
       await networkApi.invite(searchInput, searchTab);
-      showSnack('Connection request sent', 'success');
+      showSnack('Connection request sent!', 'success');
       setSearchResults(null);
       setSearchInput('');
+      refetchConnections();
     } catch {
       showSnack('Failed to send request', 'error');
     }
