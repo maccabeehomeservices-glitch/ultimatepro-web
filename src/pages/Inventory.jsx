@@ -27,6 +27,11 @@ export default function Inventory() {
   const [transferQty, setTransferQty] = useState(1);
   const [transferring, setTransferring] = useState(false);
 
+  // Restock modal
+  const [restockModal, setRestockModal] = useState(false);
+  const [restockItems, setRestockItems] = useState([]);
+  const [restockSending, setRestockSending] = useState(false);
+
   const { data: warehouseData, loading: warehouseLoading, refetch: refetchWarehouse } = useGet(
     activeTab === 'warehouse' ? '/inventory/warehouse' : null, [activeTab]
   );
@@ -90,6 +95,39 @@ export default function Inventory() {
       showSnack('Failed to update', 'error');
     } finally {
       setSavingTruck((prev) => ({ ...prev, [id]: false }));
+    }
+  }
+
+  function openRestockModal() {
+    setRestockItems(truckStock.map(item => ({
+      id: item.id || item._id,
+      name: item.name,
+      sku: item.sku || '',
+      checked: false,
+      qty_requested: 1,
+    })));
+    setRestockModal(true);
+  }
+
+  async function handleRestockRequest() {
+    const selected = restockItems.filter(i => i.checked);
+    if (selected.length === 0) { showSnack('Select at least one item', 'error'); return; }
+    setRestockSending(true);
+    try {
+      await api.post('/inventory/restock-request', {
+        truck_id: selectedTruckId,
+        items: selected.map(i => ({
+          pricebook_item_id: i.id,
+          item_name: i.name,
+          qty_requested: i.qty_requested,
+        })),
+      });
+      showSnack('Restock request sent to office!', 'success');
+      setRestockModal(false);
+    } catch {
+      showSnack('Failed to send restock request', 'error');
+    } finally {
+      setRestockSending(false);
     }
   }
 
@@ -208,6 +246,9 @@ export default function Inventory() {
                         </Card>
                       );
                     })}
+                    <Button variant="outlined" onClick={openRestockModal} className="w-full mt-2">
+                      Request Restock
+                    </Button>
                   </div>
                 )
               )}
@@ -218,6 +259,41 @@ export default function Inventory() {
           )
         )}
       </div>
+
+      {/* Restock Modal */}
+      <Modal
+        isOpen={restockModal}
+        onClose={() => setRestockModal(false)}
+        title="Request Restock"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setRestockModal(false)}>Cancel</Button>
+            <Button loading={restockSending} onClick={handleRestockRequest}>Send Request</Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500">Select items you need restocked and enter the quantity needed.</p>
+          {restockItems.map((item, i) => (
+            <div key={item.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+              <input
+                type="checkbox"
+                checked={item.checked}
+                onChange={e => setRestockItems(prev => prev.map((it, j) => j === i ? { ...it, checked: e.target.checked } : it))}
+                className="w-5 h-5 rounded accent-[#1A73E8] flex-shrink-0"
+              />
+              <span className="flex-1 text-sm font-medium text-gray-900 min-w-0 truncate">{item.name}</span>
+              {item.checked && (
+                <StepperInput
+                  value={item.qty_requested}
+                  min={1}
+                  onChange={v => setRestockItems(prev => prev.map((it, j) => j === i ? { ...it, qty_requested: v } : it))}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </Modal>
 
       {/* Transfer Modal */}
       <Modal

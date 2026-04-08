@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { Card, Badge, LoadingSpinner, EmptyState, Modal, Button } from '../components/ui';
 import api from '../lib/api';
-import { Briefcase, DollarSign, Receipt, Calendar, ClipboardList, Phone, Star, Users, ChevronRight } from 'lucide-react';
+import { Briefcase, DollarSign, Receipt, Calendar, ClipboardList, Phone, Star, Users, ChevronRight, RefreshCw } from 'lucide-react';
 
 const MAPS_KEY = 'AIzaSyDtSGWBuiTFR5BbomG8ZFNYeiwUszkJiNQ';
 
@@ -126,13 +126,21 @@ export default function Dashboard() {
   const [parsing, setParsing] = useState(false);
   const mapsReady = useGoogleMaps();
 
-  const { data: dashData, loading: dashLoading } = useGet('/reports/dashboard');
-  const { data: jobsData, loading: jobsLoading } = useGet(
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { data: dashData, loading: dashLoading, refetch: refetchDash } = useGet('/reports/dashboard');
+  const { data: jobsData, loading: jobsLoading, refetch: refetchJobs } = useGet(
     '/jobs?status=scheduled,en_route,in_progress,unscheduled&page=1&limit=10'
   );
-  const { data: gpsData } = useGet('/gps/live');
-  const { data: dueSoonData } = useGet('/memberships/due-soon');
-  const { data: phoneData } = useGet('/phone/stats');
+  const { data: gpsData, refetch: refetchGps } = useGet('/gps/live');
+  const { data: dueSoonData, refetch: refetchDueSoon } = useGet('/memberships/due-soon');
+  const { data: phoneData, refetch: refetchPhone } = useGet('/phone/stats');
+
+  function handleRefresh() {
+    setRefreshing(true);
+    refetchDash(); refetchJobs(); refetchGps(); refetchDueSoon(); refetchPhone();
+    setTimeout(() => setRefreshing(false), 1500);
+  }
 
   const raw = dashData?.report || dashData?.stats || dashData || {};
   const todayJobs      = raw?.jobs?.total      ?? raw.today_jobs      ?? raw.todayJobs      ?? 0;
@@ -164,11 +172,19 @@ export default function Dashboard() {
   return (
     <div className="p-4 space-y-6 max-w-5xl mx-auto pb-24">
       {/* Greeting */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">
-          Hello, {user?.first_name || 'there'} 👋
-        </h2>
-        <p className="text-gray-500 text-sm">Here's what's happening today.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">
+            Hello, {user?.first_name || 'there'} 👋
+          </h2>
+          <p className="text-gray-500 text-sm">Here's what's happening today.</p>
+        </div>
+        <button
+          onClick={handleRefresh}
+          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500"
+        >
+          <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
+        </button>
       </div>
 
       {/* 2nd Chance banner */}

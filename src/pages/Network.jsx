@@ -1,20 +1,20 @@
 import { useState } from 'react';
 import { Copy, Check, Handshake, Search } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import { Card, LoadingSpinner, EmptyState, Badge, Button, Input, Select } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState, Badge, Button, Input } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 
-const SEARCH_TYPE_OPTIONS = [
-  { value: 'phone', label: 'Phone Number' },
-  { value: 'email', label: 'Email Address' },
-  { value: 'ucm_id', label: 'UCM ID' },
+const SEARCH_TABS = [
+  { id: 'phone', label: '📱 By Phone', type: 'tel', placeholder: '+1 (555) 000-0000' },
+  { id: 'email', label: '✉️ By Email', type: 'email', placeholder: 'partner@company.com' },
+  { id: 'ucm_id', label: '🔑 By UCM ID', type: 'text', placeholder: 'UCM ID...' },
 ];
 
 export default function Network() {
   const { showSnack } = useSnackbar();
   const [copied, setCopied] = useState(false);
+  const [searchTab, setSearchTab] = useState('phone');
   const [searchInput, setSearchInput] = useState('');
-  const [searchType, setSearchType] = useState('phone');
   const [searchResults, setSearchResults] = useState(null);
 
   const { data: myIdData } = useGet('/network/my-id');
@@ -31,10 +31,16 @@ export default function Network() {
     });
   }
 
+  function handleTabChange(tab) {
+    setSearchTab(tab);
+    setSearchInput('');
+    setSearchResults(null);
+  }
+
   async function handleSearch() {
     if (!searchInput.trim()) return;
     try {
-      const res = await mutate('post', '/network/search', { query: searchInput, type: searchType });
+      const res = await mutate('post', '/network/search', { query: searchInput, type: searchTab });
       setSearchResults(res?.results || res || []);
     } catch {
       showSnack('Search failed', 'error');
@@ -49,6 +55,8 @@ export default function Network() {
       showSnack('Failed to send request', 'error');
     }
   }
+
+  const activeTabConfig = SEARCH_TABS.find(t => t.id === searchTab);
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
@@ -74,22 +82,37 @@ export default function Network() {
       {/* Find Contractor */}
       <Card className="mb-4">
         <p className="text-sm font-semibold text-gray-900 mb-3">Find a Contractor</p>
+
+        {/* 3 Search Tabs */}
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-3">
+          {SEARCH_TABS.map(tab => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => handleTabChange(tab.id)}
+              className={`flex-1 py-2 px-1 rounded-lg text-xs font-semibold transition-colors min-h-[36px] ${
+                searchTab === tab.id ? 'bg-white text-[#1A73E8] shadow-sm' : 'text-gray-500'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="space-y-3">
-          <Select
-            label="Search by"
-            value={searchType}
-            onChange={(e) => setSearchType(e.target.value)}
-            options={SEARCH_TYPE_OPTIONS}
-          />
-          <Input
+          <input
+            type={activeTabConfig?.type}
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            placeholder={searchType === 'phone' ? '+1 (555) 000-0000' : searchType === 'email' ? 'partner@company.com' : 'UCM ID...'}
+            onChange={e => setSearchInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSearch()}
+            placeholder={activeTabConfig?.placeholder}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
           />
           <Button onClick={handleSearch} loading={searching} className="w-full">
             <Search size={16} /> Search
           </Button>
         </div>
+
         {searchResults !== null && (
           <div className="mt-3">
             {searchResults.length === 0 ? (

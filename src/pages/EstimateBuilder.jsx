@@ -56,6 +56,9 @@ export default function EstimateBuilder() {
   // GBB mode
   const [gbbMode, setGbbMode] = useState(false);
   const [activeTier, setActiveTier] = useState('good');
+  const [gbbTierNames, setGbbTierNames] = useState({ good: 'Good', better: 'Better', best: 'Best' });
+  const [editingTierName, setEditingTierName] = useState(null);
+  const [tierNameInput, setTierNameInput] = useState('');
 
   // Standard mode: single section
   const [stdSection, setStdSection] = useState(emptySection());
@@ -94,6 +97,7 @@ export default function EstimateBuilder() {
           better: e.tiers?.better || emptySection(),
           best: e.tiers?.best || emptySection(),
         });
+        if (e.tier_names) setGbbTierNames({ good: e.tier_names.good || 'Good', better: e.tier_names.better || 'Better', best: e.tier_names.best || 'Best' });
       } else {
         const items = e.line_items || e.items || [];
         const services = items.filter(i => i.item_type !== 'material' && i.item_type !== 'discount');
@@ -217,6 +221,7 @@ export default function EstimateBuilder() {
 
       if (gbbMode) {
         payload.tiers = gbbSections;
+        payload.tier_names = gbbTierNames;
         payload.total = Math.max(gbbTotals.good, gbbTotals.better, gbbTotals.best);
       } else {
         const allItems = [
@@ -404,11 +409,35 @@ export default function EstimateBuilder() {
                 key={tier}
                 type="button"
                 onClick={() => setActiveTier(tier)}
+                onDoubleClick={() => { setEditingTierName(tier); setTierNameInput(gbbTierNames[tier]); }}
                 className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
                   activeTier === tier ? 'bg-white text-[#1A73E8] shadow-sm' : 'text-gray-500'
                 }`}
               >
-                {GBB_LABELS[tier]}
+                {editingTierName === tier ? (
+                  <input
+                    autoFocus
+                    value={tierNameInput}
+                    onChange={e => setTierNameInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === 'Escape') {
+                        if (e.key === 'Enter' && tierNameInput.trim()) {
+                          setGbbTierNames(prev => ({ ...prev, [tier]: tierNameInput.trim() }));
+                        }
+                        setEditingTierName(null);
+                        e.stopPropagation();
+                      }
+                    }}
+                    onBlur={() => {
+                      if (tierNameInput.trim()) setGbbTierNames(prev => ({ ...prev, [tier]: tierNameInput.trim() }));
+                      setEditingTierName(null);
+                    }}
+                    onClick={e => e.stopPropagation()}
+                    className="w-full text-center text-sm font-semibold bg-transparent border-b border-[#1A73E8] focus:outline-none px-1"
+                  />
+                ) : (
+                  gbbTierNames[tier]
+                )}
                 <span className="block text-xs font-normal text-gray-400">
                   ${gbbTotals[tier].toFixed(0)}
                 </span>

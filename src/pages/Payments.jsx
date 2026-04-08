@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DollarSign } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState } from '../components/ui';
 import { format } from 'date-fns';
@@ -9,6 +10,7 @@ function formatCurrency(v) {
 }
 
 export default function Payments() {
+  const navigate = useNavigate();
   const today = new Date();
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
   const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
@@ -59,6 +61,14 @@ export default function Payments() {
                   <p className="text-xs text-gray-400">
                     {p.method || 'Payment'} · {p.date || p.created_at ? format(new Date(p.date || p.created_at), 'MMM d, yyyy') : ''}
                   </p>
+                  {p.invoice_id && (
+                    <button
+                      onClick={() => navigate(`/invoices/${p.invoice_id}`)}
+                      className="text-xs text-[#1A73E8] font-medium mt-0.5"
+                    >
+                      INV-{p.invoice_number || p.invoice_id}
+                    </button>
+                  )}
                 </div>
                 <p className="font-bold text-green-600 ml-3">{formatCurrency(p.amount)}</p>
               </div>

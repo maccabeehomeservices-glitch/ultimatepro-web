@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight, Plus, ChevronDown } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import api from '../lib/api';
-import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select } from '../components/ui';
+import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select, Toggle, StepperInput } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 
 const JOB_STATUSES = [
@@ -125,6 +125,29 @@ export default function JobDetail() {
   const [jobHistory, setJobHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // FIX 2: partner status action loading
+  const [partnerActing, setPartnerActing] = useState(false);
+
+  // FIX 3: add line item modal
+  const [addItemModal, setAddItemModal] = useState(false);
+  const [pbSearch, setPbSearch] = useState('');
+  const [pbResults, setPbResults] = useState([]);
+  const [pbSearching, setPbSearching] = useState(false);
+  const [newItem, setNewItem] = useState({ name: '', qty: 1, unit_price: '' });
+  const [addingItem, setAddingItem] = useState(false);
+  const pbSearchTimeout = useRef(null);
+
+  // FIX 4: tech permissions
+  const [techPerms, setTechPerms] = useState(null);
+  const [techPermSaving, setTechPermSaving] = useState(false);
+
+  // FIX 5: history accordion
+  const [histOpen, setHistOpen] = useState({});
+  const [pastJobs, setPastJobs] = useState([]);
+  const [jobEstimates, setJobEstimates] = useState([]);
+  const [jobInvoices, setJobInvoices] = useState([]);
+  const [histLoading, setHistLoading] = useState({});
+
   // Messages state
   const [jobMessages, setJobMessages] = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -149,6 +172,15 @@ export default function JobDetail() {
       setReminderMethod(jobData.reminder_method || '');
     }
   }, [jobData?.reminder_method]);
+
+  // FIX 4: sync tech_permissions
+  useEffect(() => {
+    if (!jobData) return;
+    setTechPerms(jobData.tech_permissions || {
+      view_history: true, collect_payments: true, take_photos: true,
+      add_parts: false, edit_details: false, cancel_job: false,
+    });
+  }, [jobData?.id]);
 
   // Load history when tab = 'history'
   useEffect(() => {
@@ -205,6 +237,102 @@ export default function JobDetail() {
       .catch(() => setSendToRecipients(recipients))
       .finally(() => setSendToLoading(false));
   }, [sendToModal]);
+
+  // FIX 2: partner confirm/dispute
+  async function handlePartnerStatus(status) {
+    setPartnerActing(true);
+    try {
+      await api.post(`/jobs/${id}/partner-status`, { status });
+      showSnack('Status updated', 'success');
+      refetch();
+    } catch {
+      showSnack('Failed to update status', 'error');
+    } finally {
+      setPartnerActing(false);
+    }
+  }
+
+  // FIX 3: pricebook search + add item
+  function handlePbSearch(val) {
+    setPbSearch(val);
+    clearTimeout(pbSearchTimeout.current);
+    if (!val.trim()) { setPbResults([]); return; }
+    setPbSearching(true);
+    pbSearchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await api.get(`/pricebook/items?search=${encodeURIComponent(val)}&limit=10`);
+        setPbResults(res.data?.items || res.data || []);
+      } catch { setPbResults([]); }
+      finally { setPbSearching(false); }
+    }, 300);
+  }
+
+  function selectPbItem(item) {
+    setNewItem({ name: item.name, qty: 1, unit_price: item.unit_price || item.price || '' });
+    setPbSearch(item.name);
+    setPbResults([]);
+  }
+
+  async function handleAddLineItem() {
+    if (!newItem.name.trim()) { showSnack('Item name required', 'error'); return; }
+    setAddingItem(true);
+    try {
+      const current = jobData.line_items || jobData.charges || [];
+      const updated = [...current, {
+        name: newItem.name,
+        quantity: newItem.qty,
+        unit_price: Number(newItem.unit_price) || 0,
+        total: (Number(newItem.unit_price) || 0) * newItem.qty,
+      }];
+      await api.patch(`/jobs/${id}`, { line_items: updated });
+      showSnack('Item added', 'success');
+      setAddItemModal(false);
+      setNewItem({ name: '', qty: 1, unit_price: '' });
+      setPbSearch('');
+      refetch();
+    } catch {
+      showSnack('Failed to add item', 'error');
+    } finally {
+      setAddingItem(false);
+    }
+  }
+
+  // FIX 4: tech permissions toggle
+  async function handleTechPermToggle(key, value) {
+    const updated = { ...techPerms, [key]: value };
+    setTechPerms(updated);
+    setTechPermSaving(true);
+    try {
+      await api.patch(`/jobs/${id}`, { tech_permissions: updated });
+      showSnack('Saved', 'success');
+    } catch {
+      setTechPerms(prev => ({ ...prev, [key]: !value }));
+      showSnack('Failed to save', 'error');
+    } finally {
+      setTechPermSaving(false);
+    }
+  }
+
+  // FIX 5: history accordion section loader
+  async function toggleHistSection(section) {
+    const isOpening = !histOpen[section];
+    setHistOpen(prev => ({ ...prev, [section]: isOpening }));
+    if (!isOpening || histLoading[section]) return;
+    setHistLoading(prev => ({ ...prev, [section]: true }));
+    try {
+      if (section === 'past_jobs' && jobData?.customer_id) {
+        const res = await api.get(`/customers/${jobData.customer_id}/jobs?exclude_id=${id}&limit=5`);
+        setPastJobs(res.data?.jobs || []);
+      } else if (section === 'estimates') {
+        const res = await api.get(`/estimates?job_id=${id}`);
+        setJobEstimates(res.data?.estimates || []);
+      } else if (section === 'invoices') {
+        const res = await api.get(`/invoices?job_id=${id}`);
+        setJobInvoices(res.data?.invoices || []);
+      }
+    } catch { /* ignore */ }
+    finally { setHistLoading(prev => ({ ...prev, [section]: false })); }
+  }
 
   async function handleStatusChange(status) {
     try {
@@ -389,6 +517,24 @@ export default function JobDetail() {
             Sent to: {jobData.sent_to_company_name || 'Partner Company'}
           </p>
           <p className="text-xs text-blue-600">This job was forwarded to a network partner</p>
+          {jobData.partner_status === 'pending' && (
+            <div className="flex gap-2 mt-2">
+              <button
+                onClick={() => handlePartnerStatus('confirmed')}
+                disabled={partnerActing}
+                className="text-xs px-3 py-1.5 rounded-lg border border-green-500 text-green-700 font-medium min-h-[32px] hover:bg-green-50 disabled:opacity-50"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={() => handlePartnerStatus('disputed')}
+                disabled={partnerActing}
+                className="text-xs px-3 py-1.5 rounded-lg border border-red-400 text-red-600 font-medium min-h-[32px] hover:bg-red-50 disabled:opacity-50"
+              >
+                Dispute
+              </button>
+            </div>
+          )}
         </div>
       )}
       {jobData.sent_by_company_id && (
@@ -485,9 +631,17 @@ export default function JobDetail() {
             )}
 
             {/* Line Items */}
-            {lineItems.length > 0 && (
-              <div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
                 <SectionLabel>Charges & Parts</SectionLabel>
+                <button
+                  onClick={() => { setAddItemModal(true); setNewItem({ name: '', qty: 1, unit_price: '' }); setPbSearch(''); setPbResults([]); }}
+                  className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[44px] px-2"
+                >
+                  <Plus size={14} /> Add Item
+                </button>
+              </div>
+              {lineItems.length > 0 ? (
                 <Card>
                   <div className="space-y-2">
                     {lineItems.map((item, i) => (
@@ -509,8 +663,10 @@ export default function JobDetail() {
                     </div>
                   </div>
                 </Card>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded-xl">No charges or parts added.</p>
+              )}
+            </div>
 
             {/* Notes */}
             <div>
@@ -607,6 +763,34 @@ export default function JobDetail() {
               )}
             </div>
 
+            {/* Tech Permissions */}
+            {techPerms && (jobData.sent_to_company_id || jobData.assigned_user_id || jobData.tech_permissions) && (
+              <div>
+                <SectionLabel>Tech Permissions {techPermSaving && <span className="text-[#1A73E8] ml-1">saving...</span>}</SectionLabel>
+                <Card>
+                  <div className="divide-y divide-gray-50">
+                    {[
+                      { key: 'view_history', label: 'View History' },
+                      { key: 'collect_payments', label: 'Collect Payments' },
+                      { key: 'take_photos', label: 'Take Photos' },
+                      { key: 'add_parts', label: 'Add Parts' },
+                      { key: 'edit_details', label: 'Edit Details' },
+                      { key: 'cancel_job', label: 'Cancel Job' },
+                    ].map(({ key, label }) => (
+                      <div key={key} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                        <span className="text-sm font-medium text-gray-700">{label}</span>
+                        <Toggle
+                          checked={Boolean(techPerms[key])}
+                          onChange={e => handleTechPermToggle(key, e.target.checked)}
+                          disabled={techPermSaving}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex flex-col gap-2">
               <Button onClick={() => setStatusModal(true)} className="w-full">
@@ -636,72 +820,158 @@ export default function JobDetail() {
           </>
         )}
 
-        {/* HISTORY TAB */}
+        {/* HISTORY TAB — 5 accordion sections */}
         {activeTab === 'history' && (
-          historyLoading ? <LoadingSpinner /> : (
+          <div className="space-y-2">
+            {/* Section 1: Past Jobs */}
             <Card>
-              {jobHistory.length > 0 ? (
-                <div className="space-y-4">
-                  {jobHistory.map((event, i) => (
-                    <div key={i} className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-[#1A73E8] mt-1.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {event.description || event.event || event.action || event.note}
-                        </p>
-                        {event.created_at && (
-                          <p className="text-xs text-gray-400">
-                            {format(new Date(event.created_at), 'PPp')}
-                          </p>
-                        )}
-                        {event.user_name && (
-                          <p className="text-xs text-gray-400">{event.user_name}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+              <button
+                onClick={() => toggleHistSection('past_jobs')}
+                className="w-full flex items-center justify-between min-h-[44px]"
+              >
+                <span className="font-semibold text-gray-900 text-sm">📋 Past Jobs</span>
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${histOpen.past_jobs ? 'rotate-180' : ''}`} />
+              </button>
+              {histOpen.past_jobs && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  {histLoading.past_jobs ? <LoadingSpinner /> :
+                   pastJobs.length === 0 ? <p className="text-sm text-gray-400 py-2 text-center">No other jobs for this customer</p> :
+                   <div className="space-y-2">
+                     {pastJobs.map(j => (
+                       <button key={j.id || j._id} onClick={() => navigate(`/jobs/${j.id || j._id}`)} className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
+                         <div>
+                           <p className="text-sm font-medium text-gray-900">#{j.job_number || j.id} · {j.title || j.job_title}</p>
+                           {j.scheduled_date && <p className="text-xs text-gray-400">{format(new Date(j.scheduled_date), 'MMM d, yyyy')}</p>}
+                         </div>
+                         <Badge status={j.status} label={j.status?.replace(/_/g, ' ')} />
+                       </button>
+                     ))}
+                   </div>}
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  {jobData.created_at && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-green-400 mt-1.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Job Created</p>
-                        <p className="text-xs text-gray-400">{format(new Date(jobData.created_at), 'PPp')}</p>
-                      </div>
-                    </div>
-                  )}
-                  {jobData.status && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-blue-400 mt-1.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          Current Status: {jobData.status?.replace(/_/g, ' ')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {jobData.has_estimate && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-purple-400 mt-1.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Estimate created</p>
-                      </div>
-                    </div>
-                  )}
-                  {jobData.has_invoice && (
-                    <div className="flex items-start gap-3">
-                      <div className="w-2 h-2 rounded-full bg-amber-400 mt-1.5 flex-shrink-0" />
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">Invoice created</p>
-                      </div>
-                    </div>
+              )}
+            </Card>
+
+            {/* Section 2: Estimates */}
+            <Card>
+              <button
+                onClick={() => toggleHistSection('estimates')}
+                className="w-full flex items-center justify-between min-h-[44px]"
+              >
+                <span className="font-semibold text-gray-900 text-sm">📄 Estimates</span>
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${histOpen.estimates ? 'rotate-180' : ''}`} />
+              </button>
+              {histOpen.estimates && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  {histLoading.estimates ? <LoadingSpinner /> :
+                   jobEstimates.length === 0 ? <p className="text-sm text-gray-400 py-2 text-center">No estimates for this job</p> :
+                   <div className="space-y-2">
+                     {jobEstimates.map(e => (
+                       <button key={e.id || e._id} onClick={() => navigate(`/estimates/${e.id || e._id}`)} className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
+                         <div>
+                           <p className="text-sm font-medium text-gray-900">EST-{e.estimate_number || e.id}</p>
+                           <p className="text-xs text-gray-400">{formatCurrency(e.total)}</p>
+                         </div>
+                         <Badge status={e.status} label={e.status} />
+                       </button>
+                     ))}
+                   </div>}
+                </div>
+              )}
+            </Card>
+
+            {/* Section 3: Invoices */}
+            <Card>
+              <button
+                onClick={() => toggleHistSection('invoices')}
+                className="w-full flex items-center justify-between min-h-[44px]"
+              >
+                <span className="font-semibold text-gray-900 text-sm">🧾 Invoices</span>
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${histOpen.invoices ? 'rotate-180' : ''}`} />
+              </button>
+              {histOpen.invoices && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  {histLoading.invoices ? <LoadingSpinner /> :
+                   jobInvoices.length === 0 ? <p className="text-sm text-gray-400 py-2 text-center">No invoices for this job</p> :
+                   <div className="space-y-2">
+                     {jobInvoices.map(inv => (
+                       <button key={inv.id || inv._id} onClick={() => navigate(`/invoices/${inv.id || inv._id}`)} className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
+                         <div>
+                           <p className="text-sm font-medium text-gray-900">INV-{inv.invoice_number || inv.id}</p>
+                           <p className="text-xs text-gray-400">{formatCurrency(inv.total)}</p>
+                         </div>
+                         <Badge status={inv.status} label={inv.status} />
+                       </button>
+                     ))}
+                   </div>}
+                </div>
+              )}
+            </Card>
+
+            {/* Section 4: Notes */}
+            <Card>
+              <button
+                onClick={() => setHistOpen(prev => ({ ...prev, notes: !prev.notes }))}
+                className="w-full flex items-center justify-between min-h-[44px]"
+              >
+                <span className="font-semibold text-gray-900 text-sm">📝 Notes</span>
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${histOpen.notes ? 'rotate-180' : ''}`} />
+              </button>
+              {histOpen.notes && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  {notes ? (
+                    <p className="text-sm text-gray-700 whitespace-pre-wrap">{notes}</p>
+                  ) : (
+                    <p className="text-sm text-gray-400 text-center py-2">No notes added</p>
                   )}
                 </div>
               )}
             </Card>
-          )
+
+            {/* Section 5: Photos */}
+            <Card>
+              <button
+                onClick={() => setHistOpen(prev => ({ ...prev, photos: !prev.photos }))}
+                className="w-full flex items-center justify-between min-h-[44px]"
+              >
+                <span className="font-semibold text-gray-900 text-sm">📸 Photos</span>
+                <ChevronDown size={16} className={`text-gray-400 transition-transform ${histOpen.photos ? 'rotate-180' : ''}`} />
+              </button>
+              {histOpen.photos && (
+                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                  {beforePhotos.length === 0 && afterPhotos.length === 0 ? (
+                    <p className="text-sm text-gray-400 text-center py-2">No photos added</p>
+                  ) : (
+                    <>
+                      {beforePhotos.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Before</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {beforePhotos.map((photo, i) => (
+                              <button key={i} onClick={() => setLightbox({ photos: beforePhotos, index: i })} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                                <img src={photo?.url || photo} alt="" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {afterPhotos.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-400 uppercase mb-2">After</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {afterPhotos.map((photo, i) => (
+                              <button key={i} onClick={() => setLightbox({ photos: afterPhotos, index: i })} className="aspect-square rounded-xl overflow-hidden bg-gray-100">
+                                <img src={photo?.url || photo} alt="" className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+            </Card>
+          </div>
         )}
 
         {/* MESSAGES TAB */}
@@ -756,6 +1026,56 @@ export default function JobDetail() {
           </div>
         )}
       </div>
+
+      {/* Add Line Item Modal */}
+      <Modal
+        isOpen={addItemModal}
+        onClose={() => { setAddItemModal(false); setPbSearch(''); setPbResults([]); }}
+        title="Add Item"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => { setAddItemModal(false); setPbSearch(''); setPbResults([]); }}>Cancel</Button>
+            <Button loading={addingItem} onClick={handleAddLineItem}>Add Item</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {/* Pricebook search */}
+          <div className="relative">
+            <Input
+              label="Search pricebook or enter name"
+              value={pbSearch}
+              onChange={e => { handlePbSearch(e.target.value); setNewItem(prev => ({ ...prev, name: e.target.value })); }}
+              placeholder="AC filter, labor..."
+            />
+            {pbSearching && <p className="text-xs text-gray-400 mt-1">Searching...</p>}
+            {pbResults.length > 0 && (
+              <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                {pbResults.map(item => (
+                  <button key={item.id || item._id} type="button" onClick={() => selectPbItem(item)}
+                    className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
+                    <span className="font-medium">{item.name}</span>
+                    <span className="text-gray-400">${Number(item.unit_price || item.price || 0).toFixed(2)}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-1">Qty</p>
+              <StepperInput value={newItem.qty} min={1} onChange={v => setNewItem(prev => ({ ...prev, qty: v }))} />
+            </div>
+            <Input
+              label="Unit Price ($)"
+              type="number"
+              value={newItem.unit_price}
+              onChange={e => setNewItem(prev => ({ ...prev, unit_price: e.target.value }))}
+              placeholder="0.00"
+            />
+          </div>
+        </div>
+      </Modal>
 
       {/* Photo Lightbox */}
       {lightbox && (
