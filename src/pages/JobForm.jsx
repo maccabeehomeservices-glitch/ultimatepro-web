@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Search, ClipboardList, X } from 'lucide-react';
-import api, { jobsApi, customersApi } from '../lib/api';
+import { ArrowLeft, Plus, Trash2, Search, ClipboardList, X, UserCheck } from 'lucide-react';
+import { jobsApi, customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import QuickCreateCustomerModal from '../components/QuickCreateCustomerModal';
 
 const JOB_TYPES = ['Service', 'Installation', 'Maintenance', 'Inspection', 'Repair', 'New Installation', 'Spring Replacement', 'Tune-Up', 'Other'];
 const PRIORITIES = [
@@ -71,18 +72,22 @@ export default function JobForm() {
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerResults, setCustomerResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [quickCreatePrefill, setQuickCreatePrefill] = useState({});
   const [extraPhones, setExtraPhones] = useState([]);
   const [extraEmails, setExtraEmails] = useState([]);
   const [lineItems, setLineItems] = useState([]);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [pasteModal, setPasteModal] = useState(false);
   const [ticketText, setTicketText] = useState('');
   const [parsing, setParsing] = useState(false);
   const [lineItemModal, setLineItemModal] = useState(null);
-  const [dupCustomer, setDupCustomer] = useState(null);
   const searchTO = useRef(null);
   const streetInputRef = useRef(null);
+  const customerDropdownRef = useRef(null);
 
   const { data: jobData, loading: jobLoading } = useGet(isEdit ? `/jobs/${id}` : null, [id]);
   const { data: techsData } = useGet('/users/technicians');
@@ -207,17 +212,30 @@ export default function JobForm() {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   }
 
+  // Outside-click closes customer dropdown
+  useEffect(() => {
+    function handleMouseDown(e) {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target)) {
+        setShowCustomerDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, []);
+
   function handleCustomerInput(e) {
     const val = e.target.value;
     setCustomerSearch(val);
+    setSelectedCustomer(null);
     setForm(prev => ({ ...prev, customer_name: val, customer_id: '' }));
-    setDupCustomer(null);
+    if (fieldErrors.customer_id) setFieldErrors(prev => ({ ...prev, customer_id: '' }));
     clearTimeout(searchTO.current);
     if (val.length > 1) {
       searchTO.current = setTimeout(async () => {
         try {
-          const res = await api.get(`/customers?search=${encodeURIComponent(val)}&limit=6`);
-          setCustomerResults(res.data?.customers || res.data || []);
+          const res = await customersApi.list({ search: val, limit: 6 });
+          const results = res.data?.customers || res.data || [];
+          setCustomerResults(results);
           setShowCustomerDropdown(true);
         } catch { setCustomerResults([]); }
       }, 300);
@@ -229,6 +247,7 @@ export default function JobForm() {
 
   function selectCustomer(customer) {
     const name = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || '';
+    setSelectedCustomer(customer);
     setForm(prev => ({
       ...prev,
       customer_id: customer.id || customer._id,
@@ -240,7 +259,26 @@ export default function JobForm() {
     }));
     setCustomerSearch(name);
     setShowCustomerDropdown(false);
-    setDupCustomer(null);
+    setFieldErrors(prev => ({ ...prev, customer_id: '' }));
+  }
+
+  function handleCustomerQuickCreate(parsedData) {
+    setShowQuickCreate(true);
+    setQuickCreatePrefill({
+      first_name: parsedData?.first_name || '',
+      last_name: parsedData?.last_name || '',
+      phone: parsedData?.phone || parsedData?.customer_phone || '',
+      email: parsedData?.email || parsedData?.customer_email || '',
+      address: parsedData?.address || '',
+      city: parsedData?.city || '',
+      state: parsedData?.state || '',
+      zip: parsedData?.zip || '',
+    });
+  }
+
+  function onCustomerCreated(customer) {
+    setShowQuickCreate(false);
+    selectCustomer(customer);
   }
 
   async function handleParseTicket() {
@@ -278,17 +316,17 @@ export default function JobForm() {
           const customers = custRes.data?.customers || [];
           if (customers.length === 1) {
             selectCustomer(customers[0]);
-            showSnack(`Ticket parsed! Customer matched: ${customers[0].first_name} ${customers[0].last_name || ''}`.trim(), 'success');
+            showSnack(`Ticket parsed! Customer matched: ${(`${customers[0].first_name || ''} ${customers[0].last_name || ''}`).trim()}`, 'success');
           } else if (customers.length > 1) {
             setCustomerResults(customers);
             setShowCustomerDropdown(true);
-            showSnack('Ticket parsed! Multiple customers found — select one', 'success');
+            showSnack('Ticket parsed! Multiple customers found — select one below', 'success');
           } else {
-            setForm(prev => ({ ...prev, customer_name: p.customer_name || '' }));
-            showSnack('Ticket parsed! Customer not found — search or create new', 'success');
+            // No match — auto-open quick create with parsed data
+            showSnack('Ticket parsed! No customer found — creating new customer', 'success');
+            handleCustomerQuickCreate(p);
           }
         } catch {
-          setForm(prev => ({ ...prev, customer_name: p.customer_name || '' }));
           showSnack('Ticket parsed! Review and complete missing fields.', 'success');
         }
       } else {
@@ -303,8 +341,10 @@ export default function JobForm() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.title?.trim()) { showSnack('Please enter a job title', 'error'); return; }
-    if (!form.customer_id) { showSnack('Please select a customer from the search results', 'error'); return; }
+    const fe = {};
+    if (!form.title?.trim()) fe.title = 'Job title is required';
+    if (!form.customer_id) fe.customer_id = 'Please select or create a customer';
+    if (Object.keys(fe).length) { setFieldErrors(fe); return; }
 
     setSaving(true);
     try {
@@ -381,41 +421,54 @@ export default function JobForm() {
         {/* CUSTOMER */}
         <Card>
           <SectionLabel>Customer</SectionLabel>
-          <div className="relative">
-            <input
-              value={form.customer_id ? form.customer_name : customerSearch}
-              onChange={handleCustomerInput}
-              placeholder="Search customer..."
-              className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] ${errors.customer_name ? 'border-red-400' : 'border-gray-300'}`}
-            />
-            {errors.customer_name && <p className="text-red-500 text-xs mt-1">{errors.customer_name}</p>}
-            {showCustomerDropdown && customerResults.length > 0 && (
-              <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
-                {customerResults.map(c => (
-                  <button key={c.id || c._id} type="button" onClick={() => selectCustomer(c)}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
-                    <span className="font-medium">{`${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name}</span>
-                    {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
 
-          {/* Duplicate warning */}
-          {dupCustomer && (
-            <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm">
-              <p className="font-medium text-amber-800 mb-2">Returning customer: {dupCustomer.name}</p>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => { selectCustomer(dupCustomer); setDupCustomer(null); }}
-                  className="text-xs px-3 py-1.5 bg-[#1A73E8] text-white rounded-lg min-h-[32px]">Use Existing</button>
-                <button type="button" onClick={() => setDupCustomer(null)}
-                  className="text-xs px-3 py-1.5 border border-gray-300 rounded-lg min-h-[32px]">Create New</button>
-                <button type="button" onClick={() => navigate(`/customers/${dupCustomer.id || dupCustomer._id}`)}
-                  className="text-xs px-3 py-1.5 border border-gray-300 rounded-lg min-h-[32px]">View</button>
+          {/* Selected customer card */}
+          {selectedCustomer ? (
+            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl mb-2">
+              <UserCheck size={18} className="text-[#1A73E8] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">
+                  {`${selectedCustomer.first_name || ''} ${selectedCustomer.last_name || ''}`.trim() || selectedCustomer.name}
+                </p>
+                {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
               </div>
+              <button type="button" onClick={() => { setSelectedCustomer(null); setForm(prev => ({ ...prev, customer_id: '', customer_name: '' })); setCustomerSearch(''); }}
+                className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg">
+                <X size={16} />
+              </button>
+            </div>
+          ) : (
+            <div className="relative" ref={customerDropdownRef}>
+              <input
+                value={customerSearch}
+                onChange={handleCustomerInput}
+                placeholder="Search customer by name, phone, or email..."
+                className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] ${fieldErrors.customer_id ? 'border-red-400' : 'border-gray-300'}`}
+              />
+              {showCustomerDropdown && (
+                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                  {customerResults.map(c => (
+                    <button key={c.id || c._id} type="button" onClick={() => selectCustomer(c)}
+                      className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
+                      <span className="font-medium">{`${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name}</span>
+                      {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
+                    </button>
+                  ))}
+                  <button type="button" onClick={() => { setShowCustomerDropdown(false); handleCustomerQuickCreate({ first_name: customerSearch }); }}
+                    className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-[#1A73E8] font-medium flex items-center gap-2">
+                    <Plus size={14} /> Create new customer
+                  </button>
+                </div>
+              )}
+              {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
+                <button type="button" onClick={() => handleCustomerQuickCreate({ first_name: customerSearch })}
+                  className="mt-1.5 text-sm text-[#1A73E8] font-medium flex items-center gap-1 min-h-[36px]">
+                  <Plus size={14} /> Create new customer
+                </button>
+              )}
             </div>
           )}
+          {fieldErrors.customer_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.customer_id}</p>}
 
           {/* Extra phones */}
           {extraPhones.map((ph, idx) => (
@@ -449,8 +502,8 @@ export default function JobForm() {
         {/* JOB INFO */}
         <Card>
           <SectionLabel>Job Info</SectionLabel>
-          <Input label="Job Title" name="title" value={form.title} onChange={handleChange}
-            placeholder="e.g. AC Repair - Main Unit" error={errors.title} />
+          <Input label="Job Title" name="title" value={form.title} onChange={e => { handleChange(e); if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: '' })); }}
+            placeholder="e.g. AC Repair - Main Unit" error={fieldErrors.title || errors.title} />
           <div className="mt-3">
             <label className="block text-sm font-medium text-gray-700 mb-1">Notes for technician</label>
             <textarea name="notes" value={form.notes} onChange={handleChange} rows={3}
@@ -695,6 +748,14 @@ export default function JobForm() {
           onClose={() => setLineItemModal(null)}
         />
       )}
+
+      {/* Quick Create Customer Modal */}
+      <QuickCreateCustomerModal
+        isOpen={showQuickCreate}
+        onClose={() => setShowQuickCreate(false)}
+        onCreated={onCustomerCreated}
+        prefill={quickCreatePrefill}
+      />
     </div>
   );
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Search } from 'lucide-react';
-import api, { estimatesApi } from '../lib/api';
+import { ArrowLeft, Plus, Trash2, Search, UserCheck, X } from 'lucide-react';
+import { estimatesApi, customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, Toggle, StepperInput, Modal, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import QuickCreateCustomerModal from '../components/QuickCreateCustomerModal';
 
 const GBB_TIERS = ['good', 'better', 'best'];
 const GBB_LABELS = { good: 'Good', better: 'Better', best: 'Best' };
@@ -39,6 +40,11 @@ export default function EstimateBuilder() {
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerResults, setCustomerResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [quickCreatePrefill, setQuickCreatePrefill] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
+  const customerDropdownRef = useRef(null);
 
   const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
@@ -108,15 +114,28 @@ export default function EstimateBuilder() {
     }
   }, [isEdit, existingData]);
 
+  // Outside-click closes customer dropdown
+  useEffect(() => {
+    function handleMouseDown(e) {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target)) {
+        setShowCustomerDropdown(false);
+      }
+    }
+    document.addEventListener('mousedown', handleMouseDown);
+    return () => document.removeEventListener('mousedown', handleMouseDown);
+  }, []);
+
   function handleCustomerInput(e) {
     const val = e.target.value;
     setCustomerSearch(val);
     setCustomerId('');
+    setSelectedCustomer(null);
+    if (fieldErrors.customer_id) setFieldErrors(prev => ({ ...prev, customer_id: '' }));
     clearTimeout(searchTimeout.current);
     if (val.length > 1) {
       searchTimeout.current = setTimeout(async () => {
         try {
-          const res = await api.get(`/customers?search=${encodeURIComponent(val)}&limit=6`);
+          const res = await customersApi.list({ search: val, limit: 6 });
           setCustomerResults(res.data?.customers || res.data || []);
           setShowCustomerDropdown(true);
         } catch { setCustomerResults([]); }
@@ -129,10 +148,17 @@ export default function EstimateBuilder() {
 
   function selectCustomer(c) {
     const name = `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name || '';
+    setSelectedCustomer(c);
     setCustomerId(c.id || c._id);
     setCustomerName(name);
     setCustomerSearch(name);
     setShowCustomerDropdown(false);
+    setFieldErrors(prev => ({ ...prev, customer_id: '' }));
+  }
+
+  function onCustomerCreated(customer) {
+    setShowQuickCreate(false);
+    selectCustomer(customer);
   }
 
   function updateSectionItem(getter, setter, type, idx, field, value) {
@@ -203,7 +229,10 @@ export default function EstimateBuilder() {
   };
 
   async function handleSave(action) {
-    if (!customerId) { showSnack('Please select a customer', 'error'); return; }
+    const fe = {};
+    if (!customerId) fe.customer_id = 'Please select or create a customer';
+    if (!title.trim()) fe.title = 'Title is required';
+    if (Object.keys(fe).length) { setFieldErrors(fe); return; }
     setSaving(true);
     try {
       const allItems = gbbMode ? [] : [
@@ -388,26 +417,55 @@ export default function EstimateBuilder() {
         {/* Customer */}
         <Card>
           <div className="space-y-4">
-            <div className="relative">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-              <input
-                value={customerId ? customerName : customerSearch}
-                onChange={handleCustomerInput}
-                placeholder="Search customer..."
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-              />
-              {showCustomerDropdown && customerResults.length > 0 && (
-                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
-                  {customerResults.map((c) => (
-                    <button key={c.id || c._id} type="button" onClick={() => selectCustomer(c)} className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0">
-                      <span className="font-medium">{`${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name}</span>
-                      {c.phone && <span className="text-gray-400 ml-2">{c.phone}</span>}
+              {selectedCustomer ? (
+                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <UserCheck size={18} className="text-[#1A73E8] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">
+                      {`${selectedCustomer.first_name || ''} ${selectedCustomer.last_name || ''}`.trim() || selectedCustomer.name}
+                    </p>
+                    {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
+                  </div>
+                  <button type="button" onClick={() => { setSelectedCustomer(null); setCustomerId(''); setCustomerName(''); setCustomerSearch(''); }}
+                    className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg">
+                    <X size={16} />
+                  </button>
+                </div>
+              ) : (
+                <div className="relative" ref={customerDropdownRef}>
+                  <input
+                    value={customerSearch}
+                    onChange={handleCustomerInput}
+                    placeholder="Search customer by name, phone, or email..."
+                    className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] ${fieldErrors.customer_id ? 'border-red-400' : 'border-gray-300'}`}
+                  />
+                  {showCustomerDropdown && (
+                    <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                      {customerResults.map((c) => (
+                        <button key={c.id || c._id} type="button" onClick={() => selectCustomer(c)} className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
+                          <span className="font-medium">{`${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name}</span>
+                          {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
+                        </button>
+                      ))}
+                      <button type="button" onClick={() => { setShowCustomerDropdown(false); setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
+                        className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-[#1A73E8] font-medium flex items-center gap-2">
+                        <Plus size={14} /> Create new customer
+                      </button>
+                    </div>
+                  )}
+                  {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
+                    <button type="button" onClick={() => { setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
+                      className="mt-1.5 text-sm text-[#1A73E8] font-medium flex items-center gap-1 min-h-[36px]">
+                      <Plus size={14} /> Create new customer
                     </button>
-                  ))}
+                  )}
                 </div>
               )}
+              {fieldErrors.customer_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.customer_id}</p>}
             </div>
-            <Input label="Title / Description" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. AC Tune-Up Service" />
+            <Input label="Title / Description" value={title} onChange={(e) => { setTitle(e.target.value); if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: '' })); }} placeholder="e.g. AC Tune-Up Service" error={fieldErrors.title} />
           </div>
         </Card>
 
@@ -609,6 +667,14 @@ export default function EstimateBuilder() {
           {pricebookItems.length === 0 && <p className="text-center text-gray-400 text-sm py-4">No items found.</p>}
         </div>
       </Modal>
+
+      {/* Quick Create Customer Modal */}
+      <QuickCreateCustomerModal
+        isOpen={showQuickCreate}
+        onClose={() => setShowQuickCreate(false)}
+        onCreated={onCustomerCreated}
+        prefill={quickCreatePrefill}
+      />
     </div>
   );
 }
