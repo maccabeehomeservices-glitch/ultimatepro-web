@@ -54,7 +54,7 @@ export default function CustomerDetail() {
   const { data: invoicesData, loading: invoicesLoading } = useGet(
     activeTab === 'invoices' ? `/invoices?customer_id=${id}` : null, [activeTab, id]
   );
-  const { data: membershipsData, refetch: refetchMemberships } = useGet(`/customers/${id}/memberships`);
+  const { data: membershipsData, refetch: refetchMemberships } = useGet(`/memberships/customer/${id}`);
   const { data: plansData } = useGet('/memberships/plans');
 
   const memberships = membershipsData?.memberships || (Array.isArray(membershipsData) ? membershipsData : []);
@@ -97,7 +97,7 @@ export default function CustomerDetail() {
     if (!customer || notes === (customer.notes || '')) return;
     setNotesSaving(true);
     try {
-      await api.patch(`/customers/${id}`, { notes });
+      await api.put(`/customers/${id}`, { ...customer, notes });
       showSnack('Notes saved', 'success');
     } catch {
       showSnack('Failed to save notes', 'error');
@@ -110,7 +110,7 @@ export default function CustomerDetail() {
     if (!membershipPlanId) { showSnack('Select a plan', 'error'); return; }
     setAddingMembership(true);
     try {
-      await api.post(`/customers/${id}/memberships`, { plan_id: membershipPlanId });
+      await api.post(`/memberships/customer/${id}`, { plan_id: membershipPlanId, start_date: new Date().toISOString().slice(0, 10) });
       showSnack('Membership added', 'success');
       setAddMembershipModal(false);
       setMembershipPlanId('');
@@ -127,7 +127,7 @@ export default function CustomerDetail() {
     if (!messageBody.trim() || !convId) return;
     setSendingMsg(true);
     try {
-      await api.post(`/sms/conversations/${convId}/send`, { body: messageBody });
+      await api.post(`/sms/conversations/${convId}/send`, { message: messageBody });
       setMessageBody('');
       const res = await api.get(`/sms/customer/${id}/messages`);
       setMessages(res.data?.messages || (Array.isArray(res.data) ? res.data : []));

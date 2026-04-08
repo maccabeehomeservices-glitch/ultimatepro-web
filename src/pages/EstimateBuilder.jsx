@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Search } from 'lucide-react';
-import api from '../lib/api';
+import api, { estimatesApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, Toggle, StepperInput, Modal, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -206,7 +206,13 @@ export default function EstimateBuilder() {
     if (!customerId) { showSnack('Please select a customer', 'error'); return; }
     setSaving(true);
     try {
-      const payload = {
+      const allItems = gbbMode ? [] : [
+        ...stdSection.services,
+        ...stdSection.materials,
+        ...stdSection.discounts,
+      ];
+
+      const basePayload = {
         customer_id: customerId,
         title,
         notes,
@@ -217,37 +223,40 @@ export default function EstimateBuilder() {
         deposit_amount: depositRequired ? Number(depositAmount) : 0,
         deposit_type: depositType,
         gbb_mode: gbbMode,
+        line_items: gbbMode ? [] : allItems,
+        total: gbbMode ? Math.max(gbbTotals.good, gbbTotals.better, gbbTotals.best) : stdTotal,
       };
 
-      if (gbbMode) {
-        payload.tiers = gbbSections;
-        payload.tier_names = gbbTierNames;
-        payload.total = Math.max(gbbTotals.good, gbbTotals.better, gbbTotals.best);
-      } else {
-        const allItems = [
-          ...stdSection.services,
-          ...stdSection.materials,
-          ...stdSection.discounts,
-        ];
-        payload.line_items = allItems;
-        payload.total = stdTotal;
-      }
-
-      if (action === 'send') payload.action = 'send_for_signature';
-      if (action === 'get_signature') payload.action = 'get_signature';
+      if (action === 'send') basePayload.action = 'send_for_signature';
+      if (action === 'get_signature') basePayload.action = 'get_signature';
 
       let estimateId = id;
       if (isEdit) {
-        await api.put(`/estimates/${id}`, payload);
+        await api.put(`/estimates/${id}`, basePayload);
         showSnack('Estimate updated', 'success');
       } else {
-        const res = await api.post('/estimates', payload);
+        const res = await api.post('/estimates', basePayload);
         estimateId = res.data?.estimate?.id || res.data?.id;
         showSnack('Estimate created', 'success');
       }
+
+      // Save GBB tiers separately using the correct endpoint
+      if (gbbMode && estimateId) {
+        const tiers = GBB_TIERS.map(key => ({
+          tier_label: gbbTierNames[key] || GBB_LABELS[key],
+          description: '',
+          line_items: [
+            ...gbbSections[key].services,
+            ...gbbSections[key].materials,
+            ...gbbSections[key].discounts,
+          ],
+        }));
+        await estimatesApi.saveTiers(estimateId, tiers);
+      }
+
       navigate(`/estimates/${estimateId}`);
     } catch (err) {
-      showSnack(err?.response?.data?.message || 'Failed to save estimate', 'error');
+      showSnack(err?.response?.data?.error || err?.response?.data?.message || 'Failed to save estimate', 'error');
     } finally {
       setSaving(false);
     }

@@ -15,9 +15,10 @@ export default function Payments() {
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
   const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
 
-  const url = `/payments?from=${from}&to=${to}`;
+  const url = `/payments?from=${from}&to=${to}&page=1&limit=50`;
   const { data, loading } = useGet(url, [from, to]);
-  const payments = data?.payments || data || [];
+  const payments = data?.payments || (Array.isArray(data) ? data : []);
+  const totalCollected = data?.total_collected ?? payments.reduce((s, p) => s + Number(p.amount || 0), 0);
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
@@ -59,7 +60,7 @@ export default function Payments() {
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{p.customer_name || p.customer?.name || 'Customer'}</p>
                   <p className="text-xs text-gray-400">
-                    {p.method || 'Payment'} · {p.date || p.created_at ? format(new Date(p.date || p.created_at), 'MMM d, yyyy') : ''}
+                    {p.method || 'Payment'} · {(p.processed_at || p.created_at) ? format(new Date(p.processed_at || p.created_at), 'MMM d, yyyy') : ''}
                   </p>
                   {p.invoice_id && (
                     <button
@@ -78,7 +79,7 @@ export default function Payments() {
           <div className="mt-4 p-4 bg-gray-100 rounded-2xl flex justify-between">
             <span className="font-semibold text-gray-700">Total</span>
             <span className="font-bold text-gray-900">
-              {formatCurrency(payments.reduce((s, p) => s + Number(p.amount || 0), 0))}
+              {formatCurrency(totalCollected)}
             </span>
           </div>
         </div>

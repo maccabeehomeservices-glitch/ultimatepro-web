@@ -27,7 +27,7 @@ export default function SmsThread() {
     e.preventDefault();
     if (!body.trim()) return;
     try {
-      await mutate('post', `/sms/conversations/${id}/send`, { body });
+      await mutate('post', `/sms/conversations/${id}/send`, { message: body });
       setBody('');
       refetch();
     } catch {

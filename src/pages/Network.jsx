@@ -3,6 +3,7 @@ import { Copy, Check, Handshake, Search } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Badge, Button, Input } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { networkApi } from '../lib/api';
 
 const SEARCH_TABS = [
   { id: 'phone', label: '📱 By Phone', type: 'tel', placeholder: '+1 (555) 000-0000' },
@@ -40,17 +41,19 @@ export default function Network() {
   async function handleSearch() {
     if (!searchInput.trim()) return;
     try {
-      const res = await mutate('post', '/network/search', { query: searchInput, type: searchTab });
-      setSearchResults(res?.results || res || []);
+      const res = await networkApi.search(searchInput, searchTab);
+      setSearchResults(res.data?.results || res.data || []);
     } catch {
       showSnack('Search failed', 'error');
     }
   }
 
-  async function handleConnect(partnerId) {
+  async function handleConnect(result) {
     try {
-      await mutate('post', '/network/connect', { partner_id: partnerId });
+      await networkApi.invite(searchInput, searchTab);
       showSnack('Connection request sent', 'success');
+      setSearchResults(null);
+      setSearchInput('');
     } catch {
       showSnack('Failed to send request', 'error');
     }
@@ -125,7 +128,7 @@ export default function Network() {
                       <p className="font-medium text-gray-900">{r.company_name || r.name}</p>
                       <p className="text-xs text-gray-400">{r.ucm_id}</p>
                     </div>
-                    <Button size="sm" onClick={() => handleConnect(r.id || r._id)}>Connect</Button>
+                    <Button size="sm" onClick={() => handleConnect(r)}>Connect</Button>
                   </div>
                 ))}
               </div>
@@ -148,7 +151,13 @@ export default function Network() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-semibold text-gray-900">{conn.company_name || conn.partner_name || conn.name}</p>
-                    <p className="text-xs text-gray-400">{conn.ucm_id || ''}</p>
+                    <p className="text-xs text-gray-400">{conn.ucm_id || conn.ultimatecrm_id || ''}</p>
+                    {conn.latest_agreement_status && (
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        Agreement: {conn.latest_agreement_status}
+                        {conn.latest_sender_keeps_pct != null && ` · ${conn.latest_sender_keeps_pct}% / ${conn.latest_receiver_keeps_pct}%`}
+                      </p>
+                    )}
                   </div>
                   <Badge status={conn.status} label={conn.status || 'active'} />
                 </div>

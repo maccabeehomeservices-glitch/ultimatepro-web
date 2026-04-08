@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
-import { Card, LoadingSpinner, EmptyState, Tabs, Select } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState, Tabs, Select, Button } from '../components/ui';
+import { networkApi } from '../lib/api';
 
 const tabList = [
   { id: 'revenue', label: 'Revenue' },
@@ -34,23 +35,51 @@ export default function Reports() {
     activeTab === 'revenue' ? `/reports/revenue?from=${from}&to=${to}` : null, [activeTab, from, to]
   );
   const { data: sourcesData, loading: sourcesLoading } = useGet(
-    activeTab === 'sources' ? `/reports/jobs?from=${from}&to=${to}` : null, [activeTab, from, to]
+    activeTab === 'sources' ? `/sources/report?date_from=${from}&date_to=${to}` : null, [activeTab, from, to]
   );
   const { data: tsData, loading: tsLoading } = useGet(
     activeTab === 'timesheets'
-      ? `/timesheets/report?start_date=${from}&end_date=${to}${techFilter ? `&tech_id=${techFilter}` : ''}`
+      ? `/timesheets/report?start_date=${from}&end_date=${to}${techFilter ? `&user_id=${techFilter}` : ''}`
       : null,
     [activeTab, from, to, techFilter]
   );
   const { data: techsData } = useGet(activeTab === 'timesheets' ? '/users/technicians' : null, [activeTab]);
-  const { data: partnersData, loading: partnersLoading } = useGet(
-    activeTab === 'partners' ? `/reports/partners?from=${from}&to=${to}` : null, [activeTab, from, to]
+  const { data: connectionsData, loading: connectionsLoading } = useGet(
+    activeTab === 'partners' ? '/network/connections' : null, [activeTab]
   );
 
-  const partners = partnersData?.partners || (Array.isArray(partnersData) ? partnersData : []);
+  const [partnerReport, setPartnerReport] = useState(null);
+  const [partnerReportLoading, setPartnerReportLoading] = useState(false);
+  const [selectedConnection, setSelectedConnection] = useState(null);
+
+  async function loadConnectionReport(conn) {
+    setSelectedConnection(conn);
+    setPartnerReport(null);
+    setPartnerReportLoading(true);
+    try {
+      const res = await networkApi.getConnectionReport(conn.id || conn._id, from, to);
+      setPartnerReport(res.data);
+    } catch {
+      setPartnerReport(null);
+    } finally {
+      setPartnerReportLoading(false);
+    }
+  }
+
+  const connections = connectionsData?.connections || (Array.isArray(connectionsData) ? connectionsData : []);
   const revenueStats = revenueData?.stats || revenueData || {};
   const revenueList = revenueData?.data || revenueData?.items || [];
-  const sources = sourcesData?.sources || (Array.isArray(sourcesData) ? sourcesData : []);
+
+  // Sources: combine network[], external_contacts[], own_company[]
+  const sourceNetwork = sourcesData?.network || [];
+  const sourceExternal = sourcesData?.external_contacts || [];
+  const sourceOwn = sourcesData?.own_company || [];
+  const allSources = [
+    ...sourceNetwork.map(s => ({ ...s, _category: 'Network' })),
+    ...sourceExternal.map(s => ({ ...s, _category: 'Source Contact' })),
+    ...sourceOwn.map(s => ({ ...s, _category: 'Own Company' })),
+  ];
+
   const tsRows = tsData?.rows || tsData?.entries || (Array.isArray(tsData) ? tsData : []);
   const tsSummary = tsData?.summary || tsData?.technicians || [];
   const techs = techsData?.technicians || (Array.isArray(techsData) ? techsData : []);
@@ -131,18 +160,24 @@ export default function Reports() {
         {/* Sources tab */}
         {activeTab === 'sources' && (
           sourcesLoading ? <LoadingSpinner /> :
-          sources.length === 0 ? (
+          allSources.length === 0 ? (
             <EmptyState icon={BarChart2} title="No data" description="Job source data will appear here." />
           ) : (
             <div className="space-y-2">
-              {sources.map((s, i) => (
+              {allSources.map((s, i) => (
                 <Card key={i}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{s.source || s.name || 'Unknown'}</p>
-                      <p className="text-sm text-gray-500">{s.count || s.jobs || 0} jobs</p>
+                      <p className="font-medium text-gray-900">{s.name || s.source || 'Unknown'}</p>
+                      <p className="text-xs text-gray-400">{s._category}</p>
+                      <p className="text-sm text-gray-500">{s.jobs_count || s.count || s.jobs || 0} jobs</p>
                     </div>
-                    <p className="font-bold text-[#1A73E8]">{formatCurrency(s.revenue || s.total || 0)}</p>
+                    <div className="text-right">
+                      <p className="font-bold text-[#1A73E8]">{formatCurrency(s.revenue || s.total || 0)}</p>
+                      {s.commission != null && (
+                        <p className="text-xs text-gray-400">Commission: {formatCurrency(s.commission)}</p>
+                      )}
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -152,33 +187,60 @@ export default function Reports() {
 
         {/* Partners tab */}
         {activeTab === 'partners' && (
-          partnersLoading ? <LoadingSpinner /> :
-          partners.length === 0 ? (
-            <EmptyState icon={BarChart2} title="No partner data" description="No partner revenue for this period." />
+          connectionsLoading ? <LoadingSpinner /> :
+          connections.length === 0 ? (
+            <EmptyState icon={BarChart2} title="No connections" description="Connect with partners to see revenue reports." />
           ) : (
-            <div className="bg-white rounded-2xl shadow overflow-hidden">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-100 bg-gray-50">
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Partner Company</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Sent</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Received</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Revenue</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Split</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {partners.map((p, i) => (
-                    <tr key={p.id || p.company_id || i} className="border-b border-gray-50 last:border-0">
-                      <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{p.company_name || p.name || '—'}</td>
-                      <td className="px-4 py-2.5 text-sm text-gray-600">{p.jobs_sent || 0}</td>
-                      <td className="px-4 py-2.5 text-sm text-gray-600">{p.jobs_received || 0}</td>
-                      <td className="px-4 py-2.5 text-sm font-semibold text-[#1A73E8]">{formatCurrency(p.revenue || p.total_revenue || 0)}</td>
-                      <td className="px-4 py-2.5 text-sm text-gray-600">{p.split_percent != null ? `${p.split_percent}%` : '—'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                {connections.map((conn) => (
+                  <Card key={conn.id || conn._id}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-gray-900">{conn.company_name || conn.partner_name || conn.name}</p>
+                        <p className="text-xs text-gray-400">{conn.status || 'active'}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outlined"
+                        onClick={() => loadConnectionReport(conn)}
+                      >
+                        View Report
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {partnerReportLoading && <LoadingSpinner />}
+
+              {partnerReport && selectedConnection && (
+                <Card>
+                  <p className="text-xs text-gray-400 uppercase font-medium mb-3">
+                    {selectedConnection.company_name || selectedConnection.partner_name} — {from} to {to}
+                  </p>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <p className="text-xs text-gray-400">Total Jobs</p>
+                      <p className="font-bold text-gray-900">{partnerReport.summary?.total_jobs || 0}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">You Earn</p>
+                      <p className="font-bold text-[#1A73E8]">{formatCurrency(partnerReport.summary?.sender_earns || partnerReport.summary?.receiver_earns || 0)}</p>
+                    </div>
+                  </div>
+                  {(partnerReport.jobs || []).length > 0 && (
+                    <div className="space-y-1">
+                      {(partnerReport.jobs || []).map((j, i) => (
+                        <div key={j.id || i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+                          <p className="text-sm text-gray-700">{j.title || j.job_number || `Job ${i + 1}`}</p>
+                          <p className="text-sm font-medium text-gray-900">{formatCurrency(j.amount || j.revenue || 0)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </Card>
+              )}
             </div>
           )
         )}

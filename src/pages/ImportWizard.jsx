@@ -88,12 +88,12 @@ export default function ImportWizard() {
   async function handleImport(dupAction) {
     setLoading(true);
     try {
-      const res = await api.post('/import/run', {
+      const res = await api.post('/import/execute', {
         type,
         file_id: preview?.file_id,
         mappings,
-        categories: type === 'pricebook' ? categories : undefined,
-        duplicate_action: dupAction || 'skip',
+        categoryAssignments: type === 'pricebook' ? categories : undefined,
+        duplicateAction: dupAction || 'skip',
       });
       setResult(res.data);
       setStep(4);

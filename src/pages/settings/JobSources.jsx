@@ -12,7 +12,7 @@ function emptyForm() {
 export default function JobSources() {
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
-  const { data, loading, refetch } = useGet('/sources');
+  const { data, loading, refetch } = useGet('/sources/contacts');
   const { mutate, loading: saving } = useMutation();
   const [modal, setModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -20,7 +20,7 @@ export default function JobSources() {
   const [deleteModal, setDeleteModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  const sources = data?.sources || data || [];
+  const sources = data?.contacts || data?.sources || (Array.isArray(data) ? data : []);
 
   function openAdd() { setEditItem(null); setForm(emptyForm()); setModal(true); }
   function openEdit(s) {
@@ -36,10 +36,10 @@ export default function JobSources() {
     try {
       const payload = { name: form.name, commission_pct: Number(form.commission_pct) || 0 };
       if (editItem) {
-        await mutate('put', `/sources/${editItem.id || editItem._id}`, payload);
+        await mutate('put', `/sources/contacts/${editItem.id || editItem._id}`, payload);
         showSnack('Source updated', 'success');
       } else {
-        await mutate('post', '/sources', payload);
+        await mutate('post', '/sources/contacts', payload);
         showSnack('Source added', 'success');
       }
       setModal(false);
@@ -51,7 +51,7 @@ export default function JobSources() {
 
   async function handleDelete() {
     try {
-      await mutate('delete', `/sources/${deleteTarget.id || deleteTarget._id}`);
+      await mutate('delete', `/sources/contacts/${deleteTarget.id || deleteTarget._id}`);
       showSnack('Source deleted', 'success');
       setDeleteModal(false);
       refetch();

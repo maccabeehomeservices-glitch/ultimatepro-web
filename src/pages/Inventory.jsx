@@ -3,7 +3,7 @@ import { Truck, Package, ArrowRight } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Tabs, StepperInput, Button, Select, Modal } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
-import api from '../lib/api';
+import api, { inventoryApi } from '../lib/api';
 
 const tabList = [
   { id: 'warehouse', label: 'Warehouse' },
@@ -84,17 +84,17 @@ export default function Inventory() {
   }
 
   async function saveTruckItem(item) {
-    const id = item.id || item._id;
+    const itemId = item.id || item._id;
     const qty = getTruckQty(item);
-    setSavingTruck((prev) => ({ ...prev, [id]: true }));
+    setSavingTruck((prev) => ({ ...prev, [itemId]: true }));
     try {
-      await mutate('put', `/inventory/truck-items/${id}`, { quantity: qty });
+      await inventoryApi.updateTruckStockItem(selectedTruckId, itemId, qty, item.min_qty);
       showSnack('Quantity updated', 'success');
       refetchTruckStock();
     } catch {
       showSnack('Failed to update', 'error');
     } finally {
-      setSavingTruck((prev) => ({ ...prev, [id]: false }));
+      setSavingTruck((prev) => ({ ...prev, [itemId]: false }));
     }
   }
 
@@ -114,14 +114,15 @@ export default function Inventory() {
     if (selected.length === 0) { showSnack('Select at least one item', 'error'); return; }
     setRestockSending(true);
     try {
-      await api.post('/inventory/restock-request', {
-        truck_id: selectedTruckId,
-        items: selected.map(i => ({
+      await inventoryApi.createRestockRequest(
+        selectedTruckId,
+        selected.map(i => ({
           pricebook_item_id: i.id,
           item_name: i.name,
           qty_requested: i.qty_requested,
         })),
-      });
+        ''
+      );
       showSnack('Restock request sent to office!', 'success');
       setRestockModal(false);
     } catch {

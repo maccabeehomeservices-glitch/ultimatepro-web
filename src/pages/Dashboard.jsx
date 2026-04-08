@@ -130,25 +130,24 @@ export default function Dashboard() {
 
   const { data: dashData, loading: dashLoading, refetch: refetchDash } = useGet('/reports/dashboard');
   const { data: jobsData, loading: jobsLoading, refetch: refetchJobs } = useGet(
-    '/jobs?status=scheduled,en_route,in_progress,unscheduled&page=1&limit=10'
+    '/jobs?status=scheduled,en_route,in_progress,unscheduled&page=1&limit=50'
   );
   const { data: gpsData, refetch: refetchGps } = useGet('/gps/live');
   const { data: dueSoonData, refetch: refetchDueSoon } = useGet('/memberships/due-soon');
-  const { data: phoneData, refetch: refetchPhone } = useGet('/phone/stats');
 
   function handleRefresh() {
     setRefreshing(true);
-    refetchDash(); refetchJobs(); refetchGps(); refetchDueSoon(); refetchPhone();
+    refetchDash(); refetchJobs(); refetchGps(); refetchDueSoon();
     setTimeout(() => setRefreshing(false), 1500);
   }
 
-  const raw = dashData?.report || dashData?.stats || dashData || {};
-  const todayJobs      = raw?.jobs?.total      ?? raw.today_jobs      ?? raw.todayJobs      ?? 0;
-  const monthRevenue   = raw?.revenue?.this_month ?? raw.month_revenue  ?? raw.monthRevenue   ?? 0;
-  const openInvoices   = raw?.invoices?.open    ?? raw.open_invoices   ?? raw.openInvoices   ?? 0;
-  const scheduledToday = raw?.jobs?.scheduled   ?? raw.scheduled_today ?? raw.scheduledToday ?? 0;
-  const missedCalls    = phoneData?.missed_calls ?? phoneData?.missedCalls ?? raw.missed_calls ?? 0;
-  const secondChance   = phoneData?.second_chance ?? phoneData?.secondChance ?? raw.second_chance_leads ?? 0;
+  const raw = dashData || {};
+  const monthRevenue   = raw?.revenue?.total || 0;
+  const todayJobs      = raw?.jobs?.total || 0;
+  const openInvoices   = raw?.invoices?.open || 0;
+  const scheduledToday = raw?.jobs?.scheduled || 0;
+  const missedCalls    = raw?.calls?.missed_calls || 0;
+  const secondChance   = raw?.second_chance?.count || raw?.second_chance || 0;
 
   const activeJobs  = jobsData?.jobs  || (Array.isArray(jobsData) ? jobsData : []);
   const activeTechs = gpsData?.techs  || gpsData?.technicians || (Array.isArray(gpsData) ? gpsData : []);

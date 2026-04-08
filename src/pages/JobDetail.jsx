@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight, Plus, ChevronDown } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import api from '../lib/api';
+import api, { formatDate, formatTime } from '../lib/api';
 import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select, Toggle, StepperInput } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 
@@ -182,15 +182,7 @@ export default function JobDetail() {
     });
   }, [jobData?.id]);
 
-  // Load history when tab = 'history'
-  useEffect(() => {
-    if (activeTab !== 'history' || !id) return;
-    setHistoryLoading(true);
-    api.get(`/jobs/${id}/history`)
-      .then(res => setJobHistory(res.data?.history || (Array.isArray(res.data) ? res.data : [])))
-      .catch(() => setJobHistory([]))
-      .finally(() => setHistoryLoading(false));
-  }, [activeTab, id]);
+  // History tab accordion loads on section open via toggleHistSection
 
   // Load messages when tab = 'messages'
   useEffect(() => {
@@ -239,10 +231,10 @@ export default function JobDetail() {
   }, [sendToModal]);
 
   // FIX 2: partner confirm/dispute
-  async function handlePartnerStatus(status) {
+  async function handlePartnerStatus(action) {
     setPartnerActing(true);
     try {
-      await api.post(`/jobs/${id}/partner-status`, { status });
+      await api.post(`/jobs/${id}/confirm-partner-status`, { action });
       showSnack('Status updated', 'success');
       refetch();
     } catch {
@@ -320,15 +312,12 @@ export default function JobDetail() {
     if (!isOpening || histLoading[section]) return;
     setHistLoading(prev => ({ ...prev, [section]: true }));
     try {
-      if (section === 'past_jobs' && jobData?.customer_id) {
-        const res = await api.get(`/customers/${jobData.customer_id}/jobs?exclude_id=${id}&limit=5`);
-        setPastJobs(res.data?.jobs || []);
-      } else if (section === 'estimates') {
-        const res = await api.get(`/estimates?job_id=${id}`);
-        setJobEstimates(res.data?.estimates || []);
-      } else if (section === 'invoices') {
-        const res = await api.get(`/invoices?job_id=${id}`);
-        setJobInvoices(res.data?.invoices || []);
+      if ((section === 'past_jobs' || section === 'estimates' || section === 'invoices') && jobData?.customer_id) {
+        const res = await api.get(`/customers/${jobData.customer_id}/history`, { params: { exclude_job_id: id } });
+        const hist = res.data || {};
+        setPastJobs(hist.jobs || []);
+        setJobEstimates(hist.estimates || []);
+        setJobInvoices(hist.invoices || []);
       }
     } catch { /* ignore */ }
     finally { setHistLoading(prev => ({ ...prev, [section]: false })); }
@@ -336,7 +325,7 @@ export default function JobDetail() {
 
   async function handleStatusChange(status) {
     try {
-      await mutate('put', `/jobs/${id}`, { status });
+      await mutate('post', `/jobs/${id}/status`, { status });
       setStatusModal(false);
       refetch();
       showSnack('Status updated', 'success');
@@ -356,10 +345,11 @@ export default function JobDetail() {
 
   async function handleDispatch() {
     try {
-      await mutate('post', `/jobs/${id}/dispatch`, { tech_lat: 0, tech_lng: 0 });
+      const res = await mutate('post', `/jobs/${id}/dispatch`, { tech_lat: 0, tech_lng: 0 });
       setDispatchModal(false);
       refetch();
-      showSnack('Tech dispatched', 'success');
+      const eta = res?.eta || res?.data?.eta;
+      showSnack(eta ? `Customer notified. ETA: ${eta}` : 'Tech dispatched', 'success');
     } catch {
       showSnack('Failed to dispatch', 'error');
     }
@@ -371,7 +361,7 @@ export default function JobDetail() {
     try {
       if (selectedRecipient.type === 'partner') {
         await api.post(`/jobs/${id}/send-to-partner`, {
-          partner_id: selectedRecipient.id,
+          partner_company_id: selectedRecipient.id,
           connection_id: selectedRecipient.connection_id,
         });
         showSnack(`Job sent to ${selectedRecipient.name}`, 'success');
@@ -462,7 +452,7 @@ export default function JobDetail() {
     if (!messageBody.trim() || !convId) return;
     setSendingMsg(true);
     try {
-      await api.post(`/sms/conversations/${convId}/send`, { body: messageBody });
+      await api.post(`/sms/conversations/${convId}/send`, { message: messageBody });
       setMessageBody('');
       const res = await api.get(`/sms/job/${id}/messages`);
       setJobMessages(res.data?.messages || (Array.isArray(res.data) ? res.data : []));
@@ -520,14 +510,14 @@ export default function JobDetail() {
           {jobData.partner_status === 'pending' && (
             <div className="flex gap-2 mt-2">
               <button
-                onClick={() => handlePartnerStatus('confirmed')}
+                onClick={() => handlePartnerStatus('confirm')}
                 disabled={partnerActing}
                 className="text-xs px-3 py-1.5 rounded-lg border border-green-500 text-green-700 font-medium min-h-[32px] hover:bg-green-50 disabled:opacity-50"
               >
                 Confirm
               </button>
               <button
-                onClick={() => handlePartnerStatus('disputed')}
+                onClick={() => handlePartnerStatus('dispute')}
                 disabled={partnerActing}
                 className="text-xs px-3 py-1.5 rounded-lg border border-red-400 text-red-600 font-medium min-h-[32px] hover:bg-red-50 disabled:opacity-50"
               >
@@ -576,16 +566,16 @@ export default function JobDetail() {
                 {jobData.description && (
                   <p className="text-sm text-gray-600">{jobData.description}</p>
                 )}
-                {(jobData.scheduled_date || jobData.scheduled_at) && (
+                {jobData.scheduled_start && (
                   <div>
                     <p className="text-xs text-gray-400 font-medium uppercase">Scheduled</p>
                     <p className="text-sm text-gray-800">
-                      {format(new Date(jobData.scheduled_date || jobData.scheduled_at), 'PPp')}
+                      {formatDate(jobData.scheduled_start)} at {formatTime(jobData.scheduled_start)}
                     </p>
                   </div>
                 )}
                 {/* Reminder override */}
-                {(jobData.scheduled_date || jobData.scheduled_at) && (
+                {jobData.scheduled_start && (
                   <div>
                     <p className="text-xs text-gray-400 font-medium uppercase mb-1">Reminder</p>
                     <Select
@@ -841,7 +831,7 @@ export default function JobDetail() {
                        <button key={j.id || j._id} onClick={() => navigate(`/jobs/${j.id || j._id}`)} className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
                          <div>
                            <p className="text-sm font-medium text-gray-900">#{j.job_number || j.id} · {j.title || j.job_title}</p>
-                           {j.scheduled_date && <p className="text-xs text-gray-400">{format(new Date(j.scheduled_date), 'MMM d, yyyy')}</p>}
+                           {j.scheduled_start && <p className="text-xs text-gray-400">{formatDate(j.scheduled_start)}</p>}
                          </div>
                          <Badge status={j.status} label={j.status?.replace(/_/g, ' ')} />
                        </button>

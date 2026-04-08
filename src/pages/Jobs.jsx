@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef } from 'react';
+import { formatDate, formatTime } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, X } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
@@ -20,7 +21,7 @@ function buildUrl(filter, search) {
   let url = '/jobs';
   const params = [];
   if (filter === 'received') {
-    params.push('received=true');
+    params.push('partner_view=true');
   } else if (filter) {
     params.push(`status=${filter}`);
   }
@@ -124,9 +125,9 @@ export default function Jobs() {
                     </div>
                     <p className="font-medium text-gray-900 truncate">{job.title || job.job_title}</p>
                     <p className="text-sm text-gray-500 truncate">{job.customer_name || job.customer?.name || 'No customer'}</p>
-                    {(job.scheduled_date || job.scheduled_at) && (
+                    {job.scheduled_start && (
                       <p className="text-xs text-gray-400 truncate">
-                        {new Date(job.scheduled_date || job.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}
+                        {formatDate(job.scheduled_start)} {formatTime(job.scheduled_start)}
                       </p>
                     )}
                     {(job.address || job.service_address) && (
@@ -170,9 +171,7 @@ export default function Jobs() {
                     <td className="px-4 py-3 text-sm text-gray-600">{job.customer_name || job.customer?.name}</td>
                     <td className="px-4 py-3"><Badge status={job.status} label={job.status?.replace(/_/g, ' ')} /></td>
                     <td className="px-4 py-3 text-sm text-gray-500">
-                      {(job.scheduled_date || job.scheduled_at)
-                        ? new Date(job.scheduled_date || job.scheduled_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                        : '—'}
+                      {job.scheduled_start ? formatDate(job.scheduled_start) : '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-[200px]">{job.address || job.service_address}</td>
                   </tr>

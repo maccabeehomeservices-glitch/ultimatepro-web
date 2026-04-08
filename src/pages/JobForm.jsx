@@ -66,7 +66,7 @@ export default function JobForm() {
     assigned_tech_id: '', assigned_roster_tech_id: '',
     status: 'unscheduled',
     job_type: 'Service', priority: 'medium',
-    source_type: '', job_source_id: '', source_review_link: '',
+    source_type: '', job_source_id: '', ad_channel_id: '', source_review_link: '',
   });
   const [customerSearch, setCustomerSearch] = useState('');
   const [customerResults, setCustomerResults] = useState([]);
@@ -86,7 +86,8 @@ export default function JobForm() {
   const { data: jobData, loading: jobLoading } = useGet(isEdit ? `/jobs/${id}` : null, [id]);
   const { data: techsData } = useGet('/users/technicians');
   const { data: rosterData } = useGet('/roster-techs');
-  const { data: sourcesData } = useGet(form.source_type === 'external_contact' ? '/sources' : null, [form.source_type]);
+  const { data: sourcesData } = useGet(form.source_type === 'external_contact' ? '/sources/contacts' : null, [form.source_type]);
+  const { data: channelsData } = useGet(form.source_type === 'own_company' ? '/sources/channels' : null, [form.source_type]);
 
   // Pre-fill from location state (parsed ticket or pre-selected customer)
   useEffect(() => {
@@ -134,6 +135,7 @@ export default function JobForm() {
         priority: j.priority || 'medium',
         source_type: j.source_type || '',
         job_source_id: j.job_source_id || '',
+        ad_channel_id: j.ad_channel_id || '',
         source_review_link: j.source_review_link || '',
       });
       setCustomerSearch(j.customer_name || j.customer?.name || '');
@@ -225,25 +227,25 @@ export default function JobForm() {
 
     setSaving(true);
     try {
-      const scheduledStart = form.scheduled_date
-        ? `${form.scheduled_date}T${form.scheduled_time || '00:00'}:00`
+      const scheduled_start = form.scheduled_date
+        ? new Date(`${form.scheduled_date}T${form.scheduled_time || '00:00'}`).toISOString()
         : undefined;
       const payload = {
         title: form.title,
-        notes: form.notes, description: form.notes,
+        notes: form.notes,
+        description: form.notes,
         customer_id: form.customer_id || undefined,
         customer_name: !form.customer_id ? form.customer_name : undefined,
         address: form.address, city: form.city, state: form.state, zip: form.zip,
-        scheduled_date: form.scheduled_date || undefined,
-        scheduled_time: form.scheduled_time || undefined,
-        scheduled_start: scheduledStart,
-        assigned_to: form.assigned_tech_id || undefined,
-        assigned_roster_tech_id: form.assigned_roster_tech_id || undefined,
+        scheduled_start,
+        assigned_to: form.assigned_roster_tech_id ? null : (form.assigned_tech_id || undefined),
+        assigned_roster_tech_id: form.assigned_tech_id ? null : (form.assigned_roster_tech_id || undefined),
         status: form.status,
-        job_type: form.job_type, type: form.job_type,
+        type: form.job_type,
         priority: form.priority,
         source_type: form.source_type || undefined,
         job_source_id: form.job_source_id || undefined,
+        ad_channel_id: form.ad_channel_id || undefined,
         source_review_link: form.source_review_link || undefined,
         line_items: lineItems.map(li => ({
           name: li.name, quantity: li.qty, unit_price: li.unit_price,
@@ -268,7 +270,8 @@ export default function JobForm() {
 
   const techs = techsData?.technicians || techsData || [];
   const rosterTechs = rosterData?.technicians || rosterData || [];
-  const sources = sourcesData?.sources || sourcesData || [];
+  const sources = sourcesData?.contacts || sourcesData?.sources || sourcesData || [];
+  const channels = channelsData?.channels || channelsData || [];
 
   if (isEdit && jobLoading) return <LoadingSpinner fullPage />;
 
@@ -539,8 +542,16 @@ export default function JobForm() {
             <select value={form.job_source_id}
               onChange={e => setForm(p => ({ ...p, job_source_id: e.target.value }))}
               className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white mb-3">
-              <option value="">— Select Source —</option>
+              <option value="">— Select Source Contact —</option>
               {sources.map(s => <option key={s.id || s._id} value={s.id || s._id}>{s.name}</option>)}
+            </select>
+          )}
+          {form.source_type === 'own_company' && channels.length > 0 && (
+            <select value={form.ad_channel_id}
+              onChange={e => setForm(p => ({ ...p, ad_channel_id: e.target.value }))}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white mb-3">
+              <option value="">— Select Ad Channel —</option>
+              {channels.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
             </select>
           )}
           <Input label="Review / Source Link (optional)" name="source_review_link"
