@@ -8,6 +8,7 @@ const tabList = [
   { id: 'revenue', label: 'Revenue' },
   { id: 'sources', label: 'Job Sources' },
   { id: 'timesheets', label: 'Timesheets' },
+  { id: 'partners', label: 'Partners' },
 ];
 
 function formatCurrency(v) {
@@ -42,7 +43,11 @@ export default function Reports() {
     [activeTab, from, to, techFilter]
   );
   const { data: techsData } = useGet(activeTab === 'timesheets' ? '/users/technicians' : null, [activeTab]);
+  const { data: partnersData, loading: partnersLoading } = useGet(
+    activeTab === 'partners' ? `/reports/partners?from=${from}&to=${to}` : null, [activeTab, from, to]
+  );
 
+  const partners = partnersData?.partners || (Array.isArray(partnersData) ? partnersData : []);
   const revenueStats = revenueData?.stats || revenueData || {};
   const revenueList = revenueData?.data || revenueData?.items || [];
   const sources = sourcesData?.sources || (Array.isArray(sourcesData) ? sourcesData : []);
@@ -141,6 +146,39 @@ export default function Reports() {
                   </div>
                 </Card>
               ))}
+            </div>
+          )
+        )}
+
+        {/* Partners tab */}
+        {activeTab === 'partners' && (
+          partnersLoading ? <LoadingSpinner /> :
+          partners.length === 0 ? (
+            <EmptyState icon={BarChart2} title="No partner data" description="No partner revenue for this period." />
+          ) : (
+            <div className="bg-white rounded-2xl shadow overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-100 bg-gray-50">
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Partner Company</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Sent</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Received</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Revenue</th>
+                    <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Split</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {partners.map((p, i) => (
+                    <tr key={p.id || p.company_id || i} className="border-b border-gray-50 last:border-0">
+                      <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{p.company_name || p.name || '—'}</td>
+                      <td className="px-4 py-2.5 text-sm text-gray-600">{p.jobs_sent || 0}</td>
+                      <td className="px-4 py-2.5 text-sm text-gray-600">{p.jobs_received || 0}</td>
+                      <td className="px-4 py-2.5 text-sm font-semibold text-[#1A73E8]">{formatCurrency(p.revenue || p.total_revenue || 0)}</td>
+                      <td className="px-4 py-2.5 text-sm text-gray-600">{p.split_percent != null ? `${p.split_percent}%` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )
         )}

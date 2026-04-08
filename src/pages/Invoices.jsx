@@ -5,9 +5,10 @@ import { useGet } from '../hooks/useApi';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
 
 const filters = [
+  { id: '', label: 'All' },
   { id: 'unpaid', label: 'Unpaid' },
   { id: 'paid', label: 'Paid' },
-  { id: '', label: 'All' },
+  { id: 'overdue', label: 'Overdue' },
 ];
 
 function formatCurrency(v) {
@@ -19,7 +20,7 @@ export default function Invoices() {
   const [activeFilter, setActiveFilter] = useState('unpaid');
   const url = activeFilter ? `/invoices?status=${activeFilter}` : '/invoices';
   const { data, loading } = useGet(url, [activeFilter]);
-  const invoices = data?.invoices || data || [];
+  const invoices = data?.invoices || (Array.isArray(data) ? data : []);
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
@@ -28,12 +29,12 @@ export default function Invoices() {
       </div>
 
       {/* Filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-2 mb-4">
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4">
         {filters.map((f) => (
           <button
             key={f.id}
             onClick={() => setActiveFilter(f.id)}
-            className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap min-h-[36px] transition-colors ${
+            className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap min-h-[36px] flex-shrink-0 transition-colors ${
               activeFilter === f.id ? 'bg-[#1A73E8] text-white' : 'bg-white text-gray-600 border border-gray-200'
             }`}
           >
@@ -52,8 +53,16 @@ export default function Invoices() {
             <Card key={inv.id || inv._id} onClick={() => navigate(`/invoices/${inv.id || inv._id}`)}>
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-400">#{inv.invoice_number || inv.id}</p>
+                  <p className="text-xs text-gray-400">INV-{inv.invoice_number || inv.id}</p>
                   <p className="font-semibold text-gray-900 truncate">{inv.customer_name || inv.customer?.name}</p>
+                  {inv.due_date && (
+                    <p className="text-xs text-gray-400">
+                      Due: {new Date(inv.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </p>
+                  )}
+                  {inv.deposit_amount > 0 && inv.deposit_collected && (
+                    <p className="text-xs text-gray-400">Deposit: {formatCurrency(inv.deposit_amount)} paid</p>
+                  )}
                 </div>
                 <div className="text-right ml-3 flex-shrink-0">
                   <p className="font-bold text-gray-900">{formatCurrency(inv.total)}</p>

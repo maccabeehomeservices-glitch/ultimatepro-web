@@ -37,6 +37,7 @@ import MembershipPlans from './pages/settings/MembershipPlans';
 import JobSources from './pages/settings/JobSources';
 import ReviewPlatforms from './pages/settings/ReviewPlatforms';
 import OnlineBooking from './pages/settings/OnlineBooking';
+import Notifications from './pages/settings/Notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -85,6 +86,7 @@ export default function App() {
                   <Route path="/payments" element={<Wrap><Payments /></Wrap>} />
                   <Route path="/phone" element={<Wrap><Phone /></Wrap>} />
                   <Route path="/phone/thread/:id" element={<Wrap><SmsThread /></Wrap>} />
+                  <Route path="/phone/sms/:conversationId" element={<Wrap><SmsThread /></Wrap>} />
                   <Route path="/reports" element={<Wrap><Reports /></Wrap>} />
                   <Route path="/payroll" element={<Wrap><Payroll /></Wrap>} />
                   <Route path="/pricebook" element={<Wrap><Pricebook /></Wrap>} />
@@ -96,6 +98,7 @@ export default function App() {
                   <Route path="/settings/job-sources" element={<Wrap><JobSources /></Wrap>} />
                   <Route path="/settings/review-platforms" element={<Wrap><ReviewPlatforms /></Wrap>} />
                   <Route path="/settings/online-booking" element={<Wrap><OnlineBooking /></Wrap>} />
+                  <Route path="/settings/notifications" element={<Wrap><Notifications /></Wrap>} />
                   <Route path="/import" element={<Wrap><ImportWizard /></Wrap>} />
                 </Route>
               </Route>

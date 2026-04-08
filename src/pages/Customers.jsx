@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Users, Upload } from 'lucide-react';
+import { Plus, Search, Users, Upload, X } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState } from '../components/ui';
 
@@ -19,6 +19,21 @@ export default function Customers() {
     setSearchInput(val);
     clearTimeout(searchTimeout.current);
     searchTimeout.current = setTimeout(() => setSearch(val), 300);
+  }
+
+  function clearSearch() {
+    setSearchInput('');
+    setSearch('');
+  }
+
+  // Avatar color based on first letter
+  function avatarColor(name) {
+    const colors = [
+      '#1A73E8', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+      '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1',
+    ];
+    const idx = (name?.charCodeAt(0) || 0) % colors.length;
+    return colors[idx];
   }
 
   return (
@@ -41,8 +56,13 @@ export default function Customers() {
           placeholder="Search customers..."
           value={searchInput}
           onChange={handleSearchChange}
-          className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
+          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
         />
+        {searchInput && (
+          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+            <X size={16} />
+          </button>
+        )}
       </div>
 
       {loading ? (
@@ -66,18 +86,32 @@ export default function Customers() {
           {customers.map((c) => {
             const name = `${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name || c.company_name || 'Unknown';
             const id = c.id || c._id;
+            const color = avatarColor(name);
+            const isReturning = (c.job_count || c.total_jobs || 0) >= 2;
+            const isMember = Boolean(c.has_membership || c.membership_id || c.active_membership);
             return (
               <Card key={id} onClick={() => navigate(`/customers/${id}`)}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-[#1A73E8] flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                  <div
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
+                    style={{ backgroundColor: color }}
+                  >
                     {name[0]?.toUpperCase() || '?'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">{name}</p>
-                    {c.phone && <p className="text-sm text-gray-500">{c.phone}</p>}
+                    <div className="flex items-center gap-1.5 flex-wrap mb-0.5">
+                      <p className="font-semibold text-gray-900">{name}</p>
+                      {isMember && (
+                        <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">⭐ Member</span>
+                      )}
+                      {isReturning && !isMember && (
+                        <span className="text-xs bg-blue-50 text-[#1A73E8] px-1.5 py-0.5 rounded-full font-medium">↩ Returning</span>
+                      )}
+                    </div>
+                    {c.phone && <p className="text-sm text-gray-500">📱 {c.phone}</p>}
                     {(c.address || c.city) && (
                       <p className="text-xs text-gray-400 truncate">
-                        {[c.address, c.city, c.state].filter(Boolean).join(', ')}
+                        📍 {[c.address, c.city, c.state].filter(Boolean).join(', ')}
                       </p>
                     )}
                   </div>
