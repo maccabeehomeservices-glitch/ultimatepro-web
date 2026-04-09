@@ -118,16 +118,27 @@ export default function JobForm() {
       }));
       const phones = parsed.phone_numbers || (parsed.phone ? [parsed.phone] : []);
       if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
-      if (parsed.existing_customer_id && parsed.existing_customer) {
-        selectCustomer(parsed.existing_customer);
-      } else if (parsed.customer_name || parsed.phone) {
-        const nameParts = (parsed.customer_name || '').trim().split(' ');
+      const ec = parsed.existing_customer;
+      const parsedPhone = (parsed.phone || parsed.phone_numbers?.[0] || '').replace(/\D/g, '');
+      const phonesMatch = parsedPhone && ec?.phone &&
+        (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
+         parsedPhone.endsWith((ec?.phone || '').replace(/\D/g, '')));
+      const parsedName = (parsed.customer_name || '').trim();
+      const hasFullName = parsedName.includes(' ') && parsedName.split(' ').length >= 2;
+      const isHighConfidence = parsed.existing_customer_id && ec && phonesMatch;
+      const isMediumConfidence = parsed.existing_customer_id && ec && hasFullName &&
+        ec.first_name && parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
+
+      if (isHighConfidence || isMediumConfidence) {
+        selectCustomer(ec);
+      } else if (parsedName || parsedPhone) {
+        const nameParts = parsedName.split(' ');
         const firstName = nameParts[0] || 'Customer';
         const lastName = nameParts.slice(1).join(' ') || '';
         customersApi.create({
           first_name: firstName,
           last_name: lastName,
-          phone: parsed.phone || (parsed.phone_numbers?.[0]) || '',
+          phone: parsedPhone || '',
           type: 'residential',
         }).then(createRes => {
           selectCustomer(createRes.data?.customer || createRes.data);
@@ -294,27 +305,36 @@ export default function JobForm() {
       }));
       const phones = p.phone_numbers || (p.phone ? [p.phone] : []);
       if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
-      if (p.existing_customer_id && p.existing_customer) {
-        // Backend already resolved the customer — use it directly
-        selectCustomer(p.existing_customer);
-        showSnack(`Ticket parsed! Matched existing customer: ${p.existing_customer.first_name} ${p.existing_customer.last_name || ''}`.trim(), 'success');
-      } else if (p.customer_name || p.phone) {
-        // No match — auto-create from parsed data
-        const nameParts = (p.customer_name || '').trim().split(' ');
+      const ec = p.existing_customer;
+      const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g, '');
+      const phonesMatch = parsedPhone && ec?.phone &&
+        (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
+         parsedPhone.endsWith((ec?.phone || '').replace(/\D/g, '')));
+      const parsedName = (p.customer_name || '').trim();
+      const hasFullName = parsedName.includes(' ') && parsedName.split(' ').length >= 2;
+      const isHighConfidence = p.existing_customer_id && ec && phonesMatch;
+      const isMediumConfidence = p.existing_customer_id && ec && hasFullName &&
+        ec.first_name && parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
+
+      if (isHighConfidence || isMediumConfidence) {
+        selectCustomer(ec);
+        showSnack(`Ticket parsed! Matched: ${ec.first_name} ${ec.last_name || ''}`.trim(), 'success');
+      } else if (parsedName || parsedPhone) {
+        const nameParts = parsedName.split(' ');
         const firstName = nameParts[0] || 'Customer';
         const lastName = nameParts.slice(1).join(' ') || '';
         try {
           const createRes = await customersApi.create({
             first_name: firstName,
             last_name: lastName,
-            phone: p.phone || (p.phone_numbers?.[0]) || '',
+            phone: parsedPhone || '',
             type: 'residential',
           });
           selectCustomer(createRes.data?.customer || createRes.data);
-          showSnack(`Ticket parsed! New customer created: ${`${firstName} ${lastName}`.trim()}`, 'success');
+          showSnack(`Ticket parsed! New customer created: ${`${firstName}${lastName ? ' ' + lastName : ''}`.trim()}`, 'success');
         } catch {
           setCustomerSearch(p.customer_name || '');
-          showSnack('Ticket parsed! Could not auto-create customer — please search manually', 'info');
+          showSnack('Ticket parsed! Could not auto-create customer — please select manually', 'info');
         }
       } else {
         showSnack('Ticket parsed! Review and complete missing fields.', 'success');
@@ -335,25 +355,35 @@ export default function JobForm() {
 
     setSaving(true);
     try {
-      const scheduled_start = form.scheduled_date
-        ? new Date(`${form.scheduled_date}T${form.scheduled_time || '00:00'}`).toISOString()
-        : undefined;
+      let scheduled_start = null;
+      if (form.scheduled_date) {
+        if (form.scheduled_time) {
+          const dt = new Date(`${form.scheduled_date}T${form.scheduled_time}`);
+          scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
+        } else {
+          const dt = new Date(`${form.scheduled_date}T12:00:00`);
+          scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
+        }
+      }
       const payload = {
         title: form.title,
-        notes: form.notes,
-        description: form.notes,
+        notes: form.notes || null,
+        description: form.notes || null,
         customer_id: form.customer_id,
-        address: form.address, city: form.city, state: form.state, zip: form.zip,
+        address: form.address || null,
+        city: form.city || null,
+        state: form.state || null,
+        zip: form.zip || null,
         scheduled_start,
-        assigned_to: form.assigned_roster_tech_id ? null : (form.assigned_tech_id || undefined),
-        assigned_roster_tech_id: form.assigned_tech_id ? null : (form.assigned_roster_tech_id || undefined),
+        assigned_to: form.assigned_roster_tech_id ? null : (form.assigned_tech_id || null),
+        assigned_roster_tech_id: form.assigned_tech_id ? null : (form.assigned_roster_tech_id || null),
         status: form.status,
-        type: form.job_type,
-        priority: form.priority,
-        source_type: form.source_type || undefined,
-        job_source_id: form.job_source_id || undefined,
-        ad_channel_id: form.ad_channel_id || undefined,
-        source_review_link: form.source_review_link || undefined,
+        type: form.job_type || null,
+        priority: form.priority || null,
+        source_type: form.source_type || null,
+        job_source_id: form.job_source_id || null,
+        ad_channel_id: form.ad_channel_id || null,
+        source_review_link: form.source_review_link || null,
         line_items: lineItems.map(li => ({
           name: li.name, quantity: li.qty, unit_price: li.unit_price,
           total: li.qty * Number(li.unit_price),
