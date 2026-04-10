@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight, Plus, ChevronDown } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import api, { formatDate, formatTime } from '../lib/api';
+import api, { formatDate, formatTime, jobsApi } from '../lib/api';
 import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select, Toggle, StepperInput } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import SignaturePad from '../components/SignaturePad';
 
 const JOB_STATUSES = [
   { value: 'unscheduled', label: 'Unscheduled' },
@@ -140,6 +141,16 @@ export default function JobDetail() {
   // FIX 4: tech permissions
   const [techPerms, setTechPerms] = useState(null);
   const [techPermSaving, setTechPermSaving] = useState(false);
+
+  // Signature
+  const [showSignature, setShowSignature] = useState(false);
+  const [savingSig, setSavingSig] = useState(false);
+
+  // Complete job
+  const [showComplete, setShowComplete] = useState(false);
+  const [completionNotes, setCompletionNotes] = useState('');
+  const [completionPayment, setCompletionPayment] = useState('');
+  const [completing, setCompleting] = useState(false);
 
   // FIX 5: history accordion
   const [histOpen, setHistOpen] = useState({});
@@ -323,6 +334,47 @@ export default function JobDetail() {
     finally { setHistLoading(prev => ({ ...prev, [section]: false })); }
   }
 
+  async function handleCaptureSignature(base64) {
+    setSavingSig(true);
+    try {
+      await jobsApi.captureSignature(id, base64);
+      setShowSignature(false);
+      showSnack('Signature captured!', 'success');
+      refetch();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to save signature', 'error');
+    } finally {
+      setSavingSig(false);
+    }
+  }
+
+  async function handleCompleteJob() {
+    setCompleting(true);
+    try {
+      await jobsApi.complete(id, {
+        notes: completionNotes,
+        payment_method: completionPayment || undefined,
+      });
+      setShowComplete(false);
+      showSnack('Job completed!', 'success');
+      refetch();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to complete job', 'error');
+    } finally {
+      setCompleting(false);
+    }
+  }
+
+  async function handleRestoreJob() {
+    try {
+      await jobsApi.restore(id);
+      showSnack('Job restored!', 'success');
+      refetch();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to restore job', 'error');
+    }
+  }
+
   async function handleStatusChange(status) {
     try {
       await mutate('post', `/jobs/${id}/status`, { status });
@@ -363,6 +415,12 @@ export default function JobDetail() {
         await api.post(`/jobs/${id}/send-to-partner`, {
           partner_company_id: selectedRecipient.id,
           connection_id: selectedRecipient.connection_id,
+          notes: '',
+          tech_permissions: {
+            add_notes: true, collect_payments: true, take_photos: true,
+            add_parts: false, edit_details: false, cancel_job: false,
+            view_history: true,
+          },
         });
         showSnack(`Job sent to ${selectedRecipient.name}`, 'success');
         refetch();
@@ -792,11 +850,33 @@ export default function JobDetail() {
               <Button onClick={() => setStatusModal(true)} className="w-full">
                 Update Status
               </Button>
+              {jobData.status === 'in_progress' && (
+                <Button
+                  onClick={() => setShowComplete(true)}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  ✅ Complete Job
+                </Button>
+              )}
+              {jobData.status === 'deleted' && (
+                <Button
+                  onClick={handleRestoreJob}
+                  className="w-full bg-amber-500 hover:bg-amber-600"
+                >
+                  ♻️ Restore Job
+                </Button>
+              )}
               {jobData.status === 'scheduled' && (
                 <Button onClick={() => setDispatchModal(true)} className="w-full">
                   Dispatch Tech
                 </Button>
               )}
+              <button
+                onClick={() => setShowSignature(true)}
+                className="w-full py-3 border-2 border-[#1A73E8] text-[#1A73E8] rounded-xl font-semibold min-h-[44px]"
+              >
+                ✍️ Get Signature
+              </button>
               {!isDeletedOrCancelled && (
                 <Button variant="outlined" onClick={() => setSendToModal(true)} className="w-full">
                   Send To
@@ -1198,6 +1278,64 @@ export default function JobDetail() {
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Signature Modal */}
+      <Modal
+        isOpen={showSignature}
+        onClose={() => setShowSignature(false)}
+        title="Customer Signature"
+      >
+        <SignaturePad
+          onSave={handleCaptureSignature}
+          onCancel={() => setShowSignature(false)}
+        />
+      </Modal>
+
+      {/* Complete Job Modal */}
+      <Modal
+        isOpen={showComplete}
+        onClose={() => setShowComplete(false)}
+        title="Complete Job"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setShowComplete(false)}>Cancel</Button>
+            <Button
+              loading={completing}
+              onClick={handleCompleteJob}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Complete Job
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Completion Notes</label>
+            <textarea
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              value={completionNotes}
+              onChange={e => setCompletionNotes(e.target.value)}
+              placeholder="Describe the work completed..."
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Payment Collected</label>
+            <select
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              value={completionPayment}
+              onChange={e => setCompletionPayment(e.target.value)}
+            >
+              <option value="">No payment collected</option>
+              <option value="cash">Cash</option>
+              <option value="check">Check</option>
+              <option value="credit_card">Credit Card</option>
+              <option value="ach">ACH / Bank Transfer</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
       </Modal>
 
       {/* Collect Deposit Modal */}

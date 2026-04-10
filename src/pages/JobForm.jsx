@@ -95,6 +95,16 @@ export default function JobForm() {
   const { data: sourcesData } = useGet(form.source_type === 'external_contact' ? '/sources/contacts' : null, [form.source_type]);
   const { data: channelsData } = useGet(form.source_type === 'own_company' ? '/sources/channels' : null, [form.source_type]);
 
+  // Pre-fill from ?date= query param
+  useEffect(() => {
+    if (isEdit) return;
+    const searchParams = new URLSearchParams(location.search);
+    const presetDate = searchParams.get('date');
+    if (presetDate) {
+      setForm(prev => ({ ...prev, scheduled_date: presetDate }));
+    }
+  }, []);
+
   // Pre-fill from location state (parsed ticket or pre-selected customer)
   useEffect(() => {
     const parsed = location.state?.parsedData;

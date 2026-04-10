@@ -4,7 +4,7 @@ import { useGet } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { Card, Badge, LoadingSpinner, EmptyState, Modal, Button } from '../components/ui';
-import api from '../lib/api';
+import api, { timesheetsApi } from '../lib/api';
 import { Briefcase, DollarSign, Receipt, Calendar, ClipboardList, Phone, Star, Users, ChevronRight, RefreshCw } from 'lucide-react';
 
 const MAPS_KEY = 'AIzaSyDtSGWBuiTFR5BbomG8ZFNYeiwUszkJiNQ';
@@ -127,6 +127,8 @@ export default function Dashboard() {
   const mapsReady = useGoogleMaps();
 
   const [refreshing, setRefreshing] = useState(false);
+  const [clockedIn, setClockedIn] = useState(false);
+  const [clockLoading, setClockLoading] = useState(false);
 
   const { data: dashData, loading: dashLoading, refetch: refetchDash } = useGet('/reports/dashboard');
   const { data: jobsData, loading: jobsLoading, refetch: refetchJobs } = useGet(
@@ -135,10 +137,43 @@ export default function Dashboard() {
   const { data: gpsData, refetch: refetchGps } = useGet('/gps/live');
   const { data: dueSoonData, refetch: refetchDueSoon } = useGet('/memberships/due-soon');
 
+  useEffect(() => {
+    timesheetsApi.getStatus()
+      .then(r => setClockedIn(r.data?.clocked_in || false))
+      .catch(() => {});
+  }, []);
+
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refetchDash(); refetchJobs(); refetchGps(); refetchDueSoon();
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
   function handleRefresh() {
     setRefreshing(true);
     refetchDash(); refetchJobs(); refetchGps(); refetchDueSoon();
     setTimeout(() => setRefreshing(false), 1500);
+  }
+
+  async function toggleClock() {
+    setClockLoading(true);
+    try {
+      if (clockedIn) {
+        await timesheetsApi.clockOut();
+        setClockedIn(false);
+        showSnack('Clocked out!', 'success');
+      } else {
+        await timesheetsApi.clockIn();
+        setClockedIn(true);
+        showSnack('Clocked in!', 'success');
+      }
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed', 'error');
+    } finally {
+      setClockLoading(false);
+    }
   }
 
   const raw = dashData || {};
@@ -178,12 +213,24 @@ export default function Dashboard() {
           </h2>
           <p className="text-gray-500 text-sm">Here's what's happening today.</p>
         </div>
-        <button
-          onClick={handleRefresh}
-          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500"
-        >
-          <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleClock}
+            disabled={clockLoading}
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors text-base disabled:opacity-50 ${
+              clockedIn ? 'bg-[#1A73E8] text-white' : 'bg-gray-200 text-gray-500'
+            }`}
+            title={clockedIn ? 'Clock Out' : 'Clock In'}
+          >
+            🕐
+          </button>
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500"
+          >
+            <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
+          </button>
+        </div>
       </div>
 
       {/* 2nd Chance banner */}

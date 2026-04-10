@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check, Plus, X } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import api from '../lib/api';
+import api, { customersApi, formatMoney } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Tabs, EmptyState, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { format } from 'date-fns';
@@ -51,6 +51,15 @@ export default function CustomerDetail() {
   const [messageBody, setMessageBody] = useState('');
   const [sendingMsg, setSendingMsg] = useState(false);
   const messagesEndRef = useRef(null);
+
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    if (id) {
+      customersApi.getStats(id)
+        .then(r => setStats(r.data?.stats || r.data))
+        .catch(() => {});
+    }
+  }, [id]);
 
   const customer = data?.customer || data;
 
@@ -221,6 +230,28 @@ export default function CustomerDetail() {
           <Trash2 size={20} />
         </button>
       </div>
+
+      {/* Stats Card */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+            <div className="text-2xl font-bold text-blue-600">{stats.total_jobs || 0}</div>
+            <div className="text-xs text-gray-500">Total Jobs</div>
+          </div>
+          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+            <div className="text-2xl font-bold text-green-600">{formatMoney(stats.total_revenue || 0)}</div>
+            <div className="text-xs text-gray-500">Total Revenue</div>
+          </div>
+          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+            <div className="text-2xl font-bold text-amber-600">{stats.open_estimates || 0}</div>
+            <div className="text-xs text-gray-500">Open Estimates</div>
+          </div>
+          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+            <div className="text-2xl font-bold text-red-600">{formatMoney(stats.outstanding_balance || 0)}</div>
+            <div className="text-xs text-gray-500">Outstanding</div>
+          </div>
+        </div>
+      )}
 
       {/* Info Card */}
       <Card className="mb-4">

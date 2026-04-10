@@ -1,11 +1,12 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { formatDate, formatTime } from '../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, X } from 'lucide-react';
-import { useGet } from '../hooks/useApi';
+import { jobsApi, usersApi } from '../lib/api';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
+import { useSnackbar } from '../components/ui/Snackbar';
 
-const filters = [
+const STATUS_FILTERS = [
   { id: '', label: 'All' },
   { id: 'unscheduled', label: 'Unscheduled' },
   { id: 'scheduled', label: 'Scheduled' },
@@ -17,30 +18,70 @@ const filters = [
   { id: 'received', label: 'Received' },
 ];
 
-function buildUrl(filter, search) {
-  let url = '/jobs';
-  const params = [];
-  if (filter === 'received') {
-    params.push('partner_view=true');
-  } else if (filter) {
-    params.push(`status=${filter}`);
-  }
-  if (search) params.push(`search=${encodeURIComponent(search)}`);
-  params.push('page=1', 'limit=50');
-  url += '?' + params.join('&');
-  return url;
-}
+const PRIORITY_FILTERS = ['', 'low', 'medium', 'high', 'urgent'];
 
 export default function Jobs() {
   const navigate = useNavigate();
+  const { showSnack } = useSnackbar();
   const [activeFilter, setActiveFilter] = useState('');
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [techFilter, setTechFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [page, setPage] = useState(1);
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [techs, setTechs] = useState([]);
   const searchTimeout = useRef(null);
+  const LIMIT = 20;
 
-  const url = buildUrl(activeFilter, search);
-  const { data, loading } = useGet(url, [activeFilter, search]);
-  const jobs = data?.jobs || (Array.isArray(data) ? data : []);
+  useEffect(() => {
+    usersApi.getTechnicians()
+      .then(r => setTechs(r.data?.technicians || r.data || []))
+      .catch(() => {});
+  }, []);
+
+  const fetchJobs = useCallback(async (pageNum) => {
+    setLoading(true);
+    try {
+      const params = { page: pageNum, limit: LIMIT };
+      if (activeFilter === 'received') {
+        params.partner_view = true;
+      } else if (activeFilter) {
+        params.status = activeFilter;
+      }
+      if (search) params.search = search;
+      if (dateFrom) params.from = dateFrom;
+      if (dateTo) params.to = dateTo;
+      if (techFilter) params.assigned_to = techFilter;
+      if (priorityFilter) params.priority = priorityFilter;
+
+      const res = await jobsApi.list(params);
+      const newJobs = res.data?.jobs || (Array.isArray(res.data) ? res.data : []);
+      if (pageNum === 1) {
+        setJobs(newJobs);
+      } else {
+        setJobs(prev => [...prev, ...newJobs]);
+      }
+      setHasMore(newJobs.length === LIMIT);
+    } catch {
+      showSnack('Failed to load jobs', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [activeFilter, search, dateFrom, dateTo, techFilter, priorityFilter]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchJobs(1);
+  }, [activeFilter, search, dateFrom, dateTo, techFilter, priorityFilter]);
+
+  useEffect(() => {
+    if (page > 1) fetchJobs(page);
+  }, [page]);
 
   function handleSearchChange(e) {
     const val = e.target.value;
@@ -52,6 +93,11 @@ export default function Jobs() {
   function clearSearch() {
     setSearchInput('');
     setSearch('');
+  }
+
+  function clearDates() {
+    setDateFrom('');
+    setDateTo('');
   }
 
   return (
@@ -71,15 +117,73 @@ export default function Jobs() {
           className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
         />
         {searchInput && (
-          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 min-h-[44px] min-w-[44px] flex items-center justify-center">
             <X size={16} />
           </button>
         )}
       </div>
 
-      {/* Filter chips */}
+      {/* Date range filter */}
+      <div className="flex flex-wrap gap-2 items-center mb-3">
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">From</label>
+          <input
+            type="date"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs font-semibold text-gray-500 uppercase whitespace-nowrap">To</label>
+          <input
+            type="date"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+          />
+        </div>
+        {(dateFrom || dateTo) && (
+          <button onClick={clearDates} className="text-red-500 text-sm font-medium min-h-[44px] px-2">
+            Clear dates
+          </button>
+        )}
+      </div>
+
+      {/* Tech filter + Priority filter row */}
+      <div className="flex flex-wrap gap-2 mb-3">
+        <select
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white"
+          value={techFilter}
+          onChange={e => setTechFilter(e.target.value)}
+        >
+          <option value="">All Techs</option>
+          {techs.map(t => (
+            <option key={t.id} value={t.id}>{t.first_name || t.name} {t.last_name || ''}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Priority filter chips */}
+      <div className="flex gap-2 flex-wrap mb-3">
+        {PRIORITY_FILTERS.map(p => (
+          <button
+            key={p}
+            onClick={() => setPriorityFilter(p)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border min-h-[36px] transition-colors ${
+              priorityFilter === p
+                ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
+                : 'bg-white text-gray-600 border-gray-300'
+            }`}
+          >
+            {p ? p.charAt(0).toUpperCase() + p.slice(1) : 'All Priorities'}
+          </button>
+        ))}
+      </div>
+
+      {/* Status filter chips */}
       <div className="flex gap-2 overflow-x-auto pb-2 mb-4 -mx-4 px-4">
-        {filters.map((f) => (
+        {STATUS_FILTERS.map((f) => (
           <button
             key={f.id}
             onClick={() => setActiveFilter(f.id)}
@@ -95,7 +199,7 @@ export default function Jobs() {
       </div>
 
       {/* Content */}
-      {loading ? (
+      {loading && jobs.length === 0 ? (
         <LoadingSpinner />
       ) : jobs.length === 0 ? (
         <EmptyState
@@ -179,6 +283,17 @@ export default function Jobs() {
               </tbody>
             </table>
           </div>
+
+          {/* Load more */}
+          {loading && jobs.length > 0 && <LoadingSpinner />}
+          {!loading && hasMore && (
+            <button
+              onClick={() => setPage(p => p + 1)}
+              className="w-full py-3 text-[#1A73E8] font-medium mt-3 min-h-[44px]"
+            >
+              Load more jobs...
+            </button>
+          )}
         </>
       )}
 

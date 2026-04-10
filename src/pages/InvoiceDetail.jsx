@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
+import { invoicesApi, paymentsApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { format } from 'date-fns';
+import SignaturePad from '../components/SignaturePad';
 
 function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -33,6 +35,9 @@ export default function InvoiceDetail() {
   const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'cash', notes: '' });
   const [stopModal, setStopModal] = useState(false);
   const [resumeModal, setResumeModal] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [savingSig, setSavingSig] = useState(false);
+  const [scanpayLoading, setScanpayLoading] = useState(false);
 
   const invoice = data?.invoice || data;
 
@@ -48,6 +53,34 @@ export default function InvoiceDetail() {
       refetch();
     } catch {
       showSnack('Failed to record payment', 'error');
+    }
+  }
+
+  async function handleCaptureSignature(base64) {
+    setSavingSig(true);
+    try {
+      await invoicesApi.captureSignature(id, base64);
+      setShowSignature(false);
+      showSnack('Signature captured!', 'success');
+      refetch();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to save signature', 'error');
+    } finally {
+      setSavingSig(false);
+    }
+  }
+
+  async function handleScanpayCharge() {
+    setScanpayLoading(true);
+    try {
+      const amt = Number(invoice.total || 0) - Number(invoice.total_paid || invoice.amount_paid || 0);
+      await paymentsApi.scanpayCharge(id, amt, invoice.customer_email || invoice.cust_email);
+      showSnack('ScanPay charge initiated!', 'success');
+      refetch();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Charge failed', 'error');
+    } finally {
+      setScanpayLoading(false);
     }
   }
 
@@ -181,10 +214,27 @@ export default function InvoiceDetail() {
 
       {/* Actions */}
       {!isPaid && (
-        <Button onClick={() => setPaymentModal(true)} className="w-full mb-4">
-          Charge Payment
-        </Button>
+        <div className="flex flex-col gap-2 mb-4">
+          <Button onClick={() => setPaymentModal(true)} className="w-full">
+            Charge Payment
+          </Button>
+          <button
+            onClick={handleScanpayCharge}
+            disabled={scanpayLoading}
+            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 min-h-[44px]"
+          >
+            {scanpayLoading ? 'Processing...' : '💳 Charge via ScanPay'}
+          </button>
+        </div>
       )}
+      <div className="mb-4">
+        <button
+          onClick={() => setShowSignature(true)}
+          className="w-full py-3 border-2 border-[#1A73E8] text-[#1A73E8] rounded-xl font-semibold min-h-[44px]"
+        >
+          ✍️ Capture Signature
+        </button>
+      </div>
 
       {/* Payment Modal */}
       <Modal
@@ -219,6 +269,18 @@ export default function InvoiceDetail() {
             placeholder="Check #1234..."
           />
         </div>
+      </Modal>
+
+      {/* Signature Modal */}
+      <Modal
+        isOpen={showSignature}
+        onClose={() => setShowSignature(false)}
+        title="Capture Signature"
+      >
+        <SignaturePad
+          onSave={handleCaptureSignature}
+          onCancel={() => setShowSignature(false)}
+        />
       </Modal>
 
       {/* Stop Reminders Modal */}

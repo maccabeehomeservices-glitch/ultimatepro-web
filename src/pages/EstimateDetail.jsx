@@ -5,6 +5,7 @@ import { useGet, useMutation } from '../hooks/useApi';
 import api, { estimatesApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import SignaturePad from '../components/SignaturePad';
 
 const PAYMENT_METHODS = [
   { value: 'cash', label: 'Cash' },
@@ -74,6 +75,11 @@ export default function EstimateDetail() {
   const [depositModal, setDepositModal] = useState(false);
   const [depositForm, setDepositForm] = useState({ method: 'cash', amount: '' });
   const [collectingDeposit, setCollectingDeposit] = useState(false);
+  const [showSignature, setShowSignature] = useState(false);
+  const [signerName, setSignerName] = useState('');
+  const [savingSig, setSavingSig] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const photoInputRef = useRef(null);
 
   // Polling when status = 'sent'
   const pollRef = useRef(null);
@@ -88,6 +94,36 @@ export default function EstimateDetail() {
     }
     return () => clearInterval(pollRef.current);
   }, [estimate?.status]);
+
+  async function handleCaptureSignature(base64) {
+    setSavingSig(true);
+    try {
+      await estimatesApi.captureSignature(id, base64, signerName);
+      setShowSignature(false);
+      showSnack('Signature captured!', 'success');
+      refetch();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to save signature', 'error');
+    } finally {
+      setSavingSig(false);
+    }
+  }
+
+  async function handlePhotoUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      await estimatesApi.addPhoto(id, file);
+      showSnack('Photo attached!', 'success');
+      refetch();
+    } catch {
+      showSnack('Failed to upload photo', 'error');
+    } finally {
+      setUploadingPhoto(false);
+      e.target.value = '';
+    }
+  }
 
   async function handleSend() {
     try {
@@ -270,6 +306,25 @@ export default function EstimateDetail() {
         </Card>
       )}
 
+      {/* Photo upload */}
+      <div className="mb-4">
+        <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-2">ATTACHMENTS</p>
+        <input
+          type="file"
+          accept="image/*"
+          className="hidden"
+          ref={photoInputRef}
+          onChange={handlePhotoUpload}
+        />
+        <button
+          onClick={() => photoInputRef.current?.click()}
+          disabled={uploadingPhoto}
+          className="px-4 py-2 border border-gray-300 rounded-xl text-gray-600 text-sm min-h-[44px] disabled:opacity-50"
+        >
+          {uploadingPhoto ? 'Uploading...' : '📎 Attach Photo'}
+        </button>
+      </div>
+
       {/* Actions */}
       <div className="flex flex-col gap-2 pb-4">
         {showPresent && (
@@ -287,6 +342,12 @@ export default function EstimateDetail() {
             Get Signature
           </Button>
         )}
+        <button
+          onClick={() => setShowSignature(true)}
+          className="w-full py-3 border-2 border-[#1A73E8] text-[#1A73E8] rounded-xl font-semibold min-h-[44px]"
+        >
+          ✍️ Capture Signature
+        </button>
         {showConvert && (
           <Button onClick={handleConvert} loading={acting} className="w-full">
             Convert to Invoice
@@ -301,6 +362,26 @@ export default function EstimateDetail() {
           Edit Estimate
         </Button>
       </div>
+
+      {/* Signature Modal */}
+      <Modal
+        isOpen={showSignature}
+        onClose={() => setShowSignature(false)}
+        title="Capture Signature"
+      >
+        <div className="space-y-3">
+          <input
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+            placeholder="Signer's full name"
+            value={signerName}
+            onChange={e => setSignerName(e.target.value)}
+          />
+          <SignaturePad
+            onSave={handleCaptureSignature}
+            onCancel={() => setShowSignature(false)}
+          />
+        </div>
+      </Modal>
 
       {/* Collect Deposit Modal */}
       <Modal

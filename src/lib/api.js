@@ -143,8 +143,16 @@ export const jobsApi = {
   dispatch: (id, tech_lat = 0, tech_lng = 0) =>
     api.post(`/jobs/${id}/dispatch`, { tech_lat, tech_lng }),
 
-  sendToPartner: (id, partner_company_id, tech_permissions) =>
-    api.post(`/jobs/${id}/send-to-partner`, { partner_company_id, tech_permissions }),
+  sendToPartner: (id, partner_company_id, notes, tech_permissions) =>
+    api.post(`/jobs/${id}/send-to-partner`, {
+      partner_company_id,
+      notes,
+      tech_permissions: tech_permissions || {
+        add_notes: true, collect_payments: true, take_photos: true,
+        add_parts: false, edit_details: false, cancel_job: false,
+        view_history: true,
+      },
+    }),
 
   confirmPartnerStatus: (id, action) =>
     api.post(`/jobs/${id}/confirm-partner-status`, { action }),
@@ -157,6 +165,15 @@ export const jobsApi = {
 
   getCompletion: (id) =>
     api.get(`/jobs/${id}/completion`),
+
+  confirmCompletion: (id) =>
+    api.post(`/jobs/${id}/completion/confirm`),
+
+  captureSignature: (id, signature_data) =>
+    api.post(`/jobs/${id}/signature`, { signature_data }),
+
+  restore: (id) =>
+    api.post(`/jobs/${id}/restore`),
 
   addPhoto: (id, photo_url) =>
     api.post(`/jobs/${id}/photos`, { photo_url }),
@@ -271,6 +288,16 @@ export const estimatesApi = {
   selectTier: (id, tier_id) =>
     api.post(`/estimates/${id}/select-tier`, { tier_id }),
 
+  captureSignature: (id, signature_data, signer_name) =>
+    api.post(`/estimates/${id}/sign`, { signature_data, signer_name }),
+
+  addPhoto: (id, file) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post(`/estimates/${id}/add-photo`, form,
+      { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+
   delete: (id) =>
     api.delete(`/estimates/${id}`),
 };
@@ -309,6 +336,9 @@ export const invoicesApi = {
       phones: options.phones || [],
     }),
 
+  captureSignature: (id, signature_data) =>
+    api.post(`/invoices/${id}/sign`, { signature_data }),
+
   void: (id) =>
     api.post(`/invoices/${id}/void`),
 
@@ -342,6 +372,9 @@ export const paymentsApi = {
 
   scanpayLink: (invoice_id, amount, customer_phone) =>
     api.post('/payments/scanpay-link', { invoice_id, amount, customer_phone }),
+
+  scanpayCharge: (invoice_id, amount, customer_email) =>
+    api.post('/payments/scanpay/charge', { invoice_id, amount, customer_email }),
 };
 
 // ─── PRICEBOOK ────────────────────────────────────────────────────────────────
@@ -497,8 +530,8 @@ export const rosterTechsApi = {
   delete: (id) =>
     api.delete(`/roster-techs/${id}`),
 
-  notifyTech: (job_id, method) =>
-    api.post('/roster-techs/notify-tech', { job_id, method }),
+  notifyTech: (job_id, tech_id, method) =>
+    api.post('/roster-techs/notify-tech', { job_id, tech_id, notify_method: method }),
 };
 
 // ─── MEMBERSHIPS ──────────────────────────────────────────────────────────────
@@ -622,6 +655,9 @@ export const reportsApi = {
 export const gpsApi = {
   getLive: () =>
     api.get('/gps/live'),
+
+  ping: (lat, lng) =>
+    api.post('/gps/ping', { lat, lng }),
 };
 
 // ─── SMS ──────────────────────────────────────────────────────────────────────
@@ -682,6 +718,46 @@ export const uploadsApi = {
 
   getUploads: (entity_type, entity_id, purpose) =>
     api.get('/uploads', { params: { entity_type, entity_id, purpose } }),
+};
+
+// ─── COMPANY ─────────────────────────────────────────────────────────────────
+export const companyApi = {
+  get: () =>
+    api.get('/company'),
+  update: (data) =>
+    api.put('/company', data),
+  getCustomFields: () =>
+    api.get('/company/custom-fields'),
+  getJobyRules: () =>
+    api.get('/company/joby-rules'),
+  updateJobyRule: (id, data) =>
+    api.put(`/company/joby-rules/${id}`, data),
+};
+
+// ─── LEADS ───────────────────────────────────────────────────────────────────
+export const leadsApi = {
+  list: (params) =>
+    api.get('/leads', { params }),
+  create: (data) =>
+    api.post('/leads', data),
+  get: (id) =>
+    api.get(`/leads/${id}`),
+  update: (id, data) =>
+    api.put(`/leads/${id}`, data),
+  delete: (id) =>
+    api.delete(`/leads/${id}`),
+};
+
+// ─── SCHEDULES ───────────────────────────────────────────────────────────────
+export const schedulesApi = {
+  list: (params) =>
+    api.get('/schedules', { params }),
+  create: (data) =>
+    api.post('/schedules', data),
+  update: (id, data) =>
+    api.put(`/schedules/${id}`, data),
+  delete: (id) =>
+    api.delete(`/schedules/${id}`),
 };
 
 // ─── IMPORT ───────────────────────────────────────────────────────────────────

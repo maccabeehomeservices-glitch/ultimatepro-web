@@ -119,30 +119,50 @@ export default function Calendar() {
         onClose={() => setSelectedDay(null)}
         title={selectedDay ? format(selectedDay, 'EEEE, MMMM d') : ''}
       >
-        {selectedJobs.length === 0 ? (
-          <div className="text-center py-8 text-gray-400">
-            <CalIcon size={32} className="mx-auto mb-2 opacity-50" />
-            <p>No jobs scheduled for this day.</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {selectedJobs.map((job) => (
-              <button
+        <div className="space-y-2">
+          {selectedJobs.length === 0 ? (
+            <div className="text-center py-6 text-gray-400">
+              <CalIcon size={32} className="mx-auto mb-2 opacity-50" />
+              <p>No jobs scheduled for this day.</p>
+            </div>
+          ) : (
+            selectedJobs.map((job) => (
+              <div
                 key={job.id || job._id}
-                onClick={() => { setSelectedDay(null); navigate(`/jobs/${job.id || job._id}`); }}
-                className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-2 p-3 rounded-xl bg-gray-50"
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900 text-sm">{job.title || job.job_title}</p>
-                    <p className="text-xs text-gray-500">{job.customer_name || job.customer?.name}</p>
+                <button
+                  onClick={() => { setSelectedDay(null); navigate(`/jobs/${job.id || job._id}`); }}
+                  className="flex-1 text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900 text-sm">{job.title || job.job_title}</p>
+                      <p className="text-xs text-gray-500">{job.customer_name || job.customer?.name}</p>
+                    </div>
+                    <Badge status={job.status} label={job.status?.replace(/_/g, ' ')} />
                   </div>
-                  <Badge status={job.status} label={job.status?.replace(/_/g, ' ')} />
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                </button>
+                <button
+                  onClick={() => { setSelectedDay(null); navigate(`/jobs/${job.id || job._id}/edit`); }}
+                  className="text-xs text-[#1A73E8] font-medium px-2 py-1 rounded-lg hover:bg-blue-50 min-h-[36px] whitespace-nowrap"
+                >
+                  Edit
+                </button>
+              </div>
+            ))
+          )}
+          <button
+            onClick={() => {
+              const dateStr = selectedDay ? format(selectedDay, 'yyyy-MM-dd') : '';
+              setSelectedDay(null);
+              navigate(`/jobs/new?date=${dateStr}`);
+            }}
+            className="w-full py-3 bg-[#1A73E8] text-white rounded-xl text-sm font-medium min-h-[44px] mt-2"
+          >
+            + New Job on This Day
+          </button>
+        </div>
       </Modal>
     </div>
   );
