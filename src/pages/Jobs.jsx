@@ -38,12 +38,6 @@ export default function Jobs() {
   const searchTimeout = useRef(null);
   const LIMIT = 20;
 
-  // Auto-refresh every 60 seconds
-  useEffect(() => {
-    const interval = setInterval(() => fetchJobs(1), 60000);
-    return () => clearInterval(interval);
-  }, [fetchJobs]);
-
   useEffect(() => {
     usersApi.getTechnicians()
       .then(r => setTechs(r.data?.technicians || r.data || []))
@@ -79,6 +73,14 @@ export default function Jobs() {
       setLoading(false);
     }
   }, [activeFilter, search, dateFrom, dateTo, techFilter, priorityFilter]);
+
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchJobs(1).catch(() => {});
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [fetchJobs]);
 
   useEffect(() => {
     setPage(1);

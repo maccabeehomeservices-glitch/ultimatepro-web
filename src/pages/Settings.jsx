@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Building2,
@@ -7,7 +8,6 @@ import {
   Tag,
   CreditCard,
   UserCheck,
-  Palette,
   Bell,
   ChevronRight,
 } from 'lucide-react';
@@ -21,22 +21,27 @@ const settingsItems = [
   { to: '/settings/job-sources', icon: Tag, label: 'Job Sources' },
   { to: '/settings/membership-plans', icon: CreditCard, label: 'Membership Plans' },
   { to: '/settings/notifications', icon: Bell, label: 'Notifications' },
-  { to: '/settings/appearance', icon: Palette, label: 'Appearance' },
 ];
 
 export default function Settings() {
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('up_dark_mode')) || false;
+    } catch { return false; }
+  });
+
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <h1 className="text-xl font-bold text-gray-900 mb-4">Settings</h1>
       <div className="bg-white rounded-2xl shadow overflow-hidden">
-        {settingsItems.map(({ to, icon: Icon, label }, i) => (
+        {settingsItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex items-center gap-4 px-4 py-4 min-h-[60px] transition-colors ${
-                i !== settingsItems.length - 1 ? 'border-b border-gray-100' : ''
-              } ${isActive ? 'bg-blue-50' : 'hover:bg-gray-50'}`
+              `flex items-center gap-4 px-4 py-4 min-h-[60px] transition-colors border-b border-gray-100 ${
+                isActive ? 'bg-blue-50' : 'hover:bg-gray-50'
+              }`
             }
           >
             <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0">
@@ -46,6 +51,33 @@ export default function Settings() {
             <ChevronRight size={18} className="text-gray-400 flex-shrink-0" />
           </NavLink>
         ))}
+
+        {/* Appearance — inline toggle, no navigation */}
+        <div className="flex items-center justify-between px-4 py-4 min-h-[60px]">
+          <div className="flex items-center gap-4">
+            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 text-base">
+              🎨
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">Appearance</div>
+              <div className="text-xs text-gray-500">Dark mode</div>
+            </div>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={darkMode}
+              onChange={() => {
+                const newMode = !darkMode;
+                setDarkMode(newMode);
+                localStorage.setItem('up_dark_mode', JSON.stringify(newMode));
+                document.documentElement.classList.toggle('dark', newMode);
+              }}
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
+          </label>
+        </div>
       </div>
     </div>
   );

@@ -41,6 +41,7 @@ import Notifications from './pages/settings/Notifications';
 import CompanyProfile from './pages/settings/CompanyProfile';
 import UserManagement from './pages/settings/UserManagement';
 import Leads from './pages/Leads';
+import LiveMap from './pages/LiveMap';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,6 +70,7 @@ export default function App() {
 
               {/* Protected routes */}
               <Route element={<ProtectedRoute />}>
+                <Route path="/live-map" element={<Wrap><LiveMap /></Wrap>} />
                 <Route element={<Layout />}>
                   <Route path="/dashboard" element={<Wrap><Dashboard /></Wrap>} />
                   <Route path="/jobs" element={<Wrap><Jobs /></Wrap>} />

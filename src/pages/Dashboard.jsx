@@ -4,7 +4,7 @@ import { useGet } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { Card, Badge, LoadingSpinner, EmptyState, Modal, Button } from '../components/ui';
-import api, { timesheetsApi } from '../lib/api';
+import api, { timesheetsApi, statusColor, statusLabel } from '../lib/api';
 import { Briefcase, DollarSign, Receipt, Calendar, ClipboardList, Phone, Star, Users, ChevronRight, RefreshCw } from 'lucide-react';
 
 const MAPS_KEY = 'AIzaSyDtSGWBuiTFR5BbomG8ZFNYeiwUszkJiNQ';
@@ -33,6 +33,7 @@ function useGoogleMaps() {
 }
 
 function JobMap({ jobs, techs }) {
+  const navigate = useNavigate();
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef([]);
@@ -65,6 +66,7 @@ function JobMap({ jobs, techs }) {
       geocoder.geocode({ address: addr }, (results, status) => {
         if (status === 'OK' && results[0]) {
           const pos = results[0].geometry.location;
+          const color = statusColor(job.status);
           const marker = new window.google.maps.Marker({
             position: pos,
             map: mapInstance.current,
@@ -72,11 +74,28 @@ function JobMap({ jobs, techs }) {
             icon: {
               path: window.google.maps.SymbolPath.CIRCLE,
               scale: 8,
-              fillColor: '#1A73E8',
+              fillColor: color,
               fillOpacity: 1,
               strokeColor: '#fff',
               strokeWeight: 2,
             },
+          });
+          marker.addListener('click', () => {
+            const iw = new window.google.maps.InfoWindow({
+              content: `
+                <div style="min-width:180px;font-family:system-ui;padding:4px">
+                  <div style="font-weight:700;font-size:13px">${job.job_number || ''}</div>
+                  <div style="font-size:12px;margin:2px 0">${job.title || job.job_title || 'Untitled'}</div>
+                  <div style="font-size:11px;color:#666">${job.customer_name || job.customer?.name || ''}</div>
+                  <div style="display:inline-block;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:600;color:white;background:${color};margin-top:4px">
+                    ${statusLabel(job.status)}
+                  </div>
+                  <div style="margin-top:6px">
+                    <a href="/jobs/${job.id || job._id}" style="color:#1A73E8;font-size:11px;font-weight:600;text-decoration:none">Open Job →</a>
+                  </div>
+                </div>`
+            });
+            iw.open(mapInstance.current, marker);
           });
           markersRef.current.push(marker);
           bounds.extend(pos);
@@ -107,6 +126,19 @@ function JobMap({ jobs, techs }) {
       markersRef.current.push(marker);
     });
   }, [jobs, techs]);
+
+  // Handle SPA navigation from InfoWindow links
+  useEffect(() => {
+    function handleClick(e) {
+      const link = e.target.closest('a[href^="/jobs/"]');
+      if (link) {
+        e.preventDefault();
+        navigate(link.getAttribute('href'));
+      }
+    }
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [navigate]);
 
   return (
     <div
@@ -370,7 +402,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">Job Map</h3>
-            <button onClick={() => navigate('/map')} className="text-sm text-[#1A73E8] font-medium">
+            <button onClick={() => navigate('/live-map')} className="text-sm text-[#1A73E8] font-medium">
               Full Map
             </button>
           </div>
