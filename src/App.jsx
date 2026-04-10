@@ -38,6 +38,9 @@ import JobSources from './pages/settings/JobSources';
 import ReviewPlatforms from './pages/settings/ReviewPlatforms';
 import OnlineBooking from './pages/settings/OnlineBooking';
 import Notifications from './pages/settings/Notifications';
+import CompanyProfile from './pages/settings/CompanyProfile';
+import UserManagement from './pages/settings/UserManagement';
+import Leads from './pages/Leads';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,6 +102,9 @@ export default function App() {
                   <Route path="/settings/review-platforms" element={<Wrap><ReviewPlatforms /></Wrap>} />
                   <Route path="/settings/online-booking" element={<Wrap><OnlineBooking /></Wrap>} />
                   <Route path="/settings/notifications" element={<Wrap><Notifications /></Wrap>} />
+                  <Route path="/settings/company" element={<Wrap><CompanyProfile /></Wrap>} />
+                  <Route path="/settings/team" element={<Wrap><UserManagement /></Wrap>} />
+                  <Route path="/leads" element={<Wrap><Leads /></Wrap>} />
                   <Route path="/import" element={<Wrap><ImportWizard /></Wrap>} />
                 </Route>
               </Route>

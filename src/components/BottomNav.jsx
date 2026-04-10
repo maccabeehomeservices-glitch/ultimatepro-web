@@ -17,6 +17,7 @@ import {
   Truck,
   Settings,
   X,
+  ClipboardList,
 } from 'lucide-react';
 
 const mainItems = [
@@ -27,6 +28,7 @@ const mainItems = [
 ];
 
 const moreItems = [
+  { to: '/leads', icon: ClipboardList, label: 'Leads' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/estimates', icon: FileText, label: 'Estimates' },
   { to: '/invoices', icon: Receipt, label: 'Invoices' },

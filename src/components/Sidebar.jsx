@@ -15,6 +15,7 @@ import {
   Truck,
   Settings,
   LogOut,
+  ClipboardList,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Avatar from './ui/Avatar';
@@ -23,6 +24,7 @@ const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/jobs', icon: Briefcase, label: 'Jobs' },
   { to: '/customers', icon: Users, label: 'Customers' },
+  { to: '/leads', icon: ClipboardList, label: 'Leads' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/estimates', icon: FileText, label: 'Estimates' },
   { to: '/invoices', icon: Receipt, label: 'Invoices' },
