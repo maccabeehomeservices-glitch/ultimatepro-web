@@ -44,7 +44,7 @@ function formatCurrency(v) {
 }
 
 function SectionLabel({ children }) {
-  return <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{children}</p>;
+  return <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2 mt-4">{children}</p>;
 }
 
 // Photo lightbox

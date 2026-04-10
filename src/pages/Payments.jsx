@@ -9,6 +9,15 @@ function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function methodBadgeClass(method) {
+  return ({
+    cash: 'bg-green-100 text-green-700',
+    check: 'bg-blue-100 text-blue-700',
+    credit_card: 'bg-purple-100 text-purple-700',
+    ach: 'bg-indigo-100 text-indigo-700',
+  }[method] || 'bg-gray-100 text-gray-600');
+}
+
 export default function Payments() {
   const navigate = useNavigate();
   const today = new Date();
@@ -59,9 +68,16 @@ export default function Payments() {
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-gray-900 truncate">{p.customer_name || p.customer?.name || 'Customer'}</p>
-                  <p className="text-xs text-gray-400">
-                    {p.method || 'Payment'} · {(p.processed_at || p.created_at) ? format(new Date(p.processed_at || p.created_at), 'MMM d, yyyy') : ''}
-                  </p>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {p.method && (
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${methodBadgeClass(p.method)}`}>
+                        {p.method.replace(/_/g, ' ')}
+                      </span>
+                    )}
+                    <span className="text-xs text-gray-400">
+                      {(p.processed_at || p.created_at) ? format(new Date(p.processed_at || p.created_at), 'MMM d, yyyy') : ''}
+                    </span>
+                  </div>
                   {p.invoice_id && (
                     <button
                       onClick={() => navigate(`/invoices/${p.invoice_id}`)}

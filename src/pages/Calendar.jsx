@@ -4,6 +4,7 @@ import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addM
 import { ChevronLeft, ChevronRight, Calendar as CalIcon } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Modal, LoadingSpinner, Badge } from '../components/ui';
+import { statusColor } from '../lib/api';
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -101,8 +102,8 @@ export default function Calendar() {
               </span>
               {dayJobs.length > 0 && (
                 <div className="flex gap-0.5 flex-wrap justify-center mt-0.5">
-                  {dayJobs.slice(0, 3).map((_, idx) => (
-                    <span key={idx} className="w-1.5 h-1.5 rounded-full bg-[#1A73E8]" />
+                  {dayJobs.slice(0, 3).map((job, idx) => (
+                    <span key={idx} className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: statusColor(job.status) }} />
                   ))}
                 </div>
               )}

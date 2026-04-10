@@ -353,6 +353,16 @@ export default function Pricebook() {
             />
           </div>
           <Select
+            label="Category"
+            name="category_id"
+            value={itemForm.category_id}
+            onChange={handleItemFormChange}
+            options={[
+              { value: '', label: 'Select category...' },
+              ...categories.map(c => ({ value: c.id || c._id, label: c.name })),
+            ]}
+          />
+          <Select
             label="Item Type"
             name="item_type"
             value={itemForm.item_type}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, PhoneCall, Phone as PhoneIcon } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
@@ -14,24 +14,43 @@ export default function Phone() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('messages');
 
-  const { data: convData, loading: convLoading } = useGet(
+  const { data: convData, loading: convLoading, refetch: refetchConv } = useGet(
     activeTab === 'messages' ? '/sms/conversations' : null, [activeTab]
   );
-  const { data: callsData, loading: callsLoading } = useGet(
+  const { data: callsData, loading: callsLoading, refetch: refetchCalls } = useGet(
     activeTab === 'calls' ? '/phone/calls' : null, [activeTab]
   );
 
   const conversations = convData?.conversations || convData || [];
   const calls = callsData?.calls || callsData || [];
 
+  // Auto-refresh conversations every 60 seconds
+  useEffect(() => {
+    if (activeTab !== 'messages') return;
+    const interval = setInterval(() => refetchConv(), 60000);
+    return () => clearInterval(interval);
+  }, [activeTab]);
+
   function formatTime(ts) {
     if (!ts) return '';
     try { return format(new Date(ts), 'h:mm a'); } catch { return ''; }
   }
 
+  const activeRefetch = activeTab === 'messages' ? refetchConv : refetchCalls;
+  const activeLoading = activeTab === 'messages' ? convLoading : callsLoading;
+
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Phone / SMS</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold text-gray-900">Phone / SMS</h1>
+        <button
+          onClick={() => activeRefetch()}
+          disabled={activeLoading}
+          className="text-blue-600 text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
+        >
+          {activeLoading ? '⟳ Loading...' : '⟳ Refresh'}
+        </button>
+      </div>
 
       <Tabs tabs={tabList} active={activeTab} onChange={setActiveTab} />
 

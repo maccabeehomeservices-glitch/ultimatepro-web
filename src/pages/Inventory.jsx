@@ -3,15 +3,18 @@ import { Truck, Package, ArrowRight } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Tabs, StepperInput, Button, Select, Modal } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { useAuth } from '../hooks/useAuth';
 import api, { inventoryApi } from '../lib/api';
 
 const tabList = [
   { id: 'warehouse', label: 'Warehouse' },
   { id: 'trucks', label: 'Trucks' },
+  { id: 'my_truck', label: 'My Truck' },
 ];
 
 export default function Inventory() {
   const { showSnack } = useSnackbar();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('warehouse');
   const [selectedTruckId, setSelectedTruckId] = useState('');
   const [itemQtys, setItemQtys] = useState({});
@@ -40,7 +43,13 @@ export default function Inventory() {
     activeTab === 'trucks' && selectedTruckId ? `/inventory/trucks/${selectedTruckId}/stock` : null,
     [selectedTruckId]
   );
+  const { data: myTruckData, loading: myTruckLoading } = useGet(
+    activeTab === 'my_truck' && user?.id ? `/inventory/tech-truck/${user.id}` : null,
+    [activeTab, user?.id]
+  );
   const { mutate } = useMutation();
+
+  const myTruckItems = myTruckData?.items || myTruckData?.stock || (Array.isArray(myTruckData) ? myTruckData : []);
 
   const warehouseItems = warehouseData?.items || warehouseData || [];
   const trucks = trucksData?.trucks || trucksData || [];
@@ -197,6 +206,36 @@ export default function Inventory() {
                         >
                           <ArrowRight size={14} /> Truck
                         </button>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )
+        )}
+
+        {activeTab === 'my_truck' && (
+          myTruckLoading ? <LoadingSpinner /> :
+          myTruckItems.length === 0 ? (
+            <EmptyState icon={Truck} title="No stock on your truck" description="Items assigned to your truck will appear here." />
+          ) : (
+            <div className="space-y-2">
+              {myTruckItems.map((item) => {
+                const id = item.id || item._id;
+                return (
+                  <Card key={id}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900">{item.name}</p>
+                        {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900">{item.qty_on_hand ?? item.quantity ?? item.qty ?? 0}</p>
+                        <p className="text-xs text-gray-400">on hand</p>
+                        {item.min_qty != null && (item.qty_on_hand ?? item.quantity ?? item.qty ?? 0) < item.min_qty && (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">Low Stock</span>
+                        )}
                       </div>
                     </div>
                   </Card>

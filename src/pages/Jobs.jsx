@@ -38,6 +38,12 @@ export default function Jobs() {
   const searchTimeout = useRef(null);
   const LIMIT = 20;
 
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => fetchJobs(1), 60000);
+    return () => clearInterval(interval);
+  }, [fetchJobs]);
+
   useEffect(() => {
     usersApi.getTechnicians()
       .then(r => setTechs(r.data?.technicians || r.data || []))
@@ -104,6 +110,13 @@ export default function Jobs() {
     <div className="p-4 max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-900">Jobs</h1>
+        <button
+          onClick={() => { setPage(1); fetchJobs(1); }}
+          disabled={loading}
+          className="text-blue-600 text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
+        >
+          {loading ? '⟳ Loading...' : '⟳ Refresh'}
+        </button>
       </div>
 
       {/* Search */}
