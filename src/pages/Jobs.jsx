@@ -20,6 +20,8 @@ const STATUS_FILTERS = [
 
 const PRIORITY_FILTERS = ['', 'low', 'medium', 'high', 'urgent'];
 
+const LIMIT = 20;
+
 export default function Jobs() {
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
@@ -36,14 +38,8 @@ export default function Jobs() {
   const [hasMore, setHasMore] = useState(false);
   const [techs, setTechs] = useState([]);
   const searchTimeout = useRef(null);
-  const LIMIT = 20;
 
-  useEffect(() => {
-    usersApi.getTechnicians()
-      .then(r => setTechs(r.data?.technicians || r.data || []))
-      .catch(() => {});
-  }, []);
-
+  // Declare fetchJobs FIRST — before any useEffect that references it
   const fetchJobs = useCallback(async (pageNum) => {
     setLoading(true);
     try {
@@ -72,7 +68,25 @@ export default function Jobs() {
     } finally {
       setLoading(false);
     }
-  }, [activeFilter, search, dateFrom, dateTo, techFilter, priorityFilter]);
+  }, [activeFilter, search, dateFrom, dateTo, techFilter, priorityFilter, showSnack]);
+
+  // Load technicians (no fetchJobs dependency)
+  useEffect(() => {
+    usersApi.getTechnicians()
+      .then(r => setTechs(r.data?.technicians || r.data || []))
+      .catch(() => {});
+  }, []);
+
+  // Fetch jobs whenever filters change — depend on fetchJobs (which closes over all filter values)
+  useEffect(() => {
+    setPage(1);
+    fetchJobs(1);
+  }, [fetchJobs]);
+
+  // Load next page when page increments past 1
+  useEffect(() => {
+    if (page > 1) fetchJobs(page);
+  }, [page, fetchJobs]);
 
   // Auto-refresh every 60 seconds
   useEffect(() => {
@@ -81,15 +95,6 @@ export default function Jobs() {
     }, 60000);
     return () => clearInterval(interval);
   }, [fetchJobs]);
-
-  useEffect(() => {
-    setPage(1);
-    fetchJobs(1);
-  }, [activeFilter, search, dateFrom, dateTo, techFilter, priorityFilter]);
-
-  useEffect(() => {
-    if (page > 1) fetchJobs(page);
-  }, [page]);
 
   function handleSearchChange(e) {
     const val = e.target.value;
@@ -165,7 +170,7 @@ export default function Jobs() {
         )}
       </div>
 
-      {/* Tech filter + Priority filter row */}
+      {/* Tech filter */}
       <div className="flex flex-wrap gap-2 mb-3">
         <select
           className="border border-gray-300 rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white"
