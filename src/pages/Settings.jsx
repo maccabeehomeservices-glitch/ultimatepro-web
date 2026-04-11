@@ -23,6 +23,11 @@ const settingsItems = [
   { to: '/settings/notifications', icon: Bell, label: 'Notifications' },
 ];
 
+const emojiSettingsItems = [
+  { to: '/settings/custom-fields', emoji: '🏷️', label: 'Custom Fields', desc: 'Add custom data fields to jobs, customers, estimates' },
+  { to: '/settings/automation', emoji: '⚡', label: 'Automation Rules', desc: 'Automate actions when events happen' },
+];
+
 export default function Settings() {
   const [darkMode, setDarkMode] = useState(() => {
     try {
@@ -48,6 +53,27 @@ export default function Settings() {
               <Icon size={18} className="text-gray-600" />
             </div>
             <span className="flex-1 font-medium text-gray-900">{label}</span>
+            <ChevronRight size={18} className="text-gray-400 flex-shrink-0" />
+          </NavLink>
+        ))}
+
+        {emojiSettingsItems.map(({ to, emoji, label, desc }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) =>
+              `flex items-center gap-4 px-4 py-4 min-h-[60px] transition-colors border-b border-gray-100 ${
+                isActive ? 'bg-blue-50' : 'hover:bg-gray-50'
+              }`
+            }
+          >
+            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 text-base">
+              {emoji}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-gray-900">{label}</p>
+              <p className="text-xs text-gray-500">{desc}</p>
+            </div>
             <ChevronRight size={18} className="text-gray-400 flex-shrink-0" />
           </NavLink>
         ))}

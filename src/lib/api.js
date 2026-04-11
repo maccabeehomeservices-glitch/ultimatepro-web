@@ -728,6 +728,12 @@ export const companyApi = {
     api.put('/company', data),
   getCustomFields: () =>
     api.get('/company/custom-fields'),
+  createCustomField: (data) =>
+    api.post('/company/custom-fields', data),
+  updateCustomField: (id, data) =>
+    api.put(`/company/custom-fields/${id}`, data),
+  deleteCustomField: (id) =>
+    api.delete(`/company/custom-fields/${id}`),
   getJobyRules: () =>
     api.get('/company/joby-rules'),
   updateJobyRule: (id, data) =>

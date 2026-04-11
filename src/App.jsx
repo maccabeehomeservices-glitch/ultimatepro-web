@@ -40,6 +40,8 @@ import OnlineBooking from './pages/settings/OnlineBooking';
 import Notifications from './pages/settings/Notifications';
 import CompanyProfile from './pages/settings/CompanyProfile';
 import UserManagement from './pages/settings/UserManagement';
+import CustomFields from './pages/settings/CustomFields';
+import AutomationRules from './pages/settings/AutomationRules';
 import Leads from './pages/Leads';
 import LiveMap from './pages/LiveMap';
 
@@ -106,6 +108,8 @@ export default function App() {
                   <Route path="/settings/notifications" element={<Wrap><Notifications /></Wrap>} />
                   <Route path="/settings/company" element={<Wrap><CompanyProfile /></Wrap>} />
                   <Route path="/settings/team" element={<Wrap><UserManagement /></Wrap>} />
+                  <Route path="/settings/custom-fields" element={<Wrap><CustomFields /></Wrap>} />
+                  <Route path="/settings/automation" element={<Wrap><AutomationRules /></Wrap>} />
                   <Route path="/leads" element={<Wrap><Leads /></Wrap>} />
                   <Route path="/import" element={<Wrap><ImportWizard /></Wrap>} />
                 </Route>
