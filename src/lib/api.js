@@ -755,6 +755,24 @@ export const companyApi = {
     api.put(`/company/joby-rules/${id}`, data),
 };
 
+// ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
+export const notificationsApi = {
+  list: (unread_only) =>
+    api.get('/notifications', { params: unread_only ? { unread_only: true } : {} }),
+
+  getUnreadCount: () =>
+    api.get('/notifications/unread-count'),
+
+  markRead: (id) =>
+    api.put(`/notifications/${id}/read`),
+
+  markAllRead: () =>
+    api.put('/notifications/read-all'),
+
+  delete: (id) =>
+    api.delete(`/notifications/${id}`),
+};
+
 // ─── LEADS ───────────────────────────────────────────────────────────────────
 export const leadsApi = {
   list: (params) =>

@@ -44,6 +44,7 @@ import CustomFields from './pages/settings/CustomFields';
 import AutomationRules from './pages/settings/AutomationRules';
 import Leads from './pages/Leads';
 import LiveMap from './pages/LiveMap';
+import NotificationsPage from './pages/Notifications';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -112,6 +113,7 @@ export default function App() {
                   <Route path="/settings/automation" element={<Wrap><AutomationRules /></Wrap>} />
                   <Route path="/leads" element={<Wrap><Leads /></Wrap>} />
                   <Route path="/import" element={<Wrap><ImportWizard /></Wrap>} />
+                  <Route path="/notifications" element={<Wrap><NotificationsPage /></Wrap>} />
                 </Route>
               </Route>
 

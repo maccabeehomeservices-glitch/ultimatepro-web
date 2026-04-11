@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Briefcase,
@@ -16,9 +17,11 @@ import {
   Settings,
   LogOut,
   ClipboardList,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import Avatar from './ui/Avatar';
+import { notificationsApi } from '../lib/api';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -40,6 +43,17 @@ const navItems = [
 
 export default function Sidebar() {
   const { user, company, logout } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const fetch = () => notificationsApi.getUnreadCount()
+      .then(r => { if (active) setUnreadCount(r.data.unread_count || 0); })
+      .catch(() => {});
+    fetch();
+    const interval = setInterval(fetch, 30000);
+    return () => { active = false; clearInterval(interval); };
+  }, []);
 
   return (
     <div className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-[240px] bg-[#0D1B2A] text-white z-20">
@@ -70,6 +84,28 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Notifications link */}
+      <div className="px-3 pb-2">
+        <NavLink
+          to="/notifications"
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors rounded-lg ${
+              isActive
+                ? 'text-white bg-white/10 border-l-4 border-[#1A73E8]'
+                : 'text-white/60 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
+            }`
+          }
+        >
+          <Bell size={18} />
+          Notifications
+          {unreadCount > 0 && (
+            <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </NavLink>
+      </div>
 
       {/* User section */}
       <div className="p-4 border-t border-white/10">
