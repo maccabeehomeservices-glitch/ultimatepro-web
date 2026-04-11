@@ -15,6 +15,7 @@ export default function Register() {
     email: '',
     phone: '',
     password: '',
+    invite_code: '',
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -36,7 +37,7 @@ export default function Register() {
       setStoredCompany(company);
       navigate('/dashboard');
     } catch (err) {
-      setError(err?.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err?.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -111,6 +112,20 @@ export default function Register() {
               autoComplete="new-password"
               required
             />
+            <div>
+              <Input
+                label="Invite Code"
+                name="invite_code"
+                value={form.invite_code}
+                onChange={handleChange}
+                placeholder="Enter your invite code"
+                autoComplete="off"
+                required
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Contact the administrator for an invite code
+              </p>
+            </div>
             <Button
               type="submit"
               loading={loading}
