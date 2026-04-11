@@ -238,6 +238,9 @@ export default function EstimateDetail() {
               const itemTotal = Number(item.total || qty * price);
               return (
                 <div key={i} className="flex items-start justify-between gap-2 py-2 border-b border-gray-50 last:border-0">
+                  {item.image_url && (
+                    <img src={item.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100 mt-0.5" />
+                  )}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-gray-900">{item.name || item.description}</p>
                     <p className="text-xs text-gray-400">{qty} × {formatCurrency(price)}</p>

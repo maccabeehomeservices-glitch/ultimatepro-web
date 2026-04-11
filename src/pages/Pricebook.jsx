@@ -18,7 +18,7 @@ function formatCurrency(v) {
 
 const emptyItemForm = () => ({
   name: '', sku: '', description: '', unit_price: '', cost_price: '',
-  item_type: 'service', is_active: true, category_id: '',
+  item_type: 'service', is_active: true, category_id: '', image_url: '',
 });
 
 export default function Pricebook() {
@@ -88,6 +88,7 @@ export default function Pricebook() {
       item_type: item.item_type || 'service',
       is_active: item.is_active !== false,
       category_id: item.category_id || selectedCategory?.id || selectedCategory?._id || '',
+      image_url: item.image_url || '',
     });
     setItemModal(true);
   }
@@ -243,6 +244,9 @@ export default function Pricebook() {
               {filteredItems.map((item) => (
                 <Card key={item.id || item._id}>
                   <div className="flex items-center justify-between gap-3">
+                    {item.image_url && (
+                      <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-medium text-gray-900">{item.name}</p>
@@ -369,6 +373,16 @@ export default function Pricebook() {
             onChange={handleItemFormChange}
             options={ITEM_TYPE_OPTIONS}
           />
+          <Input
+            label="Image URL"
+            name="image_url"
+            value={itemForm.image_url}
+            onChange={handleItemFormChange}
+            placeholder="https://..."
+          />
+          {itemForm.image_url && (
+            <img src={itemForm.image_url} alt="Preview" className="w-20 h-20 rounded-xl object-cover border border-gray-200" />
+          )}
           <div className="flex items-center justify-between py-1">
             <span className="text-sm font-medium text-gray-700">Active</span>
             <Toggle

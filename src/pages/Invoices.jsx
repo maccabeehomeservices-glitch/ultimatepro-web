@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Receipt, Search, X } from 'lucide-react';
+import { Receipt, Search, X, Plus } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
 
@@ -43,13 +43,21 @@ export default function Invoices() {
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-900">Invoices</h1>
-        <button
-          onClick={() => refetch()}
-          disabled={loading}
-          className="text-blue-600 text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
-        >
-          {loading ? '⟳ Loading...' : '⟳ Refresh'}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => refetch()}
+            disabled={loading}
+            className="text-blue-600 text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
+          >
+            {loading ? '⟳ Loading...' : '⟳ Refresh'}
+          </button>
+          <button
+            onClick={() => navigate('/invoices/new')}
+            className="flex items-center gap-1.5 text-sm bg-[#1A73E8] text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-700 transition-colors"
+          >
+            <Plus size={14} /> New
+          </button>
+        </div>
       </div>
 
       {/* Search */}

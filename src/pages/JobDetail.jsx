@@ -699,7 +699,10 @@ export default function JobDetail() {
                 <Card>
                   <div className="space-y-2">
                     {lineItems.map((item, i) => (
-                      <div key={item.id || i} className="flex items-center justify-between">
+                      <div key={item.id || i} className="flex items-center justify-between gap-2">
+                        {item.image_url && (
+                          <img src={item.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                        )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">{item.name || item.description}</p>
                           {item.quantity != null && item.quantity !== 1 && (

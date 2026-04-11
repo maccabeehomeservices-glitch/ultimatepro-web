@@ -79,6 +79,9 @@ export const jobsApi = {
   list: (params) =>
     api.get('/jobs', { params }),
 
+  today: () =>
+    api.get('/jobs/today'),
+
   get: (id) =>
     api.get(`/jobs/${id}`),
 

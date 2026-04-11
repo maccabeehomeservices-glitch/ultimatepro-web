@@ -8,6 +8,7 @@ import { useSnackbar } from '../components/ui/Snackbar';
 
 const STATUS_FILTERS = [
   { id: '', label: 'All' },
+  { id: 'today', label: 'Today' },
   { id: 'unscheduled', label: 'Unscheduled' },
   { id: 'scheduled', label: 'Scheduled' },
   { id: 'en_route', label: 'En Route' },
@@ -43,6 +44,14 @@ export default function Jobs() {
   const fetchJobs = useCallback(async (pageNum) => {
     setLoading(true);
     try {
+      if (activeFilter === 'today') {
+        const todayRes = await jobsApi.today();
+        const todayJobs = todayRes.data?.jobs || (Array.isArray(todayRes.data) ? todayRes.data : []);
+        if (pageNum === 1) setJobs(todayJobs);
+        setHasMore(false);
+        return;
+      }
+
       const params = { page: pageNum, limit: LIMIT };
       if (activeFilter === 'received') {
         params.partner_view = true;

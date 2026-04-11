@@ -21,6 +21,7 @@ import EstimateDetail from './pages/EstimateDetail';
 import EstimateBuilder from './pages/EstimateBuilder';
 import Invoices from './pages/Invoices';
 import InvoiceDetail from './pages/InvoiceDetail';
+import InvoiceForm from './pages/InvoiceForm';
 import Payments from './pages/Payments';
 import Phone from './pages/Phone';
 import SmsThread from './pages/SmsThread';
@@ -90,6 +91,7 @@ export default function App() {
                   <Route path="/estimates/:id" element={<Wrap><EstimateDetail /></Wrap>} />
                   <Route path="/estimates/:id/edit" element={<Wrap><EstimateBuilder /></Wrap>} />
                   <Route path="/invoices" element={<Wrap><Invoices /></Wrap>} />
+                  <Route path="/invoices/new" element={<Wrap><InvoiceForm /></Wrap>} />
                   <Route path="/invoices/:id" element={<Wrap><InvoiceDetail /></Wrap>} />
                   <Route path="/payments" element={<Wrap><Payments /></Wrap>} />
                   <Route path="/phone" element={<Wrap><Phone /></Wrap>} />

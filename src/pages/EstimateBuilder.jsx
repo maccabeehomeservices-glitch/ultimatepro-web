@@ -337,6 +337,9 @@ export default function EstimateBuilder() {
           {items.map((item, idx) => (
             <div key={idx} className="border border-gray-100 rounded-xl p-3 space-y-2">
               <div className="flex items-center gap-2">
+                {item.image_url && (
+                  <img src={item.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                )}
                 <input
                   value={item.name}
                   onChange={e => {
@@ -349,6 +352,32 @@ export default function EstimateBuilder() {
                   placeholder="Item name"
                   className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
                 />
+                <div className="flex flex-col gap-0.5">
+                  <button
+                    type="button"
+                    disabled={idx === 0}
+                    onClick={() => setter(prev => {
+                      const arr = [...prev[sectionKey]];
+                      [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+                      return { ...prev, [sectionKey]: arr };
+                    })}
+                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-20 rounded"
+                  >
+                    ▲
+                  </button>
+                  <button
+                    type="button"
+                    disabled={idx === items.length - 1}
+                    onClick={() => setter(prev => {
+                      const arr = [...prev[sectionKey]];
+                      [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+                      return { ...prev, [sectionKey]: arr };
+                    })}
+                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-20 rounded"
+                  >
+                    ▼
+                  </button>
+                </div>
                 <button
                   type="button"
                   onClick={() => setter(prev => ({ ...prev, [sectionKey]: prev[sectionKey].filter((_, i) => i !== idx) }))}

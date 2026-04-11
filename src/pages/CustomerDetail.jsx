@@ -313,10 +313,19 @@ export default function CustomerDetail() {
                 type="tel"
                 value={addPhoneInput}
                 onChange={e => setAddPhoneInput(e.target.value)}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+1 (555) 000-0000 or paste multiple"
                 className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 autoFocus
                 onKeyDown={e => { if (e.key === 'Enter') handleAddContact('phone', addPhoneInput); if (e.key === 'Escape') setShowAddPhone(false); }}
+                onPaste={e => {
+                  const text = e.clipboardData.getData('text');
+                  const parts = text.split(/[,/\n;]+/).map(s => s.trim()).filter(Boolean);
+                  if (parts.length > 1) {
+                    e.preventDefault();
+                    parts.forEach(v => handleAddContact('phone', v));
+                    setShowAddPhone(false);
+                  }
+                }}
               />
               <button onClick={() => handleAddContact('phone', addPhoneInput)} disabled={savingContact || !addPhoneInput.trim()} className="px-3 rounded-xl bg-[#1A73E8] text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
               <button onClick={() => setShowAddPhone(false)} className="px-3 rounded-xl border border-gray-300 text-sm min-h-[44px]">Cancel</button>
@@ -345,10 +354,19 @@ export default function CustomerDetail() {
                 type="email"
                 value={addEmailInput}
                 onChange={e => setAddEmailInput(e.target.value)}
-                placeholder="email@example.com"
+                placeholder="email@example.com or paste multiple"
                 className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 autoFocus
                 onKeyDown={e => { if (e.key === 'Enter') handleAddContact('email', addEmailInput); if (e.key === 'Escape') setShowAddEmail(false); }}
+                onPaste={e => {
+                  const text = e.clipboardData.getData('text');
+                  const parts = text.split(/[,/\n;]+/).map(s => s.trim()).filter(Boolean);
+                  if (parts.length > 1) {
+                    e.preventDefault();
+                    parts.forEach(v => handleAddContact('email', v));
+                    setShowAddEmail(false);
+                  }
+                }}
               />
               <button onClick={() => handleAddContact('email', addEmailInput)} disabled={savingContact || !addEmailInput.trim()} className="px-3 rounded-xl bg-[#1A73E8] text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
               <button onClick={() => setShowAddEmail(false)} className="px-3 rounded-xl border border-gray-300 text-sm min-h-[44px]">Cancel</button>
@@ -436,7 +454,7 @@ export default function CustomerDetail() {
         <Card className="mb-4 border border-blue-100 bg-blue-50">
           <p className="text-xs font-semibold text-blue-700 uppercase mb-2">Customer Portal</p>
           <p className="text-xs text-blue-500 truncate mb-3">{portalUrl}</p>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => handleCopyPortal(portalUrl)}
               className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
@@ -444,6 +462,14 @@ export default function CustomerDetail() {
               {portalCopied ? <Check size={14} /> : <Copy size={14} />}
               {portalCopied ? 'Copied' : 'Copy Link'}
             </button>
+            {typeof navigator !== 'undefined' && navigator.share && (
+              <button
+                onClick={() => navigator.share({ title: `${name}'s Portal`, url: portalUrl }).catch(() => {})}
+                className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+              >
+                <Send size={14} /> Share
+              </button>
+            )}
             <a
               href={portalUrl}
               target="_blank"

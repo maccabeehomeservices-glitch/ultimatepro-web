@@ -126,6 +126,7 @@ export default function JobForm() {
   const [ticketText, setTicketText] = useState('');
   const [parsing, setParsing] = useState(false);
   const [lineItemModal, setLineItemModal] = useState(null);
+  const [duplicateModal, setDuplicateModal] = useState(null); // { matched: customer, parsedName: string }
   const searchTO = useRef(null);
   const streetInputRef = useRef(null);
   const customerDropdownRef = useRef(null);
@@ -439,6 +440,12 @@ export default function JobForm() {
 
     // Resolve customer — robust, never blocks job creation
     const result = await resolveCustomer(p);
+
+    if (result.action === 'matched' && result.customer) {
+      // Show duplicate modal instead of silently selecting
+      setDuplicateModal({ matched: result.customer, parsedName: p.customer_name || '' });
+      return;
+    }
 
     if (result.customer) {
       selectCustomer(result.customer);
@@ -926,6 +933,63 @@ export default function JobForm() {
             className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
             autoFocus />
         </div>
+      </Modal>
+
+      {/* Duplicate Customer Modal */}
+      <Modal
+        isOpen={Boolean(duplicateModal)}
+        onClose={() => setDuplicateModal(null)}
+        title="Returning Customer?"
+      >
+        {duplicateModal && (
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              We found an existing customer matching <strong>{duplicateModal.parsedName || 'this contact'}</strong>:
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+              <p className="font-semibold text-gray-900">
+                {`${duplicateModal.matched.first_name || ''} ${duplicateModal.matched.last_name || ''}`.trim() || duplicateModal.matched.name}
+              </p>
+              {duplicateModal.matched.phone && <p className="text-sm text-gray-600">{duplicateModal.matched.phone}</p>}
+              {duplicateModal.matched.address && <p className="text-xs text-gray-500">{duplicateModal.matched.address}</p>}
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              <Button
+                onClick={() => { selectCustomer(duplicateModal.matched); setDuplicateModal(null); showSnack('Returning customer selected', 'success'); }}
+                className="w-full"
+              >
+                Returning Customer
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={async () => {
+                  setDuplicateModal(null);
+                  showSnack('Creating new customer...', 'info');
+                  try {
+                    const parsedName = duplicateModal.parsedName.trim();
+                    const parts = parsedName.split(' ');
+                    const res = await customersApi.create({
+                      first_name: parts[0] || 'Customer',
+                      last_name: parts.slice(1).join(' ') || '',
+                      phone: duplicateModal.matched.phone || null,
+                      type: 'residential',
+                    });
+                    selectCustomer(res.data?.customer || res.data);
+                    showSnack('New customer created', 'success');
+                  } catch {
+                    showSnack('Failed to create customer', 'error');
+                  }
+                }}
+                className="w-full"
+              >
+                Create New Customer
+              </Button>
+              <Button variant="outlined" onClick={() => setDuplicateModal(null)} className="w-full">
+                Go Back
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
 
       {/* Add Line Item Modal */}
