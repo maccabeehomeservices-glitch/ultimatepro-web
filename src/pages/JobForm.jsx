@@ -8,6 +8,47 @@ import { useSnackbar } from '../components/ui/Snackbar';
 import QuickCreateCustomerModal from '../components/QuickCreateCustomerModal';
 
 const JOB_TYPES = ['Service', 'Installation', 'Maintenance', 'Inspection', 'Repair', 'New Installation', 'Spring Replacement', 'Tune-Up', 'Other'];
+
+// Map display labels → backend enum values (backend expects lowercase)
+const JOB_TYPE_TO_BACKEND = {
+  'Service':          'service',
+  'Installation':     'installation',
+  'Maintenance':      'maintenance',
+  'Inspection':       'inspection',
+  'Repair':           'repair',
+  'New Installation': 'installation',
+  'Spring Replacement': 'repair',
+  'Tune-Up':          'maintenance',
+  'Other':            'service',
+  'Estimate':         'estimate',
+};
+
+// US state name → 2-letter abbreviation lookup
+const STATE_ABBR = {
+  'alabama':'AL','alaska':'AK','arizona':'AZ','arkansas':'AR',
+  'california':'CA','colorado':'CO','connecticut':'CT',
+  'delaware':'DE','florida':'FL','georgia':'GA','hawaii':'HI',
+  'idaho':'ID','illinois':'IL','indiana':'IN','iowa':'IA',
+  'kansas':'KS','kentucky':'KY','louisiana':'LA','maine':'ME',
+  'maryland':'MD','massachusetts':'MA','michigan':'MI',
+  'minnesota':'MN','mississippi':'MS','missouri':'MO',
+  'montana':'MT','nebraska':'NE','nevada':'NV',
+  'new hampshire':'NH','new jersey':'NJ','new mexico':'NM',
+  'new york':'NY','north carolina':'NC','north dakota':'ND',
+  'ohio':'OH','oklahoma':'OK','oregon':'OR','pennsylvania':'PA',
+  'rhode island':'RI','south carolina':'SC','south dakota':'SD',
+  'tennessee':'TN','texas':'TX','utah':'UT','vermont':'VT',
+  'virginia':'VA','washington':'WA','west virginia':'WV',
+  'wisconsin':'WI','wyoming':'WY','district of columbia':'DC',
+};
+
+function toStateAbbr(val) {
+  if (!val) return val;
+  const trimmed = val.trim();
+  if (trimmed.length <= 2) return trimmed.toUpperCase();
+  return STATE_ABBR[trimmed.toLowerCase()] || trimmed;
+}
+
 const PRIORITIES = [
   { value: 'low',    label: 'Low',    sel: 'bg-gray-500 text-white border-gray-500',   unsel: 'text-gray-600 border-gray-300' },
   { value: 'medium', label: 'Medium', sel: 'bg-[#1A73E8] text-white border-[#1A73E8]', unsel: 'text-[#1A73E8] border-blue-300' },
@@ -115,7 +156,7 @@ export default function JobForm() {
         notes: [parsed.job_description, parsed.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
         address: parsed.address || parsed.service_address || prev.address,
         city: parsed.city || prev.city,
-        state: parsed.state || prev.state,
+        state: toStateAbbr(parsed.state) || prev.state,
         zip: parsed.zip || prev.zip,
         job_type: parsed.type || parsed.job_type || prev.job_type,
         priority: parsed.priority || prev.priority,
@@ -186,7 +227,7 @@ export default function JobForm() {
       setForm(prev => ({
         ...prev,
         address: street.trim() || place.formatted_address,
-        city, state, zip,
+        city, state: toStateAbbr(state), zip,
       }));
     });
     return () => window.google?.maps?.event?.clearInstanceListeners(ac);
@@ -381,7 +422,7 @@ export default function JobForm() {
       notes: [p.job_description, p.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
       address: p.address || p.service_address || prev.address,
       city: p.city || prev.city,
-      state: p.state || prev.state,
+      state: toStateAbbr(p.state) || prev.state,
       zip: p.zip || prev.zip,
       job_type: p.type || p.job_type || prev.job_type,
       priority: p.priority || prev.priority,
@@ -483,13 +524,12 @@ export default function JobForm() {
         customer_id: form.customer_id || null,
         address: form.address?.trim() || null,
         city: form.city?.trim() || null,
-        state: form.state?.trim() || null,
+        state: toStateAbbr(form.state?.trim()) || null,
         zip: form.zip?.trim() || null,
         scheduled_start,
         assigned_to: form.assigned_roster_tech_id ? null : (form.assigned_tech_id || null),
         assigned_roster_tech_id: form.assigned_tech_id ? null : (form.assigned_roster_tech_id || null),
-        status: form.status || null,
-        type: form.job_type || null,
+        type: JOB_TYPE_TO_BACKEND[form.job_type] || form.job_type?.toLowerCase() || null,
         priority: form.priority || null,
         source_type: form.source_type || null,
         job_source_id: form.job_source_id || null,
@@ -508,6 +548,8 @@ export default function JobForm() {
         if (payload[k] === undefined) delete payload[k];
       });
 
+      console.log('[JobForm] Submitting payload:', JSON.stringify(payload, null, 2));
+
       if (isEdit) {
         await jobsApi.update(id, payload);
         showSnack('Job updated', 'success');
@@ -518,9 +560,16 @@ export default function JobForm() {
         navigate(`/jobs/${res.data?.job?.id || res.data?.id}`);
       }
     } catch (err) {
-      const msg = err?.response?.data?.error || err?.response?.data?.message || 'Failed to save job';
+      console.error('[JobForm] Save error:', {
+        status: err?.response?.status,
+        data: err?.response?.data,
+        payload: err?.config?.data,
+      });
+      const msg = err?.response?.data?.error
+        || err?.response?.data?.errors?.[0]?.msg
+        || err?.response?.data?.message
+        || 'Failed to save job';
       showSnack(msg, 'error');
-      console.error('[JobForm] Save error:', err?.response?.data || err);
     } finally {
       setSaving(false);
     }
