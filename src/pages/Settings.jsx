@@ -25,7 +25,7 @@ const settingsItems = [
 
 const emojiSettingsItems = [
   { to: '/settings/custom-fields', emoji: '🏷️', label: 'Custom Fields', desc: 'Add custom data fields to jobs, customers, estimates' },
-  { to: '/settings/automation', emoji: '⚡', label: 'Automation Rules', desc: 'Automate actions when events happen' },
+  { to: '/settings/automation', emoji: '⚡', label: 'Ailot', desc: 'Smart Automation Rules' },
 ];
 
 export default function Settings() {

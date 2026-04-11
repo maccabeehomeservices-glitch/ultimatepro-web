@@ -128,7 +128,7 @@ export default function AutomationRules() {
       const res = await companyApi.getJobyRules();
       setRules(res.data || []);
     } catch (err) {
-      showSnack(err?.response?.data?.error || 'Failed to load automation rules', 'error');
+      showSnack(err?.response?.data?.error || 'Failed to load Ailot rules', 'error');
     } finally {
       setLoading(false);
     }
@@ -158,18 +158,17 @@ export default function AutomationRules() {
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">Automation Rules</h1>
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">⚡ Ailot</h1>
+          <p className="text-xs text-gray-500">Smart Automation Rules</p>
+        </div>
       </div>
-
-      <p className="text-sm text-gray-500 mb-4">
-        Automation rules trigger actions automatically when events happen in your business.
-      </p>
 
       {loading ? (
         <LoadingSpinner />
       ) : rules.length === 0 ? (
         <Card>
-          <p className="text-center text-gray-400 py-6">No automation rules configured.</p>
+          <p className="text-center text-gray-400 py-6">No automation rules configured yet. Ailot runs tasks automatically when events happen in your workflow.</p>
         </Card>
       ) : (
         <div>
