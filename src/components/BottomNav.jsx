@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -18,16 +18,18 @@ import {
   Settings,
   X,
   ClipboardList,
+  Bell,
 } from 'lucide-react';
+import { notificationsApi } from '../lib/api';
 
 const mainItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home' },
   { to: '/jobs', icon: Briefcase, label: 'Jobs' },
   { to: '/customers', icon: Users, label: 'Customers' },
-  { to: '/phone', icon: Phone, label: 'Phone' },
 ];
 
 const moreItems = [
+  { to: '/phone', icon: Phone, label: 'Phone' },
   { to: '/leads', icon: ClipboardList, label: 'Leads' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/estimates', icon: FileText, label: 'Estimates' },
@@ -43,6 +45,16 @@ const moreItems = [
 
 export default function BottomNav() {
   const [showMore, setShowMore] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchCount = () => notificationsApi.getUnreadCount()
+      .then(r => setUnreadCount(r.data?.unread_count || 0))
+      .catch(() => {});
+    fetchCount();
+    const interval = setInterval(fetchCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -97,6 +109,24 @@ export default function BottomNav() {
             <span className="text-[10px] font-medium">{label}</span>
           </NavLink>
         ))}
+        <NavLink
+          to="/notifications"
+          className={({ isActive }) =>
+            `flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-center transition-colors ${
+              isActive ? 'text-[#1A73E8]' : 'text-gray-400'
+            }`
+          }
+        >
+          <div className="relative">
+            <Bell size={22} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                {unreadCount > 99 ? '!' : unreadCount}
+              </span>
+            )}
+          </div>
+          <span className="text-[10px] font-medium">Alerts</span>
+        </NavLink>
         <button
           onClick={() => setShowMore(!showMore)}
           className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-center transition-colors ${showMore ? 'text-[#1A73E8]' : 'text-gray-400'}`}
