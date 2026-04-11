@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Briefcase,
@@ -43,6 +43,7 @@ const navItems = [
 
 export default function Sidebar() {
   const { user, company, logout } = useAuth();
+  const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -57,12 +58,25 @@ export default function Sidebar() {
 
   return (
     <div className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-[240px] bg-[#0D1B2A] text-white z-20">
-      {/* Logo / Brand */}
-      <div className="px-5 py-5 border-b border-white/10">
-        <h1 className="text-xl font-bold text-white">UltimatePro</h1>
-        {company && (
-          <p className="text-xs text-white/50 mt-0.5 truncate">{company.name}</p>
-        )}
+      {/* Logo / Brand + Bell */}
+      <div className="px-5 py-5 border-b border-white/10 flex items-start justify-between">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl font-bold text-white">UltimatePro</h1>
+          {company && (
+            <p className="text-xs text-white/50 mt-0.5 truncate">{company.name}</p>
+          )}
+        </div>
+        <button
+          onClick={() => navigate('/notifications')}
+          className="relative p-1.5 ml-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+        >
+          <Bell size={18} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
+              {unreadCount > 99 ? '!' : unreadCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* Nav links */}
@@ -84,28 +98,6 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
-
-      {/* Notifications link */}
-      <div className="px-3 pb-2">
-        <NavLink
-          to="/notifications"
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-colors rounded-lg ${
-              isActive
-                ? 'text-white bg-white/10 border-l-4 border-[#1A73E8]'
-                : 'text-white/60 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
-            }`
-          }
-        >
-          <Bell size={18} />
-          Notifications
-          {unreadCount > 0 && (
-            <span className="ml-auto bg-red-500 text-white text-xs font-bold rounded-full px-1.5 py-0.5 leading-none">
-              {unreadCount > 99 ? '99+' : unreadCount}
-            </span>
-          )}
-        </NavLink>
-      </div>
 
       {/* User section */}
       <div className="p-4 border-t border-white/10">
