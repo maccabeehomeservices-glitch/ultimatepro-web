@@ -288,10 +288,96 @@ export default function JobForm() {
     selectCustomer(customer);
   }
 
+  // Resolve customer from parsed ticket data.
+  // Backend requires customer_id — this function always attempts to
+  // return a valid customer. Walk-in placeholder is the final fallback.
+  async function resolveCustomer(p) {
+    const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g, '');
+    const parsedName = (p.customer_name || '').trim();
+    const nameParts = parsedName.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Step 1: Backend already matched an existing customer — verify confidence
+    if (p.existing_customer_id && p.existing_customer) {
+      const ec = p.existing_customer;
+      const phonesMatch = parsedPhone && ec.phone &&
+        (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
+         parsedPhone.endsWith(ec.phone.replace(/\D/g, '')));
+      const hasFullName = parsedName.includes(' ') && nameParts.length >= 2;
+      const nameMatch = hasFullName && ec.first_name &&
+        parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
+      if (phonesMatch || nameMatch) {
+        return { customer: ec, action: 'matched', message: `Matched: ${`${ec.first_name} ${ec.last_name || ''}`.trim()}` };
+      }
+    }
+
+    // Step 2: Search by phone/name if backend didn't match
+    if (parsedPhone || parsedName) {
+      try {
+        const searchTerm = parsedPhone || parsedName;
+        const res = await customersApi.list({ search: searchTerm, limit: 5 });
+        const results = res.data?.customers || res.data || [];
+        if (parsedPhone && results.length > 0) {
+          const phoneMatch = results.find(c =>
+            (c.phone || '').replace(/\D/g, '').endsWith(parsedPhone) ||
+            parsedPhone.endsWith((c.phone || '').replace(/\D/g, ''))
+          );
+          if (phoneMatch) {
+            return { customer: phoneMatch, action: 'matched', message: `Matched: ${`${phoneMatch.first_name} ${phoneMatch.last_name || ''}`.trim()}` };
+          }
+        }
+      } catch (err) {
+        // Search failed (500, network, etc.) — continue to create
+        console.warn('[JobForm] Customer search failed:', err.message);
+      }
+    }
+
+    // Step 3: Create customer from parsed data
+    if (firstName || parsedPhone) {
+      try {
+        const createRes = await customersApi.create({
+          first_name: firstName || 'Customer',
+          last_name: lastName || '',
+          phone: parsedPhone || null,
+          email: p.email || null,
+          type: 'residential',
+        });
+        const created = createRes.data?.customer || createRes.data;
+        return { customer: created, action: 'created', message: `New customer: ${`${firstName} ${lastName}`.trim()}` };
+      } catch (err) {
+        console.warn('[JobForm] Customer create failed:', err.message);
+      }
+    }
+
+    // Step 4: Walk-in placeholder — backend requires customer_id, so we must have one
+    // Use parsedName as first_name so the job is at least identifiable
+    try {
+      const walkinRes = await customersApi.create({
+        first_name: parsedName || 'Walk-in',
+        last_name: '',
+        phone: parsedPhone || null,
+        type: 'residential',
+      });
+      const walkin = walkinRes.data?.customer || walkinRes.data;
+      return { customer: walkin, action: 'created', message: parsedName ? `Customer: ${parsedName}` : 'Walk-in customer created' };
+    } catch (err) {
+      console.warn('[JobForm] Walk-in create failed:', err.message);
+    }
+
+    // Step 5: Complete failure — customer info goes into notes, job will need manual customer
+    return {
+      customer: null,
+      action: 'failed',
+      message: parsedName ? `Could not save customer "${parsedName}" — added to notes` : null,
+    };
+  }
+
   async function applyParsedData(p) {
+    // Map job fields first (always succeeds regardless of customer)
     setForm(prev => ({
       ...prev,
-      title: p.job_title || prev.title,
+      title: p.job_title || p.title || prev.title,
       notes: [p.job_description, p.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
       address: p.address || p.service_address || prev.address,
       city: p.city || prev.city,
@@ -299,48 +385,39 @@ export default function JobForm() {
       zip: p.zip || prev.zip,
       job_type: p.type || p.job_type || prev.job_type,
       priority: p.priority || prev.priority,
-      scheduled_date: p.scheduled_date ? p.scheduled_date.slice(0, 10)
-        : p.scheduled_start ? p.scheduled_start.slice(0, 10)
-        : prev.scheduled_date,
+      scheduled_date: p.scheduled_date
+        ? p.scheduled_date.slice(0, 10)
+        : p.scheduled_start ? p.scheduled_start.slice(0, 10) : prev.scheduled_date,
       scheduled_time: p.scheduled_time
         || (p.scheduled_start ? p.scheduled_start.slice(11, 16) : '')
         || prev.scheduled_time,
     }));
+
     const phones = p.phone_numbers || (p.phone ? [p.phone] : []);
     if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
-    const ec = p.existing_customer;
-    const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g, '');
-    const phonesMatch = parsedPhone && ec?.phone &&
-      (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
-       parsedPhone.endsWith((ec?.phone || '').replace(/\D/g, '')));
-    const parsedName = (p.customer_name || '').trim();
-    const hasFullName = parsedName.includes(' ') && parsedName.split(' ').length >= 2;
-    const isHighConfidence = p.existing_customer_id && ec && phonesMatch;
-    const isMediumConfidence = p.existing_customer_id && ec && hasFullName &&
-      ec.first_name && parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
 
-    if (isHighConfidence || isMediumConfidence) {
-      selectCustomer(ec);
-      showSnack(`Ticket parsed! Matched: ${`${ec.first_name} ${ec.last_name || ''}`.trim()}`, 'success');
-    } else if (parsedName || parsedPhone) {
-      const nameParts = parsedName.split(' ');
-      const firstName = nameParts[0] || 'Customer';
-      const lastName = nameParts.slice(1).join(' ') || '';
-      try {
-        const createRes = await customersApi.create({
-          first_name: firstName,
-          last_name: lastName,
-          phone: parsedPhone || '',
-          type: 'residential',
-        });
-        selectCustomer(createRes.data?.customer || createRes.data);
-        showSnack(`Ticket parsed! New customer: ${`${firstName}${lastName ? ' ' + lastName : ''}`.trim()}`, 'success');
-      } catch {
-        setCustomerSearch(p.customer_name || '');
-        showSnack('Ticket parsed! Select customer manually', 'info');
-      }
+    // Resolve customer — robust, never blocks job creation
+    const result = await resolveCustomer(p);
+
+    if (result.customer) {
+      selectCustomer(result.customer);
     } else {
-      showSnack('Ticket parsed! Review and complete missing fields.', 'success');
+      // Customer resolution completely failed — preserve info in notes
+      const customerInfo = [p.customer_name, p.phone, p.email].filter(Boolean).join(' | ');
+      if (customerInfo) {
+        setForm(prev => ({
+          ...prev,
+          notes: prev.notes
+            ? `CUSTOMER: ${customerInfo}\n\n${prev.notes}`
+            : `CUSTOMER: ${customerInfo}`,
+        }));
+      }
+    }
+
+    if (result.message) {
+      showSnack(result.message, result.action === 'failed' ? 'error' : 'success');
+    } else {
+      showSnack('Ticket parsed!', 'success');
     }
   }
 
@@ -386,7 +463,8 @@ export default function JobForm() {
     e.preventDefault();
     const fe = {};
     if (!form.title?.trim()) fe.title = 'Job title is required';
-    if (!form.customer_id) fe.customer_id = 'Please select or create a customer';
+    // customer_id is not required at the frontend — pasted-ticket jobs auto-resolve a customer,
+    // and if resolution fails the backend error surfaces via showSnack
     if (Object.keys(fe).length) { setFieldErrors(fe); return; }
 
     setSaving(true);
@@ -402,7 +480,7 @@ export default function JobForm() {
         title: form.title.trim(),
         description: form.notes?.trim() || null,
         notes: form.notes?.trim() || null,
-        customer_id: form.customer_id,
+        customer_id: form.customer_id || null,
         address: form.address?.trim() || null,
         city: form.city?.trim() || null,
         state: form.state?.trim() || null,
