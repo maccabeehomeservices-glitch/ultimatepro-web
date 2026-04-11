@@ -3,15 +3,30 @@ import { format } from 'date-fns';
 import { CreditCard } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
+import { reportsApi } from '../lib/api';
+import { useSnackbar } from '../components/ui/Snackbar';
+
+function downloadBlob(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
 
 function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export default function Payroll() {
+  const { showSnack } = useSnackbar();
   const today = new Date();
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
   const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
+  const [exporting, setExporting] = useState(false);
 
   const url = `/reports/earnings?from=${from}&to=${to}`;
   const { data, loading } = useGet(url, [from, to]);
@@ -21,7 +36,24 @@ export default function Payroll() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Payroll</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-xl font-bold text-gray-900">Payroll</h1>
+        <button
+          onClick={async () => {
+            try {
+              setExporting(true);
+              const res = await reportsApi.exportEarnings(from, to);
+              downloadBlob(res.data, `payroll-${from}-to-${to}.csv`);
+              showSnack('Report downloaded!', 'success');
+            } catch { showSnack('Export failed', 'error'); }
+            finally { setExporting(false); }
+          }}
+          disabled={exporting}
+          className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+        >
+          {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
+        </button>
+      </div>
 
       {/* Date Range */}
       <Card className="mb-4">

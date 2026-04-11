@@ -503,6 +503,9 @@ export const sourcesApi = {
   getReport: (date_from, date_to) =>
     api.get('/sources/report', { params: { date_from, date_to } }),
 
+  exportReport: (from, to) =>
+    api.get('/sources/report/export', { params: { date_from: from, date_to: to, format: 'csv' }, responseType: 'blob' }),
+
   getCommissionRules: () =>
     api.get('/sources/commission-rules'),
 
@@ -649,6 +652,15 @@ export const reportsApi = {
 
   getEarnings: (from, to, user_id) =>
     api.get('/reports/earnings', { params: { from, to, user_id } }),
+
+  exportRevenue: (from, to, group_by) =>
+    api.get('/reports/revenue/export', { params: { from, to, group_by, format: 'csv' }, responseType: 'blob' }),
+
+  exportJobs: (from, to, group_by) =>
+    api.get('/reports/jobs/export', { params: { from, to, group_by, format: 'csv' }, responseType: 'blob' }),
+
+  exportEarnings: (from, to, user_id) =>
+    api.get('/reports/earnings/export', { params: { from, to, user_id, format: 'csv' }, responseType: 'blob' }),
 };
 
 // ─── GPS ──────────────────────────────────────────────────────────────────────
@@ -703,6 +715,9 @@ export const timesheetsApi = {
 
   getReport: (start_date, end_date, user_id) =>
     api.get('/timesheets/report', { params: { start_date, end_date, user_id } }),
+
+  exportReport: (start_date, end_date, user_id) =>
+    api.get('/timesheets/report', { params: { start_date, end_date, user_id, format: 'csv' }, responseType: 'blob' }),
 };
 
 // ─── UPLOADS ──────────────────────────────────────────────────────────────────

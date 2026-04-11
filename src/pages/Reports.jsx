@@ -3,7 +3,19 @@ import { format } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Tabs, Select, Button } from '../components/ui';
-import { networkApi } from '../lib/api';
+import { useSnackbar } from '../components/ui/Snackbar';
+import { networkApi, reportsApi, sourcesApi, timesheetsApi } from '../lib/api';
+
+function downloadBlob(blob, filename) {
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
+}
 
 const tabList = [
   { id: 'revenue', label: 'Revenue' },
@@ -25,6 +37,7 @@ function formatDuration(minutes) {
 }
 
 export default function Reports() {
+  const { showSnack } = useSnackbar();
   const today = new Date();
   const [activeTab, setActiveTab] = useState('revenue');
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
@@ -48,6 +61,7 @@ export default function Reports() {
     activeTab === 'partners' ? '/network/connections' : null, [activeTab]
   );
 
+  const [exporting, setExporting] = useState(false);
   const [partnerReport, setPartnerReport] = useState(null);
   const [partnerReportLoading, setPartnerReportLoading] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState(null);
@@ -113,6 +127,23 @@ export default function Reports() {
         {activeTab === 'revenue' && (
           revenueLoading ? <LoadingSpinner /> : (
             <div className="space-y-4">
+              <div className="flex justify-end">
+                <button
+                  onClick={async () => {
+                    try {
+                      setExporting(true);
+                      const res = await reportsApi.exportRevenue(from, to);
+                      downloadBlob(res.data, `revenue-report-${from}-to-${to}.csv`);
+                      showSnack('Report downloaded!', 'success');
+                    } catch { showSnack('Export failed', 'error'); }
+                    finally { setExporting(false); }
+                  }}
+                  disabled={exporting}
+                  className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+                >
+                  {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
+                </button>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <Card>
                   <p className="text-xs text-gray-400 uppercase">Total Revenue</p>
@@ -164,6 +195,23 @@ export default function Reports() {
             <EmptyState icon={BarChart2} title="No data" description="Job source data will appear here." />
           ) : (
             <div className="space-y-2">
+              <div className="flex justify-end mb-2">
+                <button
+                  onClick={async () => {
+                    try {
+                      setExporting(true);
+                      const res = await sourcesApi.exportReport(from, to);
+                      downloadBlob(res.data, `sources-report-${from}-to-${to}.csv`);
+                      showSnack('Report downloaded!', 'success');
+                    } catch { showSnack('Export failed', 'error'); }
+                    finally { setExporting(false); }
+                  }}
+                  disabled={exporting}
+                  className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+                >
+                  {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
+                </button>
+              </div>
               {allSources.map((s, i) => (
                 <Card key={i}>
                   <div className="flex items-center justify-between">
@@ -248,9 +296,28 @@ export default function Reports() {
         {/* Timesheets tab */}
         {activeTab === 'timesheets' && (
           <div className="space-y-4">
-            {techs.length > 0 && (
-              <Select value={techFilter} onChange={e => setTechFilter(e.target.value)} options={techOptions} />
-            )}
+            <div className="flex items-center gap-3 flex-wrap">
+              {techs.length > 0 && (
+                <div className="flex-1">
+                  <Select value={techFilter} onChange={e => setTechFilter(e.target.value)} options={techOptions} />
+                </div>
+              )}
+              <button
+                onClick={async () => {
+                  try {
+                    setExporting(true);
+                    const res = await timesheetsApi.exportReport(from, to, techFilter || undefined);
+                    downloadBlob(res.data, `timesheets-${from}-to-${to}.csv`);
+                    showSnack('Report downloaded!', 'success');
+                  } catch { showSnack('Export failed', 'error'); }
+                  finally { setExporting(false); }
+                }}
+                disabled={exporting}
+                className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+              >
+                {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
+              </button>
+            </div>
             {tsLoading ? <LoadingSpinner /> : (
               <>
                 {/* Summary cards */}
