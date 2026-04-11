@@ -288,6 +288,62 @@ export default function JobForm() {
     selectCustomer(customer);
   }
 
+  async function applyParsedData(p) {
+    setForm(prev => ({
+      ...prev,
+      title: p.job_title || prev.title,
+      notes: [p.job_description, p.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
+      address: p.address || p.service_address || prev.address,
+      city: p.city || prev.city,
+      state: p.state || prev.state,
+      zip: p.zip || prev.zip,
+      job_type: p.type || p.job_type || prev.job_type,
+      priority: p.priority || prev.priority,
+      scheduled_date: p.scheduled_date ? p.scheduled_date.slice(0, 10)
+        : p.scheduled_start ? p.scheduled_start.slice(0, 10)
+        : prev.scheduled_date,
+      scheduled_time: p.scheduled_time
+        || (p.scheduled_start ? p.scheduled_start.slice(11, 16) : '')
+        || prev.scheduled_time,
+    }));
+    const phones = p.phone_numbers || (p.phone ? [p.phone] : []);
+    if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
+    const ec = p.existing_customer;
+    const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g, '');
+    const phonesMatch = parsedPhone && ec?.phone &&
+      (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
+       parsedPhone.endsWith((ec?.phone || '').replace(/\D/g, '')));
+    const parsedName = (p.customer_name || '').trim();
+    const hasFullName = parsedName.includes(' ') && parsedName.split(' ').length >= 2;
+    const isHighConfidence = p.existing_customer_id && ec && phonesMatch;
+    const isMediumConfidence = p.existing_customer_id && ec && hasFullName &&
+      ec.first_name && parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
+
+    if (isHighConfidence || isMediumConfidence) {
+      selectCustomer(ec);
+      showSnack(`Ticket parsed! Matched: ${`${ec.first_name} ${ec.last_name || ''}`.trim()}`, 'success');
+    } else if (parsedName || parsedPhone) {
+      const nameParts = parsedName.split(' ');
+      const firstName = nameParts[0] || 'Customer';
+      const lastName = nameParts.slice(1).join(' ') || '';
+      try {
+        const createRes = await customersApi.create({
+          first_name: firstName,
+          last_name: lastName,
+          phone: parsedPhone || '',
+          type: 'residential',
+        });
+        selectCustomer(createRes.data?.customer || createRes.data);
+        showSnack(`Ticket parsed! New customer: ${`${firstName}${lastName ? ' ' + lastName : ''}`.trim()}`, 'success');
+      } catch {
+        setCustomerSearch(p.customer_name || '');
+        showSnack('Ticket parsed! Select customer manually', 'info');
+      }
+    } else {
+      showSnack('Ticket parsed! Review and complete missing fields.', 'success');
+    }
+  }
+
   async function handleParseTicket() {
     if (!ticketText.trim()) return;
     setParsing(true);
@@ -296,63 +352,33 @@ export default function JobForm() {
       const p = res.data?.job || res.data;
       setPasteModal(false);
       setTicketText('');
-      setForm(prev => ({
-        ...prev,
-        title: p.job_title || prev.title,
-        notes: [p.job_description, p.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
-        address: p.address || p.service_address || prev.address,
-        city: p.city || prev.city,
-        state: p.state || prev.state,
-        zip: p.zip || prev.zip,
-        job_type: p.type || p.job_type || prev.job_type,
-        priority: p.priority || prev.priority,
-        scheduled_date: p.scheduled_date ? p.scheduled_date.slice(0,10)
-          : p.scheduled_start ? p.scheduled_start.slice(0,10)
-          : prev.scheduled_date,
-        scheduled_time: p.scheduled_time
-          || (p.scheduled_start ? p.scheduled_start.slice(11,16) : '')
-          || prev.scheduled_time,
-      }));
-      const phones = p.phone_numbers || (p.phone ? [p.phone] : []);
-      if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
-      const ec = p.existing_customer;
-      const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g, '');
-      const phonesMatch = parsedPhone && ec?.phone &&
-        (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
-         parsedPhone.endsWith((ec?.phone || '').replace(/\D/g, '')));
-      const parsedName = (p.customer_name || '').trim();
-      const hasFullName = parsedName.includes(' ') && parsedName.split(' ').length >= 2;
-      const isHighConfidence = p.existing_customer_id && ec && phonesMatch;
-      const isMediumConfidence = p.existing_customer_id && ec && hasFullName &&
-        ec.first_name && parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
-
-      if (isHighConfidence || isMediumConfidence) {
-        selectCustomer(ec);
-        showSnack(`Ticket parsed! Matched: ${ec.first_name} ${ec.last_name || ''}`.trim(), 'success');
-      } else if (parsedName || parsedPhone) {
-        const nameParts = parsedName.split(' ');
-        const firstName = nameParts[0] || 'Customer';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        try {
-          const createRes = await customersApi.create({
-            first_name: firstName,
-            last_name: lastName,
-            phone: parsedPhone || '',
-            type: 'residential',
-          });
-          selectCustomer(createRes.data?.customer || createRes.data);
-          showSnack(`Ticket parsed! New customer created: ${`${firstName}${lastName ? ' ' + lastName : ''}`.trim()}`, 'success');
-        } catch {
-          setCustomerSearch(p.customer_name || '');
-          showSnack('Ticket parsed! Could not auto-create customer — please select manually', 'info');
-        }
-      } else {
-        showSnack('Ticket parsed! Review and complete missing fields.', 'success');
-      }
+      await applyParsedData(p);
     } catch (err) {
       showSnack(err?.response?.data?.error || 'Failed to parse ticket', 'error');
     } finally {
       setParsing(false);
+    }
+  }
+
+  async function handlePasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim().length > 10) {
+        setParsing(true);
+        try {
+          const res = await jobsApi.parseTicket(text.trim());
+          const p = res.data?.job || res.data;
+          await applyParsedData(p);
+        } catch (err) {
+          showSnack(err?.response?.data?.error || 'Failed to parse', 'error');
+        } finally {
+          setParsing(false);
+        }
+        return;
+      }
+      setPasteModal(true);
+    } catch {
+      setPasteModal(true);
     }
   }
 
@@ -367,38 +393,43 @@ export default function JobForm() {
     try {
       let scheduled_start = null;
       if (form.scheduled_date) {
-        if (form.scheduled_time) {
-          const dt = new Date(`${form.scheduled_date}T${form.scheduled_time}`);
-          scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
-        } else {
-          const dt = new Date(`${form.scheduled_date}T12:00:00`);
-          scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
-        }
+        const timeStr = form.scheduled_time || '12:00';
+        const dt = new Date(`${form.scheduled_date}T${timeStr}:00`);
+        scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
       }
+
       const payload = {
-        title: form.title,
-        notes: form.notes || null,
-        description: form.notes || null,
+        title: form.title.trim(),
+        description: form.notes?.trim() || null,
+        notes: form.notes?.trim() || null,
         customer_id: form.customer_id,
-        address: form.address || null,
-        city: form.city || null,
-        state: form.state || null,
-        zip: form.zip || null,
+        address: form.address?.trim() || null,
+        city: form.city?.trim() || null,
+        state: form.state?.trim() || null,
+        zip: form.zip?.trim() || null,
         scheduled_start,
         assigned_to: form.assigned_roster_tech_id ? null : (form.assigned_tech_id || null),
         assigned_roster_tech_id: form.assigned_tech_id ? null : (form.assigned_roster_tech_id || null),
-        status: form.status,
+        status: form.status || null,
         type: form.job_type || null,
         priority: form.priority || null,
         source_type: form.source_type || null,
         job_source_id: form.job_source_id || null,
         ad_channel_id: form.ad_channel_id || null,
-        source_review_link: form.source_review_link || null,
-        line_items: lineItems.map(li => ({
-          name: li.name, quantity: li.qty, unit_price: li.unit_price,
+        source_review_link: form.source_review_link?.trim() || null,
+        line_items: lineItems.length > 0 ? lineItems.map(li => ({
+          name: li.name,
+          quantity: li.qty,
+          unit_price: li.unit_price,
           total: li.qty * Number(li.unit_price),
-        })),
+        })) : undefined,
       };
+
+      // Remove undefined keys — don't send them at all
+      Object.keys(payload).forEach(k => {
+        if (payload[k] === undefined) delete payload[k];
+      });
+
       if (isEdit) {
         await jobsApi.update(id, payload);
         showSnack('Job updated', 'success');
@@ -409,7 +440,9 @@ export default function JobForm() {
         navigate(`/jobs/${res.data?.job?.id || res.data?.id}`);
       }
     } catch (err) {
-      showSnack(err?.response?.data?.error || err?.response?.data?.message || 'Failed to save job', 'error');
+      const msg = err?.response?.data?.error || err?.response?.data?.message || 'Failed to save job';
+      showSnack(msg, 'error');
+      console.error('[JobForm] Save error:', err?.response?.data || err);
     } finally {
       setSaving(false);
     }
@@ -436,11 +469,12 @@ export default function JobForm() {
         <h1 className="text-xl font-bold text-gray-900 flex-1">{isEdit ? 'Edit Job' : 'New Job'}</h1>
         <button
           type="button"
-          onClick={() => setPasteModal(true)}
-          className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+          onClick={handlePasteFromClipboard}
+          disabled={parsing}
+          className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 disabled:opacity-60 transition-colors"
         >
-          <ClipboardList size={16} />
-          <span className="hidden sm:inline">Paste Ticket</span>
+          {parsing ? <span className="animate-spin inline-block">⟳</span> : <ClipboardList size={16} />}
+          <span className="hidden sm:inline">{parsing ? 'Parsing...' : 'Paste Ticket'}</span>
         </button>
       </div>
 

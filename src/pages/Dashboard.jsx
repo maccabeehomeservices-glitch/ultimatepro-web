@@ -4,7 +4,7 @@ import { useGet } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { Card, Badge, LoadingSpinner, EmptyState, Modal, Button } from '../components/ui';
-import api, { timesheetsApi, statusColor, statusLabel } from '../lib/api';
+import api, { timesheetsApi, jobsApi, statusColor, statusLabel } from '../lib/api';
 import { Briefcase, DollarSign, Receipt, Calendar, ClipboardList, Phone, Star, Users, ChevronRight, RefreshCw } from 'lucide-react';
 
 const MAPS_KEY = 'AIzaSyDtSGWBuiTFR5BbomG8ZFNYeiwUszkJiNQ';
@@ -224,7 +224,7 @@ export default function Dashboard() {
     if (!ticketText.trim()) return;
     setParsing(true);
     try {
-      const res = await api.post('/jobs/parse-ticket', { text: ticketText });
+      const res = await jobsApi.parseTicket(ticketText);
       setPasteModal(false);
       setTicketText('');
       navigate('/jobs/new', { state: { parsedData: res.data?.job || res.data } });
@@ -232,6 +232,27 @@ export default function Dashboard() {
       showSnack('Failed to parse ticket', 'error');
     } finally {
       setParsing(false);
+    }
+  }
+
+  async function handlePasteTicket() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text && text.trim().length > 10) {
+        setParsing(true);
+        try {
+          const res = await jobsApi.parseTicket(text.trim());
+          navigate('/jobs/new', { state: { parsedData: res.data?.job || res.data } });
+        } catch (err) {
+          showSnack(err.response?.data?.error || 'Failed to parse ticket', 'error');
+        } finally {
+          setParsing(false);
+        }
+        return;
+      }
+      setPasteModal(true);
+    } catch {
+      setPasteModal(true);
     }
   }
 
@@ -454,11 +475,15 @@ export default function Dashboard() {
 
       {/* Paste Ticket FAB */}
       <button
-        onClick={() => setPasteModal(true)}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-[#1A73E8] text-white rounded-full shadow-lg flex items-center gap-2 px-4 h-14 hover:bg-blue-700 transition-colors z-10 font-semibold"
+        onClick={handlePasteTicket}
+        disabled={parsing}
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-[#1A73E8] text-white rounded-2xl shadow-lg flex items-center gap-2 px-5 h-14 hover:bg-blue-700 disabled:opacity-70 transition-colors z-10 font-semibold"
       >
-        <ClipboardList size={20} />
-        <span className="hidden sm:inline">Paste Ticket</span>
+        {parsing ? (
+          <><span className="animate-spin inline-block">⟳</span><span className="hidden sm:inline">Parsing...</span></>
+        ) : (
+          <><ClipboardList size={20} /><span className="hidden sm:inline">Paste Ticket</span></>
+        )}
       </button>
 
       {/* Paste Ticket Modal */}

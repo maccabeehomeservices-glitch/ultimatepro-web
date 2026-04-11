@@ -97,7 +97,20 @@ export default function CustomerForm() {
 
     setSaving(true);
     try {
-      const payload = { ...form, extra_phones: extraPhones, extra_emails: extraEmails };
+      const payload = {
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim() || null,
+        phone: form.phone.trim() || null,
+        email: form.email.trim() || null,
+        address: form.address.trim() || null,
+        city: form.city.trim() || null,
+        state: form.state.trim() || null,
+        zip: form.zip.trim() || null,
+        customer_type: form.customer_type || null,
+        notes: form.notes.trim() || null,
+        extra_phones: extraPhones.filter(p => p.trim()),
+        extra_emails: extraEmails.filter(e => e.trim()),
+      };
       if (isEdit) {
         await customersApi.update(id, payload);
         showSnack('Customer updated', 'success');
