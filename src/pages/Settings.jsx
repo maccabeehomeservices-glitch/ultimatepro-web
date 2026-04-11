@@ -26,6 +26,7 @@ const settingsItems = [
 const emojiSettingsItems = [
   { to: '/settings/custom-fields', emoji: '🏷️', label: 'Custom Fields', desc: 'Add custom data fields to jobs, customers, estimates' },
   { to: '/settings/automation', emoji: '⚡', label: 'Ailot', desc: 'Smart Automation Rules' },
+  { to: '/settings/integrations', emoji: '🔗', label: 'Integrations', desc: 'Connect QuickBooks Online and other tools' },
 ];
 
 export default function Settings() {

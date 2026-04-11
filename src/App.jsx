@@ -43,6 +43,7 @@ import CompanyProfile from './pages/settings/CompanyProfile';
 import UserManagement from './pages/settings/UserManagement';
 import CustomFields from './pages/settings/CustomFields';
 import AutomationRules from './pages/settings/AutomationRules';
+import Integrations from './pages/settings/Integrations';
 import Leads from './pages/Leads';
 import LiveMap from './pages/LiveMap';
 import NotificationsPage from './pages/Notifications';
@@ -113,6 +114,7 @@ export default function App() {
                   <Route path="/settings/team" element={<Wrap><UserManagement /></Wrap>} />
                   <Route path="/settings/custom-fields" element={<Wrap><CustomFields /></Wrap>} />
                   <Route path="/settings/automation" element={<Wrap><AutomationRules /></Wrap>} />
+                  <Route path="/settings/integrations" element={<Wrap><Integrations /></Wrap>} />
                   <Route path="/leads" element={<Wrap><Leads /></Wrap>} />
                   <Route path="/import" element={<Wrap><ImportWizard /></Wrap>} />
                   <Route path="/notifications" element={<Wrap><NotificationsPage /></Wrap>} />

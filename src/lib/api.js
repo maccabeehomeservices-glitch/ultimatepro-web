@@ -802,6 +802,33 @@ export const schedulesApi = {
     api.delete(`/schedules/${id}`),
 };
 
+// ─── QUICKBOOKS ───────────────────────────────────────────────────────────────
+export const quickbooksApi = {
+  getStatus: () =>
+    api.get('/integrations/quickbooks/status'),
+
+  getConnectUrl: () =>
+    api.get('/integrations/quickbooks/connect'),
+
+  syncCustomers: () =>
+    api.post('/integrations/quickbooks/sync/customers'),
+
+  syncInvoices: () =>
+    api.post('/integrations/quickbooks/sync/invoices'),
+
+  syncPayments: () =>
+    api.post('/integrations/quickbooks/sync/payments'),
+
+  syncAll: () =>
+    api.post('/integrations/quickbooks/sync/all'),
+
+  updateSettings: (data) =>
+    api.put('/integrations/quickbooks/settings', data),
+
+  disconnect: () =>
+    api.delete('/integrations/quickbooks/disconnect'),
+};
+
 // ─── IMPORT ───────────────────────────────────────────────────────────────────
 export const importApi = {
   preview: (file, type) => {
