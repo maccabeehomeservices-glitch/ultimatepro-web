@@ -44,6 +44,8 @@ import UserManagement from './pages/settings/UserManagement';
 import CustomFields from './pages/settings/CustomFields';
 import AutomationRules from './pages/settings/AutomationRules';
 import Integrations from './pages/settings/Integrations';
+import Privacy from './pages/Privacy';
+import Terms from './pages/Terms';
 import Leads from './pages/Leads';
 import LiveMap from './pages/LiveMap';
 import NotificationsPage from './pages/Notifications';
@@ -71,6 +73,8 @@ export default function App() {
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
               {/* Protected routes */}
