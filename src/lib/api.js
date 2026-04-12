@@ -514,6 +514,9 @@ export const sourcesApi = {
 
   saveCommissionRule: (data) =>
     api.post('/sources/commission-rules', data),
+
+  deleteCommissionRule: (id) =>
+    api.delete(`/sources/commission-rules/${id}`),
 };
 
 // ─── ROSTER TECHS ─────────────────────────────────────────────────────────────
