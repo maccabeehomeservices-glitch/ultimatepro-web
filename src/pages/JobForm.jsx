@@ -736,6 +736,15 @@ export default function JobForm() {
         {/* LOCATION */}
         <Card>
           <SectionLabel>Location</SectionLabel>
+          {isEdit && (jobData?.job || jobData)?.address_verified === false && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 mb-3">
+              <span className="text-amber-500 text-lg flex-shrink-0">⚠️</span>
+              <div>
+                <div className="text-sm font-semibold text-amber-800">Address may be inaccurate</div>
+                <div className="text-xs text-amber-600">The map pin location doesn't match the stated city/state. Please verify and re-save to update coordinates.</div>
+              </div>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
             <input

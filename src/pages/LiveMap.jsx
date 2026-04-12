@@ -72,58 +72,64 @@ export default function LiveMap() {
     markersRef.current.forEach(m => m.setMap(null));
     markersRef.current = [];
 
-    // Plot job markers
-    jobsList.forEach(job => {
-      if (!job.address && !job.city) return;
-      const addr = [job.address, job.city, job.state, job.zip].filter(Boolean).join(', ');
-      if (!addr) return;
-
-      geocoder.geocode({ address: addr }, (results, geocodeStatus) => {
-        if (geocodeStatus !== 'OK' || !results[0]) return;
-        const pos = results[0].geometry.location;
-        bounds.extend(pos);
-
-        const color = statusColor(job.status);
-        const marker = new window.google.maps.Marker({
-          position: pos,
-          map,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            fillColor: color,
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2,
-            scale: 10,
-          },
-          title: job.title || job.job_number,
-        });
-
-        marker.addListener('click', () => {
-          const content = `
-            <div style="min-width:200px;font-family:system-ui;padding:4px">
-              <div style="font-weight:700;font-size:14px;margin-bottom:4px">${job.job_number || ''}</div>
-              <div style="font-size:13px;margin-bottom:2px">${job.title || 'Untitled'}</div>
-              <div style="font-size:12px;color:#666;margin-bottom:4px">${job.customer_name || 'No customer'}</div>
-              <div style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:white;background:${color}">
-                ${statusLabel(job.status)}
-              </div>
-              <div style="font-size:11px;color:#999;margin-top:4px">
-                ${job.scheduled_start ? formatDate(job.scheduled_start) + ' ' + formatTime(job.scheduled_start) : 'Not scheduled'}
-              </div>
-              <div style="margin-top:8px">
-                <a href="/jobs/${job.id || job._id}" style="color:#1A73E8;font-size:12px;font-weight:600;text-decoration:none">View Job →</a>
-              </div>
-            </div>`;
-          infoWindowRef.current.setContent(content);
-          infoWindowRef.current.open(map, marker);
-        });
-
-        markersRef.current.push(marker);
-
-        if (markersRef.current.length > 1) {
-          map.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 });
-        }
+    // Plot job markers — prefer stored coords, fall back to full-address geocoding
+    function placeJobPin(job, pos) {
+      bounds.extend(pos);
+      const color = statusColor(job.status);
+      const mismatch = job.address_verified === false;
+      const marker = new window.google.maps.Marker({
+        position: pos,
+        map,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          fillColor: color,
+          fillOpacity: 1,
+          strokeColor: mismatch ? '#F59E0B' : '#ffffff',
+          strokeWeight: mismatch ? 3 : 2,
+          scale: 10,
+        },
+        title: job.title || job.job_number,
       });
+      marker.addListener('click', () => {
+        const content = `
+          <div style="min-width:200px;font-family:system-ui;padding:4px">
+            <div style="font-weight:700;font-size:14px;margin-bottom:4px">${job.job_number || ''}</div>
+            <div style="font-size:13px;margin-bottom:2px">${job.title || 'Untitled'}</div>
+            <div style="font-size:12px;color:#666;margin-bottom:4px">${job.customer_name || 'No customer'}</div>
+            <div style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;color:white;background:${color}">
+              ${statusLabel(job.status)}
+            </div>
+            <div style="font-size:11px;color:#999;margin-top:4px">
+              ${job.scheduled_start ? formatDate(job.scheduled_start) + ' ' + formatTime(job.scheduled_start) : 'Not scheduled'}
+            </div>
+            ${mismatch ? '<div style="font-size:10px;color:#D97706;margin-top:4px">⚠️ Address may be inaccurate</div>' : ''}
+            <div style="margin-top:8px">
+              <a href="/jobs/${job.id || job._id}" style="color:#1A73E8;font-size:12px;font-weight:600;text-decoration:none">View Job →</a>
+            </div>
+          </div>`;
+        infoWindowRef.current.setContent(content);
+        infoWindowRef.current.open(map, marker);
+      });
+      markersRef.current.push(marker);
+      if (markersRef.current.length > 1) {
+        map.fitBounds(bounds, { top: 50, bottom: 50, left: 50, right: 50 });
+      }
+    }
+
+    jobsList.forEach(job => {
+      if (job.lat && job.lng) {
+        // Use stored coordinates — no geocoding needed
+        placeJobPin(job, { lat: parseFloat(job.lat), lng: parseFloat(job.lng) });
+      } else {
+        // Fallback: geocode with full address
+        if (!job.address && !job.city) return;
+        const addr = [job.address, job.city, job.state, job.zip].filter(Boolean).join(', ');
+        if (!addr || addr.trim().length < 3) return;
+        geocoder.geocode({ address: addr }, (results, geocodeStatus) => {
+          if (geocodeStatus !== 'OK' || !results[0]) return;
+          placeJobPin(job, results[0].geometry.location);
+        });
+      }
     });
 
     // Plot tech markers (blue)

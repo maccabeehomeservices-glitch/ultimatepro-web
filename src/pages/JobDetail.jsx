@@ -655,6 +655,15 @@ export default function JobDetail() {
             {/* Location card */}
             {address && (
               <Card>
+                {jobData.address_verified === false && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 mb-3">
+                    <span className="text-amber-500 text-lg flex-shrink-0">⚠️</span>
+                    <div>
+                      <div className="text-sm font-semibold text-amber-800">Address may be inaccurate</div>
+                      <div className="text-xs text-amber-600">The map pin location doesn't match the stated city/state. Please verify the address is correct.</div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-start gap-3">
                   <MapPin size={18} className="text-[#1A73E8] mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
