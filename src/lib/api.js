@@ -756,6 +756,8 @@ export const companyApi = {
     api.get('/company/joby-rules'),
   updateJobyRule: (id, data) =>
     api.put(`/company/joby-rules/${id}`, data),
+  uploadLogo: (formData) =>
+    api.post('/company/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
 };
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
