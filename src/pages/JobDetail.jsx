@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight, Plus, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight, Plus, ChevronDown, Trash2 } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import api, { formatDate, formatTime, jobsApi } from '../lib/api';
 import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select, Toggle, StepperInput } from '../components/ui';
@@ -151,6 +151,9 @@ export default function JobDetail() {
   const [completionNotes, setCompletionNotes] = useState('');
   const [completionPayment, setCompletionPayment] = useState('');
   const [completing, setCompleting] = useState(false);
+
+  // Delete job
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // FIX 5: history accordion
   const [histOpen, setHistOpen] = useState({});
@@ -375,6 +378,17 @@ export default function JobDetail() {
     }
   }
 
+  async function handleDeleteJob() {
+    try {
+      await jobsApi.delete(id);
+      showSnack('Job archived', 'success');
+      navigate('/jobs');
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to delete job', 'error');
+    }
+    setShowDeleteConfirm(false);
+  }
+
   async function handleStatusChange(status) {
     try {
       await mutate('post', `/jobs/${id}/status`, { status });
@@ -556,6 +570,15 @@ export default function JobDetail() {
           <h1 className="font-bold text-gray-900 text-lg truncate">{jobData.title || jobData.job_title}</h1>
           <p className="text-sm text-gray-400">#{jobData.job_number || jobData.id}</p>
         </div>
+        {jobData.status !== 'deleted' && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="p-2 rounded-xl hover:bg-red-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500"
+            title="Archive job"
+          >
+            <Trash2 size={20} />
+          </button>
+        )}
         <button
           onClick={() => navigate(`/jobs/${id}/edit`)}
           className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600"
@@ -1383,6 +1406,38 @@ export default function JobDetail() {
           />
         </div>
       </Modal>
+
+      {/* Archive/Delete Confirmation */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl p-6 max-w-sm w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Archive this job?</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              The job will be moved to deleted jobs and can be retrieved from job search. Estimates and invoices will be kept.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="flex-1 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium min-h-[44px]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteJob}
+                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+              >
+                Archive
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
