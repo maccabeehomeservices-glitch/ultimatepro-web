@@ -703,6 +703,32 @@ export const usersApi = {
 
   get: (id) =>
     api.get(`/users/${id}`),
+
+  create: (data) =>
+    api.post('/users', {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      email: data.email,
+      password: data.password,
+      role: data.role,
+      phone: data.phone,
+    }),
+
+  update: (id, data) =>
+    api.put(`/users/${id}`, {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      email: data.email,
+      role: data.role,
+      phone: data.phone,
+      ...(data.password ? { password: data.password } : {}),
+    }),
+
+  delete: (id) =>
+    api.delete(`/users/${id}`),
+
+  reactivate: (id) =>
+    api.put(`/users/${id}/reactivate`),
 };
 
 // ─── TIMESHEETS ───────────────────────────────────────────────────────────────
