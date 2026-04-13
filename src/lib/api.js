@@ -108,6 +108,9 @@ export const jobsApi = {
       ad_channel_custom: data.ad_channel_custom,
       line_items: data.line_items || [],
       linked_job_id: data.linked_job_id,
+      notify_sms: data.notify_sms,
+      notify_email: data.notify_email,
+      notify_push: data.notify_push,
     }),
 
   update: (id, data) =>
@@ -180,6 +183,21 @@ export const jobsApi = {
 
   addPhoto: (id, photo_url) =>
     api.post(`/jobs/${id}/photos`, { photo_url }),
+
+  arrived: (id) =>
+    api.post(`/jobs/${id}/arrived`),
+
+  getParts: (id) =>
+    api.get(`/jobs/${id}/parts`),
+
+  savePart: (id, data) =>
+    api.post(`/jobs/${id}/parts`, data),
+
+  updatePart: (id, partId, data) =>
+    api.put(`/jobs/${id}/parts/${partId}`, data),
+
+  deletePart: (id, partId) =>
+    api.delete(`/jobs/${id}/parts/${partId}`),
 };
 
 // ─── CUSTOMERS ────────────────────────────────────────────────────────────────

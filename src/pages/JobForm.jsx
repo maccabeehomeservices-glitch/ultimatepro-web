@@ -1,29 +1,27 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Search, ClipboardList, X, UserCheck } from 'lucide-react';
-import { jobsApi, customersApi } from '../lib/api';
+import { ArrowLeft, Plus, X, ClipboardList, UserCheck } from 'lucide-react';
+import { jobsApi, customersApi, sourcesApi, companyApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import QuickCreateCustomerModal from '../components/QuickCreateCustomerModal';
 
-const JOB_TYPES = ['Service', 'Installation', 'Maintenance', 'Inspection', 'Repair', 'New Installation', 'Spring Replacement', 'Tune-Up', 'Other'];
+const JOB_TYPES = ['Service','Installation','Maintenance','Inspection','Repair','New Installation','Spring Replacement','Tune-Up','Other'];
 
-// Map display labels → backend enum values (backend expects lowercase)
 const JOB_TYPE_TO_BACKEND = {
-  'Service':          'service',
-  'Installation':     'installation',
-  'Maintenance':      'maintenance',
-  'Inspection':       'inspection',
-  'Repair':           'repair',
-  'New Installation': 'installation',
+  'Service':            'service',
+  'Installation':       'installation',
+  'Maintenance':        'maintenance',
+  'Inspection':         'inspection',
+  'Repair':             'repair',
+  'New Installation':   'installation',
   'Spring Replacement': 'repair',
-  'Tune-Up':          'maintenance',
-  'Other':            'service',
-  'Estimate':         'estimate',
+  'Tune-Up':            'maintenance',
+  'Other':              'service',
+  'Estimate':           'estimate',
 };
 
-// US state name → 2-letter abbreviation lookup
 const STATE_ABBR = {
   'alabama':'AL','alaska':'AK','arizona':'AZ','arkansas':'AR',
   'california':'CA','colorado':'CO','connecticut':'CT',
@@ -49,31 +47,6 @@ function toStateAbbr(val) {
   return STATE_ABBR[trimmed.toLowerCase()] || trimmed;
 }
 
-const PRIORITIES = [
-  { value: 'low',    label: 'Low',    sel: 'bg-gray-500 text-white border-gray-500',   unsel: 'text-gray-600 border-gray-300' },
-  { value: 'medium', label: 'Medium', sel: 'bg-[#1A73E8] text-white border-[#1A73E8]', unsel: 'text-[#1A73E8] border-blue-300' },
-  { value: 'high',   label: 'High',   sel: 'bg-orange-500 text-white border-orange-500', unsel: 'text-orange-500 border-orange-300' },
-  { value: 'urgent', label: 'Urgent', sel: 'bg-red-500 text-white border-red-500',     unsel: 'text-red-500 border-red-300' },
-];
-const SOURCE_TYPES = [
-  { value: 'network', label: 'Network' },
-  { value: 'external_contact', label: 'Source Contact' },
-  { value: 'own_company', label: 'Own Company' },
-];
-const STATUS_OPTIONS = [
-  { value: 'unscheduled', label: 'Unscheduled' },
-  { value: 'scheduled', label: 'Scheduled' },
-  { value: 'en_route', label: 'En Route' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'holding', label: 'Holding' },
-  { value: 'cancelled', label: 'Cancelled' },
-];
-
-function SectionLabel({ children }) {
-  return <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-2">{children}</p>;
-}
-
 function formatDisplayDate(iso) {
   if (!iso) return '';
   try {
@@ -93,6 +66,18 @@ function formatDisplayTime(hhmm) {
   } catch { return hhmm; }
 }
 
+function SectionLabel({ children }) {
+  return <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-2">{children}</p>;
+}
+
+// Assignment category tabs
+const ASSIGN_CATS = [
+  { id: 'self',    label: 'Self' },
+  { id: 'team',    label: 'Team' },
+  { id: 'roster',  label: 'Roster' },
+  { id: 'partner', label: 'Partner' },
+];
+
 export default function JobForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -100,113 +85,136 @@ export default function JobForm() {
   const { showSnack } = useSnackbar();
   const isEdit = Boolean(id);
 
+  // ── form fields ────────────────────────────────────────────────────────────
   const [form, setForm] = useState({
-    title: '', notes: '',
+    notes: '',
     customer_id: '', customer_name: '',
     address: '', city: '', state: '', zip: '',
     scheduled_date: '', scheduled_time: '',
-    assigned_tech_id: '', assigned_roster_tech_id: '',
+    // assignment
+    assign_cat: 'self',        // 'self' | 'team' | 'roster' | 'partner'
+    assigned_tech_id: '',      // team member (app user)
+    assigned_roster_tech_id: '', // roster tech
+    assigned_partner_company_id: '', // network partner
+    // notifications
+    notify_sms: true,
+    notify_email: false,
+    notify_push: true,
+    // source (unified)
+    source_option: 'company',  // 'company' | contact id | channel id
+    // type
+    job_type: 'Service',
+    // edit-only
     status: 'unscheduled',
-    job_type: 'Service', priority: 'medium',
-    source_type: '', job_source_id: '', ad_channel_id: '', source_review_link: '',
   });
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [customerResults, setCustomerResults] = useState([]);
+
+  // ── customer search ────────────────────────────────────────────────────────
+  const [customerSearch, setCustomerSearch]       = useState('');
+  const [customerResults, setCustomerResults]     = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [showQuickCreate, setShowQuickCreate] = useState(false);
+  const [selectedCustomer, setSelectedCustomer]   = useState(null);
+  const [showQuickCreate, setShowQuickCreate]     = useState(false);
   const [quickCreatePrefill, setQuickCreatePrefill] = useState({});
-  const [extraPhones, setExtraPhones] = useState([]);
-  const [extraEmails, setExtraEmails] = useState([]);
-  const [lineItems, setLineItems] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [pasteModal, setPasteModal] = useState(false);
-  const [ticketText, setTicketText] = useState('');
-  const [parsing, setParsing] = useState(false);
-  const [lineItemModal, setLineItemModal] = useState(null);
-  const [duplicateModal, setDuplicateModal] = useState(null); // { matched: customer, parsedName: string }
-  const searchTO = useRef(null);
-  const streetInputRef = useRef(null);
-  const customerDropdownRef = useRef(null);
+  const [extraPhones, setExtraPhones]             = useState([]);
+  const [extraEmails, setExtraEmails]             = useState([]);
 
+  // ── modals / state ─────────────────────────────────────────────────────────
+  const [saving, setSaving]                       = useState(false);
+  const [sendAfterSave, setSendAfterSave]         = useState(false);
+  const [fieldErrors, setFieldErrors]             = useState({});
+  const [pasteModal, setPasteModal]               = useState(false);
+  const [ticketText, setTicketText]               = useState('');
+  const [parsing, setParsing]                     = useState(false);
+  const [duplicateModal, setDuplicateModal]       = useState(null);
+
+  // ── source data ────────────────────────────────────────────────────────────
+  const [companyName, setCompanyName]             = useState('My Company');
+  const [sourceContacts, setSourceContacts]       = useState([]);
+  const [adChannels, setAdChannels]               = useState([]);
+
+  // ── refs ───────────────────────────────────────────────────────────────────
+  const searchTO             = useRef(null);
+  const streetInputRef       = useRef(null);
+  const customerDropdownRef  = useRef(null);
+
+  // ── remote data ────────────────────────────────────────────────────────────
   const { data: jobData, loading: jobLoading } = useGet(isEdit ? `/jobs/${id}` : null, [id]);
-  const { data: techsData } = useGet('/users/technicians');
-  const { data: rosterData } = useGet('/roster-techs');
-  const { data: sourcesData } = useGet(form.source_type === 'external_contact' ? '/sources/contacts' : null, [form.source_type]);
-  const { data: channelsData } = useGet(form.source_type === 'own_company' ? '/sources/channels' : null, [form.source_type]);
+  const { data: techsData }   = useGet('/users/technicians');
+  const { data: rosterData }  = useGet('/roster-techs');
+  const { data: partnersData } = useGet('/network/connections');
 
-  // Pre-fill from ?date= query param
+  const teamMembers  = techsData?.technicians   || techsData || [];
+  const rosterTechs  = rosterData?.technicians  || rosterData || [];
+  const partners     = partnersData?.connections || partnersData?.partners || partnersData || [];
+
+  // ── load company name + sources on mount ──────────────────────────────────
   useEffect(() => {
-    if (isEdit) return;
-    const searchParams = new URLSearchParams(location.search);
-    const presetDate = searchParams.get('date');
-    if (presetDate) {
-      setForm(prev => ({ ...prev, scheduled_date: presetDate }));
-    }
+    companyApi.get().then(r => {
+      const name = r.data?.company?.name || r.data?.name || 'My Company';
+      setCompanyName(name);
+    }).catch(() => {});
+    sourcesApi.getContacts().then(r => setSourceContacts(r.data?.contacts || r.data || [])).catch(() => {});
+    sourcesApi.getChannels().then(r => setAdChannels(r.data?.channels || r.data || [])).catch(() => {});
   }, []);
 
-  // Pre-fill from location state (parsed ticket or pre-selected customer)
+  // ── pre-fill from ?date= query param ──────────────────────────────────────
+  useEffect(() => {
+    if (isEdit) return;
+    const p = new URLSearchParams(location.search);
+    const presetDate = p.get('date');
+    if (presetDate) setForm(prev => ({ ...prev, scheduled_date: presetDate }));
+  }, []);
+
+  // ── pre-fill from location state ──────────────────────────────────────────
   useEffect(() => {
     const parsed = location.state?.parsedData;
     if (parsed && !isEdit) {
       setForm(prev => ({
         ...prev,
-        title: parsed.job_title || prev.title,
         notes: [parsed.job_description, parsed.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
         address: parsed.address || parsed.service_address || prev.address,
         city: parsed.city || prev.city,
         state: toStateAbbr(parsed.state) || prev.state,
         zip: parsed.zip || prev.zip,
         job_type: parsed.type || parsed.job_type || prev.job_type,
-        priority: parsed.priority || prev.priority,
         scheduled_date: parsed.scheduled_date ? parsed.scheduled_date.slice(0,10)
-          : parsed.scheduled_start ? parsed.scheduled_start.slice(0,10)
-          : prev.scheduled_date,
+          : parsed.scheduled_start ? parsed.scheduled_start.slice(0,10) : prev.scheduled_date,
         scheduled_time: parsed.scheduled_time
           || (parsed.scheduled_start ? parsed.scheduled_start.slice(11,16) : '')
           || prev.scheduled_time,
       }));
       const phones = parsed.phone_numbers || (parsed.phone ? [parsed.phone] : []);
-      if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
+      if (phones.length > 0) setExtraPhones(phones.slice(0,3));
       const ec = parsed.existing_customer;
       const parsedPhone = (parsed.phone || parsed.phone_numbers?.[0] || '').replace(/\D/g, '');
       const phonesMatch = parsedPhone && ec?.phone &&
-        (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
-         parsedPhone.endsWith((ec?.phone || '').replace(/\D/g, '')));
-      const parsedName = (parsed.customer_name || '').trim();
+        (ec.phone.replace(/\D/g,'').endsWith(parsedPhone) ||
+         parsedPhone.endsWith((ec?.phone||'').replace(/\D/g,'')));
+      const parsedName = (parsed.customer_name||'').trim();
       const hasFullName = parsedName.includes(' ') && parsedName.split(' ').length >= 2;
-      const isHighConfidence = parsed.existing_customer_id && ec && phonesMatch;
-      const isMediumConfidence = parsed.existing_customer_id && ec && hasFullName &&
+      const isHighConf = parsed.existing_customer_id && ec && phonesMatch;
+      const isMedConf  = parsed.existing_customer_id && ec && hasFullName &&
         ec.first_name && parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
-
-      if (isHighConfidence || isMediumConfidence) {
+      if (isHighConf || isMedConf) {
         selectCustomer(ec);
       } else if (parsedName || parsedPhone) {
-        const nameParts = parsedName.split(' ');
-        const firstName = nameParts[0] || 'Customer';
-        const lastName = nameParts.slice(1).join(' ') || '';
+        const parts = parsedName.split(' ');
         customersApi.create({
-          first_name: firstName,
-          last_name: lastName,
+          first_name: parts[0] || 'Customer',
+          last_name: parts.slice(1).join(' ') || '',
           phone: parsedPhone || '',
           type: 'residential',
-        }).then(createRes => {
-          selectCustomer(createRes.data?.customer || createRes.data);
-        }).catch(() => {
-          setCustomerSearch(parsed.customer_name || '');
-        });
+        }).then(r => selectCustomer(r.data?.customer || r.data)).catch(() => setCustomerSearch(parsed.customer_name||''));
       }
     }
     const preCustomer = location.state?.customer;
     if (preCustomer && !isEdit) {
-      setForm(prev => ({ ...prev, customer_id: preCustomer.id || '', customer_name: preCustomer.name || '' }));
-      setCustomerSearch(preCustomer.name || '');
+      setForm(prev => ({ ...prev, customer_id: preCustomer.id||'', customer_name: preCustomer.name||'' }));
+      setCustomerSearch(preCustomer.name||'');
     }
   }, []); // eslint-disable-line
 
-  // Google Places autocomplete for street address
+  // ── Google Places autocomplete ────────────────────────────────────────────
   useEffect(() => {
     if (!streetInputRef.current || !window.google?.maps?.places) return;
     const ac = new window.google.maps.places.Autocomplete(
@@ -220,72 +228,60 @@ export default function JobForm() {
       for (const c of place.address_components) {
         const t = c.types;
         if (t.includes('street_number')) street = c.long_name + ' ';
-        if (t.includes('route')) street += c.long_name;
-        if (t.includes('locality')) city = c.long_name;
+        if (t.includes('route'))         street += c.long_name;
+        if (t.includes('locality'))      city = c.long_name;
         if (t.includes('administrative_area_level_1')) state = c.short_name;
-        if (t.includes('postal_code')) zip = c.long_name;
+        if (t.includes('postal_code'))   zip = c.long_name;
       }
-      setForm(prev => ({
-        ...prev,
-        address: street.trim() || place.formatted_address,
-        city, state: toStateAbbr(state), zip,
-      }));
+      setForm(prev => ({ ...prev, address: street.trim() || place.formatted_address, city, state: toStateAbbr(state), zip }));
     });
     return () => window.google?.maps?.event?.clearInstanceListeners(ac);
   }, [!!window.google?.maps?.places]); // eslint-disable-line
 
-  // Load existing job for edit
+  // ── load existing job for edit ─────────────────────────────────────────────
   useEffect(() => {
-    if (isEdit && jobData) {
-      const j = jobData.job || jobData;
-      const sDate = j.scheduled_date ? j.scheduled_date.slice(0,10)
-        : j.scheduled_start ? j.scheduled_start.slice(0,10) : '';
-      const sTime = j.scheduled_time || (j.scheduled_start ? j.scheduled_start.slice(11,16) : '');
-      setForm({
-        title: j.title || j.job_title || '',
-        notes: j.notes || j.description || '',
-        customer_id: j.customer_id || '',
-        customer_name: j.customer_name || j.customer?.name || '',
-        address: j.address || j.service_address || '',
-        city: j.city || '', state: j.state || '', zip: j.zip || '',
-        scheduled_date: sDate, scheduled_time: sTime,
-        assigned_tech_id: j.assigned_tech_id || j.assigned_to || '',
-        assigned_roster_tech_id: j.assigned_roster_tech_id || '',
-        status: j.status || 'unscheduled',
-        job_type: j.job_type || j.type || 'Service',
-        priority: j.priority || 'medium',
-        source_type: j.source_type || '',
-        job_source_id: j.job_source_id || '',
-        ad_channel_id: j.ad_channel_id || '',
-        source_review_link: j.source_review_link || '',
-      });
-      setCustomerSearch(j.customer_name || j.customer?.name || '');
-      if (j.line_items?.length) {
-        setLineItems(j.line_items.map(li => ({
-          name: li.name, qty: li.quantity || li.qty || 1,
-          unit_price: li.unit_price || 0,
-        })));
-      }
-    }
+    if (!isEdit || !jobData) return;
+    const j = jobData.job || jobData;
+    const sDate = j.scheduled_date ? j.scheduled_date.slice(0,10)
+      : j.scheduled_start ? j.scheduled_start.slice(0,10) : '';
+    const sTime = j.scheduled_time || (j.scheduled_start ? j.scheduled_start.slice(11,16) : '');
+
+    let assign_cat = 'self', assigned_tech_id = '', assigned_roster_tech_id = '', assigned_partner_company_id = '';
+    if (j.assigned_roster_tech_id) { assign_cat = 'roster'; assigned_roster_tech_id = j.assigned_roster_tech_id; }
+    else if (j.assigned_to) { assign_cat = 'team'; assigned_tech_id = j.assigned_to; }
+
+    // determine source_option
+    let source_option = 'company';
+    if (j.job_source_id) source_option = j.job_source_id;
+    else if (j.ad_channel_id) source_option = j.ad_channel_id;
+
+    setForm({
+      notes: j.notes || j.description || '',
+      customer_id: j.customer_id || '',
+      customer_name: j.customer_name || j.customer?.name || '',
+      address: j.address || '',
+      city: j.city || '', state: j.state || '', zip: j.zip || '',
+      scheduled_date: sDate, scheduled_time: sTime,
+      assign_cat, assigned_tech_id, assigned_roster_tech_id, assigned_partner_company_id,
+      notify_sms: true, notify_email: false, notify_push: true,
+      source_option,
+      job_type: j.type ? (j.type.charAt(0).toUpperCase() + j.type.slice(1)) : 'Service',
+      status: j.status || 'unscheduled',
+    });
+    setCustomerSearch(j.customer_name || j.customer?.name || '');
   }, [isEdit, jobData]);
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
-  }
-
-  // Outside-click closes customer dropdown
+  // ── outside-click closes customer dropdown ────────────────────────────────
   useEffect(() => {
-    function handleMouseDown(e) {
-      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target)) {
+    function onMouseDown(e) {
+      if (customerDropdownRef.current && !customerDropdownRef.current.contains(e.target))
         setShowCustomerDropdown(false);
-      }
     }
-    document.addEventListener('mousedown', handleMouseDown);
-    return () => document.removeEventListener('mousedown', handleMouseDown);
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
   }, []);
 
+  // ── customer input ─────────────────────────────────────────────────────────
   function handleCustomerInput(e) {
     const val = e.target.value;
     setCustomerSearch(val);
@@ -297,8 +293,7 @@ export default function JobForm() {
       searchTO.current = setTimeout(async () => {
         try {
           const res = await customersApi.list({ search: val, limit: 6 });
-          const results = res.data?.customers || res.data || [];
-          setCustomerResults(results);
+          setCustomerResults(res.data?.customers || res.data || []);
           setShowCustomerDropdown(true);
         } catch { setCustomerResults([]); }
       }, 300);
@@ -309,16 +304,16 @@ export default function JobForm() {
   }
 
   function selectCustomer(customer) {
-    const name = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || '';
+    const name = `${customer.first_name||''} ${customer.last_name||''}`.trim() || customer.name || '';
     setSelectedCustomer(customer);
     setForm(prev => ({
       ...prev,
       customer_id: customer.id || customer._id,
       customer_name: name,
       address: prev.address || customer.address || '',
-      city: prev.city || customer.city || '',
-      state: prev.state || customer.state || '',
-      zip: prev.zip || customer.zip || '',
+      city:    prev.city    || customer.city    || '',
+      state:   prev.state   || customer.state   || '',
+      zip:     prev.zip     || customer.zip     || '',
     }));
     setCustomerSearch(name);
     setShowCustomerDropdown(false);
@@ -330,52 +325,41 @@ export default function JobForm() {
     selectCustomer(customer);
   }
 
-  // Resolve customer from parsed ticket data.
-  // Backend requires customer_id — this function always attempts to
-  // return a valid customer. Walk-in placeholder is the final fallback.
+  // ── resolve customer from parsed ticket ────────────────────────────────────
   async function resolveCustomer(p) {
-    const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g, '');
-    const parsedName = (p.customer_name || '').trim();
-    const nameParts = parsedName.split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
+    const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g,'');
+    const parsedName  = (p.customer_name || '').trim();
+    const parts       = parsedName.split(' ');
+    const firstName   = parts[0] || '';
+    const lastName    = parts.slice(1).join(' ') || '';
 
-    // Step 1: Backend already matched an existing customer — verify confidence
     if (p.existing_customer_id && p.existing_customer) {
       const ec = p.existing_customer;
       const phonesMatch = parsedPhone && ec.phone &&
-        (ec.phone.replace(/\D/g, '').endsWith(parsedPhone) ||
-         parsedPhone.endsWith(ec.phone.replace(/\D/g, '')));
-      const hasFullName = parsedName.includes(' ') && nameParts.length >= 2;
+        (ec.phone.replace(/\D/g,'').endsWith(parsedPhone) ||
+         parsedPhone.endsWith(ec.phone.replace(/\D/g,'')));
+      const hasFullName = parsedName.includes(' ') && parts.length >= 2;
       const nameMatch = hasFullName && ec.first_name &&
         parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
-      if (phonesMatch || nameMatch) {
-        return { customer: ec, action: 'matched', message: `Matched: ${`${ec.first_name} ${ec.last_name || ''}`.trim()}` };
-      }
+      if (phonesMatch || nameMatch)
+        return { customer: ec, action: 'matched', message: `Matched: ${`${ec.first_name} ${ec.last_name||''}`.trim()}` };
     }
 
-    // Step 2: Search by phone/name if backend didn't match
     if (parsedPhone || parsedName) {
       try {
-        const searchTerm = parsedPhone || parsedName;
-        const res = await customersApi.list({ search: searchTerm, limit: 5 });
+        const res = await customersApi.list({ search: parsedPhone || parsedName, limit: 5 });
         const results = res.data?.customers || res.data || [];
         if (parsedPhone && results.length > 0) {
           const phoneMatch = results.find(c =>
-            (c.phone || '').replace(/\D/g, '').endsWith(parsedPhone) ||
-            parsedPhone.endsWith((c.phone || '').replace(/\D/g, ''))
+            (c.phone||'').replace(/\D/g,'').endsWith(parsedPhone) ||
+            parsedPhone.endsWith((c.phone||'').replace(/\D/g,''))
           );
-          if (phoneMatch) {
-            return { customer: phoneMatch, action: 'matched', message: `Matched: ${`${phoneMatch.first_name} ${phoneMatch.last_name || ''}`.trim()}` };
-          }
+          if (phoneMatch)
+            return { customer: phoneMatch, action: 'matched', message: `Matched: ${`${phoneMatch.first_name} ${phoneMatch.last_name||''}`.trim()}` };
         }
-      } catch (err) {
-        // Search failed (500, network, etc.) — continue to create
-        console.warn('[JobForm] Customer search failed:', err.message);
-      }
+      } catch {}
     }
 
-    // Step 3: Create customer from parsed data
     if (firstName || parsedPhone) {
       try {
         const createRes = await customersApi.create({
@@ -387,86 +371,55 @@ export default function JobForm() {
         });
         const created = createRes.data?.customer || createRes.data;
         return { customer: created, action: 'created', message: `New customer: ${`${firstName} ${lastName}`.trim()}` };
-      } catch (err) {
-        console.warn('[JobForm] Customer create failed:', err.message);
-      }
+      } catch {}
     }
 
-    // Step 4: Walk-in placeholder — backend requires customer_id, so we must have one
-    // Use parsedName as first_name so the job is at least identifiable
     try {
       const walkinRes = await customersApi.create({
-        first_name: parsedName || 'Walk-in',
-        last_name: '',
-        phone: parsedPhone || null,
-        type: 'residential',
+        first_name: parsedName || 'Walk-in', last_name: '',
+        phone: parsedPhone || null, type: 'residential',
       });
       const walkin = walkinRes.data?.customer || walkinRes.data;
       return { customer: walkin, action: 'created', message: parsedName ? `Customer: ${parsedName}` : 'Walk-in customer created' };
-    } catch (err) {
-      console.warn('[JobForm] Walk-in create failed:', err.message);
-    }
+    } catch {}
 
-    // Step 5: Complete failure — customer info goes into notes, job will need manual customer
-    return {
-      customer: null,
-      action: 'failed',
-      message: parsedName ? `Could not save customer "${parsedName}" — added to notes` : null,
-    };
+    return { customer: null, action: 'failed', message: parsedName ? `Could not save customer "${parsedName}" — added to notes` : null };
   }
 
   async function applyParsedData(p) {
-    // Map job fields first (always succeeds regardless of customer)
     setForm(prev => ({
       ...prev,
-      title: p.job_title || p.title || prev.title,
       notes: [p.job_description, p.leftover_notes].filter(Boolean).join('\n\n') || prev.notes,
       address: p.address || p.service_address || prev.address,
-      city: p.city || prev.city,
-      state: toStateAbbr(p.state) || prev.state,
-      zip: p.zip || prev.zip,
+      city:    p.city    || prev.city,
+      state:   toStateAbbr(p.state) || prev.state,
+      zip:     p.zip     || prev.zip,
       job_type: p.type || p.job_type || prev.job_type,
-      priority: p.priority || prev.priority,
-      scheduled_date: p.scheduled_date
-        ? p.scheduled_date.slice(0, 10)
-        : p.scheduled_start ? p.scheduled_start.slice(0, 10) : prev.scheduled_date,
-      scheduled_time: p.scheduled_time
-        || (p.scheduled_start ? p.scheduled_start.slice(11, 16) : '')
-        || prev.scheduled_time,
+      scheduled_date: p.scheduled_date ? p.scheduled_date.slice(0,10)
+        : p.scheduled_start ? p.scheduled_start.slice(0,10) : prev.scheduled_date,
+      scheduled_time: p.scheduled_time || (p.scheduled_start ? p.scheduled_start.slice(11,16) : '') || prev.scheduled_time,
     }));
-
     const phones = p.phone_numbers || (p.phone ? [p.phone] : []);
-    if (phones.length > 0) setExtraPhones(phones.slice(0, 3));
+    if (phones.length > 0) setExtraPhones(phones.slice(0,3));
 
-    // Resolve customer — robust, never blocks job creation
     const result = await resolveCustomer(p);
-
     if (result.action === 'matched' && result.customer) {
-      // Show duplicate modal instead of silently selecting
       setDuplicateModal({ matched: result.customer, parsedName: p.customer_name || '' });
       return;
     }
-
     if (result.customer) {
       selectCustomer(result.customer);
     } else {
-      // Customer resolution completely failed — preserve info in notes
       const customerInfo = [p.customer_name, p.phone, p.email].filter(Boolean).join(' | ');
       if (customerInfo) {
         setForm(prev => ({
           ...prev,
-          notes: prev.notes
-            ? `CUSTOMER: ${customerInfo}\n\n${prev.notes}`
-            : `CUSTOMER: ${customerInfo}`,
+          notes: prev.notes ? `CUSTOMER: ${customerInfo}\n\n${prev.notes}` : `CUSTOMER: ${customerInfo}`,
         }));
       }
     }
-
-    if (result.message) {
-      showSnack(result.message, result.action === 'failed' ? 'error' : 'success');
-    } else {
-      showSnack('Ticket parsed!', 'success');
-    }
+    if (result.message) showSnack(result.message, result.action === 'failed' ? 'error' : 'success');
+    else showSnack('Ticket parsed!', 'success');
   }
 
   async function handleParseTicket() {
@@ -480,9 +433,7 @@ export default function JobForm() {
       await applyParsedData(p);
     } catch (err) {
       showSnack(err?.response?.data?.error || 'Failed to parse ticket', 'error');
-    } finally {
-      setParsing(false);
-    }
+    } finally { setParsing(false); }
   }
 
   async function handlePasteFromClipboard() {
@@ -496,82 +447,97 @@ export default function JobForm() {
           await applyParsedData(p);
         } catch (err) {
           showSnack(err?.response?.data?.error || 'Failed to parse', 'error');
-        } finally {
-          setParsing(false);
-        }
+        } finally { setParsing(false); }
         return;
       }
       setPasteModal(true);
-    } catch {
-      setPasteModal(true);
+    } catch { setPasteModal(true); }
+  }
+
+  // ── build payload for job create/update ───────────────────────────────────
+  function buildPayload(sendToTech = false) {
+    let scheduled_start = null;
+    if (form.scheduled_date) {
+      const timeStr = form.scheduled_time || '12:00';
+      const dt = new Date(`${form.scheduled_date}T${timeStr}:00`);
+      scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
+    }
+
+    // Resolve assignment
+    let assigned_to = null;
+    let assigned_roster_tech_id = null;
+    if (form.assign_cat === 'team')   assigned_to = form.assigned_tech_id || null;
+    if (form.assign_cat === 'roster') assigned_roster_tech_id = form.assigned_roster_tech_id || null;
+
+    // Resolve source
+    let source_type = null, job_source_id = null, ad_channel_id = null;
+    if (form.source_option === 'company') {
+      source_type = 'own_company';
+    } else {
+      const contact = sourceContacts.find(c => c.id === form.source_option || c._id === form.source_option);
+      const channel = adChannels.find(c => c.id === form.source_option || c._id === form.source_option);
+      if (contact)      { source_type = 'external_contact'; job_source_id = form.source_option; }
+      else if (channel) { source_type = 'own_company';      ad_channel_id = form.source_option; }
+    }
+
+    const type = JOB_TYPE_TO_BACKEND[form.job_type] || form.job_type?.toLowerCase() || null;
+
+    return {
+      customer_id: form.customer_id || null,
+      type,
+      notes: form.notes?.trim() || null,
+      description: form.notes?.trim() || null,
+      address: form.address?.trim() || null,
+      city:    form.city?.trim()    || null,
+      state:   toStateAbbr(form.state?.trim()) || null,
+      zip:     form.zip?.trim()     || null,
+      scheduled_start,
+      assigned_to,
+      assigned_roster_tech_id,
+      source_type,
+      job_source_id,
+      ad_channel_id,
+      ...(sendToTech ? {
+        notify_sms:   form.notify_sms,
+        notify_email: form.notify_email,
+        notify_push:  form.notify_push,
+      } : {}),
+    };
+  }
+
+  // ── notify tech after save ────────────────────────────────────────────────
+  async function notifyTech(jobId) {
+    if (form.assign_cat === 'self') return;
+    const calls = [];
+    if (form.notify_sms || form.notify_push) {
+      // dispatch triggers SMS for roster/team
+      try { await jobsApi.dispatch(jobId, 0, 0); } catch {}
     }
   }
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const fe = {};
-    if (!form.title?.trim()) fe.title = 'Job title is required';
-    // customer_id is not required at the frontend — pasted-ticket jobs auto-resolve a customer,
-    // and if resolution fails the backend error surfaces via showSnack
-    if (Object.keys(fe).length) { setFieldErrors(fe); return; }
+  // ── submit ─────────────────────────────────────────────────────────────────
+  async function handleSubmit(e, sendMode = false) {
+    if (e) e.preventDefault();
+    if (!form.customer_id) { setFieldErrors({ customer_id: 'Customer is required' }); return; }
 
     setSaving(true);
+    setSendAfterSave(sendMode);
     try {
-      let scheduled_start = null;
-      if (form.scheduled_date) {
-        const timeStr = form.scheduled_time || '12:00';
-        const dt = new Date(`${form.scheduled_date}T${timeStr}:00`);
-        scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
-      }
-
-      const payload = {
-        title: form.title.trim(),
-        description: form.notes?.trim() || null,
-        notes: form.notes?.trim() || null,
-        customer_id: form.customer_id || null,
-        address: form.address?.trim() || null,
-        city: form.city?.trim() || null,
-        state: toStateAbbr(form.state?.trim()) || null,
-        zip: form.zip?.trim() || null,
-        scheduled_start,
-        assigned_to: form.assigned_roster_tech_id ? null : (form.assigned_tech_id || null),
-        assigned_roster_tech_id: form.assigned_tech_id ? null : (form.assigned_roster_tech_id || null),
-        type: JOB_TYPE_TO_BACKEND[form.job_type] || form.job_type?.toLowerCase() || null,
-        priority: form.priority || null,
-        source_type: form.source_type || null,
-        job_source_id: form.job_source_id || null,
-        ad_channel_id: form.ad_channel_id || null,
-        source_review_link: form.source_review_link?.trim() || null,
-        line_items: lineItems.length > 0 ? lineItems.map(li => ({
-          name: li.name,
-          quantity: li.qty,
-          unit_price: li.unit_price,
-          total: li.qty * Number(li.unit_price),
-        })) : undefined,
-      };
-
-      // Remove undefined keys — don't send them at all
-      Object.keys(payload).forEach(k => {
-        if (payload[k] === undefined) delete payload[k];
-      });
-
-      console.log('[JobForm] Submitting payload:', JSON.stringify(payload, null, 2));
+      const payload = buildPayload(sendMode);
 
       if (isEdit) {
         await jobsApi.update(id, payload);
+        if (sendMode) await notifyTech(id);
         showSnack('Job updated', 'success');
         navigate(`/jobs/${id}`);
       } else {
         const res = await jobsApi.create(payload);
-        showSnack('Job created', 'success');
-        navigate(`/jobs/${res.data?.job?.id || res.data?.id}`);
+        const newId = res.data?.job?.id || res.data?.id;
+        if (sendMode && newId) await notifyTech(newId);
+        showSnack(sendMode ? 'Job created & tech notified' : 'Job created', 'success');
+        navigate(`/jobs/${newId}`);
       }
     } catch (err) {
-      console.error('[JobForm] Save error:', {
-        status: err?.response?.status,
-        data: err?.response?.data,
-        payload: err?.config?.data,
-      });
       const msg = err?.response?.data?.error
         || err?.response?.data?.errors?.[0]?.msg
         || err?.response?.data?.message
@@ -579,55 +545,173 @@ export default function JobForm() {
       showSnack(msg, 'error');
     } finally {
       setSaving(false);
+      setSendAfterSave(false);
     }
   }
 
-  const techs = techsData?.technicians || techsData || [];
-  const rosterTechs = rosterData?.technicians || rosterData || [];
-  const sources = sourcesData?.contacts || sourcesData?.sources || sourcesData || [];
-  const channels = channelsData?.channels || channelsData || [];
-
-  if (isEdit && jobLoading) return <LoadingSpinner fullPage />;
-
+  const isNonSelf = form.assign_cat !== 'self';
   const schedulePreview = form.scheduled_date
     ? `${formatDisplayDate(form.scheduled_date)}${form.scheduled_time ? ' at ' + formatDisplayTime(form.scheduled_time) : ''}`
     : '';
 
+  if (isEdit && jobLoading) return <LoadingSpinner fullPage />;
+
   return (
-    <div className="p-4 max-w-2xl mx-auto">
+    <div className="p-4 max-w-2xl mx-auto pb-32">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(-1)}
+          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
           <ArrowLeft size={20} />
         </button>
         <h1 className="text-xl font-bold text-gray-900 flex-1">{isEdit ? 'Edit Job' : 'New Job'}</h1>
-        <button
-          type="button"
-          onClick={handlePasteFromClipboard}
-          disabled={parsing}
-          className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 disabled:opacity-60 transition-colors"
-        >
+        <button type="button" onClick={handlePasteFromClipboard} disabled={parsing}
+          className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 disabled:opacity-60">
           {parsing ? <span className="animate-spin inline-block">⟳</span> : <ClipboardList size={16} />}
           <span className="hidden sm:inline">{parsing ? 'Parsing...' : 'Paste Ticket'}</span>
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* CUSTOMER */}
+      <form onSubmit={e => handleSubmit(e, false)} className="space-y-4">
+
+        {/* ── SOURCE ─────────────────────────────────────────────────────── */}
+        <Card>
+          <SectionLabel>Job Source</SectionLabel>
+          <select
+            value={form.source_option}
+            onChange={e => setForm(prev => ({ ...prev, source_option: e.target.value }))}
+            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white"
+          >
+            <option value="company">{companyName} (My Company)</option>
+            {sourceContacts.length > 0 && (
+              <optgroup label="Source Contacts">
+                {sourceContacts.map(c => (
+                  <option key={c.id||c._id} value={c.id||c._id}>{c.name}</option>
+                ))}
+              </optgroup>
+            )}
+            {adChannels.length > 0 && (
+              <optgroup label="Ad Channels">
+                {adChannels.map(c => (
+                  <option key={c.id||c._id} value={c.id||c._id}>{c.name}</option>
+                ))}
+              </optgroup>
+            )}
+          </select>
+        </Card>
+
+        {/* ── JOB TYPE ───────────────────────────────────────────────────── */}
+        <Card>
+          <SectionLabel>Job Type</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {JOB_TYPES.map(t => (
+              <button key={t} type="button"
+                onClick={() => setForm(prev => ({ ...prev, job_type: t }))}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors min-h-[36px] ${
+                  form.job_type === t
+                    ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
+                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                }`}>{t}</button>
+            ))}
+          </div>
+        </Card>
+
+        {/* ── ASSIGNMENT ─────────────────────────────────────────────────── */}
+        <Card>
+          <SectionLabel>Assign Technician</SectionLabel>
+
+          {/* Category tabs */}
+          <div className="flex gap-1 mb-3 bg-gray-100 rounded-xl p-1">
+            {ASSIGN_CATS.map(cat => (
+              <button key={cat.id} type="button"
+                onClick={() => setForm(prev => ({ ...prev, assign_cat: cat.id, assigned_tech_id: '', assigned_roster_tech_id: '', assigned_partner_company_id: '' }))}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors min-h-[36px] ${
+                  form.assign_cat === cat.id
+                    ? 'bg-white text-[#1A73E8] shadow-sm font-semibold'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}>{cat.label}</button>
+            ))}
+          </div>
+
+          {form.assign_cat === 'self' && (
+            <p className="text-sm text-gray-500 py-1">Job assigned to you.</p>
+          )}
+
+          {form.assign_cat === 'team' && (
+            <select value={form.assigned_tech_id}
+              onChange={e => setForm(prev => ({ ...prev, assigned_tech_id: e.target.value }))}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
+              <option value="">— Select Team Member —</option>
+              {teamMembers.map(t => (
+                <option key={t.id||t._id} value={t.id||t._id}>
+                  {`${t.first_name||''} ${t.last_name||''}`.trim()}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {form.assign_cat === 'roster' && (
+            <select value={form.assigned_roster_tech_id}
+              onChange={e => setForm(prev => ({ ...prev, assigned_roster_tech_id: e.target.value }))}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
+              <option value="">— Select Roster Tech —</option>
+              {rosterTechs.map(t => (
+                <option key={t.id||t._id} value={t.id||t._id}>{t.name||t.first_name}</option>
+              ))}
+            </select>
+          )}
+
+          {form.assign_cat === 'partner' && (
+            <select value={form.assigned_partner_company_id}
+              onChange={e => setForm(prev => ({ ...prev, assigned_partner_company_id: e.target.value }))}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
+              <option value="">— Select Partner —</option>
+              {partners.map(p => (
+                <option key={p.id||p._id||p.company_id} value={p.id||p._id||p.company_id}>
+                  {p.name||p.company_name||p.partner_name}
+                </option>
+              ))}
+            </select>
+          )}
+
+          {/* Notification toggles — only for non-self */}
+          {isNonSelf && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Notify via</p>
+              <div className="flex gap-2">
+                {[
+                  { key: 'notify_sms',   label: 'SMS' },
+                  { key: 'notify_email', label: 'Email' },
+                  { key: 'notify_push',  label: 'Push' },
+                ].map(({ key, label }) => (
+                  <button key={key} type="button"
+                    onClick={() => setForm(prev => ({ ...prev, [key]: !prev[key] }))}
+                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors min-h-[36px] ${
+                      form[key]
+                        ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
+                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                    }`}>{label}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+
+        {/* ── CUSTOMER ───────────────────────────────────────────────────── */}
         <Card>
           <SectionLabel>Customer</SectionLabel>
 
-          {/* Selected customer card */}
           {selectedCustomer ? (
             <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl mb-2">
               <UserCheck size={18} className="text-[#1A73E8] shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">
-                  {`${selectedCustomer.first_name || ''} ${selectedCustomer.last_name || ''}`.trim() || selectedCustomer.name}
+                  {`${selectedCustomer.first_name||''} ${selectedCustomer.last_name||''}`.trim() || selectedCustomer.name}
                 </p>
                 {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
               </div>
-              <button type="button" onClick={() => { setSelectedCustomer(null); setForm(prev => ({ ...prev, customer_id: '', customer_name: '' })); setCustomerSearch(''); }}
+              <button type="button"
+                onClick={() => { setSelectedCustomer(null); setForm(prev => ({ ...prev, customer_id: '', customer_name: '' })); setCustomerSearch(''); }}
                 className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg">
                 <X size={16} />
               </button>
@@ -643,20 +727,22 @@ export default function JobForm() {
               {showCustomerDropdown && (
                 <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
                   {customerResults.map(c => (
-                    <button key={c.id || c._id} type="button" onClick={() => selectCustomer(c)}
+                    <button key={c.id||c._id} type="button" onClick={() => selectCustomer(c)}
                       className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
-                      <span className="font-medium">{`${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name}</span>
+                      <span className="font-medium">{`${c.first_name||''} ${c.last_name||''}`.trim() || c.name}</span>
                       {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
                     </button>
                   ))}
-                  <button type="button" onClick={() => { setShowCustomerDropdown(false); setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
+                  <button type="button"
+                    onClick={() => { setShowCustomerDropdown(false); setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
                     className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-[#1A73E8] font-medium flex items-center gap-2">
                     <Plus size={14} /> Create new customer
                   </button>
                 </div>
               )}
               {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
-                <button type="button" onClick={() => { setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
+                <button type="button"
+                  onClick={() => { setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
                   className="mt-1.5 text-sm text-[#1A73E8] font-medium flex items-center gap-1 min-h-[36px]">
                   <Plus size={14} /> Create new customer
                 </button>
@@ -668,9 +754,11 @@ export default function JobForm() {
           {/* Extra phones */}
           {extraPhones.map((ph, idx) => (
             <div key={idx} className="flex gap-2 mt-2">
-              <input type="tel" value={ph} onChange={e => { const a = [...extraPhones]; a[idx] = e.target.value; setExtraPhones(a); }}
-                placeholder={`Phone ${idx + 2}`} className="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
-              <button type="button" onClick={() => setExtraPhones(prev => prev.filter((_, i) => i !== idx))}
+              <input type="tel" value={ph}
+                onChange={e => { const a = [...extraPhones]; a[idx] = e.target.value; setExtraPhones(a); }}
+                placeholder={`Phone ${idx+2}`}
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+              <button type="button" onClick={() => setExtraPhones(prev => prev.filter((_,i) => i !== idx))}
                 className="p-2 text-gray-400 hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
             </div>
           ))}
@@ -682,9 +770,11 @@ export default function JobForm() {
           {/* Extra emails */}
           {extraEmails.map((em, idx) => (
             <div key={idx} className="flex gap-2 mt-2">
-              <input type="email" value={em} onChange={e => { const a = [...extraEmails]; a[idx] = e.target.value; setExtraEmails(a); }}
-                placeholder={`Email ${idx + 2}`} className="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
-              <button type="button" onClick={() => setExtraEmails(prev => prev.filter((_, i) => i !== idx))}
+              <input type="email" value={em}
+                onChange={e => { const a = [...extraEmails]; a[idx] = e.target.value; setExtraEmails(a); }}
+                placeholder={`Email ${idx+2}`}
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+              <button type="button" onClick={() => setExtraEmails(prev => prev.filter((_,i) => i !== idx))}
                 className="p-2 text-gray-400 hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
             </div>
           ))}
@@ -694,84 +784,56 @@ export default function JobForm() {
           </button>
         </Card>
 
-        {/* JOB INFO */}
+        {/* ── ADDRESS ────────────────────────────────────────────────────── */}
         <Card>
-          <SectionLabel>Job Info</SectionLabel>
-          <Input label="Job Title" name="title" value={form.title} onChange={e => { handleChange(e); if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: '' })); }}
-            placeholder="e.g. AC Repair - Main Unit" error={fieldErrors.title || errors.title} />
-          <div className="mt-3">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes for technician</label>
-            <textarea name="notes" value={form.notes} onChange={handleChange} rows={3}
-              placeholder="Job details..."
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 text-[16px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none" />
-          </div>
-        </Card>
-
-        {/* TYPE */}
-        <Card>
-          <SectionLabel>Type</SectionLabel>
-          <div className="flex flex-wrap gap-2">
-            {JOB_TYPES.map(t => (
-              <button key={t} type="button" onClick={() => setForm(prev => ({ ...prev, job_type: t }))}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors min-h-[36px] ${
-                  form.job_type === t ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                }`}>{t}</button>
-            ))}
-          </div>
-        </Card>
-
-        {/* PRIORITY */}
-        <Card>
-          <SectionLabel>Priority</SectionLabel>
-          <div className="flex gap-2">
-            {PRIORITIES.map(p => (
-              <button key={p.value} type="button" onClick={() => setForm(prev => ({ ...prev, priority: p.value }))}
-                className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors min-h-[44px] ${
-                  form.priority === p.value ? p.sel : `bg-white ${p.unsel} hover:bg-gray-50`
-                }`}>{p.label}</button>
-            ))}
-          </div>
-        </Card>
-
-        {/* LOCATION */}
-        <Card>
-          <SectionLabel>Location</SectionLabel>
-          {isEdit && (jobData?.job || jobData)?.address_verified === false && (
+          <SectionLabel>Address</SectionLabel>
+          {isEdit && (jobData?.job||jobData)?.address_verified === false && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-start gap-2 mb-3">
-              <span className="text-amber-500 text-lg flex-shrink-0">⚠️</span>
+              <span className="text-amber-500 text-lg shrink-0">⚠️</span>
               <div>
                 <div className="text-sm font-semibold text-amber-800">Address may be inaccurate</div>
-                <div className="text-xs text-amber-600">The map pin location doesn't match the stated city/state. Please verify and re-save to update coordinates.</div>
+                <div className="text-xs text-amber-600">Please verify and re-save to update coordinates.</div>
               </div>
             </div>
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
-            <input
-              ref={streetInputRef}
+            <input ref={streetInputRef}
               className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
               placeholder="Start typing address..."
               value={form.address}
-              onChange={e => setForm(prev => ({ ...prev, address: e.target.value }))}
-            />
+              onChange={e => setForm(prev => ({ ...prev, address: e.target.value }))} />
           </div>
           <div className="grid grid-cols-3 gap-2 mt-3">
             <div className="col-span-1">
-              <Input label="City" name="city" value={form.city} onChange={handleChange} placeholder="Tampa" />
+              <Input label="City" name="city" value={form.city}
+                onChange={e => setForm(prev => ({ ...prev, city: e.target.value }))} placeholder="Tampa" />
             </div>
-            <Input label="State" name="state" value={form.state} onChange={handleChange} placeholder="FL" />
-            <Input label="ZIP" name="zip" value={form.zip} onChange={handleChange} placeholder="33601" />
+            <Input label="State" name="state" value={form.state}
+              onChange={e => setForm(prev => ({ ...prev, state: e.target.value }))} placeholder="FL" />
+            <Input label="ZIP" name="zip" value={form.zip}
+              onChange={e => setForm(prev => ({ ...prev, zip: e.target.value }))} placeholder="33601" />
           </div>
         </Card>
 
-        {/* SCHEDULE */}
+        {/* ── NOTES ──────────────────────────────────────────────────────── */}
+        <Card>
+          <SectionLabel>Job Notes</SectionLabel>
+          <textarea name="notes" value={form.notes}
+            onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
+            rows={3} placeholder="Job details, special instructions..."
+            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 text-[16px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none" />
+        </Card>
+
+        {/* ── SCHEDULE ───────────────────────────────────────────────────── */}
         <Card>
           <SectionLabel>Schedule</SectionLabel>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
               <div className="relative">
-                <input type="date" name="scheduled_date" value={form.scheduled_date} onChange={handleChange}
+                <input type="date" value={form.scheduled_date}
+                  onChange={e => setForm(prev => ({ ...prev, scheduled_date: e.target.value }))}
                   className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
                 {form.scheduled_date && (
                   <button type="button" onClick={() => setForm(p => ({ ...p, scheduled_date: '' }))}
@@ -784,7 +846,8 @@ export default function JobForm() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
               <div className="relative">
-                <input type="time" name="scheduled_time" value={form.scheduled_time} onChange={handleChange}
+                <input type="time" value={form.scheduled_time}
+                  onChange={e => setForm(prev => ({ ...prev, scheduled_time: e.target.value }))}
                   className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
                 {form.scheduled_time && (
                   <button type="button" onClick={() => setForm(p => ({ ...p, scheduled_time: '' }))}
@@ -800,141 +863,53 @@ export default function JobForm() {
           )}
         </Card>
 
-        {/* ASSIGNMENT */}
-        <Card>
-          <SectionLabel>Assignment</SectionLabel>
-          <div className="space-y-3">
-            {rosterTechs.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Technicians</p>
-                <select value={form.assigned_roster_tech_id}
-                  onChange={e => setForm(p => ({ ...p, assigned_roster_tech_id: e.target.value, assigned_tech_id: '' }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
-                  <option value="">— Select Technician —</option>
-                  {rosterTechs.map(t => (
-                    <option key={t.id || t._id} value={t.id || t._id}>{t.name || t.first_name}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-            {techs.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-1">App Users</p>
-                <select value={form.assigned_tech_id}
-                  onChange={e => setForm(p => ({ ...p, assigned_tech_id: e.target.value, assigned_roster_tech_id: '' }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
-                  <option value="">— Select App User —</option>
-                  {techs.map(t => (
-                    <option key={t.id || t._id} value={t.id || t._id}>{`${t.first_name || ''} ${t.last_name || ''}`.trim()}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </Card>
-
-        {/* CHARGES & PARTS */}
-        <Card>
-          <SectionLabel>Charges & Parts</SectionLabel>
-          <div className="flex gap-2 mb-3">
-            <button type="button" onClick={() => setLineItemModal('charge')}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 min-h-[44px]">
-              <Plus size={16} /> Add Charge
-            </button>
-            <button type="button" onClick={() => setLineItemModal('part')}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 min-h-[44px]">
-              <Plus size={16} /> Add Part
-            </button>
-          </div>
-          {lineItems.length > 0 && (
-            <div className="space-y-2">
-              {lineItems.map((li, idx) => (
-                <div key={idx} className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{li.name}</p>
-                    <p className="text-xs text-gray-400">{li.qty} × ${Number(li.unit_price).toFixed(2)}</p>
-                  </div>
-                  <p className="text-sm font-semibold text-gray-900">${(li.qty * Number(li.unit_price)).toFixed(2)}</p>
-                  <button type="button" onClick={() => setLineItems(prev => prev.filter((_, i) => i !== idx))}
-                    className="text-red-400 hover:text-red-600 p-1 min-w-[32px] min-h-[32px] flex items-center justify-center">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
-              <div className="flex justify-between pt-1">
-                <span className="text-sm font-semibold text-gray-700">Subtotal</span>
-                <span className="text-sm font-bold text-[#1A73E8]">
-                  ${lineItems.reduce((s, li) => s + li.qty * Number(li.unit_price), 0).toFixed(2)}
-                </span>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        {/* SOURCE */}
-        <Card>
-          <SectionLabel>Source</SectionLabel>
-          <p className="text-xs text-gray-400 mb-2">How did this job come in?</p>
-          <div className="flex flex-wrap gap-2 mb-3">
-            {SOURCE_TYPES.map(s => (
-              <button key={s.value} type="button"
-                onClick={() => setForm(prev => ({ ...prev, source_type: prev.source_type === s.value ? '' : s.value, job_source_id: '' }))}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors min-h-[36px] ${
-                  form.source_type === s.value ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                }`}>{s.label}</button>
-            ))}
-          </div>
-          {form.source_type === 'external_contact' && sources.length > 0 && (
-            <select value={form.job_source_id}
-              onChange={e => setForm(p => ({ ...p, job_source_id: e.target.value }))}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white mb-3">
-              <option value="">— Select Source Contact —</option>
-              {sources.map(s => <option key={s.id || s._id} value={s.id || s._id}>{s.name}</option>)}
-            </select>
-          )}
-          {form.source_type === 'own_company' && channels.length > 0 && (
-            <select value={form.ad_channel_id}
-              onChange={e => setForm(p => ({ ...p, ad_channel_id: e.target.value }))}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white mb-3">
-              <option value="">— Select Ad Channel —</option>
-              {channels.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
-            </select>
-          )}
-          <Input label="Review / Source Link (optional)" name="source_review_link"
-            value={form.source_review_link} onChange={handleChange} placeholder="https://..." />
-        </Card>
-
-        {/* STATUS (edit mode only) */}
+        {/* ── STATUS (edit only) ─────────────────────────────────────────── */}
         {isEdit && (
           <Card>
             <SectionLabel>Status</SectionLabel>
-            <select name="status" value={form.status} onChange={handleChange}
+            <select value={form.status}
+              onChange={e => setForm(prev => ({ ...prev, status: e.target.value }))}
               className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
-              {STATUS_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              {[
+                { value:'unscheduled', label:'Unscheduled' },
+                { value:'scheduled',   label:'Scheduled'   },
+                { value:'en_route',    label:'En Route'    },
+                { value:'in_progress', label:'In Progress' },
+                { value:'completed',   label:'Completed'   },
+                { value:'holding',     label:'Holding'     },
+                { value:'cancelled',   label:'Cancelled'   },
+              ].map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </Card>
         )}
 
+        {/* ── ACTION BUTTONS ─────────────────────────────────────────────── */}
         <div className="flex gap-3 pb-4">
           <Button type="button" variant="outlined" onClick={() => navigate(-1)} className="flex-1">Cancel</Button>
-          <Button type="submit" loading={saving} disabled={saving} className="flex-1">
-            {isEdit ? 'Save Changes' : 'Create Job'}
+          <Button type="submit" loading={saving && !sendAfterSave} disabled={saving} className="flex-1">
+            {isEdit ? 'Save Changes' : 'Save Job'}
           </Button>
+          {isNonSelf && !isEdit && (
+            <Button type="button"
+              loading={saving && sendAfterSave}
+              disabled={saving}
+              onClick={e => handleSubmit(null, true)}
+              className="flex-1 bg-green-600 hover:bg-green-700 border-green-600">
+              Save &amp; Send
+            </Button>
+          )}
         </div>
       </form>
 
       {/* Paste Ticket Modal */}
-      <Modal
-        isOpen={pasteModal}
-        onClose={() => { setPasteModal(false); setTicketText(''); }}
+      <Modal isOpen={pasteModal} onClose={() => { setPasteModal(false); setTicketText(''); }}
         title="Paste Job Ticket"
         footer={
           <>
             <Button variant="outlined" onClick={() => { setPasteModal(false); setTicketText(''); }}>Cancel</Button>
             <Button loading={parsing} disabled={!ticketText.trim()} onClick={handleParseTicket}>Parse with AI</Button>
           </>
-        }
-      >
+        }>
         <div className="space-y-2">
           <p className="text-sm text-gray-500">Paste any job ticket, email, or work order. AI will extract job details automatically.</p>
           <textarea value={ticketText} onChange={e => setTicketText(e.target.value)} rows={8}
@@ -945,32 +920,25 @@ export default function JobForm() {
       </Modal>
 
       {/* Duplicate Customer Modal */}
-      <Modal
-        isOpen={Boolean(duplicateModal)}
-        onClose={() => setDuplicateModal(null)}
-        title="Returning Customer?"
-      >
+      <Modal isOpen={Boolean(duplicateModal)} onClose={() => setDuplicateModal(null)} title="Returning Customer?">
         {duplicateModal && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              We found an existing customer matching <strong>{duplicateModal.parsedName || 'this contact'}</strong>:
+              We found an existing customer matching <strong>{duplicateModal.parsedName||'this contact'}</strong>:
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
               <p className="font-semibold text-gray-900">
-                {`${duplicateModal.matched.first_name || ''} ${duplicateModal.matched.last_name || ''}`.trim() || duplicateModal.matched.name}
+                {`${duplicateModal.matched.first_name||''} ${duplicateModal.matched.last_name||''}`.trim() || duplicateModal.matched.name}
               </p>
-              {duplicateModal.matched.phone && <p className="text-sm text-gray-600">{duplicateModal.matched.phone}</p>}
-              {duplicateModal.matched.address && <p className="text-xs text-gray-500">{duplicateModal.matched.address}</p>}
+              {duplicateModal.matched.phone    && <p className="text-sm text-gray-600">{duplicateModal.matched.phone}</p>}
+              {duplicateModal.matched.address  && <p className="text-xs text-gray-500">{duplicateModal.matched.address}</p>}
             </div>
             <div className="grid grid-cols-1 gap-2">
-              <Button
-                onClick={() => { selectCustomer(duplicateModal.matched); setDuplicateModal(null); showSnack('Returning customer selected', 'success'); }}
-                className="w-full"
-              >
+              <Button onClick={() => { selectCustomer(duplicateModal.matched); setDuplicateModal(null); showSnack('Returning customer selected', 'success'); }}
+                className="w-full">
                 Returning Customer
               </Button>
-              <Button
-                variant="outlined"
+              <Button variant="outlined" className="w-full"
                 onClick={async () => {
                   setDuplicateModal(null);
                   showSnack('Creating new customer...', 'info');
@@ -978,39 +946,23 @@ export default function JobForm() {
                     const parsedName = duplicateModal.parsedName.trim();
                     const parts = parsedName.split(' ');
                     const res = await customersApi.create({
-                      first_name: parts[0] || 'Customer',
-                      last_name: parts.slice(1).join(' ') || '',
-                      phone: duplicateModal.matched.phone || null,
+                      first_name: parts[0]||'Customer',
+                      last_name: parts.slice(1).join(' ')||'',
+                      phone: duplicateModal.matched.phone||null,
                       type: 'residential',
                     });
-                    selectCustomer(res.data?.customer || res.data);
+                    selectCustomer(res.data?.customer||res.data);
                     showSnack('New customer created', 'success');
-                  } catch {
-                    showSnack('Failed to create customer', 'error');
-                  }
-                }}
-                className="w-full"
-              >
+                  } catch { showSnack('Failed to create customer', 'error'); }
+                }}>
                 Create New Customer
               </Button>
-              <Button variant="outlined" onClick={() => setDuplicateModal(null)} className="w-full">
-                Go Back
-              </Button>
+              <Button variant="outlined" onClick={() => setDuplicateModal(null)} className="w-full">Go Back</Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Add Line Item Modal */}
-      {lineItemModal && (
-        <AddLineItemModal
-          type={lineItemModal}
-          onAdd={item => { setLineItems(prev => [...prev, item]); setLineItemModal(null); }}
-          onClose={() => setLineItemModal(null)}
-        />
-      )}
-
-      {/* Quick Create Customer Modal */}
       <QuickCreateCustomerModal
         isOpen={showQuickCreate}
         onClose={() => setShowQuickCreate(false)}
@@ -1018,100 +970,5 @@ export default function JobForm() {
         prefill={quickCreatePrefill}
       />
     </div>
-  );
-}
-
-function AddLineItemModal({ type, onAdd, onClose }) {
-  const [name, setName] = useState('');
-  const [qty, setQty] = useState(1);
-  const [unitPrice, setUnitPrice] = useState('');
-  const [search, setSearch] = useState('');
-  const [results, setResults] = useState([]);
-  const searchTO = useRef(null);
-
-  useEffect(() => {
-    if (search.length < 2) { setResults([]); return; }
-    clearTimeout(searchTO.current);
-    searchTO.current = setTimeout(async () => {
-      try {
-        const res = await api.get(`/pricebook/items?search=${encodeURIComponent(search)}`);
-        setResults(res.data?.items || res.data || []);
-      } catch { setResults([]); }
-    }, 300);
-  }, [search]);
-
-  function selectItem(item) {
-    setName(item.name);
-    setUnitPrice(String(item.price || item.unit_price || ''));
-    setSearch('');
-    setResults([]);
-  }
-
-  const total = Number(qty || 1) * Number(unitPrice || 0);
-
-  return (
-    <Modal
-      isOpen
-      onClose={onClose}
-      title={type === 'charge' ? 'Add Charge' : 'Add Part'}
-      footer={
-        <>
-          <Button variant="outlined" onClick={onClose}>Cancel</Button>
-          <Button disabled={!name.trim()} onClick={() => onAdd({ name, qty: Number(qty), unit_price: Number(unitPrice || 0) })}>
-            Add
-          </Button>
-        </>
-      }
-    >
-      <div className="space-y-3">
-        <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              value={name || search}
-              onChange={e => { setSearch(e.target.value); setName(e.target.value); }}
-              placeholder="Search pricebook or type name..."
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-            />
-          </div>
-          {results.length > 0 && (
-            <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden max-h-48 overflow-y-auto">
-              {results.map(item => (
-                <button key={item.id || item._id} type="button" onClick={() => selectItem(item)}
-                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm border-b last:border-0 flex justify-between">
-                  <span className="font-medium">{item.name}</span>
-                  <span className="text-[#1A73E8]">${Number(item.price || item.unit_price || 0).toFixed(2)}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="flex gap-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Qty</label>
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={() => setQty(q => Math.max(1, q - 1))}
-                className="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center text-gray-600 font-bold text-lg hover:bg-gray-50">−</button>
-              <span className="w-8 text-center font-semibold text-gray-900">{qty}</span>
-              <button type="button" onClick={() => setQty(q => q + 1)}
-                className="w-10 h-10 rounded-xl border border-gray-300 flex items-center justify-center text-gray-600 font-bold text-lg hover:bg-gray-50">+</button>
-            </div>
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Unit Price ($)</label>
-            <input type="number" value={unitPrice} onChange={e => setUnitPrice(e.target.value)}
-              placeholder="0.00" min="0" step="0.01"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
-          </div>
-        </div>
-        {total > 0 && (
-          <div className="flex justify-between pt-2 border-t border-gray-100">
-            <span className="text-sm text-gray-600">Total</span>
-            <span className="font-bold text-[#1A73E8]">${total.toFixed(2)}</span>
-          </div>
-        )}
-      </div>
-    </Modal>
   );
 }
