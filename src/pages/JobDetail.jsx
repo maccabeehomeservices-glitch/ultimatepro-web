@@ -734,34 +734,35 @@ export default function JobDetail() {
                   <div className="flex items-center gap-2">
                     <span className="text-gray-400 text-sm">👤</span>
                     <span className="text-sm font-medium text-gray-900">
-                      {jobData.customer_name || jobData.customer?.name || '—'}
+                      {[jobData.cust_first, jobData.cust_last].filter(Boolean).join(' ') || '—'}
                     </span>
                   </div>
-                  {(jobData.customer?.phone) && (
+                  {jobData.cust_phone && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400 text-sm">📱</span>
-                        <span className="text-sm text-gray-900">{jobData.customer.phone}</span>
+                        <span className="text-sm text-gray-900">{jobData.cust_phone}</span>
                       </div>
-                      <a href={`tel:${jobData.customer.phone}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📞</a>
+                      <a href={`tel:${jobData.cust_phone}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📞</a>
                     </div>
                   )}
-                  {(jobData.customer?.email) && (
+                  {jobData.cust_email && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-400 text-sm">✉️</span>
-                        <span className="text-sm text-gray-900">{jobData.customer.email}</span>
+                        <span className="text-sm text-gray-900">{jobData.cust_email}</span>
                       </div>
-                      <a href={`mailto:${jobData.customer.email}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📧</a>
+                      <a href={`mailto:${jobData.cust_email}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📧</a>
                     </div>
                   )}
-                  {(jobData.customer?.address) && (
+                  {jobData.cust_address && (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400 text-sm">📍</span>
                       <span className="text-sm text-gray-900">
-                        {jobData.customer.address}
-                        {jobData.customer.city ? `, ${jobData.customer.city}` : ''}
-                        {jobData.customer.state ? `, ${jobData.customer.state}` : ''}
+                        {jobData.cust_address}
+                        {jobData.cust_city ? `, ${jobData.cust_city}` : ''}
+                        {jobData.cust_state ? `, ${jobData.cust_state}` : ''}
+                        {jobData.cust_zip ? ` ${jobData.cust_zip}` : ''}
                       </span>
                     </div>
                   )}
@@ -785,7 +786,12 @@ export default function JobDetail() {
                   <MapPin size={18} className="text-[#1A73E8] mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-400 font-medium uppercase mb-0.5">Job Site</p>
-                    <p className="text-sm text-gray-800">{address}</p>
+                    <p className="text-sm text-gray-800">
+                      {address}
+                      {jobData.city ? `, ${jobData.city}` : ''}
+                      {jobData.state ? `, ${jobData.state}` : ''}
+                      {jobData.zip ? ` ${jobData.zip}` : ''}
+                    </p>
                   </div>
                   <button onClick={handleNavigate}
                     className="text-sm text-[#1A73E8] font-semibold min-h-[44px] flex items-center px-2">
