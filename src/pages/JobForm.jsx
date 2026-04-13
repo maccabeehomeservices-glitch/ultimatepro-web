@@ -677,21 +677,28 @@ export default function JobForm() {
           {/* Notification toggles — only for non-self */}
           {isNonSelf && (
             <div className="mt-3 pt-3 border-t border-gray-100">
-              <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Notify via</p>
-              <div className="flex gap-2">
-                {[
-                  { key: 'notify_sms',   label: 'SMS' },
-                  { key: 'notify_email', label: 'Email' },
-                  { key: 'notify_push',  label: 'Push' },
-                ].map(({ key, label }) => (
-                  <button key={key} type="button"
-                    onClick={() => setForm(prev => ({ ...prev, [key]: !prev[key] }))}
-                    className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors min-h-[36px] ${
-                      form[key]
-                        ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
-                        : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                    }`}>{label}</button>
-                ))}
+              <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-3">SEND VIA</p>
+              <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.notify_sms}
+                    onChange={e => setForm(prev => ({ ...prev, notify_sms: e.target.checked }))}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                  <span className="text-sm font-medium">SMS</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="checkbox" checked={form.notify_email}
+                    onChange={e => setForm(prev => ({ ...prev, notify_email: e.target.checked }))}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                  <span className="text-sm font-medium">Email</span>
+                </label>
+                {form.assign_cat === 'team' && (
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" checked={form.notify_push}
+                      onChange={e => setForm(prev => ({ ...prev, notify_push: e.target.checked }))}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                    <span className="text-sm font-medium">Push</span>
+                  </label>
+                )}
               </div>
             </div>
           )}
