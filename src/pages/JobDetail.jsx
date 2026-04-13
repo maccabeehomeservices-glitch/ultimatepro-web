@@ -582,59 +582,56 @@ export default function JobDetail() {
     <div className="p-4 max-w-3xl mx-auto pb-8">
 
       {/* ── Section 1: Top Bar ─────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <button onClick={() => navigate(-1)}
-          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
-          <ArrowLeft size={20} />
-        </button>
-
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-gray-400 font-mono">#{jobData.job_number || jobData.id?.slice(0,8)}</p>
-          <p className="font-bold text-gray-900 text-base truncate">{jobData.title || jobData.job_title || jobData.type || 'Job'}</p>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
+          <button onClick={() => navigate(-1)}
+            className="p-2 -ml-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+            <ArrowLeft size={20} />
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">
+            #{jobData.job_number || jobData.id?.slice(0,8)}
+          </h1>
+          {/* Status badge */}
+          <button onClick={() => setStatusModal(true)}
+            className={`${statusColor} text-white text-xs font-bold px-3 py-1.5 rounded-full min-h-[36px] uppercase`}>
+            {(jobData.status||'').replace(/_/g,' ')}
+          </button>
+          {/* Priority chip */}
+          {priorityLabel && jobData.priority !== 'none' && (
+            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${priorityStyle}`}>
+              {priorityLabel}
+            </span>
+          )}
         </div>
 
-        {/* Status color button */}
-        <button onClick={() => setStatusModal(true)}
-          className={`${statusColor} text-white text-xs font-bold px-3 py-1.5 rounded-full min-h-[36px] uppercase`}>
-          {(jobData.status||'').replace(/_/g,' ')}
-        </button>
-
-        {/* Priority chip */}
-        {priorityLabel && (
-          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${priorityStyle}`}>
-            {priorityLabel}
-          </span>
-        )}
-
-        {/* Dispatch icon */}
-        {!isDeletedOrCancelled && (
-          <button onClick={() => setDispatchModal(true)} title="Dispatch"
-            className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1A73E8]">
-            <Navigation size={18} />
+        <div className="flex items-center gap-1 shrink-0">
+          {/* Dispatch icon — only when unscheduled or scheduled */}
+          {['unscheduled', 'scheduled'].includes(jobData.status) && (
+            <button onClick={() => setDispatchModal(true)} title="Dispatch"
+              className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1A73E8]">
+              <Navigation size={18} />
+            </button>
+          )}
+          {/* Arrived icon — when en_route */}
+          {jobData.status === 'en_route' && (
+            <button onClick={handleArrived} disabled={arriving} title="Mark Arrived"
+              className="p-2 rounded-xl hover:bg-green-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-green-600 disabled:opacity-50">
+              <CheckCircle size={18} />
+            </button>
+          )}
+          {/* Edit */}
+          <button onClick={() => navigate(`/jobs/${id}/edit`)}
+            className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+            <Edit size={20} />
           </button>
-        )}
-
-        {/* Arrived icon */}
-        {!isDeletedOrCancelled && jobData.status === 'en_route' && (
-          <button onClick={handleArrived} disabled={arriving} title="Mark Arrived"
-            className="p-2 rounded-xl hover:bg-green-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-green-600 disabled:opacity-50">
-            <CheckCircle size={18} />
-          </button>
-        )}
-
-        {/* Edit */}
-        <button onClick={() => navigate(`/jobs/${id}/edit`)}
-          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
-          <Edit size={20} />
-        </button>
-
-        {/* Archive */}
-        {jobData.status !== 'deleted' && (
-          <button onClick={() => setShowDeleteConfirm(true)}
-            className="p-2 rounded-xl hover:bg-red-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500">
-            <Trash2 size={18} />
-          </button>
-        )}
+          {/* Delete */}
+          {jobData.status !== 'deleted' && (
+            <button onClick={() => setShowDeleteConfirm(true)}
+              className="p-2 rounded-xl hover:bg-red-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500">
+              <Trash2 size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Partner banners */}
@@ -725,13 +722,50 @@ export default function JobDetail() {
 
             {/* Section 5: Customer */}
             {(jobData.customer_id || jobData.customer) && (
-              <Card onClick={() => navigate(`/customers/${jobData.customer_id || jobData.customer?.id}`)}>
-                <p className="text-xs text-gray-400 font-medium uppercase mb-1">Customer</p>
-                <p className="font-semibold text-gray-900">
-                  {jobData.customer_name || jobData.customer?.name || 'View Customer'}
-                </p>
-                {jobData.customer?.phone && <p className="text-sm text-gray-500">{jobData.customer.phone}</p>}
-                {jobData.customer?.email && <p className="text-sm text-gray-500">{jobData.customer.email}</p>}
+              <Card>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Customer</h3>
+                  <button onClick={() => navigate(`/customers/${jobData.customer_id || jobData.customer?.id}`)}
+                    className="text-sm text-blue-600 font-medium min-h-[36px] px-2">
+                    View
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-sm">👤</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {jobData.customer_name || jobData.customer?.name || '—'}
+                    </span>
+                  </div>
+                  {(jobData.customer?.phone) && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">📱</span>
+                        <span className="text-sm text-gray-900">{jobData.customer.phone}</span>
+                      </div>
+                      <a href={`tel:${jobData.customer.phone}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📞</a>
+                    </div>
+                  )}
+                  {(jobData.customer?.email) && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">✉️</span>
+                        <span className="text-sm text-gray-900">{jobData.customer.email}</span>
+                      </div>
+                      <a href={`mailto:${jobData.customer.email}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📧</a>
+                    </div>
+                  )}
+                  {(jobData.customer?.address) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-400 text-sm">📍</span>
+                      <span className="text-sm text-gray-900">
+                        {jobData.customer.address}
+                        {jobData.customer.city ? `, ${jobData.customer.city}` : ''}
+                        {jobData.customer.state ? `, ${jobData.customer.state}` : ''}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </Card>
             )}
 
@@ -833,77 +867,65 @@ export default function JobDetail() {
               )}
             </div>
 
-            {/* Section 11: Before / After photos SIDE BY SIDE */}
-            <div>
-              <SectionLabel>Photos</SectionLabel>
-              <div className="grid grid-cols-2 gap-3">
-                {/* Before */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">Before</p>
+            {/* Section 11: Before / After photos — card with bordered boxes (FIX 6) */}
+            <Card>
+              <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-3">Photos</h3>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Before box */}
+                <div className="border border-gray-200 rounded-xl p-3 min-h-[120px]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase">Before</span>
                     <button onClick={() => beforeInputRef.current?.click()} disabled={uploadingPhoto}
-                      className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[36px]">
-                      <Camera size={12} />
+                      className="text-[#1A73E8] min-h-[32px] flex items-center">
+                      <Camera size={14} />
                     </button>
                   </div>
                   <input ref={beforeInputRef} type="file" accept="image/*" className="hidden"
                     onChange={e => handlePhotoUpload(e, 'before')} />
-                  {beforePhotos.length > 0 ? (
-                    <div className="space-y-1">
-                      {beforePhotos.slice(0,3).map((photo, i) => (
-                        <button key={i} onClick={() => setLightbox({ photos: beforePhotos, index: i })}
-                          className="aspect-square w-full rounded-xl overflow-hidden bg-gray-100">
-                          <img src={photo?.url || photo} alt="" className="w-full h-full object-cover" />
+                  <div className="flex flex-wrap gap-2">
+                    {beforePhotos.length > 0 ? (
+                      beforePhotos.slice(0,3).map((photo, i) => (
+                        <button key={i} onClick={() => setLightbox({ photos: beforePhotos, index: i })}>
+                          <img src={photo?.url || photo} alt="" className="w-16 h-16 object-cover rounded-lg" />
                         </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="aspect-square bg-gray-50 rounded-xl flex items-center justify-center">
-                      <p className="text-xs text-gray-400 text-center">No before<br/>photos</p>
-                    </div>
-                  )}
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-400 text-center w-full py-4">No before photos</p>
+                    )}
+                  </div>
                 </div>
 
-                {/* After */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase">After</p>
+                {/* After box */}
+                <div className="border border-gray-200 rounded-xl p-3 min-h-[120px]">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-semibold text-gray-500 uppercase">After</span>
                     <button onClick={() => afterInputRef.current?.click()} disabled={uploadingPhoto}
-                      className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[36px]">
-                      <Camera size={12} />
+                      className="text-[#1A73E8] min-h-[32px] flex items-center">
+                      <Camera size={14} />
                     </button>
                   </div>
                   <input ref={afterInputRef} type="file" accept="image/*" className="hidden"
                     onChange={e => handlePhotoUpload(e, 'after')} />
-                  {afterPhotos.length > 0 ? (
-                    <div className="space-y-1">
-                      {afterPhotos.slice(0,3).map((photo, i) => (
-                        <button key={i} onClick={() => setLightbox({ photos: afterPhotos, index: i })}
-                          className="aspect-square w-full rounded-xl overflow-hidden bg-gray-100">
-                          <img src={photo?.url || photo} alt="" className="w-full h-full object-cover" />
+                  <div className="flex flex-wrap gap-2">
+                    {afterPhotos.length > 0 ? (
+                      afterPhotos.slice(0,3).map((photo, i) => (
+                        <button key={i} onClick={() => setLightbox({ photos: afterPhotos, index: i })}>
+                          <img src={photo?.url || photo} alt="" className="w-16 h-16 object-cover rounded-lg" />
                         </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="aspect-square bg-gray-50 rounded-xl flex items-center justify-center">
-                      <p className="text-xs text-gray-400 text-center">No after<br/>photos</p>
-                    </div>
-                  )}
+                      ))
+                    ) : (
+                      <p className="text-xs text-gray-400 text-center w-full py-4">No after photos</p>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            </Card>
 
-            {/* Section 12: Parts + Charge Payment */}
+            {/* Section 12: Parts — list + Add Parts + Charge Payment in same row (FIX 8) */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <SectionLabel>Parts</SectionLabel>
-                <button onClick={() => { setPartsModal(true); setPartForm({ name: '', cost: '', provider: 'company' }); }}
-                  className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[44px] px-2">
-                  <Plus size={14} /> Add Part
-                </button>
-              </div>
+              <SectionLabel>Parts</SectionLabel>
               {parts.length > 0 ? (
-                <Card>
+                <Card className="mb-3">
                   <div className="space-y-2">
                     {parts.map(p => (
                       <div key={p.id} className="flex items-center justify-between gap-2">
@@ -925,93 +947,39 @@ export default function JobDetail() {
                   </div>
                 </Card>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded-xl">No parts added</p>
+                <p className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded-xl mb-3">No parts added</p>
               )}
-
-              <div className="mt-3">
-                <Button variant="outlined" onClick={() => setDepositModal(true)} className="w-full">
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setPartsModal(true); setPartForm({ name: '', cost: '', provider: 'company' }); }}
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
+                  🔩 Add Parts
+                </button>
+                <button
+                  onClick={() => setDepositModal(true)}
+                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
                   💳 Charge Payment
-                </Button>
-              </div>
-            </div>
-
-            {/* Line Items */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <SectionLabel>Charges</SectionLabel>
-                <button onClick={() => { setAddItemModal(true); setNewItem({ name: '', qty: 1, unit_price: '' }); setPbSearch(''); setPbResults([]); }}
-                  className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[44px] px-2">
-                  <Plus size={14} /> Add Item
                 </button>
               </div>
-              {lineItems.length > 0 ? (
-                <Card>
-                  <div className="space-y-2">
-                    {lineItems.map((item, i) => (
-                      <div key={item.id||i} className="flex items-center justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{item.name||item.description}</p>
-                          {item.quantity != null && item.quantity !== 1 && <p className="text-xs text-gray-400">Qty: {item.quantity}</p>}
-                        </div>
-                        <p className="text-sm font-semibold text-gray-900">{formatCurrency(item.total||item.amount||0)}</p>
-                      </div>
-                    ))}
-                    <div className="border-t border-gray-100 pt-2 flex justify-between text-sm font-bold">
-                      <span>Total</span>
-                      <span>{formatCurrency(lineItemsTotal)}</span>
-                    </div>
-                  </div>
-                </Card>
-              ) : null}
             </div>
-
-            {/* Tech Permissions */}
-            {techPerms && (jobData.sent_to_company_id || jobData.assigned_user_id || jobData.tech_permissions) && (
-              <div>
-                <SectionLabel>Tech Permissions {techPermSaving && <span className="text-[#1A73E8] ml-1">saving...</span>}</SectionLabel>
-                <Card>
-                  <div className="divide-y divide-gray-50">
-                    {[
-                      { key: 'view_history',      label: 'View History'      },
-                      { key: 'collect_payments',   label: 'Collect Payments'  },
-                      { key: 'take_photos',        label: 'Take Photos'       },
-                      { key: 'add_parts',          label: 'Add Parts'         },
-                      { key: 'edit_details',       label: 'Edit Details'      },
-                      { key: 'cancel_job',         label: 'Cancel Job'        },
-                    ].map(({ key, label }) => (
-                      <div key={key} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-                        <span className="text-sm font-medium text-gray-700">{label}</span>
-                        <Toggle checked={Boolean(techPerms[key])} onChange={e => handleTechPermToggle(key, e.target.checked)} disabled={techPermSaving} />
-                      </div>
-                    ))}
-                  </div>
-                </Card>
-              </div>
-            )}
-
-            {/* Signature */}
-            <button onClick={() => setShowSignature(true)}
-              className="w-full py-3 border-2 border-[#1A73E8] text-[#1A73E8] rounded-xl font-semibold min-h-[44px]">
-              ✍️ Get Signature
-            </button>
 
             {/* Section 13: Bottom action row */}
             <div className="flex gap-2">
-              <Button variant="outlined" onClick={handleSendReceipt} className="flex-1 text-sm">
+              <Button variant="outlined" onClick={handleSendReceipt} className="flex-1 text-sm min-h-[48px]">
                 📧 Send Receipt
               </Button>
               {!isDeletedOrCancelled && (
-                <Button variant="outlined" onClick={handleCancelJob} className="flex-1 text-sm border-red-300 text-red-600 hover:bg-red-50">
+                <Button variant="outlined" onClick={handleCancelJob} className="flex-1 text-sm border-red-300 text-red-600 hover:bg-red-50 min-h-[48px]">
                   Cancel Job
                 </Button>
               )}
               {jobData.status === 'deleted' && (
-                <Button onClick={handleRestoreJob} className="flex-1 bg-amber-500 hover:bg-amber-600 text-sm">
+                <Button onClick={handleRestoreJob} className="flex-1 bg-amber-500 hover:bg-amber-600 text-sm min-h-[48px]">
                   ♻️ Restore
                 </Button>
               )}
               <Button onClick={() => setShowComplete(true)}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-sm">
+                className="flex-1 bg-green-600 hover:bg-green-700 text-sm min-h-[48px]">
                 ✅ Completed
               </Button>
             </div>
