@@ -106,12 +106,23 @@ export default function InvoiceDetail() {
     }
   }
 
+  async function handleSendReceipt() {
+    try {
+      await invoicesApi.sendReceipt(id);
+      showSnack('Receipt sent', 'success');
+      refetch();
+    } catch {
+      showSnack('Failed to send receipt', 'error');
+    }
+  }
+
   if (loading) return <LoadingSpinner fullPage />;
   if (!invoice) return <div className="p-4 text-gray-500">Invoice not found.</div>;
 
   const lineItems = invoice.line_items || invoice.items || [];
   const payments = invoice.payments || [];
   const isPaid = invoice.status === 'paid';
+  const isPartiallyPaid = invoice.status === 'partial' || invoice.status === 'partially_paid';
   const hasFollowup = invoice.followup_count != null;
 
   return (
@@ -228,6 +239,13 @@ export default function InvoiceDetail() {
           >
             {scanpayLoading ? 'Processing...' : '💳 Charge via ScanPay'}
           </button>
+        </div>
+      )}
+      {(isPaid || isPartiallyPaid) && (
+        <div className="mb-4">
+          <Button variant="outlined" onClick={handleSendReceipt} className="w-full">
+            Send Receipt
+          </Button>
         </div>
       )}
       <div className="mb-4">

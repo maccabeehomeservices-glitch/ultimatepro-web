@@ -79,6 +79,7 @@ export default function EstimateDetail() {
   const [signerName, setSignerName] = useState('');
   const [savingSig, setSavingSig] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showAddToInvoiceModal, setShowAddToInvoiceModal] = useState(false);
   const photoInputRef = useRef(null);
 
   // Polling when status = 'sent'
@@ -102,6 +103,7 @@ export default function EstimateDetail() {
       setShowSignature(false);
       showSnack('Signature captured!', 'success');
       refetch();
+      setShowAddToInvoiceModal(true);
     } catch (err) {
       showSnack(err.response?.data?.error || 'Failed to save signature', 'error');
     } finally {
@@ -384,6 +386,21 @@ export default function EstimateDetail() {
             onCancel={() => setShowSignature(false)}
           />
         </div>
+      </Modal>
+
+      {/* Add to Invoice Modal */}
+      <Modal
+        isOpen={showAddToInvoiceModal}
+        onClose={() => setShowAddToInvoiceModal(false)}
+        title="Add to Invoice?"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setShowAddToInvoiceModal(false)}>No</Button>
+            <Button loading={acting} onClick={() => { setShowAddToInvoiceModal(false); handleConvert(); }}>Yes</Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-700">Signature captured! Would you like to convert this estimate to an invoice now?</p>
       </Modal>
 
       {/* Collect Deposit Modal */}

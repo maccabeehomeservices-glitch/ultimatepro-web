@@ -547,7 +547,7 @@ export default function JobDetail() {
   async function handleSendReceipt() {
     try {
       if (!jobInvoice?.id) { showSnack('No invoice found. Create an invoice first.', 'error'); return; }
-      await api.post(`/invoices/${jobInvoice.id}/send`);
+      await api.post(`/invoices/${jobInvoice.id}/send-receipt`);
       showSnack('Receipt sent', 'success');
     } catch { showSnack('Failed to send receipt', 'error'); }
   }
