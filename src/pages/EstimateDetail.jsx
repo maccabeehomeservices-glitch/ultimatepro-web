@@ -80,6 +80,9 @@ export default function EstimateDetail() {
   const [savingSig, setSavingSig] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showAddToInvoiceModal, setShowAddToInvoiceModal] = useState(false);
+  const [showKeepReplaceModal, setShowKeepReplaceModal] = useState(false);
+  const [keepReplaceOldItems, setKeepReplaceOldItems] = useState([]);
+  const [checkingInvoice, setCheckingInvoice] = useState(false);
   const photoInputRef = useRef(null);
 
   // Polling when status = 'sent'
@@ -152,6 +155,44 @@ export default function EstimateDetail() {
       const res = await mutate('post', `/estimates/${id}/convert-to-invoice`);
       showSnack('Invoice created', 'success');
       navigate(`/invoices/${res?.invoice?.id || res?.id}`);
+    } catch {
+      showSnack('Failed to convert estimate', 'error');
+    }
+  }
+
+  async function handleAddToInvoiceYes() {
+    setShowAddToInvoiceModal(false);
+    if (estimate.job_id) {
+      setCheckingInvoice(true);
+      try {
+        const res = await api.get(`/invoices`, { params: { job_id: estimate.job_id } });
+        const invoices = res?.data?.invoices || res?.invoices || [];
+        const existing = Array.isArray(invoices) ? invoices[0] : null;
+        const existingItems = existing?.line_items || [];
+        if (existingItems.length > 0) {
+          setKeepReplaceOldItems(existingItems);
+          setShowKeepReplaceModal(true);
+          return;
+        }
+      } catch { /* ignore, just convert */ }
+      finally { setCheckingInvoice(false); }
+    }
+    handleConvert();
+  }
+
+  async function handleKeepAndAdd() {
+    setShowKeepReplaceModal(false);
+    try {
+      const res = await mutate('post', `/estimates/${id}/convert-to-invoice`);
+      const newInvId = res?.invoice?.id || res?.id;
+      showSnack('Invoice created', 'success');
+      if (newInvId && keepReplaceOldItems.length > 0) {
+        const invRes = await api.get(`/invoices/${newInvId}`);
+        const newItems = invRes?.data?.invoice?.line_items || invRes?.data?.line_items || [];
+        const merged = [...newItems, ...keepReplaceOldItems];
+        await api.put(`/invoices/${newInvId}`, { line_items: merged });
+      }
+      navigate(`/invoices/${newInvId}`);
     } catch {
       showSnack('Failed to convert estimate', 'error');
     }
@@ -396,11 +437,26 @@ export default function EstimateDetail() {
         footer={
           <>
             <Button variant="outlined" onClick={() => setShowAddToInvoiceModal(false)}>No</Button>
-            <Button loading={acting} onClick={() => { setShowAddToInvoiceModal(false); handleConvert(); }}>Yes</Button>
+            <Button loading={acting || checkingInvoice} onClick={handleAddToInvoiceYes}>Yes</Button>
           </>
         }
       >
         <p className="text-sm text-gray-700">Signature captured! Would you like to convert this estimate to an invoice now?</p>
+      </Modal>
+
+      {/* Keep / Replace Modal */}
+      <Modal
+        isOpen={showKeepReplaceModal}
+        onClose={() => { setShowKeepReplaceModal(false); handleConvert(); }}
+        title="Invoice already has items"
+        footer={
+          <>
+            <Button variant="outlined" loading={acting} onClick={handleKeepAndAdd}>Keep &amp; Add</Button>
+            <Button loading={acting} onClick={() => { setShowKeepReplaceModal(false); handleConvert(); }}>Replace</Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-700">Keep existing items and add estimate items, or replace all items with estimate items?</p>
       </Modal>
 
       {/* Collect Deposit Modal */}
