@@ -106,6 +106,9 @@ export default function Settings() {
           </label>
         </div>
       </div>
+      <div className="text-xs text-gray-400 text-center pt-4 pb-8">
+        UltimatePro v{__APP_VERSION__} · Built {__BUILD_TIME__}
+      </div>
     </div>
   );
 }
