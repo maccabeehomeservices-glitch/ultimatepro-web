@@ -290,15 +290,18 @@ export default function JobDetail() {
 
   async function handleAddLineItem() {
     if (!newItem.name.trim()) { showSnack('Item name required', 'error'); return; }
+    if (!jobInvoice?.id) { showSnack('No invoice exists for this job. Create one first.', 'error'); return; }
     setAddingItem(true);
     try {
-      const current = jobData.line_items || jobData.charges || [];
+      const current = jobInvoice.line_items || [];
       const updated = [...current, {
-        name: newItem.name, quantity: newItem.qty,
+        name: newItem.name,
+        quantity: newItem.qty,
         unit_price: Number(newItem.unit_price) || 0,
         total: (Number(newItem.unit_price) || 0) * newItem.qty,
+        item_type: 'service',
       }];
-      await api.patch(`/jobs/${id}`, { line_items: updated });
+      await api.put(`/invoices/${jobInvoice.id}`, { line_items: updated });
       showSnack('Item added', 'success');
       setAddItemModal(false);
       setNewItem({ name: '', qty: 1, unit_price: '' });
@@ -386,11 +389,11 @@ export default function JobDetail() {
     } catch { showSnack('Failed to update status', 'error'); }
   }
 
-  async function handleCreateEstimate() {
-    try {
-      const result = await mutate('post', '/estimates', { job_id: id, customer_id: jobData?.customer_id });
-      navigate(`/estimates/${result?.estimate?.id || result?.id}`);
-    } catch { showSnack('Failed to create estimate', 'error'); }
+  function handleCreateEstimate() {
+    const params = new URLSearchParams();
+    params.set('job_id', id);
+    if (jobData?.customer_id) params.set('customer_id', jobData.customer_id);
+    navigate(`/estimates/new?${params.toString()}`);
   }
 
   async function handleDispatch() {

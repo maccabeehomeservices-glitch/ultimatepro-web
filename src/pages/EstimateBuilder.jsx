@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, Search, UserCheck, X } from 'lucide-react';
 import { estimatesApi, customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
@@ -32,8 +32,11 @@ function calcTotal(section, taxRate, taxEnabled) {
 export default function EstimateBuilder() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { showSnack } = useSnackbar();
   const isEdit = Boolean(id);
+  const prefilledJobId = searchParams.get('job_id') || null;
+  const prefilledCustomerId = searchParams.get('customer_id') || null;
 
   const [customerId, setCustomerId] = useState('');
   const [customerName, setCustomerName] = useState('');
@@ -113,6 +116,21 @@ export default function EstimateBuilder() {
       }
     }
   }, [isEdit, existingData]);
+
+  // Prefill customer from query params (when navigating from JobDetail)
+  useEffect(() => {
+    if (isEdit || !prefilledCustomerId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await customersApi.get(prefilledCustomerId);
+        if (cancelled) return;
+        const c = res.data?.customer || res.data;
+        if (c) selectCustomer(c);
+      } catch { /* ignore — user can pick manually */ }
+    })();
+    return () => { cancelled = true; };
+  }, [isEdit, prefilledCustomerId]);
 
   // Outside-click closes customer dropdown
   useEffect(() => {
@@ -255,6 +273,7 @@ export default function EstimateBuilder() {
         })),
         discount_pct: 0,
       };
+      if (!isEdit && prefilledJobId) basePayload.job_id = prefilledJobId;
 
       let estimateId = id;
       let savedEstimate = null;
