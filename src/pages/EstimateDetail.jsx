@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import api, { estimatesApi } from '../lib/api';
+import api, { estimatesApi, customersApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import SignaturePad from '../components/SignaturePad';
@@ -83,6 +83,16 @@ export default function EstimateDetail() {
   const [showKeepReplaceModal, setShowKeepReplaceModal] = useState(false);
   const [keepReplaceOldItems, setKeepReplaceOldItems] = useState([]);
   const [checkingInvoice, setCheckingInvoice] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [loadingSendData, setLoadingSendData] = useState(false);
+  const [sendEmails, setSendEmails] = useState([]);
+  const [sendPhones, setSendPhones] = useState([]);
+  const [newEmail, setNewEmail] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [saveContactsToProfile, setSaveContactsToProfile] = useState(true);
+  const [sending, setSending] = useState(false);
   const photoInputRef = useRef(null);
 
   // Polling when status = 'sent'
@@ -130,13 +140,93 @@ export default function EstimateDetail() {
     }
   }
 
-  async function handleSend() {
+  async function openSendModal() {
+    if (!estimate?.customer_id) { showSnack('No customer on estimate', 'error'); return; }
+    setLoadingSendData(true);
     try {
-      await mutate('post', `/estimates/${id}/send`);
-      showSnack('Estimate sent', 'success');
-      refetch();
+      const res = await customersApi.get(estimate.customer_id);
+      const customer = res.data?.customer || res.data;
+      const primaryEmail = customer?.email;
+      const primaryPhone = customer?.phone;
+      const extraEmails = (customer?.emails || []).filter(e => e && e !== primaryEmail);
+      const extraPhones = (customer?.phones || []).filter(p => p && p !== primaryPhone);
+      const emails = [
+        ...(primaryEmail ? [{ value: primaryEmail, checked: true }] : []),
+        ...extraEmails.map(e => ({ value: e, checked: true })),
+      ];
+      const phones = [
+        ...(primaryPhone ? [{ value: primaryPhone, checked: true }] : []),
+        ...extraPhones.map(p => ({ value: p, checked: true })),
+      ];
+      setSendEmails(emails);
+      setSendPhones(phones);
+      setNewEmail('');
+      setNewPhone('');
+      setShowSendModal(true);
     } catch {
-      showSnack('Failed to send estimate', 'error');
+      showSnack('Failed to load customer contacts', 'error');
+    } finally {
+      setLoadingSendData(false);
+    }
+  }
+
+  async function handleSendConfirm() {
+    const emails = sendEmails.filter(e => e.checked).map(e => e.value);
+    const phones = sendPhones.filter(p => p.checked).map(p => p.value);
+    if (emails.length === 0 && phones.length === 0) {
+      showSnack('Pick at least one recipient', 'error');
+      return;
+    }
+    setSending(true);
+    try {
+      await estimatesApi.send(id, {
+        emails,
+        phones,
+        send_email: emails.length > 0,
+        send_sms: phones.length > 0,
+      });
+      showSnack('Estimate sent', 'success');
+      setShowSendModal(false);
+      refetch();
+    } catch (err) {
+      showSnack(err?.response?.data?.error || 'Failed to send estimate', 'error');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleAddSendEmail() {
+    const v = newEmail.trim();
+    if (!v) return;
+    setSendEmails(prev => [...prev, { value: v, checked: true }]);
+    if (saveContactsToProfile && estimate?.customer_id) {
+      try { await api.post(`/customers/${estimate.customer_id}/contacts`, { type: 'email', value: v }); } catch { /* ignore */ }
+    }
+    setNewEmail('');
+  }
+
+  async function handleAddSendPhone() {
+    const v = newPhone.trim();
+    if (!v) return;
+    setSendPhones(prev => [...prev, { value: v, checked: true }]);
+    if (saveContactsToProfile && estimate?.customer_id) {
+      try { await api.post(`/customers/${estimate.customer_id}/contacts`, { type: 'phone', value: v }); } catch { /* ignore */ }
+    }
+    setNewPhone('');
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      await estimatesApi.delete(id);
+      showSnack('Estimate deleted', 'success');
+      setShowDeleteConfirm(false);
+      if (estimate?.job_id) navigate(`/jobs/${estimate.job_id}`);
+      else navigate(-1);
+    } catch (err) {
+      showSnack(err?.response?.data?.error || 'Failed to delete estimate', 'error');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -279,17 +369,24 @@ export default function EstimateDetail() {
               const qty = Number(item.qty || item.quantity || 1);
               const price = Number(item.unit_price || item.price || 0);
               const itemTotal = Number(item.total || qty * price);
+              const isDiscount = item.item_type === 'discount';
               return (
-                <div key={i} className="flex items-start justify-between gap-2 py-2 border-b border-gray-50 last:border-0">
+                <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-gray-50 last:border-0">
                   {item.image_url && (
-                    <img src={item.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100 mt-0.5" />
+                    <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
                   )}
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{item.name || item.description}</p>
-                    <p className="text-xs text-gray-400">{qty} × {formatCurrency(price)}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                    {item.description && (
+                      <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {item.sku && <span className="mr-2">SKU: {item.sku}</span>}
+                      {qty} × {formatCurrency(price)}
+                    </p>
                   </div>
-                  <p className={`font-semibold text-sm ${item.item_type === 'discount' ? 'text-red-500' : 'text-gray-900'}`}>
-                    {item.item_type === 'discount' ? '-' : ''}{formatCurrency(itemTotal)}
+                  <p className={`font-semibold text-sm ${isDiscount ? 'text-red-500' : 'text-gray-900'}`}>
+                    {isDiscount ? '-' : ''}{formatCurrency(itemTotal)}
                   </p>
                 </div>
               );
@@ -379,7 +476,7 @@ export default function EstimateDetail() {
           </Button>
         )}
         {showSend && (
-          <Button onClick={handleSend} loading={acting} className="w-full">
+          <Button onClick={openSendModal} loading={loadingSendData} className="w-full">
             Send for Signature
           </Button>
         )}
@@ -407,6 +504,15 @@ export default function EstimateDetail() {
         <Button variant="outlined" onClick={() => navigate(`/estimates/${id}/edit`)} className="w-full">
           Edit Estimate
         </Button>
+        {!isSigned && (
+          <Button
+            variant="outlined"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="w-full text-red-600 border-red-300 hover:bg-red-50"
+          >
+            Delete Estimate
+          </Button>
+        )}
       </div>
 
       {/* Signature Modal */}
@@ -490,6 +596,95 @@ export default function EstimateDetail() {
             onChange={e => setDepositForm(p => ({ ...p, amount: e.target.value }))}
             placeholder={estimate.deposit_amount?.toString() || '0.00'}
           />
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => !deleting && setShowDeleteConfirm(false)}
+        title="Delete Estimate"
+        footer={
+          <>
+            <Button variant="outlined" disabled={deleting} onClick={() => setShowDeleteConfirm(false)}>Cancel</Button>
+            <Button loading={deleting} onClick={handleDelete} className="bg-red-600 hover:bg-red-700 border-red-600">
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-700">Are you sure? This cannot be undone.</p>
+      </Modal>
+
+      {/* Send for Signature Modal */}
+      <Modal
+        isOpen={showSendModal}
+        onClose={() => !sending && setShowSendModal(false)}
+        title="Send for Signature"
+        footer={
+          <>
+            <Button variant="outlined" disabled={sending} onClick={() => setShowSendModal(false)}>Cancel</Button>
+            <Button loading={sending} onClick={handleSendConfirm}>Send</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs text-gray-400 uppercase font-medium mb-2">Email Recipients</p>
+            {sendEmails.length === 0 && <p className="text-sm text-gray-400">No emails on file.</p>}
+            {sendEmails.map((entry, i) => (
+              <label key={i} className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  checked={entry.checked}
+                  onChange={e => setSendEmails(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
+                />
+                <span className="text-sm text-gray-700">{entry.value}</span>
+              </label>
+            ))}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="email"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                placeholder="Add email..."
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              />
+              <Button variant="outlined" onClick={handleAddSendEmail} className="text-sm">Add</Button>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 uppercase font-medium mb-2">SMS / Phone Recipients</p>
+            {sendPhones.length === 0 && <p className="text-sm text-gray-400">No phones on file.</p>}
+            {sendPhones.map((entry, i) => (
+              <label key={i} className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  checked={entry.checked}
+                  onChange={e => setSendPhones(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
+                />
+                <span className="text-sm text-gray-700">{entry.value}</span>
+              </label>
+            ))}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="tel"
+                value={newPhone}
+                onChange={e => setNewPhone(e.target.value)}
+                placeholder="Add phone..."
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              />
+              <Button variant="outlined" onClick={handleAddSendPhone} className="text-sm">Add</Button>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 pt-2 border-t border-gray-100">
+            <input
+              type="checkbox"
+              checked={saveContactsToProfile}
+              onChange={e => setSaveContactsToProfile(e.target.checked)}
+            />
+            <span className="text-xs text-gray-600">Save new contacts to customer profile</span>
+          </label>
         </div>
       </Modal>
     </div>

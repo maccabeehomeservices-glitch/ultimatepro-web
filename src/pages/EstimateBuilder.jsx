@@ -200,32 +200,31 @@ export default function EstimateBuilder() {
   }
 
   function addFromPricebook(pbItem) {
+    const buildItem = (type) => ({
+      name: pbItem.name,
+      description: pbItem.description || null,
+      sku: pbItem.sku || null,
+      image_url: pbItem.image_url || null,
+      pricebook_id: pbItem.id || null,
+      qty: 1,
+      unit_price: pbItem.price || pbItem.unit_price || '',
+      total: Number(pbItem.price || pbItem.unit_price || 0),
+      item_type: type,
+      taxable: pbItem.taxable || false,
+      tax_rate: Number(pbItem.tax_rate || 0),
+    });
     if (gbbMode && pricebookModal) {
       const { tier, type } = pricebookModal;
       setGbbSections(prev => {
         const next = { ...prev };
-        next[tier] = { ...next[tier], [type + 's']: [...next[tier][type + 's'], {
-          name: pbItem.name,
-          qty: 1,
-          unit_price: pbItem.price || pbItem.unit_price || '',
-          total: Number(pbItem.price || pbItem.unit_price || 0),
-          item_type: type,
-        }]};
+        next[tier] = { ...next[tier], [type + 's']: [...next[tier][type + 's'], buildItem(type)] };
         return next;
       });
     } else if (pricebookModal) {
       const type = pricebookModal.type || 'service';
-      addItemToSection(setStdSection, type + 's');
-      // Actually just add the item directly
       setStdSection(prev => ({
         ...prev,
-        [type + 's']: [...prev[type + 's'], {
-          name: pbItem.name,
-          qty: 1,
-          unit_price: pbItem.price || pbItem.unit_price || '',
-          total: Number(pbItem.price || pbItem.unit_price || 0),
-          item_type: type,
-        }],
+        [type + 's']: [...prev[type + 's'], buildItem(type)],
       }));
     }
     setPricebookModal(null);
@@ -266,10 +265,17 @@ export default function EstimateBuilder() {
         terms,
         line_items: gbbMode ? [] : allItems.map(item => ({
           name: item.name,
-          quantity: item.qty || 1,
+          description: item.description || null,
+          sku: item.sku || null,
+          image_url: item.image_url || null,
+          pricebook_id: item.pricebook_id || null,
+          quantity: item.qty || item.quantity || 1,
           unit_price: Number(item.unit_price || 0),
-          total: (item.qty || 1) * Number(item.unit_price || 0),
+          total: (item.qty || item.quantity || 1) * Number(item.unit_price || 0),
           item_type: item.item_type || 'service',
+          taxable: item.taxable || false,
+          tax_rate: Number(item.tax_rate || 0),
+          discount_pct: Number(item.discount_pct || 0),
         })),
         discount_pct: 0,
       };

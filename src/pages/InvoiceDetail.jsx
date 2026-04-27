@@ -152,18 +152,24 @@ export default function InvoiceDetail() {
           const itemTotal = Number(item.total || qty * price);
           const isDiscount = item.item_type === 'discount';
           return (
-            <div key={i} className="flex items-start justify-between gap-2 py-2 border-b border-gray-50 last:border-0">
+            <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-gray-50 last:border-0">
               {item.image_url && (
-                <img src={item.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100 mt-0.5" />
+                <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
               )}
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900">
-                  {item.name || item.description}
+                  {item.name}
                   {isDiscount && (
                     <span className="ml-2 text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">DISCOUNT</span>
                   )}
                 </p>
-                <p className="text-xs text-gray-400">{qty} × {formatCurrency(price)}</p>
+                {item.description && (
+                  <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                )}
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {item.sku && <span className="mr-2">SKU: {item.sku}</span>}
+                  {qty} × {formatCurrency(price)}
+                </p>
               </div>
               <p className={`font-semibold text-sm ${isDiscount ? 'text-red-500' : 'text-gray-900'}`}>
                 {isDiscount ? '-' : ''}{formatCurrency(itemTotal)}
