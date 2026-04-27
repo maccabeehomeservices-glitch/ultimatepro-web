@@ -110,7 +110,11 @@ export default function InvoiceDetail() {
     try {
       await invoicesApi.sendReceipt(id);
       showSnack('Receipt sent', 'success');
-      refetch();
+      if (invoice?.job_id) {
+        navigate(`/jobs/${invoice.job_id}`);
+      } else {
+        refetch();
+      }
     } catch {
       showSnack('Failed to send receipt', 'error');
     }
