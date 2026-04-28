@@ -10,6 +10,22 @@
     <meta name="theme-color" content="#0D1B2A" />
     <link rel="manifest" href="/manifest.json" />
     <title>UltimatePro</title>
+    <script>
+      // Anti-flash: read sidebar preference before React mounts so the desktop
+      // sidebar paints at the correct width on first render. Mirror this logic
+      // exactly in src/components/Layout.jsx readInitialCollapsed().
+      (function () {
+        try {
+          var saved = localStorage.getItem('up_sidebar_collapsed');
+          var w = window.innerWidth || document.documentElement.clientWidth || 0;
+          var collapsed;
+          if (saved === 'true') collapsed = true;
+          else if (saved === 'false') collapsed = false;
+          else collapsed = w < 1024; // default: collapsed below 1024px (Apple HIG)
+          if (collapsed) document.documentElement.setAttribute('data-sidebar', 'collapsed');
+        } catch (e) {}
+      })();
+    </script>
     <script
       src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDtSGWBuiTFR5BbomG8ZFNYeiwUszkJiNQ&libraries=places&loading=async"
       async
