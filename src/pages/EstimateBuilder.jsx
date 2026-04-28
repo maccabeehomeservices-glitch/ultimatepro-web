@@ -308,18 +308,6 @@ export default function EstimateBuilder() {
         await estimatesApi.saveTiers(estimateId, tiers);
       }
 
-      if (action === 'get_signature' && estimateId) {
-        let publicToken = savedEstimate?.public_token;
-        if (!publicToken) {
-          const fullRes = await estimatesApi.get(estimateId);
-          publicToken = (fullRes.data?.estimate || fullRes.data)?.public_token;
-        }
-        if (publicToken) {
-          const backendUrl = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace('/api', '');
-          window.open(`${backendUrl}/sign/${publicToken}`, '_blank');
-        }
-      }
-
       navigate(`/estimates/${estimateId}`);
     } catch (err) {
       showSnack(err?.response?.data?.error || err?.response?.data?.message || 'Failed to save estimate', 'error');
@@ -689,9 +677,6 @@ export default function EstimateBuilder() {
         </Button>
         <Button onClick={() => handleSave('send')} loading={saving} disabled={saving} className="flex-1 bg-green-600 hover:bg-green-700 border-green-600">
           Send
-        </Button>
-        <Button onClick={() => handleSave('get_signature')} loading={saving} disabled={saving} variant="outlined" className="flex-1">
-          Get Sig
         </Button>
       </div>
 

@@ -230,16 +230,6 @@ export default function EstimateDetail() {
     }
   }
 
-  async function handleGetSignature() {
-    try {
-      await mutate('post', `/estimates/${id}/get-signature`);
-      showSnack('Signature request sent', 'success');
-      refetch();
-    } catch {
-      showSnack('Failed to request signature', 'error');
-    }
-  }
-
   async function handleConvert() {
     try {
       const res = await mutate('post', `/estimates/${id}/convert-to-invoice`);
@@ -314,7 +304,6 @@ export default function EstimateDetail() {
   // Status-dependent buttons
   const showPresent = isGbb && !isSigned && estimate.status !== 'sent';
   const showSend = !isSigned;
-  const showGetSig = !isGbb && !isSigned;
   const showConvert = isSigned;
   const showCollectDeposit = isSigned && estimate.deposit_required && !estimate.deposit_collected;
 
@@ -332,7 +321,7 @@ export default function EstimateDetail() {
         </button>
         <div className="flex-1">
           <h1 className="font-bold text-gray-900 text-lg">
-            {estimate.estimate_number || `Estimate ${estimate.id?.slice(0,8)}`}
+            {`Estimate ${estimate.estimate_number || estimate.id?.slice(0,8)}`}
           </h1>
           {(estimate.cust_first || estimate.cust_last || estimate.customer_name) && (
             <p className="text-sm text-gray-500">
@@ -513,8 +502,8 @@ export default function EstimateDetail() {
       {/* Actions */}
       <div className="flex flex-col gap-2 pb-4">
         {showPresent && (
-          <Button onClick={handleGetSignature} loading={acting} className="w-full">
-            Present to Customer
+          <Button onClick={() => setShowSignature(true)} className="w-full">
+            📊 Present GBB Options
           </Button>
         )}
         {showSend && (
@@ -522,16 +511,11 @@ export default function EstimateDetail() {
             Send for Signature
           </Button>
         )}
-        {showGetSig && !showPresent && (
-          <Button onClick={handleGetSignature} loading={acting} variant="outlined" className="w-full">
-            Get Signature
-          </Button>
-        )}
         <button
           onClick={() => setShowSignature(true)}
           className="w-full py-3 border-2 border-[#1A73E8] text-[#1A73E8] rounded-xl font-semibold min-h-[44px]"
         >
-          ✍️ Capture Signature
+          ✍️ Get Signature
         </button>
         {showConvert && (
           <Button onClick={handleConvert} loading={acting} className="w-full">
@@ -561,7 +545,7 @@ export default function EstimateDetail() {
       <Modal
         isOpen={showSignature}
         onClose={() => setShowSignature(false)}
-        title="Capture Signature"
+        title="Get Signature"
       >
         <div className="space-y-3">
           <input
