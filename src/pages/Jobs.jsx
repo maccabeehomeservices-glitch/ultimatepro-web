@@ -44,8 +44,18 @@ export default function Jobs() {
         if (selectedStatuses.has('deleted')) params.include_all_statuses = true;
       }
       if (selectedTechIds.size > 0) params.assigned_to = [...selectedTechIds].join(',');
-      if (from) params.activity_from = from;
-      if (to)   params.activity_to   = to;
+      // Forward chips (sort=upcoming) filter on scheduled_start so a March-scheduled
+      // job that was cancelled in April doesn't leak into "This Month".
+      // Past-only chips (sort=recent) filter on activity_date — the user is asking
+      // "what was touched yesterday/last week", not "what was scheduled".
+      if (from) {
+        if (sort === 'recent') params.activity_from = from;
+        else                   params.from = from;
+      }
+      if (to) {
+        if (sort === 'recent') params.activity_to = to;
+        else                   params.to = to;
+      }
       if (search) params.search = search;
 
       const res = await jobsApi.list(params);

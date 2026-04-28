@@ -214,6 +214,19 @@ export default function JobDetail() {
       .finally(() => setInvoiceLoading(false));
   }, [id]);
 
+  // ── load estimates for this job (matches Android JobDetail flow) ──────────
+  // Backend GET /api/jobs/:id does not return estimates; fetch separately.
+  const [currentJobEstimates, setCurrentJobEstimates] = useState([]);
+  useEffect(() => {
+    if (!id) return;
+    api.get(`/estimates?job_id=${id}`)
+      .then(r => {
+        const list = r.data?.estimates || r.data || [];
+        setCurrentJobEstimates(Array.isArray(list) ? list : []);
+      })
+      .catch(() => setCurrentJobEstimates([]));
+  }, [id]);
+
   // ── messages ───────────────────────────────────────────────────────────────
   useEffect(() => {
     if (activeTab !== 'messages' || !id) return;
@@ -829,10 +842,10 @@ export default function JobDetail() {
                   + Create Estimate
                 </Button>
               </div>
-              {jobData.estimates?.length > 0 && (
+              {currentJobEstimates.length > 0 && (
                 <Card>
                   <div className="space-y-2">
-                    {(jobData.estimates || []).map(e => (
+                    {currentJobEstimates.map(e => (
                       <button key={e.id} onClick={() => navigate(`/estimates/${e.id}`)}
                         className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
                         <div>
