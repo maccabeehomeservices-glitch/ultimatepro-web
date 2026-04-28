@@ -76,6 +76,13 @@ export default function Login() {
             Create one
           </Link>
         </p>
+
+        <p className="text-center text-sm text-gray-500 mt-3">
+          Need service?{' '}
+          <Link to="/book" className="text-[#1A73E8] font-medium underline hover:text-blue-700">
+            Request a service call
+          </Link>
+        </p>
       </div>
     </div>
   );

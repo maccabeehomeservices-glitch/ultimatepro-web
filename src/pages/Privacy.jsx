@@ -6,7 +6,7 @@ export default function Privacy() {
           Privacy Policy
         </h1>
         <p className="text-sm text-gray-500 mb-8">
-          Last updated: April 11, 2026
+          Last updated: April 28, 2026
         </p>
 
         <section className="mb-8">
@@ -74,7 +74,7 @@ export default function Privacy() {
 
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            4. SMS/Text Messaging Policy
+            4. SMS Communications and Mobile Messaging Consent
           </h2>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
             UltimatePro enables service businesses to send
@@ -109,15 +109,21 @@ export default function Privacy() {
             message for assistance.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
-            <strong>Message and data rates may apply.</strong>{' '}
-            Contact your wireless carrier for details about your
-            messaging plan.
+            Message and data rates may apply. Contact your
+            wireless carrier for details about your messaging
+            plan. Carriers are not liable for delayed or
+            undelivered messages.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed">
-            <strong>Mobile numbers are not shared with third
-            parties or affiliates for marketing or promotional
-            purposes.</strong> Phone numbers are used solely for
-            transactional service communications.
+            No mobile information, including phone numbers and
+            SMS opt-in consent, will be shared with third parties
+            or affiliates for marketing or promotional purposes.
+            All categories of mobile information described above
+            exclude text messaging originator opt-in data and
+            consent; this information will not be shared with any
+            third parties. Phone numbers are used solely for
+            transactional service communications described in
+            this section.
           </p>
         </section>
 

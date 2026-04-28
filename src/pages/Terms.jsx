@@ -6,7 +6,7 @@ export default function Terms() {
           Terms of Service
         </h1>
         <p className="text-sm text-gray-500 mb-8">
-          Last updated: April 11, 2026
+          Last updated: April 28, 2026
         </p>
 
         <section className="mb-8">
@@ -50,28 +50,56 @@ export default function Terms() {
 
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">
-            4. SMS Communications
+            4. SMS Communications and Mobile Messaging Consent
           </h2>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
-            The Platform enables you to send transactional SMS
-            messages to your customers. By using this feature,
-            you agree to comply with all applicable laws and
-            regulations regarding electronic communications,
-            including the Telephone Consumer Protection Act (TCPA).
+            UltimatePro enables service businesses to send
+            transactional SMS messages to their customers. These
+            messages may include appointment confirmations,
+            estimate and invoice delivery, payment links, job
+            status updates, and service follow-ups.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
-            You are responsible for obtaining appropriate consent
-            from your customers before sending them SMS messages.
-            Customers who provide their phone number when
-            requesting service are deemed to have consented to
-            receive transactional messages related to their
-            service engagement.
+            <strong>Consent:</strong> End-user customers consent
+            to receive transactional SMS messages when they
+            provide their phone number to a service business
+            using UltimatePro to request service, schedule an
+            appointment, or engage in a business transaction.
+            Consent may be collected verbally (in-person or by
+            phone), via a written service agreement, through the
+            online booking portal, or through the customer portal.
+          </p>
+          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+            <strong>Message Frequency:</strong> Message frequency
+            varies based on service activity. Customers typically
+            receive 1–5 messages per service engagement.
+          </p>
+          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+            <strong>Opt-Out:</strong> Customers can opt out of SMS
+            messages at any time by replying STOP to any message.
+            After opting out, no further messages will be sent
+            unless the customer re-subscribes by replying START.
+          </p>
+          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+            <strong>Help:</strong> Customers can reply HELP to any
+            message for assistance.
+          </p>
+          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+            Message and data rates may apply. Contact your
+            wireless carrier for details about your messaging
+            plan. Carriers are not liable for delayed or
+            undelivered messages.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed">
-            Message frequency varies. Message and data rates may
-            apply. Customers may opt out at any time by replying
-            STOP. Mobile numbers are not shared with third parties
-            for marketing purposes.
+            No mobile information, including phone numbers and
+            SMS opt-in consent, will be shared with third parties
+            or affiliates for marketing or promotional purposes.
+            All categories of mobile information described above
+            exclude text messaging originator opt-in data and
+            consent; this information will not be shared with any
+            third parties. Phone numbers are used solely for
+            transactional service communications described in
+            this section.
           </p>
         </section>
 

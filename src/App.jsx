@@ -46,6 +46,7 @@ import AutomationRules from './pages/settings/AutomationRules';
 import Integrations from './pages/settings/Integrations';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Book from './pages/Book';
 import Leads from './pages/Leads';
 import LiveMap from './pages/LiveMap';
 import NotificationsPage from './pages/Notifications';
@@ -75,6 +76,7 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/book" element={<Book />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
               {/* Protected routes */}
