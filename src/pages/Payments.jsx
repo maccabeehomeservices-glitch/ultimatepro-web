@@ -83,7 +83,7 @@ export default function Payments() {
                       onClick={() => navigate(`/invoices/${p.invoice_id}`)}
                       className="text-xs text-[#1A73E8] font-medium mt-0.5"
                     >
-                      INV-{p.invoice_number || p.invoice_id}
+                      {p.invoice_number || `INV-${(p.invoice_id || '').slice(0,6)}`}
                     </button>
                   )}
                 </div>

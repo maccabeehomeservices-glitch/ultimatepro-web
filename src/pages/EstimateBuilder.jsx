@@ -16,7 +16,7 @@ function emptyItem(type = 'service') {
 }
 
 function emptySection() {
-  return { services: [emptyItem('service')], materials: [], discounts: [] };
+  return { services: [], materials: [], discounts: [] };
 }
 
 function sectionTotal(section) {
@@ -49,7 +49,6 @@ export default function EstimateBuilder() {
   const [fieldErrors, setFieldErrors] = useState({});
   const customerDropdownRef = useRef(null);
 
-  const [title, setTitle] = useState('');
   const [notes, setNotes] = useState('');
   const [terms, setTerms] = useState('');
   const [taxEnabled, setTaxEnabled] = useState(false);
@@ -91,7 +90,6 @@ export default function EstimateBuilder() {
       setCustomerId(e.customer_id || '');
       setCustomerName(e.customer_name || e.customer?.name || '');
       setCustomerSearch(e.customer_name || e.customer?.name || '');
-      setTitle(e.title || '');
       setNotes(e.notes || '');
       setTerms(e.terms || '');
       setTaxEnabled(Boolean(e.tax_enabled));
@@ -112,7 +110,7 @@ export default function EstimateBuilder() {
         const services = items.filter(i => i.item_type !== 'material' && i.item_type !== 'discount');
         const materials = items.filter(i => i.item_type === 'material');
         const discounts = items.filter(i => i.item_type === 'discount');
-        setStdSection({ services: services.length ? services : [emptyItem('service')], materials, discounts });
+        setStdSection({ services, materials, discounts });
       }
     }
   }, [isEdit, existingData]);
@@ -248,22 +246,24 @@ export default function EstimateBuilder() {
   async function handleSave(action) {
     const fe = {};
     if (!customerId) fe.customer_id = 'Please select or create a customer';
-    if (!title.trim()) fe.title = 'Title is required';
+    const cleanLineItems = (arr) => (arr || []).filter(it => (it.name || '').trim().length > 0);
+    const cleanedItems = gbbMode ? [] : [
+      ...cleanLineItems(stdSection.services).map(it => ({ ...it, item_type: 'service' })),
+      ...cleanLineItems(stdSection.materials).map(it => ({ ...it, item_type: 'material' })),
+      ...cleanLineItems(stdSection.discounts).map(it => ({ ...it, item_type: 'discount' })),
+    ];
+    if (!gbbMode && cleanedItems.length === 0) {
+      showSnack('Add at least one line item before saving', 'error');
+      return;
+    }
     if (Object.keys(fe).length) { setFieldErrors(fe); return; }
     setSaving(true);
     try {
-      const allItems = gbbMode ? [] : [
-        ...stdSection.services,
-        ...stdSection.materials,
-        ...stdSection.discounts,
-      ];
-
       const basePayload = {
         customer_id: customerId,
-        title,
         notes,
         terms,
-        line_items: gbbMode ? [] : allItems.map(item => ({
+        line_items: cleanedItems.map(item => ({
           name: item.name,
           description: item.description || null,
           sku: item.sku || null,
@@ -519,7 +519,6 @@ export default function EstimateBuilder() {
               )}
               {fieldErrors.customer_id && <p className="text-red-500 text-xs mt-1">{fieldErrors.customer_id}</p>}
             </div>
-            <Input label="Title / Description" value={title} onChange={(e) => { setTitle(e.target.value); if (fieldErrors.title) setFieldErrors(prev => ({ ...prev, title: '' })); }} placeholder="e.g. AC Tune-Up Service" error={fieldErrors.title} />
           </div>
         </Card>
 

@@ -321,11 +321,24 @@ export default function EstimateDetail() {
   return (
     <div className="p-4 max-w-3xl mx-auto pb-8">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button
+          onClick={() => {
+            if (estimate?.job_id) navigate(`/jobs/${estimate.job_id}`);
+            else navigate('/estimates');
+          }}
+          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600"
+        >
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="font-bold text-gray-900 text-lg">Estimate #{estimate.estimate_number || estimate.id}</h1>
+          <h1 className="font-bold text-gray-900 text-lg">
+            {estimate.estimate_number || `Estimate ${estimate.id?.slice(0,8)}`}
+          </h1>
+          {(estimate.cust_first || estimate.cust_last || estimate.customer_name) && (
+            <p className="text-sm text-gray-500">
+              {[estimate.cust_first, estimate.cust_last].filter(Boolean).join(' ') || estimate.customer_name}
+            </p>
+          )}
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <Badge status={estimate.status} label={estimate.status} />
             {estimate.status === 'sent' && (
@@ -336,10 +349,39 @@ export default function EstimateDetail() {
       </div>
 
       {/* Customer */}
-      <Card className="mb-4">
-        <p className="text-xs text-gray-400 uppercase font-medium mb-1">Customer</p>
-        <p className="font-semibold text-gray-900">{estimate.customer_name || estimate.customer?.name}</p>
-      </Card>
+      {(estimate.cust_first || estimate.cust_last || estimate.cust_phone || estimate.cust_email || estimate.cust_address) && (
+        <Card className="mb-4">
+          <p className="text-xs text-blue-600 uppercase font-semibold tracking-wider mb-2">Customer</p>
+          <div className="space-y-1">
+            <p className="font-semibold text-gray-900 text-base">
+              {[estimate.cust_first, estimate.cust_last].filter(Boolean).join(' ') || estimate.customer_name || '—'}
+            </p>
+            {estimate.cust_phone && (
+              <a
+                href={`tel:${estimate.cust_phone}`}
+                className="block text-sm text-blue-600 hover:underline"
+              >
+                📞 {estimate.cust_phone}
+              </a>
+            )}
+            {estimate.cust_email && (
+              <a
+                href={`mailto:${estimate.cust_email}`}
+                className="block text-sm text-blue-600 hover:underline truncate"
+              >
+                ✉️ {estimate.cust_email}
+              </a>
+            )}
+            {(estimate.cust_address || estimate.cust_city) && (
+              <p className="text-sm text-gray-600">
+                📍 {[estimate.cust_address, estimate.cust_city, estimate.cust_state, estimate.cust_zip]
+                      .filter(Boolean)
+                      .join(', ')}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* GBB Tiers */}
       {isGbb && (

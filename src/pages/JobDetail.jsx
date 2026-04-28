@@ -836,7 +836,7 @@ export default function JobDetail() {
                       <button key={e.id} onClick={() => navigate(`/estimates/${e.id}`)}
                         className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">EST-{e.estimate_number || e.id?.slice(0,6)}</p>
+                          <p className="text-sm font-medium text-gray-900">{e.estimate_number || `EST-${e.id?.slice(0,6)}`}</p>
                           <p className="text-xs text-gray-400">{formatCurrency(e.total)}</p>
                         </div>
                         <Badge status={e.status} label={e.status} />
@@ -857,16 +857,36 @@ export default function JobDetail() {
               {jobInvoice && (
                 <Card>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-gray-900">INV-{jobInvoice.invoice_number || jobInvoice.id?.slice(0,6)}</p>
+                    <p className="text-sm font-semibold text-gray-900">{jobInvoice.invoice_number || `INV-${jobInvoice.id?.slice(0,6)}`}</p>
                     <Badge status={jobInvoice.status} label={jobInvoice.status} />
                   </div>
                   {(jobInvoice.line_items || []).map((item, i) => (
-                    <div key={i} className="flex items-start justify-between py-1 text-sm">
-                      <div className="min-w-0 flex-1 pr-2">
-                        <span className="text-gray-700">{item.name}</span>
-                        {item.sku && <span className="ml-2 text-xs text-gray-400">SKU: {item.sku}</span>}
+                    <div key={i} className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-b-0">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt=""
+                          className="w-12 h-12 object-cover rounded-lg flex-shrink-0 bg-gray-50"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center text-gray-300 text-sm">
+                          📦
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-gray-900 truncate">{item.name || '(unnamed)'}</p>
+                        {item.description && (
+                          <p className="text-xs text-gray-500 line-clamp-2">{item.description}</p>
+                        )}
+                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                          {item.sku && <span>SKU: {item.sku}</span>}
+                          {item.sku && <span>·</span>}
+                          <span>{item.quantity || item.qty || 1} × {formatCurrency(item.unit_price || item.price || 0)}</span>
+                        </div>
                       </div>
-                      <span className="font-medium text-gray-900 flex-shrink-0">{formatCurrency(item.total||item.amount||0)}</span>
+                      <span className="text-sm font-semibold text-gray-900 flex-shrink-0 self-center">
+                        {formatCurrency(item.total || item.amount || ((item.quantity || item.qty || 1) * (item.unit_price || item.price || 0)))}
+                      </span>
                     </div>
                   ))}
                   {(jobInvoice.line_items || []).length > 0 && (
@@ -1042,7 +1062,7 @@ export default function JobDetail() {
                           <button key={e.id} onClick={() => navigate(`/estimates/${e.id}`)}
                             className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">EST-{e.estimate_number||e.id?.slice(0,6)}</p>
+                              <p className="text-sm font-medium text-gray-900">{e.estimate_number || `EST-${e.id?.slice(0,6)}`}</p>
                               <p className="text-xs text-gray-400">{formatCurrency(e.total)}</p>
                             </div>
                             <Badge status={e.status} label={e.status} />
@@ -1058,7 +1078,7 @@ export default function JobDetail() {
                           <button key={inv.id} onClick={() => navigate(`/invoices/${inv.id}`)}
                             className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">INV-{inv.invoice_number||inv.id?.slice(0,6)}</p>
+                              <p className="text-sm font-medium text-gray-900">{inv.invoice_number || `INV-${inv.id?.slice(0,6)}`}</p>
                               <p className="text-xs text-gray-400">{formatCurrency(inv.total)}</p>
                             </div>
                             <Badge status={inv.status} label={inv.status} />

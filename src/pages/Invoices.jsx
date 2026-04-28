@@ -102,7 +102,7 @@ export default function Invoices() {
             <Card key={inv.id || inv._id} onClick={() => navigate(`/invoices/${inv.id || inv._id}`)}>
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-400">INV-{inv.invoice_number || inv.id}</p>
+                  <p className="text-xs text-gray-400">{inv.invoice_number || `INV-${(inv.id || '').slice(0,6)}`}</p>
                   <p className="font-semibold text-gray-900 truncate">{inv.customer_name || inv.customer?.name}</p>
                   {inv.due_date && (
                     <p className="text-xs text-gray-400">
