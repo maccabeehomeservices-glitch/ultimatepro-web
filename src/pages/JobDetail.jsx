@@ -861,9 +861,12 @@ export default function JobDetail() {
                     <Badge status={jobInvoice.status} label={jobInvoice.status} />
                   </div>
                   {(jobInvoice.line_items || []).map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-1 text-sm">
-                      <span className="text-gray-700">{item.name}</span>
-                      <span className="font-medium text-gray-900">{formatCurrency(item.total||item.amount||0)}</span>
+                    <div key={i} className="flex items-start justify-between py-1 text-sm">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <span className="text-gray-700">{item.name}</span>
+                        {item.sku && <span className="ml-2 text-xs text-gray-400">SKU: {item.sku}</span>}
+                      </div>
+                      <span className="font-medium text-gray-900 flex-shrink-0">{formatCurrency(item.total||item.amount||0)}</span>
                     </div>
                   ))}
                   {(jobInvoice.line_items || []).length > 0 && (
