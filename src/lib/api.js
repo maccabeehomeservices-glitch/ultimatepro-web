@@ -27,14 +27,16 @@ export default api;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+// Canonical job-status palette — must match skills/ui-design-system.md §1
+// and android AppColors.jobStatus() in Theme.kt.
 export const statusColor = (status) => ({
   unscheduled: '#6B7280',
-  scheduled:   '#1A73E8',
-  en_route:    '#4F46E5',
-  in_progress: '#F59E0B',
-  completed:   '#10B981',
-  cancelled:   '#EF4444',
+  scheduled:   '#2563EB',
+  en_route:    '#F97316',
+  in_progress: '#0EA5E9',
   holding:     '#D97706',
+  completed:   '#16A34A',
+  cancelled:   '#DC2626',
   deleted:     '#9CA3AF',
 }[status] || '#6B7280');
 

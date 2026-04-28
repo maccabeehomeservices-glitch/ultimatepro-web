@@ -6,7 +6,6 @@ const statusStyles = {
   completed: 'bg-green-100 text-green-700',
   cancelled: 'bg-red-100 text-red-700',
   holding: 'bg-amber-100 text-amber-700',
-  invoiced: 'bg-purple-100 text-purple-700',
   deleted: 'bg-gray-100 text-gray-500',
   draft: 'bg-gray-100 text-gray-600',
   sent: 'bg-blue-100 text-blue-700',
