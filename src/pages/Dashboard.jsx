@@ -171,8 +171,9 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
   const [pasteModal, setPasteModal] = useState(false);
-  const [ticketText, setTicketText] = useState('');
-  const [parsing, setParsing] = useState(false);
+  const [pasteText, setPasteText] = useState('');
+  const [pasteLoading, setPasteLoading] = useState(false);
+  const [pasteError, setPasteError] = useState(null);
   const mapsReady = useGoogleMaps();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -199,6 +200,16 @@ export default function Dashboard() {
     }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // Pre-fill paste textarea from clipboard when modal opens (desktop convenience).
+  // Mobile / permission-denied silently no-ops, user pastes manually.
+  useEffect(() => {
+    if (pasteModal) {
+      navigator.clipboard?.readText?.()
+        .then(text => { if (text) setPasteText(text); })
+        .catch(() => {});
+    }
+  }, [pasteModal]);
 
   function handleRefresh() {
     setRefreshing(true);
@@ -238,39 +249,25 @@ export default function Dashboard() {
   const dueSoon     = dueSoonData?.memberships || (Array.isArray(dueSoonData) ? dueSoonData : []);
 
   async function handleParseTicket() {
-    if (!ticketText.trim()) return;
-    setParsing(true);
+    if (!pasteText.trim()) return;
+    setPasteLoading(true);
+    setPasteError(null);
     try {
-      const res = await jobsApi.parseTicket(ticketText);
+      const res = await jobsApi.parseTicket(pasteText);
       setPasteModal(false);
-      setTicketText('');
+      setPasteText('');
       navigate('/jobs/new', { state: { parsedData: res.data?.job || res.data } });
-    } catch {
-      showSnack('Failed to parse ticket', 'error');
+    } catch (err) {
+      setPasteError(err?.response?.data?.error || 'Failed to parse ticket');
     } finally {
-      setParsing(false);
+      setPasteLoading(false);
     }
   }
 
-  async function handlePasteTicket() {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text && text.trim().length > 10) {
-        setParsing(true);
-        try {
-          const res = await jobsApi.parseTicket(text.trim());
-          navigate('/jobs/new', { state: { parsedData: res.data?.job || res.data } });
-        } catch (err) {
-          showSnack(err.response?.data?.error || 'Failed to parse ticket', 'error');
-        } finally {
-          setParsing(false);
-        }
-        return;
-      }
-      setPasteModal(true);
-    } catch {
-      setPasteModal(true);
-    }
+  function handlePasteTicket() {
+    setPasteText('');
+    setPasteError(null);
+    setPasteModal(true);
   }
 
   return (
@@ -493,38 +490,36 @@ export default function Dashboard() {
       {/* Paste Ticket FAB */}
       <button
         onClick={handlePasteTicket}
-        disabled={parsing}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-[#1A73E8] text-white rounded-2xl shadow-lg flex items-center gap-2 px-5 h-14 hover:bg-blue-700 disabled:opacity-70 transition-colors z-10 font-semibold"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-[#1A73E8] text-white rounded-2xl shadow-lg flex items-center gap-2 px-5 h-14 hover:bg-blue-700 transition-colors z-10 font-semibold"
       >
-        {parsing ? (
-          <><span className="animate-spin inline-block">⟳</span><span className="hidden sm:inline">Parsing...</span></>
-        ) : (
-          <><ClipboardList size={20} /><span className="hidden sm:inline">Paste Ticket</span></>
-        )}
+        <ClipboardList size={20} /><span className="hidden sm:inline">Paste Ticket</span>
       </button>
 
       {/* Paste Ticket Modal */}
       <Modal
         isOpen={pasteModal}
-        onClose={() => { setPasteModal(false); setTicketText(''); }}
+        onClose={() => { if (!pasteLoading) { setPasteModal(false); setPasteText(''); setPasteError(null); } }}
         title="Paste Job Ticket"
         footer={
           <>
-            <Button variant="outlined" onClick={() => { setPasteModal(false); setTicketText(''); }}>Cancel</Button>
-            <Button loading={parsing} disabled={!ticketText.trim()} onClick={handleParseTicket}>Parse with AI</Button>
+            <Button variant="outlined" disabled={pasteLoading} onClick={() => { setPasteModal(false); setPasteText(''); setPasteError(null); }}>Cancel</Button>
+            <Button loading={pasteLoading} disabled={!pasteText.trim()} onClick={handleParseTicket}>Parse with AI</Button>
           </>
         }
       >
         <div className="space-y-3">
           <p className="text-sm text-gray-500">Paste any job ticket, email, or work order. AI will extract job details automatically.</p>
           <textarea
-            value={ticketText}
-            onChange={e => setTicketText(e.target.value)}
+            value={pasteText}
+            onChange={e => setPasteText(e.target.value)}
             rows={8}
-            placeholder="Paste any job ticket here..."
+            placeholder="Paste any job ticket text here, emails, screenshots OCR, etc."
             className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
             autoFocus
           />
+          {pasteError && (
+            <p className="text-sm text-red-600">{pasteError}</p>
+          )}
         </div>
       </Modal>
     </div>
