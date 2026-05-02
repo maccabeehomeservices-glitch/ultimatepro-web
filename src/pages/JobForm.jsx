@@ -439,7 +439,16 @@ export default function JobForm() {
     setPasteError(null);
     try {
       const res = await jobsApi.parseTicket(pasteText);
-      const p = res.data?.job || res.data;
+      const p = res.data?.job || res.data || {};
+      const phoneList = Array.isArray(p.phone_numbers) ? p.phone_numbers : [];
+      const hasAnyData =
+        ['job_title', 'job_description', 'leftover_notes', 'customer_name', 'phone', 'email', 'address', 'city']
+          .some(k => p[k] !== null && p[k] !== undefined && String(p[k]).trim() !== '')
+        || phoneList.some(ph => ph && String(ph).trim() !== '');
+      if (!hasAnyData) {
+        setPasteError("Couldn't extract any job details from the text. Please paste a clearer ticket.");
+        return;
+      }
       setPasteModal(false);
       setPasteText('');
       await applyParsedData(p);

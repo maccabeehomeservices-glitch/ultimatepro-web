@@ -254,9 +254,19 @@ export default function Dashboard() {
     setPasteError(null);
     try {
       const res = await jobsApi.parseTicket(pasteText);
+      const parsed = res.data?.job || res.data || {};
+      const phoneList = Array.isArray(parsed.phone_numbers) ? parsed.phone_numbers : [];
+      const hasAnyData =
+        ['job_title', 'job_description', 'leftover_notes', 'customer_name', 'phone', 'email', 'address', 'city']
+          .some(k => parsed[k] !== null && parsed[k] !== undefined && String(parsed[k]).trim() !== '')
+        || phoneList.some(p => p && String(p).trim() !== '');
+      if (!hasAnyData) {
+        setPasteError("Couldn't extract any job details from the text. Please paste a clearer ticket.");
+        return;
+      }
       setPasteModal(false);
       setPasteText('');
-      navigate('/jobs/new', { state: { parsedData: res.data?.job || res.data } });
+      navigate('/jobs/new', { state: { parsedData: parsed } });
     } catch (err) {
       setPasteError(err?.response?.data?.error || 'Failed to parse ticket');
     } finally {
