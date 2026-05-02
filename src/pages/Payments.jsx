@@ -20,9 +20,12 @@ function methodBadgeClass(method) {
 
 export default function Payments() {
   const navigate = useNavigate();
-  const today = new Date();
-  const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
-  const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
+  const [from, setFrom] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 30);
+    return d.toISOString().slice(0, 10);
+  });
+  const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
 
   const url = `/payments?from=${from}&to=${to}&page=1&limit=50`;
   const { data, loading } = useGet(url, [from, to]);
@@ -57,6 +60,18 @@ export default function Payments() {
         </div>
       </Card>
 
+      {data?.total_collected !== undefined && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
+          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Collected</div>
+          <div className="text-2xl font-bold text-green-600">
+            {formatCurrency(data.total_collected || 0)}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {data.payments?.length || 0} payments · {from} to {to}
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <LoadingSpinner />
       ) : payments.length === 0 ? (
@@ -67,7 +82,7 @@ export default function Payments() {
             <Card key={p.id || p._id || i}>
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{p.customer_name || p.customer?.name || 'Customer'}</p>
+                  <p className="font-medium text-gray-900 truncate">{`${p.cust_first || ''} ${p.cust_last || ''}`.trim() || '-'}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {p.method && (
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${methodBadgeClass(p.method)}`}>
