@@ -110,7 +110,7 @@ export default function Inventory() {
   function openRestockModal() {
     setRestockItems(truckStock.map(item => ({
       id: item.id || item._id,
-      name: item.name,
+      name: item.item_name,
       sku: item.sku || '',
       checked: false,
       qty_requested: 1,
@@ -186,7 +186,7 @@ export default function Inventory() {
                   <Card key={id}>
                     <div className="flex items-center justify-between gap-3 flex-wrap">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900">{item.name}</p>
+                        <p className="font-medium text-gray-900">{item.item_name || '-'}</p>
                         {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
@@ -227,7 +227,7 @@ export default function Inventory() {
                   <Card key={id}>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900">{item.name}</p>
+                        <p className="font-medium text-gray-900">{item.item_name || '-'}</p>
                         {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
                       </div>
                       <div className="text-right">
@@ -267,7 +267,7 @@ export default function Inventory() {
                         <Card key={id}>
                           <div className="flex items-center justify-between gap-3 flex-wrap">
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900">{item.name}</p>
+                              <p className="font-medium text-gray-900">{item.item_name || '-'}</p>
                               {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
                             </div>
                             <div className="flex items-center gap-2">
