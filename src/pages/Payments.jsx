@@ -30,7 +30,6 @@ export default function Payments() {
   const url = `/payments?from=${from}&to=${to}&page=1&limit=50`;
   const { data, loading } = useGet(url, [from, to]);
   const payments = data?.payments || (Array.isArray(data) ? data : []);
-  const totalCollected = data?.total_collected ?? payments.reduce((s, p) => s + Number(p.amount || 0), 0);
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
@@ -106,13 +105,6 @@ export default function Payments() {
               </div>
             </Card>
           ))}
-          {/* Summary */}
-          <div className="mt-4 p-4 bg-gray-100 rounded-2xl flex justify-between">
-            <span className="font-semibold text-gray-700">Total</span>
-            <span className="font-bold text-gray-900">
-              {formatCurrency(totalCollected)}
-            </span>
-          </div>
         </div>
       )}
     </div>
