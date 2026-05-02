@@ -8,7 +8,7 @@ import { networkApi } from '../lib/api';
 const SEARCH_TABS = [
   { id: 'phone', label: '📱 By Phone', type: 'tel', placeholder: '+1 (555) 000-0000' },
   { id: 'email', label: '✉️ By Email', type: 'email', placeholder: 'partner@company.com' },
-  { id: 'ucm_id', label: '🔑 By UCM ID', type: 'text', placeholder: 'UCM ID...' },
+  { id: 'ultimatecrm_id', label: '🔑 By UCM ID', type: 'text', placeholder: 'UCM ID...' },
 ];
 
 export default function Network() {
