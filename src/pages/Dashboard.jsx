@@ -61,6 +61,7 @@ function JobMap({ jobs, techs }) {
     function placeJobMarker(job, pos) {
       const color = statusColor(job.status);
       const mismatch = job.address_verified === false;
+      const customerName = `${job.cust_first || ''} ${job.cust_last || ''}`.trim() || 'No customer';
       const marker = new window.google.maps.Marker({
         position: pos,
         map: mapInstance.current,
@@ -80,7 +81,7 @@ function JobMap({ jobs, techs }) {
             <div style="min-width:180px;font-family:system-ui;padding:4px">
               <div style="font-weight:700;font-size:13px">${job.job_number || ''}</div>
               <div style="font-size:12px;margin:2px 0">${job.title || job.job_title || 'Untitled'}</div>
-              <div style="font-size:11px;color:#666">${job.customer_name || job.customer?.name || ''}</div>
+              <div style="font-size:11px;color:#666">${customerName}</div>
               <div style="display:inline-block;padding:2px 6px;border-radius:10px;font-size:10px;font-weight:600;color:white;background:${color};margin-top:4px">
                 ${statusLabel(job.status)}
               </div>
@@ -473,7 +474,7 @@ export default function Dashboard() {
                       {job.title || job.job_title || 'Untitled Job'}
                     </p>
                     <p className="text-sm text-gray-500 truncate">
-                      {job.customer_name || job.customer?.name || 'No customer'}
+                      {`${job.cust_first || ''} ${job.cust_last || ''}`.trim() || 'No customer'}
                     </p>
                     {(job.address || job.service_address) && (
                       <p className="text-xs text-gray-400 truncate mt-0.5">
