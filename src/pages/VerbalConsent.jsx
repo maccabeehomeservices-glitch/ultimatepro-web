@@ -93,13 +93,9 @@ export default function VerbalConsent() {
         <section className="mb-8">
           <h2 className="text-lg font-semibold text-gray-900 mb-3">Other opt-in paths</h2>
           <p className="text-gray-700 leading-relaxed">
-            Customers can also opt in via our public booking form at{' '}
-            <Link to="/book" className="text-blue-600 hover:underline">
-              https://ultimatepro.pro/book
-            </Link>{' '}
-            or by signing a service agreement that includes an SMS
-            authorization block. A sample of the service agreement is
-            available at{' '}
+            Customers can also opt in by signing a service agreement
+            that includes an SMS authorization block. A sample of the
+            service agreement is available at{' '}
             <a
               href="/sample-service-agreement.pdf"
               className="text-blue-600 hover:underline"
