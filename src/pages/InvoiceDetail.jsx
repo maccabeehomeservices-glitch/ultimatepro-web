@@ -136,16 +136,54 @@ export default function InvoiceDetail() {
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="font-bold text-gray-900 text-lg">Invoice #{invoice.invoice_number || invoice.id}</h1>
-          <Badge status={invoice.status} label={invoice.status} />
+          <h1 className="font-bold text-gray-900 text-lg">
+            {`Invoice ${invoice.invoice_number || invoice.id?.slice(0,8)}`}
+          </h1>
+          {(invoice.cust_first || invoice.cust_last) && (
+            <p className="text-sm text-gray-500">
+              {[invoice.cust_first, invoice.cust_last].filter(Boolean).join(' ')}
+            </p>
+          )}
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <Badge status={invoice.status} label={invoice.status} />
+          </div>
         </div>
       </div>
 
       {/* Customer */}
-      <Card className="mb-4">
-        <p className="text-xs text-gray-400 uppercase font-medium mb-1">Bill To</p>
-        <p className="font-semibold text-gray-900">{invoice.customer_name || invoice.customer?.name}</p>
-      </Card>
+      {(invoice.cust_first || invoice.cust_last || invoice.cust_phone || invoice.cust_email || invoice.cust_address) && (
+        <Card className="mb-4">
+          <p className="text-xs text-blue-600 uppercase font-semibold tracking-wider mb-2">Bill To</p>
+          <div className="space-y-1">
+            <p className="font-semibold text-gray-900 text-base">
+              {[invoice.cust_first, invoice.cust_last].filter(Boolean).join(' ') || '-'}
+            </p>
+            {invoice.cust_phone && (
+              <a
+                href={`tel:${invoice.cust_phone}`}
+                className="block text-sm text-blue-600 hover:underline"
+              >
+                📞 {invoice.cust_phone}
+              </a>
+            )}
+            {invoice.cust_email && (
+              <a
+                href={`mailto:${invoice.cust_email}`}
+                className="block text-sm text-blue-600 hover:underline truncate"
+              >
+                ✉️ {invoice.cust_email}
+              </a>
+            )}
+            {(invoice.cust_address || invoice.cust_city) && (
+              <p className="text-sm text-gray-600">
+                📍 {[invoice.cust_address, invoice.cust_city, invoice.cust_state, invoice.cust_zip]
+                      .filter(Boolean)
+                      .join(', ')}
+              </p>
+            )}
+          </div>
+        </Card>
+      )}
 
       {/* Line Items */}
       <Card className="mb-4">
