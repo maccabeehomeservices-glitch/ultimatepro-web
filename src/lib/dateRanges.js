@@ -99,6 +99,7 @@ export const DATE_CHIPS = [
 ];
 
 export const STATUS_OPTIONS = [
+  { id: 'unscheduled', label: 'Unscheduled' },
   { id: 'scheduled',   label: 'Scheduled' },
   { id: 'en_route',    label: 'En Route' },
   { id: 'in_progress', label: 'In Progress' },
