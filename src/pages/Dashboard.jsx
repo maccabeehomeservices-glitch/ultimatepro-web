@@ -397,7 +397,7 @@ export default function Dashboard() {
                   className="w-full flex items-center justify-between py-3 first:pt-0 last:pb-0 text-left"
                 >
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{m.customer_name || 'Customer'}</p>
+                    <p className="text-sm font-medium text-gray-900">{`${m.first_name || ''} ${m.last_name || ''}`.trim() || 'No customer'}</p>
                     <p className="text-xs text-gray-400">{m.plan_name || 'Membership'}</p>
                   </div>
                   <div className="text-right">
