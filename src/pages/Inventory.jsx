@@ -10,6 +10,7 @@ const tabList = [
   { id: 'warehouse', label: 'Warehouse' },
   { id: 'trucks', label: 'Trucks' },
   { id: 'my_truck', label: 'My Truck' },
+  { id: 'requests', label: 'Restock Requests' },
 ];
 
 export default function Inventory() {
@@ -35,6 +36,9 @@ export default function Inventory() {
   const [restockItems, setRestockItems] = useState([]);
   const [restockSending, setRestockSending] = useState(false);
 
+  // Restock requests tab
+  const [requestStatus, setRequestStatus] = useState('pending');
+
   const { data: warehouseData, loading: warehouseLoading, refetch: refetchWarehouse } = useGet(
     activeTab === 'warehouse' ? '/inventory/warehouse' : null, [activeTab]
   );
@@ -46,6 +50,10 @@ export default function Inventory() {
   const { data: myTruckData, loading: myTruckLoading } = useGet(
     activeTab === 'my_truck' && user?.id ? `/inventory/tech-truck/${user.id}` : null,
     [activeTab, user?.id]
+  );
+  const { data: requestsData } = useGet(
+    activeTab === 'requests' ? `/inventory/restock-requests${requestStatus !== 'all' ? `?status=${requestStatus}` : ''}` : null,
+    [activeTab, requestStatus]
   );
   const { mutate } = useMutation();
 
@@ -297,6 +305,65 @@ export default function Inventory() {
               )}
             </div>
           )
+        )}
+
+        {activeTab === 'requests' && (
+          <>
+            <div className="flex gap-2 mb-3">
+              {['pending', 'fulfilled', 'all'].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setRequestStatus(s)}
+                  className={requestStatus === s
+                    ? 'px-3 py-1.5 bg-[#1A73E8] text-white rounded-full text-sm font-medium min-h-[36px]'
+                    : 'px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm min-h-[36px]'}
+                >
+                  {s === 'pending' ? 'Pending' : s === 'fulfilled' ? 'Fulfilled' : 'All'}
+                </button>
+              ))}
+            </div>
+
+            {(requestsData?.requests || requestsData || []).length === 0 ? (
+              <div className="text-center text-gray-500 py-8">
+                No {requestStatus === 'all' ? '' : requestStatus + ' '}restock requests yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {(requestsData?.requests || requestsData || []).map(req => (
+                  <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900">
+                          {req.truck_name || '-'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Requested by {req.requested_by_name || '-'} · {req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-'}
+                        </p>
+                      </div>
+                      <span className={req.status === 'pending'
+                        ? 'px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full text-xs font-medium ml-2 flex-shrink-0'
+                        : 'px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium ml-2 flex-shrink-0'}>
+                        {req.status}
+                      </span>
+                    </div>
+                    {(req.items || []).length > 0 && (
+                      <div className="mt-2 pt-2 border-t border-gray-100">
+                        {(req.items || []).map((it, i) => (
+                          <div key={i} className="flex justify-between text-sm py-0.5">
+                            <span className="text-gray-700">{it.item_name || '-'}</span>
+                            <span className="text-gray-500">Qty: {it.qty_requested || 0}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {req.notes && (
+                      <p className="text-xs text-gray-500 mt-2 italic">"{req.notes}"</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
