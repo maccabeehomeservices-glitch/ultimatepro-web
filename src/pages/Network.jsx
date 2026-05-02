@@ -50,7 +50,7 @@ export default function Network() {
   const { data: connectionsData, loading, refetch: refetchConnections } = useGet('/network/connections');
   const { loading: searching } = useMutation();
 
-  const ucmId = myIdData?.ucm_id || myIdData?.id || '';
+  const ucmId = myIdData?.ultimatecrm_id || myIdData?.ucm_id || myIdData?.id || '';
   const connections = connectionsData?.connections || connectionsData || [];
 
   function handleCopy() {
