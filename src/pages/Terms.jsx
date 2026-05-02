@@ -66,8 +66,8 @@ export default function Terms() {
             using UltimatePro to request service, schedule an
             appointment, or engage in a business transaction.
             Consent may be collected verbally (in-person or by
-            phone), via a written service agreement, through the
-            online booking portal, or through the customer portal.
+            phone) or via a written service agreement that
+            includes SMS authorization language.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
             <strong>Message Frequency:</strong> Message frequency
@@ -76,12 +76,12 @@ export default function Terms() {
           </p>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
             <strong>Opt-Out:</strong> Customers can opt out of SMS
-            messages at any time by replying STOP to any message.
+            messages at any time by replying <strong>STOP</strong> to any message.
             After opting out, no further messages will be sent
-            unless the customer re-subscribes by replying START.
+            unless the customer re-subscribes by replying <strong>START</strong>.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
-            <strong>Help:</strong> Customers can reply HELP to any
+            <strong>Help:</strong> Customers can reply <strong>HELP</strong> to any
             message for assistance.
           </p>
           <p className="text-gray-700 text-sm leading-relaxed mb-3">
