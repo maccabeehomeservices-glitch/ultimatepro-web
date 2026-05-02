@@ -402,7 +402,7 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold text-amber-600">
-                      {m.days_until_renewal != null ? `${m.days_until_renewal}d left` : m.renewal_date || ''}
+                      {m.next_job_date ? new Date(m.next_job_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-'}
                     </p>
                     <ChevronRight size={14} className="text-gray-400 ml-auto mt-0.5" />
                   </div>
