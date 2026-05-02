@@ -13,13 +13,15 @@ export default function Jobs() {
   const { showSnack } = useSnackbar();
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [dateRange, setDateRange] = useState('today');
+  const [dateRange, setDateRange] = useState('all');
   const [customFrom, setCustomFrom] = useState(null);
   const [customTo, setCustomTo] = useState(null);
   const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [customDraftFrom, setCustomDraftFrom] = useState('');
   const [customDraftTo, setCustomDraftTo] = useState('');
-  const [selectedStatuses, setSelectedStatuses] = useState(new Set());
+  const [selectedStatuses, setSelectedStatuses] = useState(
+    new Set(['scheduled', 'en_route', 'in_progress', 'unscheduled', 'holding'])
+  );
   const [selectedTechIds, setSelectedTechIds] = useState(new Set());
   const [partnerView, setPartnerView] = useState(false);
   const [showFilterDialog, setShowFilterDialog] = useState(false);
