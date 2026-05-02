@@ -66,6 +66,22 @@ function formatDisplayTime(hhmm) {
   } catch { return hhmm; }
 }
 
+// Format raw phone digits as a customer display name so the customer pill
+// shows useful info (e.g. "(757) 555-1212") instead of a literal "Customer"
+// placeholder when AI extracts a phone but no name. Backend customers POST
+// requires non-empty first_name.
+function formatPhoneAsName(phoneStr) {
+  if (!phoneStr) return '';
+  const digits = String(phoneStr).replace(/\D/g, '');
+  if (digits.length === 10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+  if (digits.length === 11 && digits[0] === '1') return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
+  return digits;
+}
+
+function fallbackCustomerName(phoneStr) {
+  return formatPhoneAsName(phoneStr) || 'New customer';
+}
+
 function SectionLabel({ children }) {
   return <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-2">{children}</p>;
 }
@@ -201,7 +217,7 @@ export default function JobForm() {
       } else if (parsedName || parsedPhone) {
         const parts = parsedName.split(' ');
         customersApi.create({
-          first_name: parts[0] || 'Customer',
+          first_name: parts[0] || fallbackCustomerName(parsedPhone),
           last_name: parts.slice(1).join(' ') || '',
           phone: parsedPhone || '',
           type: 'residential',
@@ -373,15 +389,17 @@ export default function JobForm() {
 
     if (firstName || parsedPhone) {
       try {
+        const fallbackName = fallbackCustomerName(parsedPhone);
         const createRes = await customersApi.create({
-          first_name: firstName || 'Customer',
+          first_name: firstName || fallbackName,
           last_name: lastName || '',
           phone: parsedPhone || null,
           email: p.email || null,
           type: 'residential',
         });
         const created = createRes.data?.customer || createRes.data;
-        return { customer: created, action: 'created', message: `New customer: ${`${firstName} ${lastName}`.trim()}` };
+        const displayName = `${firstName} ${lastName}`.trim() || fallbackName;
+        return { customer: created, action: 'created', message: `New customer: ${displayName}` };
       } catch {}
     }
 
@@ -965,7 +983,7 @@ export default function JobForm() {
                     const parsedName = duplicateModal.parsedName.trim();
                     const parts = parsedName.split(' ');
                     const res = await customersApi.create({
-                      first_name: parts[0]||'Customer',
+                      first_name: parts[0]||fallbackCustomerName(duplicateModal.matched.phone),
                       last_name: parts.slice(1).join(' ')||'',
                       phone: duplicateModal.matched.phone||null,
                       type: 'residential',
