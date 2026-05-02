@@ -98,7 +98,7 @@ export default function Estimates() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-400">{est.estimate_number || `EST-${(est.id || '').slice(0,6)}`}</p>
-                    <p className="font-semibold text-gray-900 truncate">{est.customer_name || est.customer?.name || 'Customer'}</p>
+                    <p className="font-semibold text-gray-900 truncate">{`${est.cust_first || ''} ${est.cust_last || ''}`.trim() || '-'}</p>
                     {est.title && <p className="text-sm text-gray-500 truncate">{est.title}</p>}
                     {est.created_at && (
                       <p className="text-xs text-gray-400">

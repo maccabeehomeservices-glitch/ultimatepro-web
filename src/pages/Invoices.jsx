@@ -103,7 +103,7 @@ export default function Invoices() {
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-gray-400">{inv.invoice_number || `INV-${(inv.id || '').slice(0,6)}`}</p>
-                  <p className="font-semibold text-gray-900 truncate">{inv.customer_name || inv.customer?.name}</p>
+                  <p className="font-semibold text-gray-900 truncate">{`${inv.cust_first || ''} ${inv.cust_last || ''}`.trim() || '-'}</p>
                   {inv.due_date && (
                     <p className="text-xs text-gray-400">
                       Due: {new Date(inv.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
