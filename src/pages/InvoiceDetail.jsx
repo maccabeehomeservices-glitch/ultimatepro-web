@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import { invoicesApi, paymentsApi } from '../lib/api';
+import api, { invoicesApi, paymentsApi, customersApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { format } from 'date-fns';
@@ -38,6 +38,13 @@ export default function InvoiceDetail() {
   const [showSignature, setShowSignature] = useState(false);
   const [savingSig, setSavingSig] = useState(false);
   const [scanpayLoading, setScanpayLoading] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [sendEmails, setSendEmails] = useState([]);
+  const [sendPhones, setSendPhones] = useState([]);
+  const [newEmail, setNewEmail] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [saveContactsToProfile, setSaveContactsToProfile] = useState(true);
+  const [sending, setSending] = useState(false);
 
   const invoice = data?.invoice || data;
 
@@ -118,6 +125,78 @@ export default function InvoiceDetail() {
     } catch {
       showSnack('Failed to send receipt', 'error');
     }
+  }
+
+  async function openSendModal() {
+    if (!invoice?.customer_id) { showSnack('No customer on invoice', 'error'); return; }
+    try {
+      const res = await customersApi.get(invoice.customer_id);
+      const customer = res.data?.customer || res.data;
+      const primaryEmail = customer?.email;
+      const primaryPhone = customer?.phone;
+      const extraEmails = (customer?.emails || []).filter(e => e && e !== primaryEmail);
+      const extraPhones = (customer?.phones || []).filter(p => p && p !== primaryPhone);
+      const emails = [
+        ...(primaryEmail ? [{ value: primaryEmail, checked: true }] : []),
+        ...extraEmails.map(e => ({ value: e, checked: true })),
+      ];
+      const phones = [
+        ...(primaryPhone ? [{ value: primaryPhone, checked: true }] : []),
+        ...extraPhones.map(p => ({ value: p, checked: true })),
+      ];
+      setSendEmails(emails);
+      setSendPhones(phones);
+      setNewEmail('');
+      setNewPhone('');
+      setShowSendModal(true);
+    } catch {
+      showSnack('Failed to load customer contacts', 'error');
+    }
+  }
+
+  async function handleSendConfirm() {
+    const emails = sendEmails.filter(e => e.checked).map(e => e.value);
+    const phones = sendPhones.filter(p => p.checked).map(p => p.value);
+    if (emails.length === 0 && phones.length === 0) {
+      showSnack('Pick at least one recipient', 'error');
+      return;
+    }
+    setSending(true);
+    try {
+      await invoicesApi.send(id, {
+        emails,
+        phones,
+        send_email: emails.length > 0,
+        send_sms: phones.length > 0,
+      });
+      showSnack('Invoice sent', 'success');
+      setShowSendModal(false);
+      refetch();
+    } catch (err) {
+      showSnack(err?.response?.data?.error || 'Failed to send invoice', 'error');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function handleAddSendEmail() {
+    const v = newEmail.trim();
+    if (!v) return;
+    setSendEmails(prev => [...prev, { value: v, checked: true }]);
+    if (saveContactsToProfile && invoice?.customer_id) {
+      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'email', value: v }); } catch { /* ignore */ }
+    }
+    setNewEmail('');
+  }
+
+  async function handleAddSendPhone() {
+    const v = newPhone.trim();
+    if (!v) return;
+    setSendPhones(prev => [...prev, { value: v, checked: true }]);
+    if (saveContactsToProfile && invoice?.customer_id) {
+      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'phone', value: v }); } catch { /* ignore */ }
+    }
+    setNewPhone('');
   }
 
   if (loading) return <LoadingSpinner fullPage />;
@@ -283,6 +362,13 @@ export default function InvoiceDetail() {
       )}
 
       {/* Actions */}
+      {(invoice.status === 'draft' || invoice.status === 'sent') && (
+        <div className="mb-4">
+          <Button onClick={openSendModal} className="w-full">
+            Send Invoice
+          </Button>
+        </div>
+      )}
       {!isPaid && (
         <div className="flex flex-col gap-2 mb-4">
           <Button onClick={() => setPaymentModal(true)} className="w-full">
@@ -388,6 +474,78 @@ export default function InvoiceDetail() {
         }
       >
         <p className="text-gray-600">Resume automatic follow-up reminders for this invoice?</p>
+      </Modal>
+
+      {/* Send Invoice Modal */}
+      <Modal
+        isOpen={showSendModal}
+        onClose={() => !sending && setShowSendModal(false)}
+        title="Send Invoice"
+        footer={
+          <>
+            <Button variant="outlined" disabled={sending} onClick={() => setShowSendModal(false)}>Cancel</Button>
+            <Button loading={sending} onClick={handleSendConfirm}>Send Invoice</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs text-gray-400 uppercase font-medium mb-2">Email Recipients</p>
+            {sendEmails.length === 0 && <p className="text-sm text-gray-400">No emails on file.</p>}
+            {sendEmails.map((entry, i) => (
+              <label key={i} className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  checked={entry.checked}
+                  onChange={e => setSendEmails(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
+                />
+                <span className="text-sm text-gray-700">{entry.value}</span>
+              </label>
+            ))}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="email"
+                value={newEmail}
+                onChange={e => setNewEmail(e.target.value)}
+                placeholder="Add email..."
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              />
+              <Button variant="outlined" onClick={handleAddSendEmail} className="text-sm">Add</Button>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 uppercase font-medium mb-2">SMS / Phone Recipients</p>
+            {sendPhones.length === 0 && <p className="text-sm text-gray-400">No phones on file.</p>}
+            {sendPhones.map((entry, i) => (
+              <label key={i} className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  checked={entry.checked}
+                  onChange={e => setSendPhones(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
+                />
+                <span className="text-sm text-gray-700">{entry.value}</span>
+              </label>
+            ))}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="tel"
+                value={newPhone}
+                onChange={e => setNewPhone(e.target.value)}
+                placeholder="Add phone..."
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              />
+              <Button variant="outlined" onClick={handleAddSendPhone} className="text-sm">Add</Button>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 pt-2 border-t border-gray-100">
+            <input
+              type="checkbox"
+              checked={saveContactsToProfile}
+              onChange={e => setSaveContactsToProfile(e.target.checked)}
+            />
+            <span className="text-xs text-gray-600">Save new contacts to customer profile</span>
+          </label>
+        </div>
       </Modal>
     </div>
   );
