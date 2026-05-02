@@ -47,6 +47,7 @@ import Integrations from './pages/settings/Integrations';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import Book from './pages/Book';
+import VerbalConsent from './pages/VerbalConsent';
 import Leads from './pages/Leads';
 import LiveMap from './pages/LiveMap';
 import NotificationsPage from './pages/Notifications';
@@ -77,6 +78,7 @@ export default function App() {
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/book" element={<Book />} />
+              <Route path="/verbal-consent" element={<VerbalConsent />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
               {/* Protected routes */}

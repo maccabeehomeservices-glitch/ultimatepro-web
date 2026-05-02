@@ -23,7 +23,7 @@ export default function Book() {
   const [submitted, setSubmitted] = useState(false);
 
   const requiredFilled = name.trim() && phone.trim() && address.trim() && serviceType.trim();
-  const canSubmit = consent && requiredFilled && !submitting;
+  const canSubmit = requiredFilled && !submitting;
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -36,8 +36,8 @@ export default function Book() {
       address: address.trim(),
       service_type: serviceType,
       description: description.trim() || null,
-      sms_consent: true,
-      sms_consent_at: new Date().toISOString(),
+      sms_consent: consent,
+      sms_consent_at: consent ? new Date().toISOString() : null,
       source: 'public_booking',
     };
     try {
@@ -155,20 +155,23 @@ export default function Book() {
                   />
                 </Field>
 
-                {/* Consent checkbox — required for TCR/10DLC verification */}
+                {/* Consent checkbox: optional, for TCR/10DLC compliance */}
                 <label className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg cursor-pointer">
                   <input
                     type="checkbox"
                     id="sms-consent"
                     checked={consent}
                     onChange={(e) => setConsent(e.target.checked)}
-                    required
                     className="mt-1 w-4 h-4 flex-shrink-0"
                   />
                   <span className="text-sm text-gray-800 leading-relaxed">
-                    By checking this box and providing my phone number, I consent to receive transactional SMS messages from UltimatePro Solutions LLC and the service business fulfilling my request, including appointment confirmations, technician arrival notifications, estimate and invoice delivery, payment links, and service follow-ups. Message frequency varies based on my service activity, typically 1-5 messages per service engagement. Message and data rates may apply. Reply STOP to opt out at any time. Reply HELP for help. View our <Link to="/privacy" className="underline text-[#1A73E8]">Privacy Policy</Link> and <Link to="/terms" className="underline text-[#1A73E8]">Terms of Service</Link>.
+                    (Optional) Send me text updates: I agree to receive transactional SMS messages from UltimatePro Solutions LLC and the service business fulfilling my request, including appointment confirmations, technician arrival notifications, estimate and invoice delivery, payment links, and service follow-ups. Message frequency varies based on my service activity, typically 1-5 messages per service engagement. Message and data rates may apply. Reply STOP to opt out at any time. Reply HELP for help.
                   </span>
                 </label>
+
+                <p className="text-xs text-gray-500 mt-2">
+                  Submitting this form does not require SMS consent. We will contact you about your service request using the phone number you provide.
+                </p>
 
                 <button
                   type="submit"
