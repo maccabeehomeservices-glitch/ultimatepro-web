@@ -9,7 +9,6 @@ export default function VerbalConsent() {
           <nav className="flex gap-4 text-sm">
             <Link to="/privacy" className="text-blue-600 hover:underline">Privacy</Link>
             <Link to="/terms" className="text-blue-600 hover:underline">Terms</Link>
-            <Link to="/book" className="text-blue-600 hover:underline">Book Service</Link>
           </nav>
         </div>
       </header>
