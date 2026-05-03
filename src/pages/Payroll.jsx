@@ -78,15 +78,18 @@ export default function Payroll() {
           <div className="space-y-2 mb-4">
             {techs.map((tech, i) => {
               const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || 'Unknown tech';
+              const actorColor = tech.color || '#1A73E8';
               return (
                 <Card key={tech.id || tech._id || i}>
                   <div className="flex items-center gap-3">
-                    <Avatar name={name} size="md" color="#1A73E8" />
+                    <Avatar name={name} size="md" color={actorColor} />
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900">{name}</p>
                       <p className="text-sm text-gray-500">{tech.job_count || 0} jobs completed</p>
                     </div>
-                    <p className="font-bold text-[#1A73E8] text-lg">{formatCurrency(Number(tech.total || 0))}</p>
+                    <p className="font-bold text-lg" style={{ color: actorColor }}>
+                      {formatCurrency(Number(tech.total || 0))}
+                    </p>
                   </div>
                 </Card>
               );
@@ -106,11 +109,14 @@ export default function Payroll() {
               <tbody>
                 {techs.map((tech, i) => {
                   const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || 'Unknown tech';
+                  const actorColor = tech.color || '#1A73E8';
                   return (
                     <tr key={i} className="border-b border-gray-50 last:border-0">
                       <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{name}</td>
                       <td className="px-4 py-2.5 text-sm text-gray-600">{tech.job_count || 0}</td>
-                      <td className="px-4 py-2.5 text-sm font-semibold text-[#1A73E8]">{formatCurrency(Number(tech.total || 0))}</td>
+                      <td className="px-4 py-2.5 text-sm font-semibold" style={{ color: actorColor }}>
+                        {formatCurrency(Number(tech.total || 0))}
+                      </td>
                     </tr>
                   );
                 })}
