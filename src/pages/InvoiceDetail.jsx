@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import api, { invoicesApi, paymentsApi, customersApi } from '../lib/api';
@@ -46,6 +46,18 @@ export default function InvoiceDetail() {
   const [saveContactsToProfile, setSaveContactsToProfile] = useState(true);
   const [sending, setSending] = useState(false);
 
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
+  const [receiptEmails, setReceiptEmails] = useState([]);
+  const [receiptPhones, setReceiptPhones] = useState([]);
+  const [receiptNewEmail, setReceiptNewEmail] = useState('');
+  const [receiptNewPhone, setReceiptNewPhone] = useState('');
+  const [receiptSendEmail, setReceiptSendEmail] = useState(true);
+  const [receiptSendSms, setReceiptSendSms] = useState(true);
+  const [receiptSaveToProfile, setReceiptSaveToProfile] = useState(true);
+  const [receiptSendReview, setReceiptSendReview] = useState(false);
+  const [receiptSubmitting, setReceiptSubmitting] = useState(false);
+
+  const location = useLocation();
   const invoice = data?.invoice || data;
 
   async function handlePayment() {
@@ -113,19 +125,90 @@ export default function InvoiceDetail() {
     }
   }
 
-  async function handleSendReceipt() {
+  async function openReceiptModal() {
+    if (!invoice?.customer_id) { showSnack('No customer on invoice', 'error'); return; }
     try {
-      await invoicesApi.sendReceipt(id);
-      showSnack('Receipt sent', 'success');
-      if (invoice?.job_id) {
-        navigate(`/jobs/${invoice.job_id}`);
-      } else {
-        refetch();
-      }
+      const res = await customersApi.get(invoice.customer_id);
+      const customer = res.data?.customer || res.data;
+      const primaryEmail = customer?.email;
+      const primaryPhone = customer?.phone;
+      const extraEmails = (customer?.emails || []).filter(e => e && e !== primaryEmail);
+      const extraPhones = (customer?.phones || []).filter(p => p && p !== primaryPhone);
+      const emails = [
+        ...(primaryEmail ? [{ value: primaryEmail, checked: true }] : []),
+        ...extraEmails.map(e => ({ value: e, checked: true })),
+      ];
+      const phones = [
+        ...(primaryPhone ? [{ value: primaryPhone, checked: true }] : []),
+        ...extraPhones.map(p => ({ value: p, checked: true })),
+      ];
+      setReceiptEmails(emails);
+      setReceiptPhones(phones);
+      setReceiptNewEmail('');
+      setReceiptNewPhone('');
+      setReceiptSendEmail(true);
+      setReceiptSendSms(true);
+      setReceiptSaveToProfile(true);
+      setReceiptSendReview(false);
+      setShowReceiptModal(true);
     } catch {
-      showSnack('Failed to send receipt', 'error');
+      showSnack('Failed to load customer contacts', 'error');
     }
   }
+
+  async function handleSendReceipt() {
+    const emails = receiptEmails.filter(e => e.checked).map(e => e.value);
+    const phones = receiptPhones.filter(p => p.checked).map(p => p.value);
+    if (emails.length === 0 && phones.length === 0) {
+      showSnack('Pick at least one recipient', 'error');
+      return;
+    }
+    setReceiptSubmitting(true);
+    try {
+      await invoicesApi.sendReceipt(id, {
+        emails,
+        phones,
+        send_email: receiptSendEmail && emails.length > 0,
+        send_sms: receiptSendSms && phones.length > 0,
+        send_review_request: receiptSendReview,
+      });
+      showSnack('Receipt sent', 'success');
+      setShowReceiptModal(false);
+      refetch();
+    } catch (err) {
+      showSnack(err?.response?.data?.error || 'Failed to send receipt', 'error');
+    } finally {
+      setReceiptSubmitting(false);
+    }
+  }
+
+  async function handleAddReceiptEmail() {
+    const v = receiptNewEmail.trim();
+    if (!v) return;
+    setReceiptEmails(prev => [...prev, { value: v, checked: true }]);
+    if (receiptSaveToProfile && invoice?.customer_id) {
+      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'email', value: v }); } catch { /* ignore */ }
+    }
+    setReceiptNewEmail('');
+  }
+
+  async function handleAddReceiptPhone() {
+    const v = receiptNewPhone.trim();
+    if (!v) return;
+    setReceiptPhones(prev => [...prev, { value: v, checked: true }]);
+    if (receiptSaveToProfile && invoice?.customer_id) {
+      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'phone', value: v }); } catch { /* ignore */ }
+    }
+    setReceiptNewPhone('');
+  }
+
+  useEffect(() => {
+    if (location.state?.openReceipt && invoice?.customer_id && !showReceiptModal) {
+      openReceiptModal();
+      navigate(location.pathname, { replace: true, state: null });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoice?.customer_id]);
 
   async function openSendModal() {
     if (!invoice?.customer_id) { showSnack('No customer on invoice', 'error'); return; }
@@ -385,7 +468,7 @@ export default function InvoiceDetail() {
       )}
       {(isPaid || isPartiallyPaid) && (
         <div className="mb-4">
-          <Button variant="outlined" onClick={handleSendReceipt} className="w-full">
+          <Button variant="outlined" onClick={openReceiptModal} className="w-full">
             Send Receipt
           </Button>
         </div>
@@ -544,6 +627,86 @@ export default function InvoiceDetail() {
               onChange={e => setSaveContactsToProfile(e.target.checked)}
             />
             <span className="text-xs text-gray-600">Save new contacts to customer profile</span>
+          </label>
+        </div>
+      </Modal>
+
+      {/* Send Receipt Modal */}
+      <Modal
+        isOpen={showReceiptModal}
+        onClose={() => !receiptSubmitting && setShowReceiptModal(false)}
+        title="Send Receipt"
+        footer={
+          <>
+            <Button variant="outlined" disabled={receiptSubmitting} onClick={() => setShowReceiptModal(false)}>Cancel</Button>
+            <Button loading={receiptSubmitting} onClick={handleSendReceipt}>Send Receipt</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs text-gray-400 uppercase font-medium mb-2">Email Recipients</p>
+            {receiptEmails.length === 0 && <p className="text-sm text-gray-400">No emails on file.</p>}
+            {receiptEmails.map((entry, i) => (
+              <label key={i} className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  checked={entry.checked}
+                  onChange={e => setReceiptEmails(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
+                />
+                <span className="text-sm text-gray-700">{entry.value}</span>
+              </label>
+            ))}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="email"
+                value={receiptNewEmail}
+                onChange={e => setReceiptNewEmail(e.target.value)}
+                placeholder="Add email..."
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              />
+              <Button variant="outlined" onClick={handleAddReceiptEmail} className="text-sm">Add</Button>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 uppercase font-medium mb-2">SMS / Phone Recipients</p>
+            {receiptPhones.length === 0 && <p className="text-sm text-gray-400">No phones on file.</p>}
+            {receiptPhones.map((entry, i) => (
+              <label key={i} className="flex items-center gap-2 py-1">
+                <input
+                  type="checkbox"
+                  checked={entry.checked}
+                  onChange={e => setReceiptPhones(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
+                />
+                <span className="text-sm text-gray-700">{entry.value}</span>
+              </label>
+            ))}
+            <div className="flex items-center gap-2 mt-2">
+              <input
+                type="tel"
+                value={receiptNewPhone}
+                onChange={e => setReceiptNewPhone(e.target.value)}
+                placeholder="Add phone..."
+                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              />
+              <Button variant="outlined" onClick={handleAddReceiptPhone} className="text-sm">Add</Button>
+            </div>
+          </div>
+          <label className="flex items-center gap-2 pt-2 border-t border-gray-100">
+            <input
+              type="checkbox"
+              checked={receiptSaveToProfile}
+              onChange={e => setReceiptSaveToProfile(e.target.checked)}
+            />
+            <span className="text-xs text-gray-600">Save new contacts to customer profile</span>
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={receiptSendReview}
+              onChange={e => setReceiptSendReview(e.target.checked)}
+            />
+            <span className="text-xs text-gray-600">Include review request link</span>
           </label>
         </div>
       </Modal>
