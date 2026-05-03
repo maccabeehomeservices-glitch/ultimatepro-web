@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
@@ -56,6 +56,15 @@ export default function InvoiceDetail() {
   const [receiptSaveToProfile, setReceiptSaveToProfile] = useState(true);
   const [receiptSendReview, setReceiptSendReview] = useState(false);
   const [receiptSubmitting, setReceiptSubmitting] = useState(false);
+
+  // Track which recipients were already on the customer profile when each
+  // modal was opened. Newly-added recipients (not in these sets) are
+  // persisted to the profile only after a successful send, when the
+  // save-to-profile toggle is still on at that moment.
+  const originalSendEmailsRef = useRef(new Set());
+  const originalSendPhonesRef = useRef(new Set());
+  const originalReceiptEmailsRef = useRef(new Set());
+  const originalReceiptPhonesRef = useRef(new Set());
 
   const location = useLocation();
   const invoice = data?.invoice || data;
@@ -144,6 +153,8 @@ export default function InvoiceDetail() {
       ];
       setReceiptEmails(emails);
       setReceiptPhones(phones);
+      originalReceiptEmailsRef.current = new Set(emails.map(e => e.value));
+      originalReceiptPhonesRef.current = new Set(phones.map(p => p.value));
       setReceiptNewEmail('');
       setReceiptNewPhone('');
       setReceiptSendEmail(true);
@@ -175,6 +186,39 @@ export default function InvoiceDetail() {
       showSnack('Receipt sent', 'success');
       setShowReceiptModal(false);
       refetch();
+
+      // Persist newly-added recipients to the customer profile, only when
+      // the toggle is still on at Send-click. Failures aggregate into a
+      // single non-blocking snackbar; the send already succeeded.
+      if (receiptSaveToProfile && invoice?.customer_id) {
+        const newEmails = receiptEmails
+          .filter(e => e.checked && !originalReceiptEmailsRef.current.has(e.value))
+          .map(e => e.value);
+        const newPhones = receiptPhones
+          .filter(p => p.checked && !originalReceiptPhonesRef.current.has(p.value))
+          .map(p => p.value);
+        const failures = [];
+        for (const email of newEmails) {
+          try {
+            await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'email', value: email });
+          } catch {
+            failures.push(`email ${email}`);
+          }
+        }
+        for (const phone of newPhones) {
+          try {
+            await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'phone', value: phone });
+          } catch {
+            failures.push(`phone ${phone}`);
+          }
+        }
+        if (failures.length > 0) {
+          showSnack(
+            `Sent, but failed to save ${failures.length} contact${failures.length > 1 ? 's' : ''} to profile`,
+            'error'
+          );
+        }
+      }
     } catch (err) {
       showSnack(err?.response?.data?.error || 'Failed to send receipt', 'error');
     } finally {
@@ -182,23 +226,17 @@ export default function InvoiceDetail() {
     }
   }
 
-  async function handleAddReceiptEmail() {
+  function handleAddReceiptEmail() {
     const v = receiptNewEmail.trim();
     if (!v) return;
     setReceiptEmails(prev => [...prev, { value: v, checked: true }]);
-    if (receiptSaveToProfile && invoice?.customer_id) {
-      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'email', value: v }); } catch { /* ignore */ }
-    }
     setReceiptNewEmail('');
   }
 
-  async function handleAddReceiptPhone() {
+  function handleAddReceiptPhone() {
     const v = receiptNewPhone.trim();
     if (!v) return;
     setReceiptPhones(prev => [...prev, { value: v, checked: true }]);
-    if (receiptSaveToProfile && invoice?.customer_id) {
-      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'phone', value: v }); } catch { /* ignore */ }
-    }
     setReceiptNewPhone('');
   }
 
@@ -229,6 +267,8 @@ export default function InvoiceDetail() {
       ];
       setSendEmails(emails);
       setSendPhones(phones);
+      originalSendEmailsRef.current = new Set(emails.map(e => e.value));
+      originalSendPhonesRef.current = new Set(phones.map(p => p.value));
       setNewEmail('');
       setNewPhone('');
       setShowSendModal(true);
@@ -255,6 +295,39 @@ export default function InvoiceDetail() {
       showSnack('Invoice sent', 'success');
       setShowSendModal(false);
       refetch();
+
+      // Persist newly-added recipients to the customer profile, only when
+      // the toggle is still on at Send-click. Failures aggregate into a
+      // single non-blocking snackbar; the send already succeeded.
+      if (saveContactsToProfile && invoice?.customer_id) {
+        const newEmails = sendEmails
+          .filter(e => e.checked && !originalSendEmailsRef.current.has(e.value))
+          .map(e => e.value);
+        const newPhones = sendPhones
+          .filter(p => p.checked && !originalSendPhonesRef.current.has(p.value))
+          .map(p => p.value);
+        const failures = [];
+        for (const email of newEmails) {
+          try {
+            await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'email', value: email });
+          } catch {
+            failures.push(`email ${email}`);
+          }
+        }
+        for (const phone of newPhones) {
+          try {
+            await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'phone', value: phone });
+          } catch {
+            failures.push(`phone ${phone}`);
+          }
+        }
+        if (failures.length > 0) {
+          showSnack(
+            `Sent, but failed to save ${failures.length} contact${failures.length > 1 ? 's' : ''} to profile`,
+            'error'
+          );
+        }
+      }
     } catch (err) {
       showSnack(err?.response?.data?.error || 'Failed to send invoice', 'error');
     } finally {
@@ -262,23 +335,17 @@ export default function InvoiceDetail() {
     }
   }
 
-  async function handleAddSendEmail() {
+  function handleAddSendEmail() {
     const v = newEmail.trim();
     if (!v) return;
     setSendEmails(prev => [...prev, { value: v, checked: true }]);
-    if (saveContactsToProfile && invoice?.customer_id) {
-      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'email', value: v }); } catch { /* ignore */ }
-    }
     setNewEmail('');
   }
 
-  async function handleAddSendPhone() {
+  function handleAddSendPhone() {
     const v = newPhone.trim();
     if (!v) return;
     setSendPhones(prev => [...prev, { value: v, checked: true }]);
-    if (saveContactsToProfile && invoice?.customer_id) {
-      try { await api.post(`/customers/${invoice.customer_id}/contacts`, { type: 'phone', value: v }); } catch { /* ignore */ }
-    }
     setNewPhone('');
   }
 

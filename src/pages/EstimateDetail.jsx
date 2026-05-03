@@ -95,6 +95,13 @@ export default function EstimateDetail() {
   const [sending, setSending] = useState(false);
   const photoInputRef = useRef(null);
 
+  // Track which recipients were already on the customer profile when the
+  // modal was opened. Newly-added recipients (not in these sets) are
+  // persisted to the profile only after a successful send, when the
+  // save-to-profile toggle is still on at that moment.
+  const originalSendEmailsRef = useRef(new Set());
+  const originalSendPhonesRef = useRef(new Set());
+
   // Polling when status = 'sent'
   const pollRef = useRef(null);
   const estimate = data?.estimate || data;
@@ -160,6 +167,8 @@ export default function EstimateDetail() {
       ];
       setSendEmails(emails);
       setSendPhones(phones);
+      originalSendEmailsRef.current = new Set(emails.map(e => e.value));
+      originalSendPhonesRef.current = new Set(phones.map(p => p.value));
       setNewEmail('');
       setNewPhone('');
       setShowSendModal(true);
@@ -188,6 +197,39 @@ export default function EstimateDetail() {
       showSnack('Estimate sent', 'success');
       setShowSendModal(false);
       refetch();
+
+      // Persist newly-added recipients to the customer profile, only when
+      // the toggle is still on at Send-click. Failures aggregate into a
+      // single non-blocking snackbar; the send already succeeded.
+      if (saveContactsToProfile && estimate?.customer_id) {
+        const newEmails = sendEmails
+          .filter(e => e.checked && !originalSendEmailsRef.current.has(e.value))
+          .map(e => e.value);
+        const newPhones = sendPhones
+          .filter(p => p.checked && !originalSendPhonesRef.current.has(p.value))
+          .map(p => p.value);
+        const failures = [];
+        for (const email of newEmails) {
+          try {
+            await api.post(`/customers/${estimate.customer_id}/contacts`, { type: 'email', value: email });
+          } catch {
+            failures.push(`email ${email}`);
+          }
+        }
+        for (const phone of newPhones) {
+          try {
+            await api.post(`/customers/${estimate.customer_id}/contacts`, { type: 'phone', value: phone });
+          } catch {
+            failures.push(`phone ${phone}`);
+          }
+        }
+        if (failures.length > 0) {
+          showSnack(
+            `Sent, but failed to save ${failures.length} contact${failures.length > 1 ? 's' : ''} to profile`,
+            'error'
+          );
+        }
+      }
     } catch (err) {
       showSnack(err?.response?.data?.error || 'Failed to send estimate', 'error');
     } finally {
@@ -195,23 +237,17 @@ export default function EstimateDetail() {
     }
   }
 
-  async function handleAddSendEmail() {
+  function handleAddSendEmail() {
     const v = newEmail.trim();
     if (!v) return;
     setSendEmails(prev => [...prev, { value: v, checked: true }]);
-    if (saveContactsToProfile && estimate?.customer_id) {
-      try { await api.post(`/customers/${estimate.customer_id}/contacts`, { type: 'email', value: v }); } catch { /* ignore */ }
-    }
     setNewEmail('');
   }
 
-  async function handleAddSendPhone() {
+  function handleAddSendPhone() {
     const v = newPhone.trim();
     if (!v) return;
     setSendPhones(prev => [...prev, { value: v, checked: true }]);
-    if (saveContactsToProfile && estimate?.customer_id) {
-      try { await api.post(`/customers/${estimate.customer_id}/contacts`, { type: 'phone', value: v }); } catch { /* ignore */ }
-    }
     setNewPhone('');
   }
 
