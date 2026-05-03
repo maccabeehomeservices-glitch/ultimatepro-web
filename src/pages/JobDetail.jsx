@@ -165,6 +165,13 @@ export default function JobDetail() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [arriving, setArriving]             = useState(false);
 
+  // Profit allocation override
+  const [showProfitModal, setShowProfitModal]               = useState(false);
+  const [profitOverrideEnabled, setProfitOverrideEnabled]   = useState(false);
+  const [profitSourcePct, setProfitSourcePct]               = useState('');
+  const [profitTechPct, setProfitTechPct]                   = useState('');
+  const [profitSubmitting, setProfitSubmitting]             = useState(false);
+
   // Messages
   const [jobMessages, setJobMessages]   = useState([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -583,6 +590,46 @@ export default function JobDetail() {
   if (loading) return <LoadingSpinner fullPage />;
   if (!jobData) return <div className="p-4 text-gray-500">Job not found.</div>;
 
+  function openProfitModal() {
+    setProfitOverrideEnabled(jobData?.profit_override === true);
+    setProfitSourcePct(
+      jobData?.override_source_pct != null ? String(jobData.override_source_pct) : ''
+    );
+    setProfitTechPct(
+      jobData?.override_tech_pct != null ? String(jobData.override_tech_pct) : ''
+    );
+    setShowProfitModal(true);
+  }
+
+  async function handleSaveProfitOverride() {
+    setProfitSubmitting(true);
+    try {
+      const body = { profit_override: profitOverrideEnabled };
+      if (profitOverrideEnabled) {
+        const src = parseFloat(profitSourcePct);
+        const tech = parseFloat(profitTechPct);
+        if (isNaN(src) || isNaN(tech)) {
+          showSnack('Both percentages required when override is on', 'error');
+          setProfitSubmitting(false);
+          return;
+        }
+        body.override_source_pct = src;
+        body.override_tech_pct = tech;
+      }
+      await jobsApi.update(id, body);
+      showSnack('Profit allocation saved', 'success');
+      setShowProfitModal(false);
+      refetch();
+    } catch (err) {
+      showSnack(err?.response?.data?.error || 'Failed to save profit allocation', 'error');
+    } finally {
+      setProfitSubmitting(false);
+    }
+  }
+
+  const overrideSum = (parseFloat(profitSourcePct) || 0) + (parseFloat(profitTechPct) || 0);
+  const isOverrideConflict = profitOverrideEnabled && overrideSum > 100;
+
   const isDeletedOrCancelled = ['deleted','cancelled'].includes(jobData.status);
   const hasDeposit   = jobData.deposit_required && !jobData.deposit_collected;
   const address      = jobData.address || jobData.service_address || '';
@@ -910,6 +957,34 @@ export default function JobDetail() {
                   )}
                 </Card>
               )}
+            </div>
+
+            {/* Section 10b: Profit Allocation */}
+            <div>
+              <SectionLabel>Profit Allocation</SectionLabel>
+              <Card>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">
+                      {jobData?.profit_override ? 'Custom split' : 'Default split'}
+                    </div>
+                    {jobData?.profit_override
+                      && jobData?.override_source_pct != null
+                      && jobData?.override_tech_pct != null ? (
+                      <div className="text-xs text-gray-500 mt-1">
+                        Source {jobData.override_source_pct}%
+                        {' · '}Tech {jobData.override_tech_pct}%
+                        {' · '}Company {(100 - parseFloat(jobData.override_source_pct) - parseFloat(jobData.override_tech_pct)).toFixed(2).replace(/\.00$/, '')}%
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500 mt-1">
+                        From source + tech defaults
+                      </div>
+                    )}
+                  </div>
+                  <Button variant="outlined" onClick={openProfitModal}>Edit</Button>
+                </div>
+              </Card>
             </div>
 
             {/* Section 11: Before / After photos — card with bordered boxes (FIX 6) */}
@@ -1384,6 +1459,46 @@ export default function JobDetail() {
               <option value="other">Other</option>
             </select>
           </div>
+        </div>
+      </Modal>
+
+      {/* Profit Allocation */}
+      <Modal isOpen={showProfitModal} onClose={() => !profitSubmitting && setShowProfitModal(false)} title="Profit Allocation"
+        footer={
+          <>
+            <Button variant="outlined" disabled={profitSubmitting} onClick={() => setShowProfitModal(false)}>Cancel</Button>
+            <Button loading={profitSubmitting} disabled={isOverrideConflict} onClick={handleSaveProfitOverride}>Save</Button>
+          </>
+        }>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium text-gray-900">Override default split</div>
+              <div className="text-xs text-gray-500">For this job only. Doesn't change source or tech defaults.</div>
+            </div>
+            <Toggle
+              checked={profitOverrideEnabled}
+              onChange={(e) => setProfitOverrideEnabled(e.target.checked)}
+            />
+          </div>
+
+          {profitOverrideEnabled && (
+            <>
+              <Input label="Source %" type="number" value={profitSourcePct}
+                onChange={(e) => setProfitSourcePct(e.target.value)} placeholder="0" />
+              <Input label="Tech %" type="number" value={profitTechPct}
+                onChange={(e) => setProfitTechPct(e.target.value)} placeholder="0" />
+              <div className={'text-xs ' + (isOverrideConflict ? 'text-red-600 font-medium' : 'text-gray-600')}>
+                Sum: Source {profitSourcePct || 0}% + Tech {profitTechPct || 0}% = {overrideSum}%
+                {isOverrideConflict && (
+                  <span className="block mt-1">Exceeds 100%. Adjust before saving.</span>
+                )}
+                {!isOverrideConflict && overrideSum > 0 && (
+                  <span className="block text-gray-500 mt-1">Company keeps: {100 - overrideSum}%</span>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </Modal>
 

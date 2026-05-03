@@ -137,6 +137,9 @@ export const jobsApi = {
       ad_channel_custom: data.ad_channel_custom,
       line_items: data.line_items,
       tech_permissions: data.tech_permissions,
+      profit_override: data.profit_override,
+      override_source_pct: data.override_source_pct,
+      override_tech_pct: data.override_tech_pct,
     }),
 
   updateStatus: (id, status, notes) =>
