@@ -247,13 +247,14 @@ export default function JobDetail() {
     if (!sendToModal || !jobData) return;
     setSendToLoading(true);
     const recipients = [];
-    if (jobData.assigned_tech_id) {
+    if (jobData.assigned_to) {
+      const techName = `${jobData.tech_first || ''} ${jobData.tech_last || ''}`.trim() || 'Assigned Tech';
       recipients.push({
-        id: jobData.assigned_tech_id,
-        name: jobData.assigned_tech_name || 'Assigned Tech',
+        id: jobData.assigned_to,
+        name: techName,
         type: 'roster_tech',
-        phone: jobData.assigned_tech_phone || null,
-        email: jobData.assigned_tech_email || null,
+        phone: jobData.tech_phone || null,
+        email: null,
       });
     }
     api.get('/network/connections/active-simple')
@@ -730,7 +731,9 @@ export default function JobDetail() {
                   className="flex-1 text-center py-2 min-h-[44px] hover:bg-gray-50 rounded-r-xl">
                   <p className="text-[10px] text-gray-400 uppercase font-semibold">Assigned</p>
                   <p className="text-xs font-medium text-gray-800 truncate px-1">
-                    {jobData.assigned_tech_name || jobData.assigned_roster_tech_name || 'Unassigned'}
+                    {(jobData.tech_first || jobData.tech_last)
+                      ? `${jobData.tech_first || ''} ${jobData.tech_last || ''}`.trim()
+                      : 'Unassigned'}
                   </p>
                 </button>
               </div>
