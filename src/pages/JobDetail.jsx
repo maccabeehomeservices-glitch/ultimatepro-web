@@ -971,11 +971,26 @@ export default function JobDetail() {
                     {jobData?.profit_override
                       && jobData?.override_source_pct != null
                       && jobData?.override_tech_pct != null ? (
-                      <div className="text-xs text-gray-500 mt-1">
-                        Source {jobData.override_source_pct}%
-                        {' · '}Tech {jobData.override_tech_pct}%
-                        {' · '}Company {(100 - parseFloat(jobData.override_source_pct) - parseFloat(jobData.override_tech_pct)).toFixed(2).replace(/\.00$/, '')}%
-                      </div>
+                      (() => {
+                        const src = parseFloat(jobData.override_source_pct);
+                        const tech = parseFloat(jobData.override_tech_pct);
+                        const sum = src + tech;
+                        const fmt = (n) => n.toFixed(2).replace(/\.00$/, '');
+                        if (sum > 100) {
+                          return (
+                            <div className="text-xs text-red-600 mt-1 font-medium">
+                              Source {fmt(src)}% + Tech {fmt(tech)}% = {fmt(sum)}% (exceeds 100%). Adjust before completing.
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="text-xs text-gray-500 mt-1">
+                            Source {fmt(src)}%
+                            {' · '}Tech {fmt(tech)}%
+                            {' · '}Company {fmt(100 - sum)}%
+                          </div>
+                        );
+                      })()
                     ) : (
                       <div className="text-xs text-gray-500 mt-1">
                         From source + tech defaults
