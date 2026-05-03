@@ -6,7 +6,10 @@ const sizeMap = {
 
 function getInitials(name) {
   if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
+  // Drop parenthesized labels like "(Roster)" so they don't leak into the
+  // initials. "David Yifrach (Roster)" reads as ["David", "Yifrach"] = "DY".
+  const parts = name.trim().split(/\s+/).filter(p => !p.startsWith('('));
+  if (parts.length === 0) return '?';
   if (parts.length === 1) return parts[0][0].toUpperCase();
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
