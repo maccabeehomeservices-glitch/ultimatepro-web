@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Plus, X, ClipboardList, UserCheck } from 'lucide-react';
 import { jobsApi, customersApi, sourcesApi, companyApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuth';
 import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import QuickCreateCustomerModal from '../components/QuickCreateCustomerModal';
@@ -99,6 +100,7 @@ export default function JobForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { showSnack } = useSnackbar();
+  const { user } = useAuth();
   const isEdit = Boolean(id);
 
   // ── form fields ────────────────────────────────────────────────────────────
@@ -493,6 +495,7 @@ export default function JobForm() {
     // Resolve assignment
     let assigned_to = null;
     let assigned_roster_tech_id = null;
+    if (form.assign_cat === 'self')   assigned_to = user?.id || null;
     if (form.assign_cat === 'team')   assigned_to = form.assigned_tech_id || null;
     if (form.assign_cat === 'roster') assigned_roster_tech_id = form.assigned_roster_tech_id || null;
 
