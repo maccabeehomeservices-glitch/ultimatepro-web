@@ -239,7 +239,7 @@ export default function Jobs() {
               </thead>
               <tbody>
                 {jobs.map((job, i) => {
-                  const tech = [job.tech_first, job.tech_last].filter(Boolean).join(' ');
+                  const tech = [job.tech_first, job.tech_last].filter(Boolean).join(' ') || job.roster_tech_name || '';
                   return (
                     <tr
                       key={job.id || job._id}
@@ -401,7 +401,7 @@ function JobCard({ job, onClick }) {
   const accentColor = isDeleted ? '#DC2626' : statusColor(job.status);
   const customer = [job.cust_first, job.cust_last].filter(Boolean).join(' ') || job.customer_name || '—';
   const addrParts = [job.address, job.cust_city || job.city].filter(Boolean);
-  const tech = [job.tech_first, job.tech_last].filter(Boolean).join(' ');
+  const tech = [job.tech_first, job.tech_last].filter(Boolean).join(' ') || job.roster_tech_name || '';
   const showPriority = !isDeleted && (job.priority === 'urgent' || job.priority === 'high');
   const priorityClass = job.priority === 'urgent'
     ? 'bg-red-100 text-red-700'

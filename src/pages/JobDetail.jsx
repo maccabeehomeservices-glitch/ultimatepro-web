@@ -733,7 +733,7 @@ export default function JobDetail() {
                   <p className="text-xs font-medium text-gray-800 truncate px-1">
                     {(jobData.tech_first || jobData.tech_last)
                       ? `${jobData.tech_first || ''} ${jobData.tech_last || ''}`.trim()
-                      : 'Unassigned'}
+                      : jobData.roster_tech_name || 'Unassigned'}
                   </p>
                 </button>
               </div>
