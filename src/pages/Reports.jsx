@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { BarChart2 } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
-import { Card, LoadingSpinner, EmptyState, Tabs, Select, Button } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState, Tabs, Select, Button, Modal, Input } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { networkApi, reportsApi, sourcesApi, timesheetsApi } from '../lib/api';
 
@@ -15,6 +15,35 @@ function downloadBlob(blob, filename) {
   a.click();
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
+}
+
+// Wrap a value in CSV-safe form: quote when it contains delimiter/newline/quote,
+// double up internal quotes per RFC 4180.
+function csvCell(v) {
+  const s = (v == null ? '' : String(v));
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+}
+
+// Build the five date-range presets used by the chip row. Each preset returns
+// 'yyyy-MM-dd' strings via date-fns format(). 'custom' carries no preset
+// values; the user manipulates the date inputs directly.
+function buildDatePresets() {
+  const today = new Date();
+  const fmt = (d) => format(d, 'yyyy-MM-dd');
+  // Monday-anchored week start (Sunday treated as end of prior week).
+  const dayIdx = (today.getDay() + 6) % 7;
+  const weekStart = new Date(today.getFullYear(), today.getMonth(), today.getDate() - dayIdx);
+  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+  const yearStart = new Date(today.getFullYear(), 0, 1);
+  return [
+    { id: 'week',       label: 'This Week',  from: fmt(weekStart),      to: fmt(today) },
+    { id: 'month',      label: 'This Month', from: fmt(monthStart),     to: fmt(today) },
+    { id: 'last-month', label: 'Last Month', from: fmt(lastMonthStart), to: fmt(lastMonthEnd) },
+    { id: 'ytd',        label: 'YTD',        from: fmt(yearStart),      to: fmt(today) },
+    { id: 'custom',     label: 'Custom' },
+  ];
 }
 
 const tabList = [
@@ -38,11 +67,26 @@ function formatDuration(minutes) {
 
 export default function Reports() {
   const { showSnack } = useSnackbar();
-  const today = new Date();
+  const datePresets = buildDatePresets();
+  const monthPreset = datePresets.find(p => p.id === 'month');
+
   const [activeTab, setActiveTab] = useState('revenue');
-  const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
-  const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
+  const [dateRange, setDateRange] = useState('month');
+  const [from, setFrom] = useState(monthPreset.from);
+  const [to, setTo] = useState(monthPreset.to);
   const [techFilter, setTechFilter] = useState('');
+
+  function pickDateChip(id) {
+    setDateRange(id);
+    if (id === 'custom') return;
+    const preset = datePresets.find(p => p.id === id);
+    if (preset) { setFrom(preset.from); setTo(preset.to); }
+  }
+
+  // Send Partner Report modal
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [sendRecipient, setSendRecipient] = useState('');
+  const [sending, setSending] = useState(false);
 
   const { data: revenueData, loading: revenueLoading } = useGet(
     activeTab === 'revenue' ? `/reports/revenue?from=${from}&to=${to}` : null, [activeTab, from, to]
@@ -116,16 +160,44 @@ export default function Reports() {
     <div className="p-4 max-w-3xl mx-auto">
       <h1 className="text-xl font-bold text-gray-900 mb-4">Reports</h1>
 
-      {/* Date Range */}
+      {/* Date Range: chips + inputs. Inputs are always visible so the user
+           can see the active range; manually editing either input flips the
+           selection to 'custom'. Chip styling matches Jobs.jsx. */}
       <Card className="mb-4">
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 mb-3">
+          {datePresets.map(({ id, label }) => {
+            const selected = dateRange === id;
+            return (
+              <button
+                key={id}
+                onClick={() => pickDateChip(id)}
+                className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors min-h-[36px] flex-shrink-0 ${
+                  selected ? 'bg-[#1A73E8] text-white' : 'bg-white text-gray-600 border border-gray-200'
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
+        </div>
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
-            <input type="date" value={from} onChange={e => setFrom(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+            <input
+              type="date"
+              value={from}
+              onChange={e => { setFrom(e.target.value); setDateRange('custom'); }}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+            />
           </div>
           <div className="flex-1">
             <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
-            <input type="date" value={to} onChange={e => setTo(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+            <input
+              type="date"
+              value={to}
+              onChange={e => { setTo(e.target.value); setDateRange('custom'); }}
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+            />
           </div>
         </div>
       </Card>
@@ -298,7 +370,7 @@ export default function Reports() {
                     </div>
                   </div>
                   {(partnerReport.jobs || []).length > 0 && (
-                    <div className="space-y-1">
+                    <div className="space-y-1 mb-3">
                       {(partnerReport.jobs || []).map((j, i) => (
                         <div key={j.job_id || j.id || i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
                           <div className="min-w-0 flex-1">
@@ -312,6 +384,55 @@ export default function Reports() {
                       ))}
                     </div>
                   )}
+                  <div className="flex gap-2 pt-2 border-t border-gray-100">
+                    <button
+                      onClick={() => { setSendRecipient(''); setShowSendModal(true); }}
+                      className="flex-1 py-2 bg-[#1A73E8] text-white rounded-xl text-sm font-medium hover:bg-blue-700 min-h-[44px]"
+                    >
+                      📧 Send Report
+                    </button>
+                    <button
+                      onClick={() => {
+                        const partnerName = selectedConnection.company_name || selectedConnection.partner_name || 'partner';
+                        const jobs = partnerReport.jobs || [];
+                        const summary = partnerReport.summary || {};
+                        const headers = ['Job Number', 'Customer', 'Address', 'Date', 'Total', 'Parts', 'CC Fee', 'Net', 'Our Earnings', 'Their Earnings'];
+                        const lines = [headers.join(',')];
+                        jobs.forEach(j => {
+                          const date = j.completed_at ? String(j.completed_at).slice(0, 10) : '';
+                          lines.push([
+                            csvCell(j.job_number),
+                            csvCell(j.customer_name),
+                            csvCell(j.address),
+                            csvCell(date),
+                            csvCell(j.job_total),
+                            csvCell(j.parts_amount),
+                            csvCell(j.cc_fee_amount),
+                            csvCell(j.net_amount),
+                            csvCell(j.our_earnings),
+                            csvCell(j.their_earnings),
+                          ].join(','));
+                        });
+                        // Summary row
+                        lines.push([
+                          'TOTAL', '', '', '',
+                          csvCell(summary.total_gross),
+                          csvCell(summary.total_parts),
+                          csvCell(summary.total_cc_fees),
+                          csvCell(summary.total_net),
+                          csvCell(summary.our_total_earnings),
+                          csvCell(summary.their_total_earnings),
+                        ].join(','));
+                        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+                        const safeName = partnerName.replace(/[^a-zA-Z0-9]+/g, '-');
+                        downloadBlob(blob, `partner-report-${safeName}-${from}-to-${to}.csv`);
+                        showSnack('Report downloaded!', 'success');
+                      }}
+                      className="flex-1 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium hover:bg-blue-50 min-h-[44px]"
+                    >
+                      📥 Export CSV
+                    </button>
+                  </div>
                 </Card>
               )}
             </div>
@@ -408,6 +529,60 @@ export default function Reports() {
           </div>
         )}
       </div>
+
+      {/* Send Partner Report modal */}
+      <Modal
+        isOpen={showSendModal}
+        onClose={() => !sending && setShowSendModal(false)}
+        title="Send Partner Report"
+        footer={
+          <>
+            <Button variant="outlined" disabled={sending} onClick={() => setShowSendModal(false)}>Cancel</Button>
+            <Button
+              loading={sending}
+              onClick={async () => {
+                if (!selectedConnection) return;
+                setSending(true);
+                try {
+                  await networkApi.sendConnectionReport(
+                    selectedConnection.id || selectedConnection._id,
+                    from,
+                    to,
+                    sendRecipient.trim() || null
+                  );
+                  showSnack('Report sent', 'success');
+                  setShowSendModal(false);
+                } catch (err) {
+                  showSnack(err?.response?.data?.error || 'Failed to send report', 'error');
+                } finally {
+                  setSending(false);
+                }
+              }}
+            >
+              Send
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <div>
+            <p className="text-xs text-gray-400 uppercase font-medium mb-1">Period</p>
+            <p className="text-sm text-gray-700">
+              {selectedConnection?.company_name || selectedConnection?.partner_name} · {from} to {to}
+            </p>
+          </div>
+          <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+            A PDF copy is always sent to your office email. Add a partner address below if you also want them to receive it.
+          </div>
+          <Input
+            label="Also send to (optional)"
+            type="email"
+            value={sendRecipient}
+            onChange={e => setSendRecipient(e.target.value)}
+            placeholder="partner@example.com"
+          />
+        </div>
+      </Modal>
     </div>
   );
 }
