@@ -88,6 +88,49 @@ export default function Reports() {
   const [sendRecipient, setSendRecipient] = useState('');
   const [sending, setSending] = useState(false);
 
+  // Build the per-job CSV from in-memory partnerReport data + summary totals
+  // and trigger download. Named function (rather than inline arrow) so the
+  // symbol survives minification with a stable shape.
+  function handleExportPartner() {
+    if (!partnerReport || !selectedConnection) {
+      showSnack('Load a partner report first', 'error');
+      return;
+    }
+    const partnerName = selectedConnection.company_name || selectedConnection.partner_name || 'partner';
+    const jobs = partnerReport.jobs || [];
+    const summary = partnerReport.summary || {};
+    const headers = ['Job Number', 'Customer', 'Address', 'Date', 'Total', 'Parts', 'CC Fee', 'Net', 'Our Earnings', 'Their Earnings'];
+    const lines = [headers.join(',')];
+    jobs.forEach((j) => {
+      const date = j.completed_at ? String(j.completed_at).slice(0, 10) : '';
+      lines.push([
+        csvCell(j.job_number),
+        csvCell(j.customer_name),
+        csvCell(j.address),
+        csvCell(date),
+        csvCell(j.job_total),
+        csvCell(j.parts_amount),
+        csvCell(j.cc_fee_amount),
+        csvCell(j.net_amount),
+        csvCell(j.our_earnings),
+        csvCell(j.their_earnings),
+      ].join(','));
+    });
+    lines.push([
+      'TOTAL', '', '', '',
+      csvCell(summary.total_gross),
+      csvCell(summary.total_parts),
+      csvCell(summary.total_cc_fees),
+      csvCell(summary.total_net),
+      csvCell(summary.our_total_earnings),
+      csvCell(summary.their_total_earnings),
+    ].join(','));
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const safeName = partnerName.replace(/[^a-zA-Z0-9]+/g, '-');
+    downloadBlob(blob, `partner-report-${safeName}-${from}-to-${to}.csv`);
+    showSnack('Report downloaded!', 'success');
+  }
+
   const { data: revenueData, loading: revenueLoading } = useGet(
     activeTab === 'revenue' ? `/reports/revenue?from=${from}&to=${to}` : null, [activeTab, from, to]
   );
@@ -392,42 +435,7 @@ export default function Reports() {
                       📧 Send Report
                     </button>
                     <button
-                      onClick={() => {
-                        const partnerName = selectedConnection.company_name || selectedConnection.partner_name || 'partner';
-                        const jobs = partnerReport.jobs || [];
-                        const summary = partnerReport.summary || {};
-                        const headers = ['Job Number', 'Customer', 'Address', 'Date', 'Total', 'Parts', 'CC Fee', 'Net', 'Our Earnings', 'Their Earnings'];
-                        const lines = [headers.join(',')];
-                        jobs.forEach(j => {
-                          const date = j.completed_at ? String(j.completed_at).slice(0, 10) : '';
-                          lines.push([
-                            csvCell(j.job_number),
-                            csvCell(j.customer_name),
-                            csvCell(j.address),
-                            csvCell(date),
-                            csvCell(j.job_total),
-                            csvCell(j.parts_amount),
-                            csvCell(j.cc_fee_amount),
-                            csvCell(j.net_amount),
-                            csvCell(j.our_earnings),
-                            csvCell(j.their_earnings),
-                          ].join(','));
-                        });
-                        // Summary row
-                        lines.push([
-                          'TOTAL', '', '', '',
-                          csvCell(summary.total_gross),
-                          csvCell(summary.total_parts),
-                          csvCell(summary.total_cc_fees),
-                          csvCell(summary.total_net),
-                          csvCell(summary.our_total_earnings),
-                          csvCell(summary.their_total_earnings),
-                        ].join(','));
-                        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
-                        const safeName = partnerName.replace(/[^a-zA-Z0-9]+/g, '-');
-                        downloadBlob(blob, `partner-report-${safeName}-${from}-to-${to}.csv`);
-                        showSnack('Report downloaded!', 'success');
-                      }}
+                      onClick={handleExportPartner}
                       className="flex-1 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium hover:bg-blue-50 min-h-[44px]"
                     >
                       📥 Export CSV
