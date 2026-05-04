@@ -81,8 +81,18 @@ export default function Reports() {
   }
 
   const connections = connectionsData?.connections || (Array.isArray(connectionsData) ? connectionsData : []);
-  const revenueStats = revenueData?.stats || revenueData || {};
-  const revenueList = revenueData?.data || revenueData?.items || [];
+
+  // /reports/revenue returns a flat array of per-period rows:
+  // [{ period, cash, check, card, online, total, payment_count }, ...]
+  // KPIs are derived by summing across rows; per-period rows feed the table below.
+  const revenueRows  = Array.isArray(revenueData) ? revenueData : [];
+  const totalRevenue = revenueRows.reduce((s, r) => s + Number(r.total || 0), 0);
+  const totalPayments = revenueRows.reduce((s, r) => s + Number(r.payment_count || 0), 0);
+  const totalCash    = revenueRows.reduce((s, r) => s + Number(r.cash || 0), 0);
+  const totalCard    = revenueRows.reduce((s, r) => s + Number(r.card || 0), 0);
+  const totalCheck   = revenueRows.reduce((s, r) => s + Number(r.check || 0), 0);
+  const totalOnline  = revenueRows.reduce((s, r) => s + Number(r.online || 0), 0);
+  const totalElectronic = totalCard + totalOnline;
 
   // Sources: combine network[], external_contacts[], own_company[]
   const sourceNetwork = sourcesData?.network || [];
@@ -94,8 +104,8 @@ export default function Reports() {
     ...sourceOwn.map(s => ({ ...s, _category: 'Own Company' })),
   ];
 
-  const tsRows = tsData?.rows || tsData?.entries || (Array.isArray(tsData) ? tsData : []);
-  const tsSummary = tsData?.summary || tsData?.technicians || [];
+  const tsRows = tsData?.timesheets || (Array.isArray(tsData) ? tsData : []);
+  const tsSummary = tsData?.summary || [];
   const techs = techsData?.technicians || (Array.isArray(techsData) ? techsData : []);
   const techOptions = [
     { value: '', label: 'All Technicians' },
@@ -147,41 +157,51 @@ export default function Reports() {
               <div className="grid grid-cols-2 gap-3">
                 <Card>
                   <p className="text-xs text-gray-400 uppercase">Total Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(revenueStats.total_revenue || revenueStats.total)}</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(totalRevenue)}</p>
                 </Card>
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase">Jobs Completed</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{revenueStats.jobs_completed || revenueStats.total_jobs || 0}</p>
+                  <p className="text-xs text-gray-400 uppercase">Payments</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{totalPayments}</p>
                 </Card>
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase">Invoiced</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(revenueStats.invoiced || 0)}</p>
+                  <p className="text-xs text-gray-400 uppercase">Cash</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(totalCash)}</p>
                 </Card>
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase">Collected</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(revenueStats.collected || revenueStats.paid || 0)}</p>
+                  <p className="text-xs text-gray-400 uppercase">Card + Online</p>
+                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(totalElectronic)}</p>
                 </Card>
               </div>
-              {revenueList.length > 0 && (
+              {revenueRows.length > 0 && (
                 <div className="bg-white rounded-2xl shadow overflow-hidden">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-gray-100 bg-gray-50">
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Date</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Revenue</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Jobs</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {revenueList.map((row, i) => (
-                        <tr key={i} className="border-b border-gray-50 last:border-0">
-                          <td className="px-4 py-2.5 text-sm text-gray-700">{row.date || row.period}</td>
-                          <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{formatCurrency(row.revenue || row.amount)}</td>
-                          <td className="px-4 py-2.5 text-sm text-gray-600">{row.jobs || row.count || 0}</td>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-100 bg-gray-50">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Date</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Cash</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Card</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Check</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Online</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Total</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Payments</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {revenueRows.map((row, i) => (
+                          <tr key={i} className="border-b border-gray-50 last:border-0">
+                            <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{row.period ? format(new Date(row.period), 'MMM d, yyyy') : ''}</td>
+                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.cash)}</td>
+                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.card)}</td>
+                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.check)}</td>
+                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.online)}</td>
+                            <td className="px-4 py-2.5 font-semibold text-gray-900 text-right">{formatCurrency(row.total)}</td>
+                            <td className="px-4 py-2.5 text-gray-600 text-right">{row.payment_count || 0}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>
@@ -216,14 +236,14 @@ export default function Reports() {
                 <Card key={i}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{s.name || s.source || 'Unknown'}</p>
+                      <p className="font-medium text-gray-900">{s.source_name || 'Unknown'}</p>
                       <p className="text-xs text-gray-400">{s._category}</p>
-                      <p className="text-sm text-gray-500">{s.jobs_count || s.count || s.jobs || 0} jobs</p>
+                      <p className="text-sm text-gray-500">{s.job_count || 0} jobs</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-[#1A73E8]">{formatCurrency(s.revenue || s.total || 0)}</p>
-                      {s.commission != null && (
-                        <p className="text-xs text-gray-400">Commission: {formatCurrency(s.commission)}</p>
+                      <p className="font-bold text-[#1A73E8]">{formatCurrency(s.total_revenue || 0)}</p>
+                      {s.profit_allocation_pct != null && (
+                        <p className="text-xs text-gray-400">Allocation: {s.profit_allocation_pct}%</p>
                       )}
                     </div>
                   </div>
@@ -274,15 +294,20 @@ export default function Reports() {
                     </div>
                     <div>
                       <p className="text-xs text-gray-400">You Earn</p>
-                      <p className="font-bold text-[#1A73E8]">{formatCurrency(partnerReport.summary?.sender_earns || partnerReport.summary?.receiver_earns || 0)}</p>
+                      <p className="font-bold text-[#1A73E8]">{formatCurrency(partnerReport.summary?.our_total_earnings || 0)}</p>
                     </div>
                   </div>
                   {(partnerReport.jobs || []).length > 0 && (
                     <div className="space-y-1">
                       {(partnerReport.jobs || []).map((j, i) => (
-                        <div key={j.id || i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-                          <p className="text-sm text-gray-700">{j.title || j.job_number || `Job ${i + 1}`}</p>
-                          <p className="text-sm font-medium text-gray-900">{formatCurrency(j.amount || j.revenue || 0)}</p>
+                        <div key={j.job_id || j.id || i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm text-gray-700 truncate">{j.job_number || `Job ${i + 1}`}</p>
+                            {j.customer_name && (
+                              <p className="text-xs text-gray-400 truncate">{j.customer_name}</p>
+                            )}
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 ml-3 flex-shrink-0">{formatCurrency(j.our_earnings || 0)}</p>
                         </div>
                       ))}
                     </div>

@@ -237,12 +237,19 @@ export default function Dashboard() {
   }
 
   const raw = dashData || {};
-  const monthRevenue   = raw?.revenue?.total || 0;
-  const todayJobs      = raw?.jobs?.total || 0;
-  const openInvoices   = raw?.invoices?.open || 0;
-  const scheduledToday = raw?.jobs?.scheduled || 0;
-  const missedCalls    = raw?.calls?.missed_calls || 0;
-  const secondChance   = raw?.second_chance?.total || 0;
+  // /reports/dashboard returns:
+  //   revenue: { total_collected, today, this_month, last_month, payment_count }
+  //   jobs:    { total, completed, cancelled, in_progress, scheduled, completion_rate_pct }
+  //   calls:   { total_calls, inbound, outbound, missed, avg_duration_sec }
+  //   second_chance: { total, booked, recovery_rate_pct }
+  // No invoices block today; the "Open Invoices" card has been replaced
+  // with completion rate (which the endpoint already returns).
+  const monthRevenue    = raw?.revenue?.this_month || raw?.revenue?.total_collected || 0;
+  const totalJobs       = raw?.jobs?.total || 0;
+  const completionRate  = raw?.jobs?.completion_rate_pct || 0;
+  const scheduledToday  = raw?.jobs?.scheduled || 0;
+  const missedCalls     = raw?.calls?.missed || 0;
+  const secondChance    = raw?.second_chance?.total || 0;
 
   const activeJobs  = jobsData?.jobs  || (Array.isArray(jobsData) ? jobsData : []);
   const activeTechs = gpsData?.techs  || gpsData?.technicians || (Array.isArray(gpsData) ? gpsData : []);
@@ -334,8 +341,8 @@ export default function Dashboard() {
               <div className="p-2 bg-blue-50 rounded-lg w-fit">
                 <Briefcase size={18} className="text-[#1A73E8]" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{todayJobs}</p>
-              <p className="text-xs text-gray-500">Today's Jobs</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{totalJobs}</p>
+              <p className="text-xs text-gray-500">Total Jobs</p>
             </div>
           </Card>
           <Card>
@@ -352,8 +359,8 @@ export default function Dashboard() {
               <div className="p-2 bg-purple-50 rounded-lg w-fit">
                 <Receipt size={18} className="text-purple-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{openInvoices}</p>
-              <p className="text-xs text-gray-500">Open Invoices</p>
+              <p className="text-2xl font-bold text-gray-900 mt-1">{completionRate}%</p>
+              <p className="text-xs text-gray-500">Completion Rate</p>
             </div>
           </Card>
           <Card>
