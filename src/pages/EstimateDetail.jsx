@@ -40,8 +40,11 @@ function TierCard({ tier }) {
       {allItems.length > 0 && (
         <div className="space-y-1 mb-3">
           {allItems.map((item, i) => (
-            <div key={i} className="flex items-center justify-between text-sm">
-              <span className="text-gray-700">{item.name || item.description}</span>
+            <div key={i} className="flex items-center gap-2 text-sm">
+              {item.image_url && (
+                <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+              )}
+              <span className="flex-1 text-gray-700 min-w-0 truncate">{item.name || item.description}</span>
               <span className={item.item_type === 'discount' ? 'text-red-500' : 'text-gray-500'}>
                 {item.item_type === 'discount' ? '-' : ''}{formatCurrency(item.total || Number(item.unit_price || 0) * Number(item.qty || 1))}
               </span>

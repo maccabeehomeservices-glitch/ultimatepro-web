@@ -97,7 +97,7 @@ export default function EstimateBuilder() {
       setDepositRequired(Boolean(e.deposit_required));
       setDepositAmount(e.deposit_amount?.toString() || '');
       setDepositType(e.deposit_type || 'flat');
-      if (e.gbb_mode) {
+      if (e.presentation_mode === 'gbb') {
         setGbbMode(true);
         setGbbSections({
           good: e.tiers?.good || emptySection(),
