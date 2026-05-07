@@ -7,26 +7,47 @@ import { Button, Input, Card, Toggle, StepperInput, Modal, LoadingSpinner } from
 import { useSnackbar } from '../components/ui/Snackbar';
 import QuickCreateCustomerModal from '../components/QuickCreateCustomerModal';
 
-const GBB_TIERS = ['good', 'better', 'best'];
-const GBB_LABELS = { good: 'Good', better: 'Better', best: 'Best' };
-const ITEM_TYPES = ['service', 'material', 'discount'];
+const MAX_TIERS = 5;
+const MIN_TIERS = 1;
+const DEFAULT_NEW_TIER_COUNT = 2;
 
 function emptyItem(type = 'service') {
-  return { name: '', qty: 1, unit_price: '', total: 0, item_type: type };
+  return { name: '', quantity: 1, unit_price: '', total: 0, item_type: type };
 }
 
 function emptySection() {
   return { services: [], materials: [], discounts: [] };
 }
 
+function emptyTier(n) {
+  return { label: `Tier ${n}`, description: '', ...emptySection() };
+}
+
+function defaultTiers() {
+  const arr = [];
+  for (let i = 1; i <= DEFAULT_NEW_TIER_COUNT; i++) arr.push(emptyTier(i));
+  return arr;
+}
+
 function sectionTotal(section) {
-  const sum = (arr) => arr.reduce((s, i) => s + (Number(i.unit_price || 0) * Number(i.qty || 1)), 0);
+  const sum = (arr) => arr.reduce((s, i) => s + (Number(i.unit_price || 0) * Number(i.quantity || 1)), 0);
   return sum(section.services) + sum(section.materials) - sum(section.discounts);
 }
 
 function calcTotal(section, taxRate, taxEnabled) {
   const sub = sectionTotal(section);
   return taxEnabled ? sub * (1 + Number(taxRate || 0) / 100) : sub;
+}
+
+// Split a flat line_items array (as stored in JSONB) into the
+// services/materials/discounts buckets the UI uses.
+function splitLineItemsByType(items) {
+  const list = Array.isArray(items) ? items : [];
+  return {
+    services:  list.filter(it => !it.item_type || it.item_type === 'service' || it.item_type === 'labor'),
+    materials: list.filter(it => it.item_type === 'material' || it.item_type === 'part'),
+    discounts: list.filter(it => it.item_type === 'discount'),
+  };
 }
 
 export default function EstimateBuilder() {
@@ -57,26 +78,18 @@ export default function EstimateBuilder() {
   const [depositAmount, setDepositAmount] = useState('');
   const [depositType, setDepositType] = useState('flat');
   const [saving, setSaving] = useState(false);
-  const [pricebookModal, setPricebookModal] = useState(null); // { tier, type } or null (standard)
+  // pricebookModal: { tierIdx?, type } — tierIdx omitted for standard mode
+  const [pricebookModal, setPricebookModal] = useState(null);
   const [pricebookSearch, setPricebookSearch] = useState('');
   const searchTimeout = useRef(null);
 
-  // GBB mode
+  // GBB mode + tiers array (1-5 entries, default 2 for new estimates)
   const [gbbMode, setGbbMode] = useState(false);
-  const [activeTier, setActiveTier] = useState('good');
-  const [gbbTierNames, setGbbTierNames] = useState({ good: 'Good', better: 'Better', best: 'Best' });
-  const [editingTierName, setEditingTierName] = useState(null);
-  const [tierNameInput, setTierNameInput] = useState('');
+  const [tiers, setTiers] = useState(defaultTiers());
+  const [activeTierIdx, setActiveTierIdx] = useState(0);
 
   // Standard mode: single section
   const [stdSection, setStdSection] = useState(emptySection());
-
-  // GBB mode: per-tier sections
-  const [gbbSections, setGbbSections] = useState({
-    good: emptySection(),
-    better: emptySection(),
-    best: emptySection(),
-  });
 
   const { data: existingData, loading: loadingExisting } = useGet(isEdit ? `/estimates/${id}` : null, [id]);
   const { data: pricebookData } = useGet(
@@ -84,6 +97,7 @@ export default function EstimateBuilder() {
     [pricebookModal, pricebookSearch]
   );
 
+  // Sync hydration from existing estimate row
   useEffect(() => {
     if (isEdit && existingData) {
       const e = existingData.estimate || existingData;
@@ -99,21 +113,51 @@ export default function EstimateBuilder() {
       setDepositType(e.deposit_type || 'flat');
       if (e.presentation_mode === 'gbb') {
         setGbbMode(true);
-        setGbbSections({
-          good: e.tiers?.good || emptySection(),
-          better: e.tiers?.better || emptySection(),
-          best: e.tiers?.best || emptySection(),
-        });
-        if (e.tier_names) setGbbTierNames({ good: e.tier_names.good || 'Good', better: e.tier_names.better || 'Better', best: e.tier_names.best || 'Best' });
+        // Tier rows fetched separately below
       } else {
         const items = e.line_items || e.items || [];
-        const services = items.filter(i => i.item_type !== 'material' && i.item_type !== 'discount');
-        const materials = items.filter(i => i.item_type === 'material');
-        const discounts = items.filter(i => i.item_type === 'discount');
-        setStdSection({ services, materials, discounts });
+        setStdSection(splitLineItemsByType(items));
       }
     }
   }, [isEdit, existingData]);
+
+  // Async tier hydration — fetches /estimates/:id/tiers when editing a GBB
+  // estimate. Backend returns rows ordered by sort_order with line_items as
+  // a flat JSONB array; we split back into services/materials/discounts so
+  // the per-section UI keeps working.
+  useEffect(() => {
+    if (!isEdit || !existingData) return;
+    const e = existingData.estimate || existingData;
+    if (e.presentation_mode !== 'gbb') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await estimatesApi.getTiers(id);
+        if (cancelled) return;
+        const apiTiers = res?.data || res || [];
+        if (!Array.isArray(apiTiers) || apiTiers.length === 0) {
+          setTiers(defaultTiers());
+          setActiveTierIdx(0);
+          return;
+        }
+        const loaded = [...apiTiers]
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+          .map(t => ({
+            id: t.id,
+            label: t.tier_label || 'Tier',
+            description: t.description || '',
+            ...splitLineItemsByType(t.line_items),
+          }));
+        setTiers(loaded);
+        setActiveTierIdx(0);
+      } catch (err) {
+        console.error('[EstimateBuilder] failed to load tiers:', err);
+        setTiers(defaultTiers());
+        setActiveTierIdx(0);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isEdit, existingData, id]);
 
   // Prefill customer from query params (when navigating from JobDetail)
   useEffect(() => {
@@ -177,24 +221,47 @@ export default function EstimateBuilder() {
     selectCustomer(customer);
   }
 
-  function updateSectionItem(getter, setter, type, idx, field, value) {
-    setter(prev => {
-      const next = { ...prev };
-      next[type] = [...prev[type]];
-      next[type][idx] = { ...next[type][idx], [field]: value };
-      const qty = Number(next[type][idx].qty || 1);
-      const price = Number(next[type][idx].unit_price || 0);
-      next[type][idx].total = qty * price;
+  // ── Tier helpers ──────────────────────────────────────────────────────────
+  function addTier() {
+    setTiers(prev => {
+      if (prev.length >= MAX_TIERS) return prev;
+      const next = [...prev, emptyTier(prev.length + 1)];
+      setActiveTierIdx(next.length - 1);
       return next;
     });
   }
 
-  function addItemToSection(setter, type) {
-    setter(prev => ({ ...prev, [type]: [...prev[type], emptyItem(type)] }));
+  function removeTier(idx) {
+    setTiers(prev => {
+      if (prev.length <= MIN_TIERS) {
+        showSnack('Need at least 1 option', 'error');
+        return prev;
+      }
+      const next = prev.filter((_, i) => i !== idx);
+      setActiveTierIdx(curIdx => Math.min(curIdx, next.length - 1));
+      return next;
+    });
   }
 
-  function removeItemFromSection(setter, type, idx) {
-    setter(prev => ({ ...prev, [type]: prev[type].filter((_, i) => i !== idx) }));
+  function updateTier(idx, updater) {
+    setTiers(prev => prev.map((t, i) => (i === idx ? updater(t) : t)));
+  }
+
+  function updateTierLabel(idx, label) {
+    updateTier(idx, t => ({ ...t, label }));
+  }
+
+  // Bridges the existing ItemSection setter API (which expects setter(prev =>
+  // ({ ...prev, [sectionKey]: ... }))) to our tier-indexed state.
+  function tierSectionSetter(idx) {
+    return (updater) => {
+      setTiers(prev => prev.map((t, i) => {
+        if (i !== idx) return t;
+        const sub = { services: t.services, materials: t.materials, discounts: t.discounts };
+        const nextSub = typeof updater === 'function' ? updater(sub) : updater;
+        return { ...t, ...nextSub };
+      }));
+    };
   }
 
   function addFromPricebook(pbItem) {
@@ -204,20 +271,19 @@ export default function EstimateBuilder() {
       sku: pbItem.sku || null,
       image_url: pbItem.image_url || null,
       pricebook_id: pbItem.id || null,
-      qty: 1,
+      quantity: 1,
       unit_price: pbItem.price || pbItem.unit_price || '',
       total: Number(pbItem.price || pbItem.unit_price || 0),
       item_type: type,
       taxable: pbItem.taxable || false,
       tax_rate: Number(pbItem.tax_rate || 0),
     });
-    if (gbbMode && pricebookModal) {
-      const { tier, type } = pricebookModal;
-      setGbbSections(prev => {
-        const next = { ...prev };
-        next[tier] = { ...next[tier], [type + 's']: [...next[tier][type + 's'], buildItem(type)] };
-        return next;
-      });
+    if (gbbMode && pricebookModal && pricebookModal.tierIdx !== undefined) {
+      const { tierIdx, type } = pricebookModal;
+      updateTier(tierIdx, t => ({
+        ...t,
+        [type + 's']: [...t[type + 's'], buildItem(type)],
+      }));
     } else if (pricebookModal) {
       const type = pricebookModal.type || 'service';
       setStdSection(prev => ({
@@ -229,24 +295,22 @@ export default function EstimateBuilder() {
     setPricebookSearch('');
   }
 
-  // Get the active section for display (GBB mode uses activeTier)
-  const activeSection = gbbMode ? gbbSections[activeTier] : stdSection;
-  const activeSetter = gbbMode
-    ? (updater) => setGbbSections(prev => ({ ...prev, [activeTier]: typeof updater === 'function' ? updater(prev[activeTier]) : updater }))
-    : setStdSection;
+  // Active section + setter for the rendered editor
+  const activeTier = tiers[activeTierIdx] || tiers[0];
+  const activeSection = gbbMode
+    ? { services: activeTier.services, materials: activeTier.materials, discounts: activeTier.discounts }
+    : stdSection;
+  const activeSetter = gbbMode ? tierSectionSetter(activeTierIdx) : setStdSection;
 
   // Compute totals
   const stdTotal = calcTotal(stdSection, taxRate, taxEnabled);
-  const gbbTotals = {
-    good: calcTotal(gbbSections.good, taxRate, taxEnabled),
-    better: calcTotal(gbbSections.better, taxRate, taxEnabled),
-    best: calcTotal(gbbSections.best, taxRate, taxEnabled),
-  };
+  const tierTotals = tiers.map(t => calcTotal(t, taxRate, taxEnabled));
 
   async function handleSave(action) {
     const fe = {};
     if (!customerId) fe.customer_id = 'Please select or create a customer';
     const cleanLineItems = (arr) => (arr || []).filter(it => (it.name || '').trim().length > 0);
+
     const cleanedItems = gbbMode ? [] : [
       ...cleanLineItems(stdSection.services).map(it => ({ ...it, item_type: 'service' })),
       ...cleanLineItems(stdSection.materials).map(it => ({ ...it, item_type: 'material' })),
@@ -256,22 +320,46 @@ export default function EstimateBuilder() {
       showSnack('Add at least one line item before saving', 'error');
       return;
     }
+    if (gbbMode) {
+      // Each tier needs at least one named item to be saveable
+      const emptyTiers = tiers.filter(t =>
+        cleanLineItems(t.services).length === 0 &&
+        cleanLineItems(t.materials).length === 0 &&
+        cleanLineItems(t.discounts).length === 0
+      );
+      if (emptyTiers.length > 0) {
+        showSnack(`Add at least one item to "${emptyTiers[0].label}"`, 'error');
+        return;
+      }
+    }
     if (Object.keys(fe).length) { setFieldErrors(fe); return; }
     setSaving(true);
     try {
+      // Backend POST /estimates and PUT /estimates/:id require line_items
+      // with min:1. For GBB we use the first tier's items as the legacy
+      // line_items mirror; the real per-tier data lives in the subsequent
+      // saveTiers call.
+      const seedItems = gbbMode
+        ? [
+            ...cleanLineItems(activeTier.services).map(it => ({ ...it, item_type: 'service' })),
+            ...cleanLineItems(activeTier.materials).map(it => ({ ...it, item_type: 'material' })),
+            ...cleanLineItems(activeTier.discounts).map(it => ({ ...it, item_type: 'discount' })),
+          ]
+        : cleanedItems;
+
       const basePayload = {
         customer_id: customerId,
         notes,
         terms,
-        line_items: cleanedItems.map(item => ({
+        line_items: seedItems.map(item => ({
           name: item.name,
           description: item.description || null,
           sku: item.sku || null,
           image_url: item.image_url || null,
           pricebook_id: item.pricebook_id || null,
-          quantity: item.qty || item.quantity || 1,
+          quantity: Number(item.quantity || 1),
           unit_price: Number(item.unit_price || 0),
-          total: (item.qty || item.quantity || 1) * Number(item.unit_price || 0),
+          total: Number(item.quantity || 1) * Number(item.unit_price || 0),
           item_type: item.item_type || 'service',
           taxable: item.taxable || false,
           tax_rate: Number(item.tax_rate || 0),
@@ -282,30 +370,41 @@ export default function EstimateBuilder() {
       if (!isEdit && prefilledJobId) basePayload.job_id = prefilledJobId;
 
       let estimateId = id;
-      let savedEstimate = null;
       if (isEdit) {
-        const res = await estimatesApi.update(id, basePayload);
-        savedEstimate = res.data?.estimate || res.data;
+        await estimatesApi.update(id, basePayload);
         showSnack('Estimate updated', 'success');
       } else {
         const res = await estimatesApi.create(basePayload);
         estimateId = res.data?.estimate?.id || res.data?.id;
-        savedEstimate = res.data?.estimate || res.data;
         showSnack('Estimate created', 'success');
       }
 
-      // Save GBB tiers separately using the correct endpoint
+      // Save GBB tiers separately. Backend POST /:id/tiers replaces all
+      // tiers for the estimate and stamps presentation_mode='gbb'.
       if (gbbMode && estimateId) {
-        const tiers = GBB_TIERS.map(key => ({
-          tier_label: gbbTierNames[key] || GBB_LABELS[key],
-          description: '',
+        const tiersPayload = tiers.map(tier => ({
+          tier_label: (tier.label || '').trim() || 'Option',
+          description: tier.description || '',
           line_items: [
-            ...gbbSections[key].services,
-            ...gbbSections[key].materials,
-            ...gbbSections[key].discounts,
-          ],
+            ...cleanLineItems(tier.services).map(it => ({ ...it, item_type: 'service' })),
+            ...cleanLineItems(tier.materials).map(it => ({ ...it, item_type: 'material' })),
+            ...cleanLineItems(tier.discounts).map(it => ({ ...it, item_type: 'discount' })),
+          ].map(it => ({
+            name: it.name,
+            description: it.description || null,
+            sku: it.sku || null,
+            image_url: it.image_url || null,
+            pricebook_id: it.pricebook_id || null,
+            quantity: Number(it.quantity || 1),
+            unit_price: Number(it.unit_price || 0),
+            total: Number(it.quantity || 1) * Number(it.unit_price || 0),
+            item_type: it.item_type || 'service',
+            taxable: it.taxable || false,
+            tax_rate: Number(it.tax_rate || 0),
+            discount_pct: Number(it.discount_pct || 0),
+          })),
         }));
-        await estimatesApi.saveTiers(estimateId, tiers);
+        await estimatesApi.saveTiers(estimateId, tiersPayload);
       }
 
       navigate(`/estimates/${estimateId}`);
@@ -329,7 +428,13 @@ export default function EstimateBuilder() {
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={() => { setPricebookModal({ tier: activeTier, type: itemType }); setPricebookSearch(''); }}
+              onClick={() => {
+                const modal = gbbMode
+                  ? { tierIdx: activeTierIdx, type: itemType }
+                  : { type: itemType };
+                setPricebookModal(modal);
+                setPricebookSearch('');
+              }}
               className="text-xs text-[#1A73E8] font-medium"
             >
               Pricebook
@@ -403,12 +508,12 @@ export default function EstimateBuilder() {
                 <div className="flex-1">
                   <label className="text-xs text-gray-400">Qty</label>
                   <StepperInput
-                    value={Number(item.qty || 1)}
+                    value={Number(item.quantity || 1)}
                     min={1}
                     onChange={v => {
                       setter(prev => {
                         const next = { ...prev, [sectionKey]: [...prev[sectionKey]] };
-                        next[sectionKey][idx] = { ...next[sectionKey][idx], qty: v, total: v * Number(next[sectionKey][idx].unit_price || 0) };
+                        next[sectionKey][idx] = { ...next[sectionKey][idx], quantity: v, total: v * Number(next[sectionKey][idx].unit_price || 0) };
                         return next;
                       });
                     }}
@@ -422,7 +527,7 @@ export default function EstimateBuilder() {
                     onChange={e => {
                       setter(prev => {
                         const next = { ...prev, [sectionKey]: [...prev[sectionKey]] };
-                        next[sectionKey][idx] = { ...next[sectionKey][idx], unit_price: e.target.value, total: Number(e.target.value || 0) * Number(next[sectionKey][idx].qty || 1) };
+                        next[sectionKey][idx] = { ...next[sectionKey][idx], unit_price: e.target.value, total: Number(e.target.value || 0) * Number(next[sectionKey][idx].quantity || 1) };
                         return next;
                       });
                     }}
@@ -435,7 +540,7 @@ export default function EstimateBuilder() {
                 <div className="flex-1">
                   <label className="text-xs text-gray-400">Total</label>
                   <div className={`rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium min-h-[44px] flex items-center ${itemType === 'discount' ? 'text-red-500' : ''}`}>
-                    {itemType === 'discount' ? '-' : ''}${(Number(item.unit_price || 0) * Number(item.qty || 1)).toFixed(2)}
+                    {itemType === 'discount' ? '-' : ''}${(Number(item.unit_price || 0) * Number(item.quantity || 1)).toFixed(2)}
                   </div>
                 </div>
               </div>
@@ -515,55 +620,78 @@ export default function EstimateBuilder() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-medium text-gray-900">Good-Better-Best Mode</p>
-              <p className="text-xs text-gray-400">Present 3 tier options to the customer</p>
+              <p className="text-xs text-gray-400">Present 1–5 tier options to the customer</p>
             </div>
             <Toggle checked={gbbMode} onChange={(e) => setGbbMode(e.target.checked)} />
           </div>
         </Card>
 
-        {/* GBB tier tabs */}
+        {/* GBB tier tabs (chip-style row, scrollable, with Add Option) */}
         {gbbMode && (
-          <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
-            {GBB_TIERS.map(tier => (
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            {tiers.map((tier, idx) => {
+              const isActive = idx === activeTierIdx;
+              return (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => setActiveTierIdx(idx)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap min-h-[44px] transition-colors ${
+                    isActive
+                      ? 'bg-[#1A73E8] text-white border border-[#1A73E8]'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <span>{tier.label || `Tier ${idx + 1}`}</span>
+                  <span className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-400'}`}>
+                    ${tierTotals[idx].toFixed(0)}
+                  </span>
+                  {isActive && tiers.length > MIN_TIERS && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); removeTier(idx); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); removeTier(idx); } }}
+                      className="ml-1 -mr-1 w-5 h-5 rounded-full flex items-center justify-center hover:bg-white/20 cursor-pointer"
+                      title="Remove this option"
+                    >
+                      <X size={12} />
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+            {tiers.length < MAX_TIERS && (
               <button
-                key={tier}
                 type="button"
-                onClick={() => setActiveTier(tier)}
-                onDoubleClick={() => { setEditingTierName(tier); setTierNameInput(gbbTierNames[tier]); }}
-                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
-                  activeTier === tier ? 'bg-white text-[#1A73E8] shadow-sm' : 'text-gray-500'
-                }`}
+                onClick={addTier}
+                className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-dashed border-gray-300 text-gray-500 hover:border-[#1A73E8] hover:text-[#1A73E8] flex items-center gap-1 min-h-[44px]"
               >
-                {editingTierName === tier ? (
-                  <input
-                    autoFocus
-                    value={tierNameInput}
-                    onChange={e => setTierNameInput(e.target.value)}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' || e.key === 'Escape') {
-                        if (e.key === 'Enter' && tierNameInput.trim()) {
-                          setGbbTierNames(prev => ({ ...prev, [tier]: tierNameInput.trim() }));
-                        }
-                        setEditingTierName(null);
-                        e.stopPropagation();
-                      }
-                    }}
-                    onBlur={() => {
-                      if (tierNameInput.trim()) setGbbTierNames(prev => ({ ...prev, [tier]: tierNameInput.trim() }));
-                      setEditingTierName(null);
-                    }}
-                    onClick={e => e.stopPropagation()}
-                    className="w-full text-center text-sm font-semibold bg-transparent border-b border-[#1A73E8] focus:outline-none px-1"
-                  />
-                ) : (
-                  gbbTierNames[tier]
-                )}
-                <span className="block text-xs font-normal text-gray-400">
-                  ${gbbTotals[tier].toFixed(0)}
-                </span>
+                <Plus size={14} /> Add Option
               </button>
-            ))}
+            )}
           </div>
+        )}
+
+        {/* Active tier label + description editors */}
+        {gbbMode && activeTier && (
+          <Card>
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Option Name</label>
+            <input
+              value={activeTier.label}
+              onChange={(e) => updateTierLabel(activeTierIdx, e.target.value)}
+              placeholder="e.g., Basic, Premium, Best Value"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] mb-3"
+            />
+            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Description (optional)</label>
+            <textarea
+              value={activeTier.description}
+              onChange={(e) => updateTier(activeTierIdx, t => ({ ...t, description: e.target.value }))}
+              rows={2}
+              placeholder="Short pitch shown to the customer for this option"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
+            />
+          </Card>
         )}
 
         {/* Line item sections */}
@@ -593,7 +721,7 @@ export default function EstimateBuilder() {
           {/* Section subtotal */}
           <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
             <span className="text-sm font-semibold text-gray-600">
-              {gbbMode ? `${GBB_LABELS[activeTier]} Subtotal` : 'Subtotal'}
+              {gbbMode ? `${activeTier?.label || 'Option'} Subtotal` : 'Subtotal'}
             </span>
             <span className="text-sm font-bold text-gray-900">
               ${sectionTotal(activeSection).toFixed(2)}
