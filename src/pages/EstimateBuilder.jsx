@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Search, UserCheck, X } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Search, UserCheck, X, Copy } from 'lucide-react';
 import { estimatesApi, customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, Toggle, StepperInput, Modal, LoadingSpinner } from '../components/ui';
@@ -239,6 +239,30 @@ export default function EstimateBuilder() {
       }
       const next = prev.filter((_, i) => i !== idx);
       setActiveTierIdx(curIdx => Math.min(curIdx, next.length - 1));
+      return next;
+    });
+  }
+
+  function duplicateTier(idx) {
+    setTiers(prev => {
+      if (prev.length >= MAX_TIERS) {
+        showSnack(`Max ${MAX_TIERS} options`, 'error');
+        return prev;
+      }
+      const source = prev[idx];
+      if (!source) return prev;
+      // Deep-copy line items so edits to the new tier don't mutate the source.
+      // Drop `id` (backend assigns fresh ids on next saveTiers — replace-all
+      // semantics).
+      const copy = {
+        label: `${source.label || 'Option'} (Copy)`,
+        description: source.description || '',
+        services:  source.services.map(it => ({ ...it })),
+        materials: source.materials.map(it => ({ ...it })),
+        discounts: source.discounts.map(it => ({ ...it })),
+      };
+      const next = [...prev, copy];
+      setActiveTierIdx(next.length - 1);
       return next;
     });
   }
@@ -646,6 +670,18 @@ export default function EstimateBuilder() {
                   <span className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-400'}`}>
                     ${tierTotals[idx].toFixed(0)}
                   </span>
+                  {isActive && tiers.length < MAX_TIERS && (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); duplicateTier(idx); }}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); duplicateTier(idx); } }}
+                      className="ml-1 w-5 h-5 rounded-full flex items-center justify-center hover:bg-white/20 cursor-pointer"
+                      title="Duplicate this option"
+                    >
+                      <Copy size={12} />
+                    </span>
+                  )}
                   {isActive && tiers.length > MIN_TIERS && (
                     <span
                       role="button"
