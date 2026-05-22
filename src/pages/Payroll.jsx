@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { CreditCard } from 'lucide-react';
+import { CreditCard, ChevronRight } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
 import { reportsApi } from '../lib/api';
@@ -23,6 +24,7 @@ function formatCurrency(v) {
 
 export default function Payroll() {
   const { showSnack } = useSnackbar();
+  const navigate = useNavigate();
   const today = new Date();
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
   const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
@@ -30,6 +32,27 @@ export default function Payroll() {
 
   const url = `/reports/earnings?from=${from}&to=${to}`;
   const { data, loading } = useGet(url, [from, to]);
+
+  // /reports/earnings doesn't expose the underlying user.id (GROUP BY hides it),
+  // so we fetch the technicians list separately and resolve user ids by name
+  // to power the Bundle 4.6a drill-down into /reports/team/:userId. Roster and
+  // Source rows stay non-clickable until 4.6b ships their screens.
+  const { data: techsResp } = useGet('/users/technicians', []);
+  const techDirectory = useMemo(() => {
+    const raw = techsResp?.technicians || (Array.isArray(techsResp) ? techsResp : []);
+    const m = new Map();
+    for (const t of raw) {
+      const key = `${(t.first_name || '').trim().toLowerCase()}|${(t.last_name || '').trim().toLowerCase()}`;
+      const id = t.id || t._id;
+      if (id) m.set(key, id);
+    }
+    return m;
+  }, [techsResp]);
+
+  function resolveUserId(row) {
+    const key = `${(row.first_name || '').trim().toLowerCase()}|${(row.last_name || '').trim().toLowerCase()}`;
+    return techDirectory.get(key) || null;
+  }
 
   const rawTechs = data?.earnings || data?.technicians || data?.payroll || data;
   const techs = Array.isArray(rawTechs) ? rawTechs : [];
@@ -79,19 +102,41 @@ export default function Payroll() {
             {techs.map((tech, i) => {
               const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || 'Unknown tech';
               const actorColor = tech.color || '#1A73E8';
-              return (
+
+              // Only team actors (not roster, not source) drill in to Bundle
+              // 4.6a TeamReport. Other actor screens land in 4.6b/c.
+              const isTeam = !tech.is_roster && !tech.is_source;
+              const userId = isTeam ? resolveUserId(tech) : null;
+              const clickable = !!userId;
+
+              const cardEl = (
                 <Card key={tech.id || tech._id || i}>
                   <div className="flex items-center gap-3">
                     <Avatar name={name} size="md" color={actorColor} />
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900">{name}</p>
-                      <p className="text-sm text-gray-500">{tech.job_count || 0} jobs completed</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 truncate">{name}</p>
+                      <p className="text-sm text-gray-500">
+                        {tech.job_count || 0} jobs · {tech.type || (tech.is_source ? 'source' : tech.is_roster ? 'roster' : 'tech')}
+                      </p>
                     </div>
                     <p className="font-bold text-lg" style={{ color: actorColor }}>
                       {formatCurrency(Number(tech.total || 0))}
                     </p>
+                    {clickable && <ChevronRight size={18} className="text-gray-300 -mr-1" />}
                   </div>
                 </Card>
+              );
+
+              if (!clickable) return cardEl;
+              return (
+                <button
+                  key={tech.id || tech._id || i}
+                  type="button"
+                  onClick={() => navigate(`/reports/team/${userId}`)}
+                  className="block w-full text-left rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                >
+                  {cardEl}
+                </button>
               );
             })}
           </div>

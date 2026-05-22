@@ -682,6 +682,27 @@ export const reportsApi = {
   getEarnings: (from, to, user_id) =>
     api.get('/reports/earnings', { params: { from, to, user_id } }),
 
+  // Bundle 4.2 actor reports (JSON payload)
+  getTechReport: (userId, { from, to }) =>
+    api.get(`/reports/tech/${userId}`, { params: { from, to } }).then(r => r.data),
+  getRosterReport: (rosterId, { from, to }) =>
+    api.get(`/reports/roster/${rosterId}`, { params: { from, to } }).then(r => r.data),
+  getSourceReportV2: (sourceId, { from, to }) =>
+    api.get(`/reports/source/${sourceId}`, { params: { from, to } }).then(r => r.data),
+  getSelfReport: ({ from, to }) =>
+    api.get('/reports/self', { params: { from, to } }).then(r => r.data),
+  getPartnerReport: (connectionId, { from, to }) =>
+    api.get(`/reports/partner/${connectionId}`, { params: { from, to } }).then(r => r.data),
+
+  // Bundle 4.4 distribution. actorType: tech|roster|source|self|partner.
+  // 'self' has no actorId in the URL path.
+  sendReport: (actorType, actorId, body) => {
+    const path = actorType === 'self'
+      ? '/reports/self/send'
+      : `/reports/${actorType}/${actorId}/send`;
+    return api.post(path, body).then(r => r.data);
+  },
+
   exportRevenue: (from, to, group_by) =>
     api.get('/reports/revenue/export', { params: { from, to, group_by, format: 'csv' }, responseType: 'blob' }),
 

@@ -26,6 +26,7 @@ import Payments from './pages/Payments';
 import Phone from './pages/Phone';
 import SmsThread from './pages/SmsThread';
 import Reports from './pages/Reports';
+import TeamReport from './pages/TeamReport';
 import Payroll from './pages/Payroll';
 import Pricebook from './pages/Pricebook';
 import Network from './pages/Network';
@@ -107,6 +108,7 @@ export default function App() {
                   <Route path="/phone/thread/:id" element={<Wrap><SmsThread /></Wrap>} />
                   <Route path="/phone/sms/:conversationId" element={<Wrap><SmsThread /></Wrap>} />
                   <Route path="/reports" element={<Wrap><Reports /></Wrap>} />
+                  <Route path="/reports/team/:userId" element={<Wrap><TeamReport /></Wrap>} />
                   <Route path="/payroll" element={<Wrap><Payroll /></Wrap>} />
                   <Route path="/pricebook" element={<Wrap><Pricebook /></Wrap>} />
                   <Route path="/network" element={<Wrap><Network /></Wrap>} />
