@@ -189,7 +189,7 @@ export default function TeamReport() {
           {/* Period KPIs */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
             <KPI label="Jobs"        value={summary.jobs_count || 0} />
-            <KPI label="Revenue"     value={formatMoney(summary.total_sale)} />
+            <KPI label="Revenue"     value={formatMoney(summary.total_total_sale)} />
             <KPI label="Tech Profit" value={formatMoney(summary.total_tech_profit)} accent={actorColor} />
             <KPI label="Balance"     value={formatMoney(summary.total_balance)} />
           </div>
