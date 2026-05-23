@@ -45,17 +45,49 @@ const PERIOD_CHIPS = [
   { id: 'this_year',    label: 'This Year' },
 ];
 
-function KPI({ label, value, accent }) {
+function CompRow({ label, value, bold = false }) {
   return (
-    <Card>
-      <p className="text-xs text-gray-400 uppercase">{label}</p>
-      <p
-        className="text-xl font-bold mt-1"
-        style={accent ? { color: accent } : { color: '#111827' }}
-      >
-        {value}
-      </p>
-    </Card>
+    <div
+      className={`flex justify-between py-1.5 text-sm ${
+        bold ? 'text-base font-bold text-[#1A73E8]' : 'text-gray-700'
+      }`}
+    >
+      <span>{label}</span>
+      <span>${Number(value || 0).toFixed(2)}</span>
+    </div>
+  );
+}
+
+function CompensationSummary({ summary, bonuses, deductions, allTime }) {
+  const periodProfit = Number(summary?.total_tech_profit || 0);
+  const bonusTotal = (bonuses || []).reduce(
+    (s, b) => s + Number(b.amount || 0),
+    0
+  );
+  const deductionTotal = (deductions || []).reduce(
+    (s, d) => s + Number(d.amount || 0),
+    0
+  );
+  const netPay = periodProfit + bonusTotal - deductionTotal;
+
+  return (
+    <div className="space-y-4 mb-4">
+      <div className="bg-white rounded-2xl shadow p-4 border-l-4 border-[#1A73E8]">
+        <h3 className="font-semibold text-[#1A73E8] mb-3">Compensation Summary</h3>
+        <CompRow label="Period Tech Profit (from jobs)" value={periodProfit} />
+        <CompRow label="+ Bonuses"    value={bonusTotal} />
+        <CompRow label="- Deductions" value={deductionTotal} />
+        <div className="border-t-2 border-[#1A73E8] mt-3 pt-3">
+          <CompRow label="Net Pay for Period" value={netPay} bold />
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow p-4 border-l-4 border-gray-400">
+        <h3 className="font-semibold text-gray-700 mb-3">All-Time Balance</h3>
+        <CompRow label="Lifetime Owed (Unpaid)" value={Number(allTime?.unpaid || 0)} />
+        <CompRow label="Lifetime Paid"          value={Number(allTime?.paid   || 0)} />
+      </div>
+    </div>
   );
 }
 
@@ -101,7 +133,11 @@ export default function TeamReport() {
   const jobs       = report?.jobs       || [];
   const bonuses    = report?.bonuses    || [];
   const deductions = report?.deductions || [];
-  const allTimeBalance = Number(report?.all_time_balance || 0);
+  // all_time_balance shape: { unpaid, paid } (Bundle 4.6b). The prominent
+  // top card still shows "owed" (matches the original Report Balance);
+  // the CompensationSummary block below the jobs table shows both sides.
+  const allTime = report?.all_time_balance || { unpaid: 0, paid: 0 };
+  const allTimeBalanceUnpaid = Number(allTime.unpaid || 0);
 
   const actorColor = actor.color || '#1A73E8';
 
@@ -179,22 +215,14 @@ export default function TeamReport() {
               All-Time Balance Owed
             </p>
             <p className="text-3xl font-bold text-[#1A73E8] mt-1">
-              {formatMoney(allTimeBalance)}
+              {formatMoney(allTimeBalanceUnpaid)}
             </p>
             <p className="text-xs text-gray-500 mt-1">
               Carries unpaid earnings plus bonuses minus pending deductions, regardless of period.
             </p>
           </Card>
 
-          {/* Period KPIs */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-            <KPI label="Jobs"        value={summary.jobs_count || 0} />
-            <KPI label="Revenue"     value={formatMoney(summary.total_total_sale)} />
-            <KPI label="Tech Profit" value={formatMoney(summary.total_tech_profit)} accent={actorColor} />
-            <KPI label="Balance"     value={formatMoney(summary.total_balance)} />
-          </div>
-
-          {/* Jobs table */}
+          {/* Jobs table — Bundle 4.6b 7-col essentials */}
           <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
             <div className="px-4 py-3 border-b border-gray-100 font-semibold text-gray-900">
               Jobs ({jobs.length})
@@ -208,21 +236,13 @@ export default function TeamReport() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">
-                        Ticket
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">
-                        Customer
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">
-                        Date
-                      </th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">
-                        Total
-                      </th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">
-                        Profit
-                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Ticket</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Customer</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Address</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Date</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Total</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Comm %</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Tech Profit</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -235,11 +255,15 @@ export default function TeamReport() {
                           {j.ticket || '—'}
                         </td>
                         <td className="px-4 py-2.5 text-gray-700">{j.customer_name || '—'}</td>
-                        <td className="px-4 py-2.5 text-gray-500">
+                        <td className="px-4 py-2.5 text-gray-500 max-w-[200px] truncate">{j.address || '—'}</td>
+                        <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
                           {j.date ? new Date(j.date).toLocaleDateString() : '—'}
                         </td>
                         <td className="px-4 py-2.5 text-right text-gray-700">
                           {formatMoney(j.total_sale)}
+                        </td>
+                        <td className="px-4 py-2.5 text-right text-gray-700">
+                          {Number(j.commission_pct || 0).toFixed(1)}%
                         </td>
                         <td
                           className="px-4 py-2.5 text-right font-semibold"
@@ -254,6 +278,14 @@ export default function TeamReport() {
               </div>
             )}
           </div>
+
+          {/* Compensation Summary block — Bundle 4.6b bottom-line Net Pay */}
+          <CompensationSummary
+            summary={summary}
+            bonuses={bonuses}
+            deductions={deductions}
+            allTime={allTime}
+          />
 
           {/* Bonuses */}
           {bonuses.length > 0 && (
