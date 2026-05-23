@@ -27,6 +27,8 @@ import Phone from './pages/Phone';
 import SmsThread from './pages/SmsThread';
 import Reports from './pages/Reports';
 import TeamReport from './pages/TeamReport';
+import RosterReport from './pages/RosterReport';
+import SourceReport from './pages/SourceReport';
 import Payroll from './pages/Payroll';
 import Pricebook from './pages/Pricebook';
 import Network from './pages/Network';
@@ -109,6 +111,8 @@ export default function App() {
                   <Route path="/phone/sms/:conversationId" element={<Wrap><SmsThread /></Wrap>} />
                   <Route path="/reports" element={<Wrap><Reports /></Wrap>} />
                   <Route path="/reports/team/:userId" element={<Wrap><TeamReport /></Wrap>} />
+                  <Route path="/reports/roster/:rosterId" element={<Wrap><RosterReport /></Wrap>} />
+                  <Route path="/reports/source/:sourceId" element={<Wrap><SourceReport /></Wrap>} />
                   <Route path="/payroll" element={<Wrap><Payroll /></Wrap>} />
                   <Route path="/pricebook" element={<Wrap><Pricebook /></Wrap>} />
                   <Route path="/network" element={<Wrap><Network /></Wrap>} />

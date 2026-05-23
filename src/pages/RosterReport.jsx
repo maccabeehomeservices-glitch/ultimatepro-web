@@ -8,6 +8,12 @@ import SendReportModal from '../components/SendReportModal';
 import ExportReportMenu from '../components/ExportReportMenu';
 import { buildPeriods, PERIOD_CHIPS } from '../lib/reportPeriods';
 
+// Same layout as TeamReport — different actorType, no bonuses/deductions
+// detail tables (roster_techs has no bonuses/deductions tables backend-side,
+// so the response's bonuses[] / deductions[] are always empty). The
+// Compensation Summary block still renders; with zero bonus/deduction, Net
+// Pay equals Period Tech Profit which is the right number for roster.
+
 function CompRow({ label, value, bold = false }) {
   return (
     <div
@@ -21,25 +27,16 @@ function CompRow({ label, value, bold = false }) {
   );
 }
 
-function CompensationSummary({ summary, bonuses, deductions, allTime }) {
+function CompensationSummary({ summary, allTime }) {
   const periodProfit = Number(summary?.total_tech_profit || 0);
-  const bonusTotal = (bonuses || []).reduce(
-    (s, b) => s + Number(b.amount || 0),
-    0
-  );
-  const deductionTotal = (deductions || []).reduce(
-    (s, d) => s + Number(d.amount || 0),
-    0
-  );
-  const netPay = periodProfit + bonusTotal - deductionTotal;
+  // Roster has no bonuses/deductions, so Net Pay = Period Tech Profit.
+  const netPay = periodProfit;
 
   return (
     <div className="space-y-4 mb-4">
       <div className="bg-white rounded-2xl shadow p-4 border-l-4 border-[#1A73E8]">
         <h3 className="font-semibold text-[#1A73E8] mb-3">Compensation Summary</h3>
         <CompRow label="Period Tech Profit (from jobs)" value={periodProfit} />
-        <CompRow label="+ Bonuses"    value={bonusTotal} />
-        <CompRow label="- Deductions" value={deductionTotal} />
         <div className="border-t-2 border-[#1A73E8] mt-3 pt-3">
           <CompRow label="Net Pay for Period" value={netPay} bold />
         </div>
@@ -54,8 +51,8 @@ function CompensationSummary({ summary, bonuses, deductions, allTime }) {
   );
 }
 
-export default function TeamReport() {
-  const { userId } = useParams();
+export default function RosterReport() {
+  const { rosterId } = useParams();
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
 
@@ -71,12 +68,12 @@ export default function TeamReport() {
     let cancelled = false;
     setLoading(true);
     reportsApi
-      .getTechReport(userId, period)
+      .getRosterReport(rosterId, period)
       .then((data) => {
         if (!cancelled) setReport(data);
       })
       .catch((err) => {
-        console.error('[TeamReport]', err);
+        console.error('[RosterReport]', err);
         if (!cancelled) {
           setReport(null);
           showSnack(err?.response?.data?.error || 'Failed to load report', 'error');
@@ -88,25 +85,18 @@ export default function TeamReport() {
     return () => {
       cancelled = true;
     };
-    // period values are primitives so this fires on chip change.
-  }, [userId, period.from, period.to]);
+  }, [rosterId, period.from, period.to]);
 
-  const actor      = report?.actor      || {};
-  const summary    = report?.summary    || {};
-  const jobs       = report?.jobs       || [];
-  const bonuses    = report?.bonuses    || [];
-  const deductions = report?.deductions || [];
-  // all_time_balance shape: { unpaid, paid } (Bundle 4.6b). The prominent
-  // top card still shows "owed" (matches the original Report Balance);
-  // the CompensationSummary block below the jobs table shows both sides.
+  const actor   = report?.actor   || {};
+  const summary = report?.summary || {};
+  const jobs    = report?.jobs    || [];
   const allTime = report?.all_time_balance || { unpaid: 0, paid: 0 };
   const allTimeBalanceUnpaid = Number(allTime.unpaid || 0);
 
-  const actorColor = actor.color || '#1A73E8';
+  const actorColor = actor.color || '#6B7280';
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      {/* Header */}
       <button
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-[#1A73E8] text-sm mb-3 min-h-[44px]"
@@ -117,16 +107,16 @@ export default function TeamReport() {
 
       <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
         <div className="flex items-center gap-3 min-w-0">
-          <Avatar name={actor.name || 'Tech'} size="md" color={actorColor} />
+          <Avatar name={actor.name || 'Roster'} size="md" color={actorColor} />
           <div className="min-w-0">
             <h1 className="text-xl font-bold text-gray-900 truncate">
               {actor.name || 'Pay Statement'}
             </h1>
-            <p className="text-sm text-gray-500">Pay Statement</p>
+            <p className="text-sm text-gray-500">Pay Statement (Roster)</p>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
-          <ExportReportMenu actorType="tech" actorId={userId} period={period} />
+          <ExportReportMenu actorType="roster" actorId={rosterId} period={period} />
           <button
             onClick={() => setSendOpen(true)}
             className="px-3 py-2 bg-[#1A73E8] text-white rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-700 min-h-[44px]"
@@ -137,7 +127,6 @@ export default function TeamReport() {
         </div>
       </div>
 
-      {/* Period chips */}
       <Card className="mb-4">
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
           {PERIOD_CHIPS.map(({ id, label }) => {
@@ -168,11 +157,10 @@ export default function TeamReport() {
         <EmptyState
           icon={CreditCard}
           title="Report unavailable"
-          description="No data for this tech in the selected period."
+          description="No data for this roster tech in the selected period."
         />
       ) : (
         <>
-          {/* All-time balance owed — prominent */}
           <Card className="mb-4 border-l-4 border-[#1A73E8]">
             <p className="text-xs text-gray-400 uppercase tracking-wide">
               All-Time Balance Owed
@@ -181,11 +169,11 @@ export default function TeamReport() {
               {formatMoney(allTimeBalanceUnpaid)}
             </p>
             <p className="text-xs text-gray-500 mt-1">
-              Carries unpaid earnings plus bonuses minus pending deductions, regardless of period.
+              Carries unpaid earnings, regardless of period.
             </p>
           </Card>
 
-          {/* Jobs table — Bundle 4.6b 7-col essentials */}
+          {/* Jobs table — 7-col essentials (matches ACTOR_COLUMNS.roster) */}
           <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
             <div className="px-4 py-3 border-b border-gray-100 font-semibold text-gray-900">
               Jobs ({jobs.length})
@@ -210,13 +198,8 @@ export default function TeamReport() {
                   </thead>
                   <tbody>
                     {jobs.map((j, i) => (
-                      <tr
-                        key={j.job_id || i}
-                        className="border-b border-gray-50 last:border-0"
-                      >
-                        <td className="px-4 py-2.5 font-mono text-xs text-gray-700">
-                          {j.ticket || '—'}
-                        </td>
+                      <tr key={j.job_id || i} className="border-b border-gray-50 last:border-0">
+                        <td className="px-4 py-2.5 font-mono text-xs text-gray-700">{j.ticket || '—'}</td>
                         <td className="px-4 py-2.5 text-gray-700">{j.customer_name || '—'}</td>
                         <td className="px-4 py-2.5 text-gray-500 max-w-[200px] truncate">{j.address || '—'}</td>
                         <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
@@ -242,78 +225,16 @@ export default function TeamReport() {
             )}
           </div>
 
-          {/* Compensation Summary block — Bundle 4.6b bottom-line Net Pay */}
-          <CompensationSummary
-            summary={summary}
-            bonuses={bonuses}
-            deductions={deductions}
-            allTime={allTime}
-          />
-
-          {/* Bonuses */}
-          {bonuses.length > 0 && (
-            <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
-              <div className="px-4 py-3 border-b border-gray-100 font-semibold text-green-700">
-                Bonuses ({bonuses.length})
-              </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {bonuses.map((b, i) => (
-                    <tr key={b.id || i} className="border-b border-gray-50 last:border-0">
-                      <td className="px-4 py-2.5 text-gray-700">
-                        {b.reason || b.description || '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-gray-400 whitespace-nowrap">
-                        {b.created_at
-                          ? new Date(b.created_at).toLocaleDateString()
-                          : ''}
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-green-600 whitespace-nowrap">
-                        +{formatMoney(b.amount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Deductions */}
-          {deductions.length > 0 && (
-            <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
-              <div className="px-4 py-3 border-b border-gray-100 font-semibold text-red-700">
-                Deductions ({deductions.length})
-              </div>
-              <table className="w-full text-sm">
-                <tbody>
-                  {deductions.map((d, i) => (
-                    <tr key={d.id || i} className="border-b border-gray-50 last:border-0">
-                      <td className="px-4 py-2.5 text-gray-700">
-                        {d.reason || d.description || '—'}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-gray-400 whitespace-nowrap">
-                        {d.created_at
-                          ? new Date(d.created_at).toLocaleDateString()
-                          : ''}
-                      </td>
-                      <td className="px-4 py-2.5 text-right font-semibold text-red-600 whitespace-nowrap">
-                        -{formatMoney(d.amount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <CompensationSummary summary={summary} allTime={allTime} />
         </>
       )}
 
       <SendReportModal
         isOpen={sendOpen}
         onClose={() => setSendOpen(false)}
-        actorType="tech"
-        actorId={userId}
-        actorName={actor.name || 'Technician'}
+        actorType="roster"
+        actorId={rosterId}
+        actorName={actor.name || 'Roster Tech'}
         defaultEmail={actor.email}
         defaultPhone={actor.phone}
         period={period}

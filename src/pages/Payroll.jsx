@@ -33,11 +33,16 @@ export default function Payroll() {
   const url = `/reports/earnings?from=${from}&to=${to}`;
   const { data, loading } = useGet(url, [from, to]);
 
-  // /reports/earnings doesn't expose the underlying user.id (GROUP BY hides it),
-  // so we fetch the technicians list separately and resolve user ids by name
-  // to power the Bundle 4.6a drill-down into /reports/team/:userId. Roster and
-  // Source rows stay non-clickable until 4.6b ships their screens.
-  const { data: techsResp } = useGet('/users/technicians', []);
+  // /reports/earnings groups by id but doesn't expose the underlying ids
+  // (u.id / rt.id / js.id). Resolve them by name from each actor's directory
+  // endpoint so the Payroll cards can drill into:
+  //   /reports/team/:userId   (Bundle 4.6a — team rows)
+  //   /reports/roster/:id     (Bundle 4.6b — roster rows)
+  //   /reports/source/:id     (Bundle 4.6b — source rows)
+  const { data: techsResp }   = useGet('/users/technicians', []);
+  const { data: rosterResp }  = useGet('/roster-techs', []);
+  const { data: sourcesResp } = useGet('/sources/contacts', []);
+
   const techDirectory = useMemo(() => {
     const raw = techsResp?.technicians || (Array.isArray(techsResp) ? techsResp : []);
     const m = new Map();
@@ -49,9 +54,42 @@ export default function Payroll() {
     return m;
   }, [techsResp]);
 
+  // Roster + source rows in /reports/earnings carry the actor's display name
+  // in first_name (rt.name / js.name) and the last_name is a literal tag
+  // string ('(Roster)' / '(Source)'). Match on first_name alone here.
+  const rosterDirectory = useMemo(() => {
+    const raw = rosterResp?.roster_techs || rosterResp?.techs
+      || (Array.isArray(rosterResp) ? rosterResp : []);
+    const m = new Map();
+    for (const r of raw) {
+      const key = (r.name || '').trim().toLowerCase();
+      const id = r.id || r._id;
+      if (key && id) m.set(key, id);
+    }
+    return m;
+  }, [rosterResp]);
+
+  const sourceDirectory = useMemo(() => {
+    const raw = sourcesResp?.contacts || sourcesResp?.sources
+      || (Array.isArray(sourcesResp) ? sourcesResp : []);
+    const m = new Map();
+    for (const s of raw) {
+      const key = (s.name || '').trim().toLowerCase();
+      const id = s.id || s._id;
+      if (key && id) m.set(key, id);
+    }
+    return m;
+  }, [sourcesResp]);
+
   function resolveUserId(row) {
     const key = `${(row.first_name || '').trim().toLowerCase()}|${(row.last_name || '').trim().toLowerCase()}`;
     return techDirectory.get(key) || null;
+  }
+  function resolveRosterId(row) {
+    return rosterDirectory.get((row.first_name || '').trim().toLowerCase()) || null;
+  }
+  function resolveSourceId(row) {
+    return sourceDirectory.get((row.first_name || '').trim().toLowerCase()) || null;
   }
 
   const rawTechs = data?.earnings || data?.technicians || data?.payroll || data;
@@ -103,11 +141,19 @@ export default function Payroll() {
               const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || 'Unknown tech';
               const actorColor = tech.color || '#1A73E8';
 
-              // Only team actors (not roster, not source) drill in to Bundle
-              // 4.6a TeamReport. Other actor screens land in 4.6b/c.
-              const isTeam = !tech.is_roster && !tech.is_source;
-              const userId = isTeam ? resolveUserId(tech) : null;
-              const clickable = !!userId;
+              // Bundle 4.6a (team) + 4.6b (roster/source) drill-downs.
+              let targetPath = null;
+              if (tech.is_roster) {
+                const rid = resolveRosterId(tech);
+                if (rid) targetPath = `/reports/roster/${rid}`;
+              } else if (tech.is_source) {
+                const sid = resolveSourceId(tech);
+                if (sid) targetPath = `/reports/source/${sid}`;
+              } else {
+                const uid = resolveUserId(tech);
+                if (uid) targetPath = `/reports/team/${uid}`;
+              }
+              const clickable = !!targetPath;
 
               const cardEl = (
                 <Card key={tech.id || tech._id || i}>
@@ -132,7 +178,7 @@ export default function Payroll() {
                 <button
                   key={tech.id || tech._id || i}
                   type="button"
-                  onClick={() => navigate(`/reports/team/${userId}`)}
+                  onClick={() => navigate(targetPath)}
                   className="block w-full text-left rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 >
                   {cardEl}
