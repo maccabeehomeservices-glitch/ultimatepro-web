@@ -93,7 +93,7 @@
     <h2>⚡ Recurring root-causes — fix once, clear many</h2>
     <p class="lead">Three wrong-key / unregistered-route bugs each break the same flow on multiple screens. Fixing the one cause clears every tagged row below.</p>
     <ul>
-      <li><span class="tag">SIG</span><span><b>signature_data-vs-signature wrong key.</b> Web posts <code>signature_data</code>; the sign handlers want <code>signature</code> → 400, no signature saved. <span class="hits">hits: Job Detail · Invoice Detail · Estimate Builder (×2)</span></span></li>
+      <li><span class="tag">SIG</span><span><b>signature_data-vs-signature wrong key.</b> Web posted <code>signature_data</code>; the sign handlers want <code>signature</code> → 400. <b>Phase 0 (commit 8e01dbd) fixed Invoice + Estimate get-signature.</b> 2 remain: Job Detail signature (target key <code>signature_url</code>, also dead-code modal) and Estimate present-gbb (mis-wire). <span class="hits">remaining hits: Job Detail · Estimate Builder (present-gbb)</span></span></li>
       <li><span class="tag">SMS-CONV</span><span><b>bare-array, no conversation_id.</b> The job/customer message endpoints return a bare array, so <code>conversation_id</code> is null and the web send composer is hidden/dead. <span class="hits">hits: Job Detail (messages) · Customer Detail (messages)</span></span></li>
       <li><span class="tag">SCANPAY-404</span><span><b>POST /payments/scanpay/charge unregistered.</b> The ScanPay charge route was never mounted → "Route not found". <span class="hits">hits: Invoice Detail · Payments</span></span></li>
     </ul>
@@ -138,10 +138,8 @@ const TIERS=[
   ["Complete Job","complete-job","Parts / CC / split inputs","broken","web never sends these → partner earnings overstated","part of POST /complete",""],
   ["Complete Job","complete-job","Payment Collected dropdown","dead","backend never reads payment_method","sent as payment_method",""],
   ["Complete Job","complete-job","Confirm Completion","partial","web has no confirm surface","GET /completion · POST /completion/confirm",""],
-  ["Estimate Builder","estimate-builder","Get Signature","broken","web sends signature_data; handler wants signature","POST /estimates/:id/sign","SIG"],
   ["Estimate Builder","estimate-builder","Present GBB Options","broken","web mis-wired to signature; Android has PresentTiersScreen","opens signature modal (no route)","SIG"],
   ["Estimate Builder","estimate-builder","Attach Photo","broken","web sends a file; handler wants JSON {url}","POST /estimates/:id/add-photo",""],
-  ["Invoice Detail","invoice-detail","Capture Signature","broken","web sends signature_data; handler wants signature","POST /invoices/:id/sign","SIG"],
   ["Invoice Detail","invoice-detail","Charge via ScanPay","broken","route never registered","POST /payments/scanpay/charge","SCANPAY-404"],
   ["Payments","payments","Charge via ScanPay","broken","route never registered","POST /payments/scanpay/charge","SCANPAY-404"],
   ["Customer Detail","customer-detail","Jobs/Estimates/Invoices tabs","partial","Android has no estimates/invoices tabs","GET /jobs|estimates|invoices?customer_id",""],
