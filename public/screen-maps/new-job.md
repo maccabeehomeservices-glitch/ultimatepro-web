@@ -1,0 +1,203 @@
+# Screen Map — New Job (Job Form)
+
+> **Format:** Action-Map Schema v1. Source of truth; the HTML atlas is rendered from it.
+> When code changes this screen, update this file in the same commit. Reality on disk wins.
+
+---
+
+## SCREEN
+
+| Field | Value |
+|---|---|
+| `screen_id` | `new-job` |
+| `display_name` | New Job (Job Form) |
+| `surfaces` | android, web |
+| `route_android` | `jobs/new?ticket={ticket}` → `JobFormScreen` (JobScreens.kt 3197–3922) |
+| `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
+| `primary_actors` | office, owner |
+| `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline — it parses raw notes into a pre-filled form and looks up the customer. |
+| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: _(fill from build window)_ |
+
+### load_sequence
+Form loads local state; pulls dropdown data: users (team), roster techs, job sources, ad channels, network connections. In edit mode (`/jobs/:id/edit`) it first loads the job via `GET /jobs/:id`.
+
+### entry_points
+- **Android:** Jobs list "+", Dashboard (incl. `jobs/new?ticket={text}` deep link — note: the composable signature doesn't consume the ticket arg; whether VM reads it via SavedStateHandle is UNVERIFIED).
+- **Web:** Jobs list "+ New Job" → `/jobs/new`; Job Detail edit pencil → `/jobs/:id/edit`.
+
+---
+
+## ACTIONS
+
+The form's **fields** are inventoried at the bottom (they don't each call a route). The **actions** below are the things that actually do something — Paste Ticket, Save, Save & Send, Cancel, and the customer-resolution flows.
+
+---
+
+### `new-job.paste-ticket`
+- **label:** Paste Ticket
+- **section:** top-bar
+- **actors:** office, owner
+- **purpose:** Turn raw pasted notes (call notes, lead email, text) into a pre-filled job in one tap — the platform's signature time-saver.
+- **visibility:** always (top of form)
+- **precondition:** Clipboard / pasted text is non-empty.
+- **confirm:** —
+- **route_chain:** `POST /jobs/parse-ticket {text}` → Anthropic `claude-opus-4-5` parses → returns `customer_name, company_name, email, address, city, state, zip, job_title, job_description, scheduled_date, scheduled_time, source, source_review_link, leftover_notes, ticket_ref, phone_numbers[], phone, existing_customer_id, existing_customer, existing_jobs[]`
+- **request_body:** `{text}`
+- **side_effects:** `update-record` (form prefill, local), customer lookup (see customer-resolution)
+- **end_state:** Form fields pre-filled; customer matched or staged for creation.
+- **failure_modes:** none fatal — web maps `p.type||p.job_type` for the type chip but parse returns neither → type stays default (dead mapping, harmless).
+- **parity:** PARTIAL — Web opens a modal with an editable textarea + "Parse with AI" button. Android reads the clipboard and parses **immediately**, no modal.
+- **status:** PARTIAL
+- **status_note:** Web = review-before-parse modal; Android = instant parse. Both call the same endpoint. Android deep-link ticket arg (`jobs/new?ticket=`) consumption is UNVERIFIED.
+
+### `new-job.customer-resolution`
+- **label:** Customer match / create (auto, during parse or at save)
+- **section:** customer-card
+- **actors:** office, owner
+- **purpose:** Attach the right customer — link an existing one (returning customer) or create a new record — without manual searching.
+- **visibility:** runs on parse (both) and at save when no customer is linked yet.
+- **precondition:** A parsed/typed name or phone exists.
+- **confirm:** Duplicate sheet/modal if a likely match is found.
+- **route_chain:** `GET /customers?search=` (lookup) → `POST /customers` (create) ; Android save-time also calls `vm.checkDuplicateByPhone` (endpoint UNVERIFIED)
+- **request_body:** create: `{first_name, last_name, phone, email, type:'residential'}`
+- **side_effects:** `create-record` (customer), sets `linked_job_id` on Go-Back/Follow-Up (Android)
+- **end_state:** Job is linked to a real customer; returning/go-back/follow-up tags applied.
+- **failure_modes:** behavioral asymmetry (see parity) — not an error, but a real divergence.
+- **parity:** DIVERGENT — Web requires a resolved `customer_id` before save (blocks with "Customer is required") and shows a 3-option duplicate modal (Returning / Create New / Go Back) only for parsed tickets. Android auto-creates a customer from the typed name (no hard requirement) and shows a richer 4-option sheet (Returning / Go-Back-Warranty / Follow-Up / Cancel) for both parsed and manual-phone entry, with prior-job linking on Go-Back & Follow-Up.
+- **status:** PARTIAL
+- **status_note:** Web blocks without a customer; Android silently creates one. Android captures `linked_job_id`; web never sends it.
+
+### `new-job.save`
+- **label:** Save Job / Save Changes
+- **section:** footer (web) + top-bar (Android also has a top Save)
+- **actors:** office, owner
+- **purpose:** Create the job (or save edits). The core action.
+- **visibility:** always
+- **precondition:** Web: a customer must be resolved. Android: none (auto-creates customer).
+- **confirm:** —
+- **route_chain:** create `POST /jobs` ; edit `PUT /jobs/:id`
+- **request_body:** **Web** `{customer_id, type, notes, description(=notes), address, city, state, zip, scheduled_start, assigned_to, assigned_roster_tech_id, source_type, job_source_id, ad_channel_id}` (+ `notify_*` only on Save & Send). **Android** `{type, address, city, state, zip, notes, scheduled_start, assigned_to, assigned_roster_tech_id, source(label), source_type, job_source_id, ad_channel_id, customer_id, linked_job_id, notify_sms/email/push(always), skip_duplicate_check:true}`.
+- **side_effects:** `create-record` (job), `commission-resolve` (status set by assignment), optional auto-dispatch, `joby-trigger` (`job_assigned` if assigned), `push` to company, in-app notification, socket `job:created`, background geocode
+- **end_state:** Job created at status `scheduled` (if assigned) or `unscheduled` (if not); navigate to the new job (web) / pop back (Android).
+- **failure_modes:** `field-mismatch`/schema-noise — `notify_sms/email/push` are sent but are NOT jobs columns; `POST /jobs` never reads them → silently ignored (notification is driven separately by dispatch/notify-tech).
+- **parity:** PARTIAL — Web sends `description` + omits `source` label / `linked_job_id` / `skip_duplicate_check`. Android sends `source` label + `linked_job_id` + `skip_duplicate_check`, omits `description`, sends `notify_*` always.
+- **status:** PARTIAL
+- **status_note:** Functional both sides; payload differs. Web loses the human "Source / Ticket #" label; Android carries it into `jobs.source`.
+
+### `new-job.scheduled-start`
+- **label:** Date + Time → scheduled_start
+- **section:** schedule
+- **actors:** office, owner
+- **purpose:** Set when the job is scheduled.
+- **visibility:** always
+- **precondition:** —
+- **confirm:** —
+- **route_chain:** part of `POST /jobs` payload
+- **request_body:** `scheduled_start` (ISO string or null)
+- **side_effects:** `update-record`
+- **end_state:** Job carries the chosen start time (or none).
+- **failure_modes:** `divergent-logic` — Web: null-safe; null when no date, UTC ISO when set (`isNaN(dt.getTime()) ? null : dt.toISOString()`). Android: never null; naive local string with no timezone (`${date}T${time}:00`), and **blank date → uses current time (now)**.
+- **parity:** DIVERGENT — same wall-clock time can persist as different instants; Android-created jobs are never left scheduleless.
+- **status:** BROKEN
+- **status_note:** Timezone + null handling differ between surfaces. Highest correctness risk on this screen — a job scheduled on web vs Android can land at different times, and Android silently schedules blank-date jobs for "now."
+
+### `new-job.assign`
+- **label:** Assign (self / team / roster / partner)
+- **section:** assignment
+- **actors:** office, owner
+- **purpose:** Choose who does the job.
+- **visibility:** always
+- **precondition:** —
+- **confirm:** —
+- **route_chain:** part of `POST /jobs` (`assigned_to` for self/team user, `assigned_roster_tech_id` for roster). Partner → neither field sent.
+- **request_body:** `assigned_to` XOR `assigned_roster_tech_id`
+- **side_effects:** `update-record`; backend sets status `scheduled` if assigned else `unscheduled`
+- **end_state:** Job assigned to a user or roster tech; partner requires a later "Send To" from Job Detail.
+- **failure_modes:** none — partner intentionally deferred to Job Detail.
+- **parity:** PARTIAL — Web = inline tabs + dropdown; Android = button → AlertDialog. Web renders a Partner dropdown but (like Android) sends no partner field; both instruct partner-forwarding via Job Detail.
+- **status:** OK
+- **status_note:** "Self" = the owner user id (status still becomes `scheduled`).
+
+### `new-job.send-via`
+- **label:** Send Via — SMS / Email / Push (Save & Send)
+- **section:** assignment / footer
+- **actors:** office, owner
+- **purpose:** Notify the assignee when saving.
+- **visibility:** only when assignment is not "self" (Push only for team)
+- **precondition:** Job is being assigned to someone other than self.
+- **confirm:** —
+- **route_chain:** Web: `POST /jobs/:id/dispatch`. Android: `POST /roster-techs/notify-tech`.
+- **request_body:** Web dispatch `{tech_lat:0, tech_lng:0}`; Android notify-tech `{job_id, tech_id, method}` (tech_id ignored)
+- **side_effects:** `sms-tech`/`sms-customer`/`push` (see note)
+- **end_state:** Assignee notified.
+- **failure_modes:** `divergent-logic` — "Save & Send" means different things per surface.
+- **parity:** DIVERGENT — Web fires a **customer-facing** dispatch SMS ("on the way"); Android fires a **tech-facing** notify-tech message. Web also requires create-mode (`!isEdit`). Web `notify_email` alone does nothing (only dispatches on sms||push); web builds a `calls` array that's never used.
+- **status:** PARTIAL
+- **status_note:** Same button, two different notifications. Web's email-only path is a no-op.
+
+### `new-job.cancel`
+- **label:** Cancel / Back
+- **section:** top-bar / footer
+- **actors:** office, owner
+- **purpose:** Leave without saving.
+- **visibility:** always
+- **precondition:** —
+- **confirm:** —
+- **route_chain:** none (navigate)
+- **request_body:** —
+- **side_effects:** `navigate`
+- **end_state:** Returns to previous screen.
+- **failure_modes:** none
+- **parity:** PARTIAL — Web has both a top Back and a footer Cancel; Android has top-bar back only (and an extra top-bar Save).
+- **status:** OK
+- **status_note:** —
+
+### `new-job.status-field`
+- **label:** Status dropdown (edit mode)
+- **section:** schedule (web edit only)
+- **actors:** office, owner
+- **purpose:** Intended to set job status while editing.
+- **visibility:** web edit-mode only; Android has none on the form (status lives in JobEditScreen).
+- **precondition:** —
+- **confirm:** —
+- **route_chain:** none — `buildPayload` never includes `status`; `PUT /jobs/:id` doesn't read it.
+- **request_body:** not sent
+- **side_effects:** none
+- **end_state:** (intended) status changes — but nothing happens.
+- **failure_modes:** `dead-code` — the field is collected but never saved.
+- **parity:** WEB-ONLY (dead).
+- **status:** DEAD-CODE
+- **status_note:** Editing Status in the web form does nothing on save. Status changes only via `POST /jobs/:id/status` from Job Detail.
+
+---
+
+## FIELD INVENTORY (form inputs — reference, not actions)
+
+| # | Field | Web | Android | Maps to | Notes |
+|---|---|---|---|---|---|
+| 1 | Job Source | select (My Company / Contacts / Ad Channels) | dropdown | `source_type` + `job_source_id`/`ad_channel_id` | default own_company |
+| 2 | Job Type | chip group (9 labels) | chips (6 raw enums) | `type` | web maps synthetic labels; web has no "emergency" chip, Android does |
+| 3 | Assign | tabs self/team/roster/partner | button→dialog | `assigned_to`/`assigned_roster_tech_id` | see `new-job.assign` |
+| 3d | Send Via | checkboxes SMS/Email/Push | AppSwitch | `notify_*` (NOT job columns) | shown only when not-self |
+| 4 | Customer | search + dropdown / pill | name text (✓ when matched) | `customer_id` | web required; Android auto-creates |
+| 4a/b | Extra phones / emails | repeatable text | repeatable text | customer record (post-save) | persistence path UNVERIFIED |
+| 5 | Street Address | text + Google Places | PlacesAddressField | `address` | |
+| 5a | City / State / ZIP | text | text | `city`/`state`(→abbr)/`zip` | |
+| 5b | Address-inaccurate warning | banner (edit + `address_verified===false`) | — | — | web-only |
+| 6 | Job Notes | textarea | text (3 lines) | `notes` (web also `description`) | |
+| 7 | Date | native date input | field → DatePicker dialog | part of `scheduled_start` | see `new-job.scheduled-start` |
+| 7a | Time | native time input | field → TimePicker dialog | part of `scheduled_start` | |
+| 8 | Status | select (edit only) | — (JobEditScreen) | not sent | DEAD on save (web) |
+
+---
+
+## SCREEN-LEVEL DRIFT FLAGS
+
+- **scheduled_start timezone/null drift** (biggest risk): web UTC + null-safe; Android naive-local + "now" fallback. Same input → possibly different stored instant.
+- **Customer-required asymmetry:** web blocks without a customer; Android auto-creates one.
+- **"Save & Send" semantics differ:** web = customer dispatch SMS; Android = tech notify-tech.
+- **Web Status field is dead on save.**
+- **notify_sms/email/push** sent by both but ignored by `POST /jobs` (not columns).
+- **Android-only carried fields:** `source` label + ticket #, `linked_job_id`, `skip_duplicate_check`, richer duplicate sheet.
+- **Web notify email-only path** is a no-op; unused `calls` array.
+- **UNVERIFIED (needs Stage-2 read of JobViewModel/CrmRepository):** Android `vm.parseTicket` body, `vm.checkDuplicateByPhone` endpoint, extra-phones/emails persistence path, deep-link `ticket` arg consumption.
