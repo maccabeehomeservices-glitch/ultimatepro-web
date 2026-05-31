@@ -16,7 +16,7 @@
 | `route_web` | `/estimates/:id` → `EstimateDetail` (EstimateDetail.jsx, 758 lines); builder `/estimates/new` & `/estimates/:id/edit` → `EstimateBuilder` |
 | `primary_actors` | office, owner, tech |
 | `purpose` | Author and close an estimate: review line items (or Good/Better/Best tiers), send it for signature, capture a signature, collect a deposit, then convert it to an invoice. Web does the actions inline (modals + a 10s poll while waiting for a remote signature); Android routes sign / send / present-tiers / deposit to dedicated screens. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: cca244c |
+| `last_verified` | 2026-05-31 · Phase 0 [SIG] fix · commit: f942dcf |
 
 ### load_sequence
 `GET /estimates/:id` returns the estimate + flattened `cust_*`. For GBB estimates the web detail also pulls `GET /estimates/:id/tiers`. While `status === 'sent'`, web polls `refetch()` every **10 s** to catch a remote signature.
@@ -76,13 +76,13 @@
 - **precondition:** —
 - **confirm:** signature pad modal (web), with a signer-name field.
 - **route_chain:** `POST /estimates/:id/sign`
-- **request_body:** web `estimatesApi.captureSignature(id, base64, signerName)` → `{ signature_data, signer_name }`. Backend (estimates.js 597–598) reads `{ signature, signer_name }` and returns **400 "Signature required"** when `signature` is absent.
-- **side_effects:** intended: set `customer_signature`, `status='approved'`, `approved_at`; fire Joby `estimate_approved`; email the office; push "Estimate Signed". With the wrong key → none of this happens.
-- **end_state:** web → 400 error; no signature saved.
-- **failure_modes:** `wrong-key` — web sends `signature_data`; handler expects `signature`. Web estimate signing is broken.
-- **parity:** DIVERGENT — web's inline signature is broken; Android signs on `EstimateSignScreen` (working path).
-- **status:** BROKEN
-- **status_note:** Same wrong-key bug as the invoice/job signatures. On success the backend would email `OFFICE_EMAIL` and push to the company.
+- **request_body:** web `estimatesApi.captureSignature(id, base64, signerName)` → `{ signature, signer_name }`. Backend (estimates.js 597–598) reads `{ signature, signer_name }`. Keys now match.
+- **side_effects:** sets `customer_signature`, `status='approved'`, `approved_at`; fires Joby `estimate_approved`; emails the office; pushes "Estimate Signed".
+- **end_state:** web → signature saved, estimate status → `approved`.
+- **failure_modes:** none observed.
+- **parity:** MATCH — web posts `{ signature, signer_name }` inline; Android signs on `EstimateSignScreen` (`signEstimate` → `{ signature, signer_name }`, CrmRepository.kt:334). Same key both surfaces.
+- **status:** OK
+- **status_note:** Phase 0 [SIG] fix (2026-05-31): web now sends `{ signature, signer_name }` matching backend estimates.js:597. Web estimate signing works; on success the backend emails `OFFICE_EMAIL` and pushes to the company.
 
 ### `estimate-builder.present-gbb`
 - **label:** "📊 Present GBB Options"
@@ -207,7 +207,7 @@
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **Web estimate signature is broken** — `captureSignature` sends `signature_data`; `/estimates/:id/sign` reads `signature` → 400. (Same wrong-key class as invoice/job signatures.)
+- **Web estimate signature now works** — Phase 0 [SIG] fix (2026-05-31): `captureSignature` sends `{ signature, signer_name }` matching `/estimates/:id/sign` (estimates.js:597) and Android. (The Job-Detail signature — separate route reading `signature_url` — remains a follow-up.)
 - **Web "Present GBB Options" is mis-wired** — it opens the (broken) signature modal instead of presenting tiers; Android has a real `PresentTiersScreen` + `POST /estimates/:id/select-tier`. Web reads `/tiers` for display but never calls select-tier.
 - **Web "Attach Photo" is broken** — posts a multipart file to an endpoint that expects a JSON `{url}` and has no multer → 400. Android sends `{url}` → works.
 - **`collect-deposit` here is the CORRECT path** (sends `{amount_collected, payment_method}`), unlike the Job-Detail deposit (wrong keys + non-existent `estimate_id`).

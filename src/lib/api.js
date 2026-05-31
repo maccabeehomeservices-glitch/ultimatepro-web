@@ -315,7 +315,7 @@ export const estimatesApi = {
     api.post(`/estimates/${id}/select-tier`, { tier_id }),
 
   captureSignature: (id, signature_data, signer_name) =>
-    api.post(`/estimates/${id}/sign`, { signature_data, signer_name }),
+    api.post(`/estimates/${id}/sign`, { signature: signature_data, signer_name }),
 
   addPhoto: (id, file) => {
     const form = new FormData();
@@ -363,7 +363,7 @@ export const invoicesApi = {
     }),
 
   captureSignature: (id, signature_data) =>
-    api.post(`/invoices/${id}/sign`, { signature_data }),
+    api.post(`/invoices/${id}/sign`, { signature: signature_data }),
 
   void: (id) =>
     api.post(`/invoices/${id}/void`),

@@ -16,7 +16,7 @@
 | `route_web` | `/invoices/:id` → `InvoiceDetail` (InvoiceDetail.jsx, 783 lines) |
 | `primary_actors` | office, owner, tech |
 | `purpose` | The collect-the-money screen for one invoice: review line items + totals, send the invoice (with a payment link + PDF), record a payment, capture a signature, send a receipt, and manage follow-up reminders. Web does every action inline (modals); Android routes the heavy actions (sign / pay / receipt / send) to dedicated screens. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: cca244c |
+| `last_verified` | 2026-05-31 · Phase 0 [SIG] fix · commit: f942dcf |
 
 ### load_sequence
 `GET /invoices/:id` returns `invoice.*` + flattened `cust_first/last/email/phone/address/city/state/zip` (JOIN customers) + `payments[]` (all rows for the invoice). Android `vm.loadInv(id)`; web `useGet('/invoices/:id')`.
@@ -108,13 +108,13 @@
 - **precondition:** —
 - **confirm:** signature pad modal (web).
 - **route_chain:** `POST /invoices/:id/sign`
-- **request_body:** web `invoicesApi.captureSignature(id, base64)` → `{ signature_data }`. Backend (invoices.js 532–535) reads `{ signature }` and returns **400 "Signature required"** when it's absent.
-- **side_effects:** intended: set `customer_signature`, `customer_signature_date`, `status='signed'`. With the wrong key → no write.
-- **end_state:** web → 400 error snackbar, no signature saved.
-- **failure_modes:** `wrong-key` — web sends `signature_data`; handler expects `signature`. Web invoice signing is broken.
-- **parity:** DIVERGENT — web has a broken inline signature; Android signs on a separate `InvoiceSignScreen` (its key is unverified here but it is the working path).
-- **status:** BROKEN
-- **status_note:** Same wrong-key bug as the web Job-Detail signature. Always 400 from the web Invoice Detail modal.
+- **request_body:** web `invoicesApi.captureSignature(id, base64)` → `{ signature }`. Backend (invoices.js 532–535) reads `{ signature }`. Keys now match.
+- **side_effects:** sets `customer_signature`, `customer_signature_date`, `status='signed'`.
+- **end_state:** web → signature saved, invoice status → `signed`.
+- **failure_modes:** none observed.
+- **parity:** MATCH — web posts `{ signature }` inline; Android signs on a separate `InvoiceSignScreen` (`signInvoice` → `{ signature }`, CrmRepository.kt:361). Same key both surfaces.
+- **status:** OK
+- **status_note:** Phase 0 [SIG] fix (2026-05-31): web now sends `{ signature }` matching backend invoices.js:534. Web invoice signing works.
 
 ### `invoice-detail.send-receipt`
 - **label:** Send Receipt / Send Partial Receipt
@@ -172,7 +172,7 @@
 ## SCREEN-LEVEL DRIFT FLAGS
 
 - **`scanpay-charge` → `POST /payments/scanpay/charge` is a 404** (route never registered). Web "Charge via ScanPay" always fails; Android's `scanpayCharge` targets the same missing path.
-- **Web `capture-signature` sends `signature_data`; backend wants `signature`** → 400. Web invoice signing is broken (same wrong-key class as the Job-Detail signature).
+- **`capture-signature` now sends `{ signature }`** (Phase 0 [SIG] fix, 2026-05-31) matching backend invoices.js:534 and Android. Web invoice signing works. (The Job-Detail signature — separate route reading `signature_url` — remains a follow-up.)
 - **Structural divergence:** web does send / pay / sign / receipt **inline** (modals); Android routes each to a dedicated screen (`InvoiceSendScreen`, `PaymentScreen`, `InvoiceSignScreen`, `ReceiptScreen`).
 - **`charge-payment` visibility differs:** web allows it at any unpaid status; Android only at `signed`.
 - **`add-item` is Android-only** on the detail screen.
