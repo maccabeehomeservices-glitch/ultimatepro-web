@@ -93,7 +93,7 @@
     <h2>⚡ Recurring root-causes — fix once, clear many</h2>
     <p class="lead">Three wrong-key / unregistered-route bugs each break the same flow on multiple screens. Fixing the one cause clears every tagged row below.</p>
     <ul>
-      <li><span class="tag">SIG</span><span><b>signature_data-vs-signature wrong key.</b> Web posted <code>signature_data</code>; the sign handlers want <code>signature</code> → 400. <b>Phase 0 (commit 8e01dbd) fixed Invoice + Estimate get-signature.</b> 2 remain: Job Detail signature (target key <code>signature_url</code>, also dead-code modal) and Estimate present-gbb (mis-wire). <span class="hits">remaining hits: Job Detail · Estimate Builder (present-gbb)</span></span></li>
+      <li><span class="tag">SIG</span><span><b>signature_data wrong-key class: fully resolved.</b> Web posted <code>signature_data</code>; handlers want <code>signature</code> (invoice/estimate) or <code>signature_url</code> (job). Phase 0 fixed all three routes (8e01dbd invoice + estimate; this commit job → <code>signature_url</code>). No key-mismatch remains. The 1 row still tagged is Estimate <code>present-gbb</code>, a mis-wire (opens the signature modal instead of presenting tiers), not a key bug. Job Detail signature drops off [SIG]: it's now an unbuilt-feature item (no trigger on web or Android). <span class="hits">remaining tagged: Estimate Builder (present-gbb)</span></span></li>
       <li><span class="tag">SMS-CONV</span><span><b>bare-array, no conversation_id.</b> The job/customer message endpoints return a bare array, so <code>conversation_id</code> is null and the web send composer is hidden/dead. <span class="hits">hits: Job Detail (messages) · Customer Detail (messages)</span></span></li>
       <li><span class="tag">SCANPAY-404</span><span><b>POST /payments/scanpay/charge unregistered.</b> The ScanPay charge route was never mounted → "Route not found". <span class="hits">hits: Invoice Detail · Payments</span></span></li>
     </ul>
@@ -132,7 +132,7 @@ const TIERS=[
   ["Job Detail","job-detail","Charge Payment","broken","web reads missing field + wrong keys → always fails","web: POST /estimates/:id/collect-deposit",""],
   ["Job Detail","job-detail","Restore","broken","endpoint doesn't exist → 404","POST /jobs/:id/restore",""],
   ["Job Detail","job-detail","Completed","partial","web can't enter parts/CC → splits wrong","POST /jobs/:id/complete",""],
-  ["Job Detail","job-detail","Signature pad","dead","web modal never opens + wrong payload key","POST /jobs/:id/signature","SIG"],
+  ["Job Detail","job-detail","Signature pad","dead","key fixed (signature_url); no trigger on either surface, feature unbuilt on web + Android","POST /jobs/:id/signature",""],
   ["Job Detail","job-detail","Details/History/Messages","broken","web can never send a job SMS (convId null)","GET /history · /sms · POST /send","SMS-CONV"],
   ["Complete Job","complete-job","Complete Job","partial","web sends only notes (no parts/CC)","POST /jobs/:id/complete",""],
   ["Complete Job","complete-job","Parts / CC / split inputs","broken","web never sends these → partner earnings overstated","part of POST /complete",""],

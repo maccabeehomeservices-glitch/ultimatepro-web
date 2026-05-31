@@ -181,7 +181,7 @@ export const jobsApi = {
     api.post(`/jobs/${id}/completion/confirm`),
 
   captureSignature: (id, signature_data) =>
-    api.post(`/jobs/${id}/signature`, { signature_data }),
+    api.post(`/jobs/${id}/signature`, { signature_url: signature_data }),
 
   restore: (id) =>
     api.post(`/jobs/${id}/restore`),

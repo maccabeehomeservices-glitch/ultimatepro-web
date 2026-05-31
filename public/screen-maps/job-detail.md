@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: _(fill from build window)_ |
+| `last_verified` | 2026-05-31 · Phase 0 [SIG] signature key fix · commit: 8f788ce |
 
 ### load_sequence
 
@@ -576,17 +576,17 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **section:** (web, unreferenced)
 - **actors:** owner, office, customer
 - **purpose:** Capture a signature on the job.
-- **visibility:** web modal exists but `setShowSignature(true)` is never called.
+- **visibility:** web modal exists but `setShowSignature(true)` is never called; Android has no job-signature UI either (feature unsurfaced on both surfaces).
 - **precondition:** —
 - **confirm:** —
-- **route_chain:** web `POST /jobs/:id/signature {signature_data}`; backend expects `signature_url`.
-- **request_body:** `{signature_data}` (wrong; backend wants `signature_url`)
+- **route_chain:** web `POST /jobs/:id/signature {signature_url}` — key matches backend jobs.js:1011 and Android repo (CrmRepository.kt:262). Remaining gap: no trigger opens the modal.
+- **request_body:** `{signature_url}` (key now correct; backend jobs.js:1011 reads `signature_url`)
 - **side_effects:** intended `update-record`
-- **end_state:** Signature saved on job.
-- **failure_modes:** `dead-code` (no trigger) + `field-mismatch` (signature_data vs signature_url → 400).
-- **parity:** WEB-ONLY (dead/broken). Android `saveJobSignature` exists in ApiService.
+- **end_state:** Signature saved on job (when a trigger eventually opens the modal).
+- **failure_modes:** `dead-code` (no trigger on either surface — feature unsurfaced on web AND Android; key mismatch resolved 2026-05-31).
+- **parity:** both surfaces lack the UI trigger — web's modal is never opened; Android has the `saveJobSignature` repo method (CrmRepository.kt:262) but no screen calls it. Not web-only; unbuilt on both.
 - **status:** DEAD-CODE
-- **status_note:** No button opens the web signature modal; payload key wrong even if it did.
+- **status_note:** Phase 0 [SIG] (2026-05-31): body key now `signature_url`, matching backend jobs.js:1011 and the Android repo. The remaining gap is product-level, not a bug: no trigger wires the modal on web, and Android has no job-signature UI at all. Wiring is a roadmap decision. Do not re-investigate the key.
 
 ### `job-detail.tabs`
 - **label:** Details / History / Messages tabs
