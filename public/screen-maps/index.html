@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UltimatePro · Screen Atlas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#0a0f1e;--ink2:#0e1528;--panel:#121a30;--panel2:#16203a;--line:#23314f;--line2:#1b2740;--cyan:#5ec8e8;--cyan-dim:#2b6b85;--text:#dbe6f5;--dim:#8ea3c4;--faint:#5e7197;--ok:#46d39a;--partial:#f2b84b;--broken:#ff6a72;--dead:#7c8aa8;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:'Archivo',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);background-size:46px 46px;background-position:-1px -1px;min-height:100vh}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 22px 100px}
+  header.mast{border-bottom:1px solid var(--line);padding:46px 0 28px;margin-bottom:26px}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan)}
+  h1{font-size:clamp(36px,6vw,64px);font-weight:900;letter-spacing:-.02em;line-height:.96;text-transform:uppercase}
+  h1 .sub{display:block;font-size:.28em;font-weight:600;letter-spacing:.04em;color:var(--dim);margin-top:11px;text-transform:none}
+  .stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);margin:26px 0}
+  .stat{flex:1;min-width:120px;background:var(--ink2);padding:16px 18px;position:relative}
+  .stat .n{font-size:30px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+  .stat .l{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .stat.total::before{background:var(--cyan)}.stat.total .n{color:var(--cyan)}
+  .stat.mapped::before{background:var(--ok)}.stat.mapped .n{color:var(--ok)}
+  .stat.pending::before{background:var(--faint)}.stat.pending .n{color:var(--dim)}
+  .sectionlabel{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin:30px 0 12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+  a.card{display:block;text-decoration:none;border:1px solid var(--line);background:var(--ink2);padding:18px;transition:.16s;position:relative;border-radius:8px}
+  a.card:hover{border-color:var(--cyan-dim);background:var(--panel);transform:translateY(-2px)}
+  a.card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:8px 0 0 8px}
+  a.card.done::before{background:var(--ok)}
+  a.card .nm{font-size:18px;font-weight:800;letter-spacing:-.01em;color:var(--text)}
+  a.card .id{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint);margin-top:3px;letter-spacing:.04em}
+  a.card .desc{font-size:13px;color:var(--dim);margin-top:10px;line-height:1.5}
+  a.card .pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:13px}
+  .pill{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px}
+  .pill.ok{color:var(--ok);background:rgba(70,211,154,.12)}
+  .pill.partial{color:var(--partial);background:rgba(242,184,75,.12)}
+  .pill.broken{color:var(--broken);background:rgba(255,106,114,.13)}
+  .pill.dead{color:var(--dead);background:rgba(124,138,168,.13)}
+  .soon{border:1px dashed var(--line);background:transparent;padding:16px 18px;border-radius:8px;opacity:.65}
+  .soon .nm{font-size:15px;font-weight:700;color:var(--dim)}
+  .soon .id{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);margin-top:3px}
+  footer{margin-top:40px;padding-top:20px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.04em;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">UltimatePro · Action-Map Schema v1</div>
+    <h1>Screen Atlas<span class="sub">A fact-based map of every screen — button, route, what fires, result. Built from code, not assumptions.</span></h1>
+  </header>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="sectionlabel">Mapped screens</div>
+  <div class="grid" id="grid"></div>
+
+  <div class="sectionlabel">Not yet mapped</div>
+  <div class="grid" id="pending"></div>
+
+  <footer>
+    UltimatePro Screen Atlas · each map is rendered from its markdown contract in /screen-maps/<br>
+    Source of truth is the markdown; the atlas pages are the presentation. Reality on disk wins.
+  </footer>
+</div>
+
+<script>
+const MAPS=[
+  {nm:"Job Detail",id:"job-detail",href:"job-detail-atlas.html",desc:"The operational hub for a single job — all four spines intersect.",counts:{ok:15,partial:10,broken:7,dead:1}},
+  {nm:"New Job",id:"new-job",href:"new-job-atlas.html",desc:"The front door — turn a call, booking, or pasted ticket into a job.",counts:{ok:2,partial:4,broken:1,dead:1}},
+  {nm:"Complete Job",id:"complete-job",href:"complete-job-atlas.html",desc:"The money spine's last step — lock the job, run profit, write earnings.",counts:{ok:2,partial:2,broken:1,dead:1}},
+];
+const PENDING=[
+  "Invoice Detail","Estimate Builder","Dashboard","Calendar","Customers","Customer Detail",
+  "Payments","Payroll","Reports","Network","Inventory","Phone / SMS","Live Map","Settings",
+];
+
+const grid=document.getElementById('grid');
+MAPS.forEach(m=>{
+  const c=m.counts;
+  const pills=Object.entries(c).filter(([,n])=>n>0).map(([k,n])=>`<span class="pill ${k}">${n} ${k}</span>`).join('');
+  grid.innerHTML+=`<a class="card done" href="${m.href}">
+    <div class="nm">${m.nm}</div><div class="id">${m.id}</div>
+    <div class="desc">${m.desc}</div>
+    <div class="pills">${pills}</div>
+  </a>`;
+});
+const pend=document.getElementById('pending');
+PENDING.forEach(p=>{pend.innerHTML+=`<div class="soon"><div class="nm">${p}</div><div class="id">pending audit</div></div>`;});
+
+const tot=MAPS.length+PENDING.length;
+document.getElementById('stats').innerHTML=`
+ <div class="stat total"><div class="n">${tot}</div><div class="l">screens total</div></div>
+ <div class="stat mapped"><div class="n">${MAPS.length}</div><div class="l">mapped</div></div>
+ <div class="stat pending"><div class="n">${PENDING.length}</div><div class="l">pending</div></div>`;
+</script>
+</body>
+</html>

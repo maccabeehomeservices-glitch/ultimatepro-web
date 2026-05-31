@@ -3,25 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UltimatePro · Atlas · New Job</title>
+<title>UltimatePro · Atlas · Complete Job</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --ink:#0a0f1e;--ink2:#0e1528;--panel:#121a30;--panel2:#16203a;
-    --line:#23314f;--line2:#1b2740;--cyan:#5ec8e8;--cyan-dim:#2b6b85;
-    --text:#dbe6f5;--dim:#8ea3c4;--faint:#5e7197;
-    --ok:#46d39a;--partial:#f2b84b;--broken:#ff6a72;--dead:#7c8aa8;
-  }
+  :root{--ink:#0a0f1e;--ink2:#0e1528;--panel:#121a30;--panel2:#16203a;--line:#23314f;--line2:#1b2740;--cyan:#5ec8e8;--cyan-dim:#2b6b85;--text:#dbe6f5;--dim:#8ea3c4;--faint:#5e7197;--ok:#46d39a;--partial:#f2b84b;--broken:#ff6a72;--dead:#7c8aa8;}
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--ink);color:var(--text);font-family:'Archivo',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;
-    background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);
-    background-size:46px 46px;background-position:-1px -1px}
+  body{background:var(--ink);color:var(--text);font-family:'Archivo',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);background-size:46px 46px;background-position:-1px -1px}
   .wrap{max-width:1240px;margin:0 auto;padding:0 22px 120px}
-  .mono{font-family:'JetBrains Mono',monospace}
-
-  header.mast{border-bottom:1px solid var(--line);padding:38px 0 24px;margin-bottom:26px;position:relative}
+  header.mast{border-bottom:1px solid var(--line);padding:38px 0 24px;margin-bottom:18px;position:relative}
   .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:13px;display:flex;align-items:center;gap:10px}
   .eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan)}
   h1{font-size:clamp(32px,5.5vw,56px);font-weight:900;letter-spacing:-.02em;line-height:.96;text-transform:uppercase}
@@ -31,7 +22,6 @@
   @media(max-width:700px){.stamp{position:static;display:inline-block;margin-top:16px;transform:none}}
   .crumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);margin-bottom:18px}
   .crumb a{color:var(--cyan);text-decoration:none}
-
   .stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);margin:24px 0}
   .stat{flex:1;min-width:110px;background:var(--ink2);padding:14px 16px;position:relative}
   .stat .n{font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
@@ -42,18 +32,15 @@
   .stat.partial::before{background:var(--partial)}.stat.partial .n{color:var(--partial)}
   .stat.broken::before{background:var(--broken)}.stat.broken .n{color:var(--broken)}
   .stat.dead::before{background:var(--dead)}.stat.dead .n{color:var(--dead)}
-
   .toolbar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center;margin-bottom:8px}
   .filters{display:flex;flex-wrap:wrap;gap:7px}
   .fbtn{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;background:var(--panel);border:1px solid var(--line);color:var(--dim);padding:7px 12px;cursor:pointer;text-transform:uppercase;transition:.15s}
   .fbtn:hover{border-color:var(--cyan-dim);color:var(--text)}
   .fbtn.active{background:var(--cyan);color:var(--ink);border-color:var(--cyan);font-weight:700}
   .hint{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint);letter-spacing:.04em}
-
   .colhead{display:grid;grid-template-columns:150px 26px 215px 26px 150px 26px 1fr;padding:14px 14px 6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
   .colhead span:nth-child(1){grid-column:1}.colhead .c-route{grid-column:3}.colhead .c-fire{grid-column:5}.colhead .c-res{grid-column:7}
   @media(max-width:820px){.colhead{display:none}}
-
   .section{border:1px solid var(--line);margin-bottom:13px;background:var(--ink2)}
   .sec-head{display:flex;align-items:center;gap:13px;padding:13px 16px;cursor:pointer;user-select:none;background:linear-gradient(180deg,var(--panel),var(--ink2));transition:.2s}
   .section.open .sec-head{border-bottom:1px solid var(--line)}
@@ -66,7 +53,6 @@
   .section.open .chev{transform:rotate(90deg)}
   .sec-body{display:none;padding:4px 12px 12px}
   .section.open .sec-body{display:block}
-
   .flow{display:grid;grid-template-columns:150px 26px 215px 26px 150px 26px 1fr;align-items:stretch;margin-top:8px;cursor:pointer}
   @media(max-width:820px){.flow{grid-template-columns:1fr}.arrow{display:none}}
   .box{border:1px solid var(--line2);background:var(--panel);padding:9px 12px;display:flex;flex-direction:column;justify-content:center;min-height:54px;border-radius:6px}
@@ -81,7 +67,6 @@
   .box .caveat{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:4px;line-height:1.35}
   .box.partial .caveat{color:#ffe4b0}.box.broken .caveat{color:#ffc4c7}.box.dead .caveat{color:#c2cde0}.box.ok .caveat{color:#bfe9d6}
   .flow:hover .box{border-color:var(--cyan-dim)}
-
   .detail{display:none;border:1px solid var(--cyan-dim);border-top:none;background:var(--ink);padding:14px 16px;margin-top:-2px;border-radius:0 0 6px 6px}
   .detail.open{display:block}
   .detail .drow{display:grid;grid-template-columns:130px 1fr;gap:14px;padding:5px 0;border-bottom:1px solid var(--line2)}
@@ -94,41 +79,32 @@
   .hopline{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
   .hop{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--panel);border:1px solid var(--line);padding:4px 8px;border-radius:3px}
   .hop .m{color:var(--cyan);font-weight:700;margin-right:5px}
-
-  .fieldtbl{border:1px solid var(--line);background:var(--ink2);margin-top:24px}
-  .fieldtbl h2{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--cyan)}
-  table{width:100%;border-collapse:collapse;font-size:12.5px}
-  th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line2);vertical-align:top}
-  th{font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)}
-  td code{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan)}
-  td .note{color:var(--faint);font-size:11px}
-
+  .moneybox{border:1px solid var(--line);background:var(--ink2);margin-top:24px}
+  .moneybox h2{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--cyan)}
+  .moneybox ul{list-style:none;padding:13px 16px;display:grid;gap:9px}
+  .moneybox li{font-size:13px;padding-left:18px;position:relative;color:var(--dim);line-height:1.55}
+  .moneybox li::before{content:"$";position:absolute;left:0;color:var(--cyan);font-family:'JetBrains Mono',monospace}
+  .moneybox li b{color:var(--text)}
+  .moneybox li code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:var(--panel);padding:1px 5px;border-radius:3px}
   .drift{border:1px solid var(--line);background:var(--ink2);margin-top:18px}
   .drift h2{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--broken)}
-  .drift.good h2{color:var(--ok)}
   .drift ul{list-style:none;padding:13px 16px;display:grid;gap:9px}
   .drift li{font-size:13px;padding-left:18px;position:relative;color:var(--dim);line-height:1.55}
   .drift li::before{content:"▸";position:absolute;left:0;color:var(--broken)}
-  .drift.good li::before{color:var(--ok)}
   .drift li b{color:var(--text)}
   .drift li code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:var(--panel);padding:1px 5px;border-radius:3px}
-
   footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.04em;line-height:1.8}
 </style>
 </head>
 <body>
 <div class="wrap">
-
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>New Job<span class="sub">The front door — turn a call, booking, or pasted ticket into a job, then Save.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>e341e38</b></div>
+    <h1>Complete Job<span class="sub">The money spine's last step — lock the job, run profit, write earnings.</span></h1>
+    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>cca244c</b></div>
   </header>
-
-  <div class="crumb"><a href="index.html">all maps</a> · <a href="job-detail-atlas.html">job detail</a> › new job</div>
-
+  <div class="crumb"><a href="index.html">all maps</a> · <a href="job-detail-atlas.html">job detail</a> · <a href="new-job-atlas.html">new job</a> › complete job</div>
   <div class="stats" id="stats"></div>
-
   <div class="toolbar">
     <div class="filters" id="filters">
       <button class="fbtn active" data-f="all">All</button>
@@ -137,82 +113,57 @@
       <button class="fbtn" data-f="broken">Broken</button>
       <button class="fbtn" data-f="dead">Dead-code</button>
     </div>
-    <div class="hint">click any row to open full detail · this screen is a form + one Save, so rows = what Save does</div>
+    <div class="hint">click any row to open full detail</div>
   </div>
-
   <div class="colhead"><span>action</span><span class="c-route">route it calls</span><span class="c-fire">what fires</span><span class="c-res">result</span></div>
-
   <div id="atlas"></div>
 
-  <div class="fieldtbl">
-    <h2>Form fields (reference — these don't each call a route)</h2>
-    <table>
-      <tr><th>field</th><th>maps to</th><th>note</th></tr>
-      <tr><td>Job Source</td><td><code>source_type</code> + <code>job_source_id</code>/<code>ad_channel_id</code></td><td class="note">My Company / Contacts / Ad Channels</td></tr>
-      <tr><td>Job Type</td><td><code>type</code></td><td class="note">web maps 9 labels; web has no "emergency" chip, Android does</td></tr>
-      <tr><td>Assign</td><td><code>assigned_to</code> / <code>assigned_roster_tech_id</code></td><td class="note">self / team / roster / partner</td></tr>
-      <tr><td>Send Via</td><td><code>notify_*</code> (not job columns)</td><td class="note">shown only when not-self</td></tr>
-      <tr><td>Customer</td><td><code>customer_id</code></td><td class="note">web required · Android auto-creates</td></tr>
-      <tr><td>Extra phones / emails</td><td>customer record</td><td class="note">post-save; persistence path unverified</td></tr>
-      <tr><td>Address / City / State / ZIP</td><td><code>address</code> <code>city</code> <code>state</code> <code>zip</code></td><td class="note">Google Places autocomplete both sides</td></tr>
-      <tr><td>Job Notes</td><td><code>notes</code> (web also <code>description</code>)</td><td class="note"></td></tr>
-      <tr><td>Date / Time</td><td>part of <code>scheduled_start</code></td><td class="note">see the scheduled-start row above — timezone drift</td></tr>
-      <tr><td>Status (edit only)</td><td>not sent</td><td class="note">web-only, dead on save</td></tr>
-    </table>
+  <div class="moneybox">
+    <h2>The money math (reference)</h2>
+    <ul>
+      <li><b>Guard:</b> if source% + tech% &gt; 100 → blocked (HTTP 400). Runs only on <code>/complete</code>, not the legacy status path.</li>
+      <li><b>Partner split:</b> net = gross − parts − CC; sender = net·sender%, receiver = net·receiver%; then CC absorbed per who-pays (sender / receiver / split).</li>
+      <li><b>Tech three-slice:</b> netProfit = gross − material_cost (from line items, not the complete-body parts); source = netProfit·source%, tech = netProfit·tech% (owner/admin → 0), company = the rest.</li>
+      <li><b>Writes in order:</b> <code>job_completion_details</code> (pending) → <code>jobs</code> (completed) → <code>tech_earnings</code> (delete+insert) → <code>material_reimbursements</code> (if any).</li>
+    </ul>
   </div>
 
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Schedule time drift (biggest risk):</b> web saves UTC and null when no date; Android saves naive local time and uses <b>"now"</b> when the date is blank. Same input → possibly different stored time.</li>
-      <li><b>Customer required vs auto-create:</b> web blocks save without a customer; Android silently creates one from the typed name.</li>
-      <li><b>"Save &amp; Send" means two things:</b> web texts the <b>customer</b> (dispatch "on the way"); Android notifies the <b>tech</b> (notify-tech). Web email-only path is a no-op.</li>
-      <li><b>Web Status field is dead on save</b> — collected but never sent. Status only changes from Job Detail.</li>
-      <li><code>notify_sms/email/push</code> sent by both but ignored by <code>POST /jobs</code> (not columns).</li>
-      <li><b>Android-only carried fields:</b> <code>source</code> label + ticket #, <code>linked_job_id</code>, <code>skip_duplicate_check</code>, richer 4-option duplicate sheet.</li>
-    </ul>
-  </div>
-  <div class="drift good">
-    <h2>✓ Needs Stage-2 read (JobViewModel / CrmRepository)</h2>
-    <ul>
-      <li>Android <code>vm.parseTicket</code> exact request body.</li>
-      <li>Android <code>vm.checkDuplicateByPhone</code> — which endpoint it calls.</li>
-      <li>Extra phones/emails — confirm they actually persist to the customer record.</li>
-      <li>Deep-link <code>jobs/new?ticket=</code> — confirm the VM reads the ticket arg.</li>
+      <li><b>Partner-split money gap (web):</b> web completes partner jobs with no parts/CC entry → net = gross → both companies' earnings overstated, CC-absorption + who-collected lost. The material correctness bug here.</li>
+      <li><b>Web "Payment Collected" dropdown is dead</b> — sent as <code>payment_method</code>, never read by the backend.</li>
+      <li><b>No web confirm surface</b> — <code>GET /jobs/:id/completion</code> and <code>POST /completion/confirm</code> exist and are used by Android; web calls neither, so a partner sender on web can't confirm a split.</li>
+      <li><b>Two completion paths:</b> <code>/complete</code> (this screen, three-slice + guard) vs <code>/status?completed</code> (legacy simple calc, no guard, no completion record). Web's status modal can hit the legacy path → different earnings math than the complete modal.</li>
+      <li><code>tip_amount</code> column exists but neither surface captures a tip → always 0.</li>
+      <li><b><code>/complete</code> is not transactional</b> — a post-hook failure can leave the job completed with no <code>tech_earnings</code> row.</li>
     </ul>
   </div>
 
   <footer>
-    UltimatePro Screen Atlas · New Job · rendered from new-job.md (Action-Map Schema v1)<br>
+    UltimatePro Screen Atlas · Complete Job · rendered from complete-job.md (Action-Map Schema v1)<br>
     Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
   </footer>
 </div>
-
 <script>
 const SECTIONS=[
- {idx:"01",title:"Paste Ticket & Customer",items:["paste-ticket","customer-resolution"]},
- {idx:"02",title:"What Save Does",items:["save","scheduled-start","assign","send-via"]},
- {idx:"03",title:"Navigation & Dead",items:["cancel","status-field"]},
+ {idx:"01",title:"Complete & Money",items:["submit","partner-split","payment-method","notes"]},
+ {idx:"02",title:"Confirm & Nav",items:["confirm","cancel"]},
 ];
 const A={
-"paste-ticket":{label:"Paste Ticket",status:"partial",route:"POST /jobs/parse-ticket",fires:"AI parses text",result:"form pre-filled",caveat:"web = review modal · Android = instant parse",
- d:{purpose:"Turn raw pasted notes into a pre-filled job in one tap — the platform's signature time-saver.",actors:["office","owner"],vis:"always (top of form)",chain:[["POST","/jobs/parse-ticket"]],parity:"PARTIAL — web opens a modal with editable textarea + 'Parse with AI'; Android reads clipboard and parses immediately. Same endpoint (Anthropic claude-opus-4-5)."}},
-"customer-resolution":{label:"Customer match/create",status:"partial",route:"GET /customers · POST /customers",fires:"link or create",result:"customer attached",caveat:"web requires a customer · Android auto-creates",
- d:{purpose:"Attach the right customer — link an existing returning customer or create a new record — without manual searching.",actors:["office","owner"],vis:"runs on parse (both) and at save when none linked",chain:[["GET","/customers?search="],["POST","/customers"]],parity:"DIVERGENT — web requires a resolved customer_id before save (3-option duplicate modal, parsed tickets only); Android auto-creates from the typed name and shows a richer 4-option sheet (adds Go-Back & Follow-Up with prior-job linking) for parsed + manual entry. Android save-time also calls vm.checkDuplicateByPhone (endpoint unverified)."}},
-"save":{label:"Save Job",status:"partial",route:"POST /jobs  ·  edit: PUT /jobs/:id",fires:"create job",result:"job created",caveat:"payload differs web vs Android",
- d:{purpose:"Create the job (or save edits). The core action.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"],["PUT","/jobs/:id"]],parity:"PARTIAL — web sends description(=notes), omits source label / linked_job_id / skip_duplicate_check. Android sends source label + linked_job_id + skip_duplicate_check, omits description, sends notify_* always. Both functional. Backend sets status scheduled if assigned else unscheduled; fires job_assigned Joby rule, push, socket, geocode."}},
-"scheduled-start":{label:"Date + Time",status:"broken",route:"part of POST /jobs",fires:"set schedule",result:"scheduled_start saved",caveat:"web UTC/null-safe · Android local + blank→now",
- d:{purpose:"Set when the job is scheduled.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"DIVERGENT — Web is null-safe: null when no date, UTC ISO when set. Android never null: naive local string with no timezone, and a blank date uses the current time. Same wall-clock time can persist as different instants; Android jobs are never left scheduleless. Highest correctness risk on this screen."}},
-"assign":{label:"Assign",status:"ok",route:"part of POST /jobs",fires:"set assignee",result:"scheduled / unscheduled",caveat:"partner → assign later via Job Detail 'Send To'",
- d:{purpose:"Choose who does the job: self, team member, roster tech, or partner.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL — web inline tabs+dropdown; Android button→dialog. Partner sends no field on either surface; both defer partner-forwarding to Job Detail. Backend sets status scheduled when assigned."}},
-"send-via":{label:"Save & Send",status:"partial",route:"web: /jobs/:id/dispatch · Android: /roster-techs/notify-tech",fires:"notify assignee",result:"assignee notified",caveat:"web texts CUSTOMER · Android texts TECH",
- d:{purpose:"Notify the assignee when saving (SMS / Email / Push).",actors:["office","owner"],vis:"only when assignment is not self",chain:[["POST","/jobs/:id/dispatch"],["POST","/roster-techs/notify-tech"]],parity:"DIVERGENT — web fires a customer-facing dispatch SMS ('on the way'); Android fires a tech-facing notify-tech message. Web requires create-mode; web email-only path does nothing; web builds an unused calls array."}},
-"cancel":{label:"Cancel / Back",status:"ok",route:"navigate",fires:"leave form",result:"previous screen",
- d:{purpose:"Leave without saving.",actors:["office","owner"],vis:"always",chain:[],parity:"PARTIAL — web has top Back + footer Cancel; Android has top-bar back only (plus an extra top-bar Save)."}},
-"status-field":{label:"Status dropdown",status:"dead",route:"not sent",fires:"—",result:"nothing happens",caveat:"collected but never saved (web edit only)",
- d:{purpose:"Intended to set job status while editing.",actors:["office","owner"],vis:"web edit-mode only; Android has none here",chain:[],parity:"WEB-ONLY dead code — buildPayload never includes status and PUT /jobs/:id doesn't read it. Status only changes via POST /jobs/:id/status from Job Detail."}},
+"submit":{label:"Complete Job",status:"partial",route:"POST /jobs/:id/complete",fires:"profit calc + earnings",result:"job completed",caveat:"web sends only notes (no parts/CC)",
+ d:{purpose:"Lock the job, run profit allocation, write earnings. The money spine's terminal action.",actors:["tech-user","owner"],vis:"always (guard blocks if source%+tech% > 100)",chain:[["POST","/jobs/:id/complete"]],parity:"PARTIAL — Android captures parts/CC for partner jobs; web sends only {notes, payment_method(ignored)}. Normal jobs converge (parts/CC don't enter the tech slice — that uses material_cost from line items). The gap bites partner jobs (see partner-split)."}},
+"partner-split":{label:"Parts / CC / split inputs",status:"broken",route:"part of POST /complete",fires:"net = gross − parts − CC",result:"sender/receiver split",caveat:"web never sends these → partner earnings overstated",
+ d:{purpose:"Capture the deductions that drive the sender/receiver split: who supplied parts, parts amount, who collected, CC fee + who absorbs it.",actors:["tech-user","owner"],vis:"Android: only when agreement_id != null (partner job). Web: never rendered.",chain:[["POST","/jobs/:id/complete"]],parity:"ANDROID-ONLY — on a web-completed partner job, parts_amount/cc_fee_amount default to 0 so net = gross → both partners' earnings overstated by the omitted parts + CC; cc_fee_paid_by and payment_collected_by stored NULL. Same job on Android vs web yields different completion numbers."}},
+"payment-method":{label:"Payment Collected dropdown",status:"dead",route:"sent as payment_method",fires:"nothing",result:"no effect",caveat:"backend never reads payment_method",
+ d:{purpose:"(Intended) record how payment was collected.",actors:["office","owner"],vis:"web modal only",chain:[["POST","/jobs/:id/complete"]],parity:"WEB-ONLY dead code — payment_method is never destructured by the handler. Records no payment and sets no payment_collected_by. The web modal's only money-ish control does nothing."}},
+"notes":{label:"Completion Notes",status:"ok",route:"part of POST /complete",fires:"save note",result:"note saved",
+ d:{purpose:"Free-text note saved with the completion.",actors:["tech-user","owner"],vis:"always (both surfaces)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH — the only shared input between the two surfaces."}},
+"confirm":{label:"Confirm Completion",status:"partial",route:"GET /completion · POST /completion/confirm",fires:"confirm split",result:"status → confirmed",caveat:"web has no confirm surface",
+ d:{purpose:"The sending company reviews and confirms the partner split a receiver submitted.",actors:["owner"],vis:"Android completion sheet when pending + isSender + partner job. Web: none.",chain:[["GET","/jobs/:id/completion"],["POST","/jobs/:id/completion/confirm"]],parity:"ANDROID-ONLY — only the sender/owning company may confirm (else 403). Web orphans both endpoints; a sender on web can't confirm a partner-completed split."}},
+"cancel":{label:"Cancel / Back",status:"ok",route:"navigate",fires:"leave",result:"back to Job Detail",
+ d:{purpose:"Leave without completing.",actors:["tech-user","owner"],vis:"always",chain:[],parity:"MATCH"}},
 };
-
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
 SECTIONS.forEach(sec=>{
