@@ -83,3 +83,10 @@ Always re-read.
 ## When in doubt
 
 Ask David. Match Android. Do not improvise.
+
+## Screen Atlas — drift rule
+After any change to a screen's buttons, routes, side-effects, or visibility,
+open the matching file in web/public/screen-maps/ (e.g. job-detail.md),
+update it to match the code just changed, and list what changed in the final
+summary. If nothing on that screen changed, say "atlas unchanged". The
+markdown is the source of truth; reality on disk wins.
