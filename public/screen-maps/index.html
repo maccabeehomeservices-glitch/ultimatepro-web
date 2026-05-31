@@ -83,9 +83,15 @@ const MAPS=[
   {nm:"Reports",id:"reports",href:"reports-atlas.html",desc:"Business reporting — web 4-tab module + shareable statements; Android cards.",counts:{ok:10,partial:0,broken:0,dead:0}},
   {nm:"Network",id:"network",href:"network-atlas.html",desc:"Contractor partners — invite, agree a bilateral split, pause, report.",counts:{ok:8,partial:0,broken:0,dead:0}},
   {nm:"Inventory",id:"inventory",href:"inventory-atlas.html",desc:"Parts across warehouse + trucks — edit, transfer, restock, auto-deduct.",counts:{ok:7,partial:0,broken:1,dead:0}},
+  {nm:"Phone / SMS",id:"phone",href:"phone-atlas.html",desc:"Call + SMS command center — web a thin 2-tab list; Android adds CSR stats, numbers, second-chance, live queue.",counts:{ok:7,partial:0,broken:0,dead:0}},
+  {nm:"SMS Thread",id:"sms-thread",href:"sms-thread-atlas.html",desc:"One conversation — read history, send via Twilio, clear unread. The one place SMS send is wired correctly.",counts:{ok:5,partial:1,broken:1,dead:0}},
+  {nm:"Live Map",id:"live-map",href:"live-map-atlas.html",desc:"Active job pins + live tech pins on Google Maps — tap to detail, jump to the job. Web polls 30s, Android techs 15s.",counts:{ok:7,partial:1,broken:0,dead:0}},
+  {nm:"Settings",id:"settings",href:"settings-atlas.html",desc:"The settings landing — each row navigates to a config sub-page. Android 'More' doubles as a nav hub.",counts:{ok:16,partial:0,broken:0,dead:0}},
 ];
 const PENDING=[
-  "Phone / SMS","Live Map","Settings",
+  "Company Profile","Team Members","Roster Technicians","Review Platforms","Online Booking",
+  "Job Sources","Membership Plans","Notifications","Custom Fields","Ailot / Automation Rules",
+  "Integrations (QuickBooks)",
 ];
 
 const grid=document.getElementById('grid');

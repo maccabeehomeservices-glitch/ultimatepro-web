@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UltimatePro · Atlas · SMS Thread</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0f1e;--ink2:#0e1528;--panel:#121a30;--panel2:#16203a;
+    --line:#23314f;--line2:#1b2740;--cyan:#5ec8e8;--cyan-dim:#2b6b85;
+    --text:#dbe6f5;--dim:#8ea3c4;--faint:#5e7197;
+    --ok:#46d39a;--partial:#f2b84b;--broken:#ff6a72;--dead:#7c8aa8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:'Archivo',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);
+    background-size:46px 46px;background-position:-1px -1px}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 22px 120px}
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  header.mast{border-bottom:1px solid var(--line);padding:38px 0 24px;margin-bottom:18px;position:relative}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:13px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan)}
+  h1{font-size:clamp(32px,5.5vw,56px);font-weight:900;letter-spacing:-.02em;line-height:.96;text-transform:uppercase}
+  h1 .sub{display:block;font-size:.32em;font-weight:600;letter-spacing:.04em;color:var(--dim);margin-top:9px;text-transform:none}
+  .stamp{position:absolute;top:38px;right:0;border:1.5px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 12px;letter-spacing:.08em;text-align:right;line-height:1.7;transform:rotate(-1.5deg);background:rgba(94,200,232,.04)}
+  .stamp b{color:var(--text)}
+  @media(max-width:700px){.stamp{position:static;display:inline-block;margin-top:16px;transform:none}}
+  .crumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);margin-bottom:18px}
+  .crumb a{color:var(--cyan);text-decoration:none}
+
+  .stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);margin:24px 0}
+  .stat{flex:1;min-width:110px;background:var(--ink2);padding:14px 16px;position:relative}
+  .stat .n{font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+  .stat .l{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .stat.total::before{background:var(--cyan)}.stat.total .n{color:var(--cyan)}
+  .stat.ok::before{background:var(--ok)}.stat.ok .n{color:var(--ok)}
+  .stat.partial::before{background:var(--partial)}.stat.partial .n{color:var(--partial)}
+  .stat.broken::before{background:var(--broken)}.stat.broken .n{color:var(--broken)}
+  .stat.dead::before{background:var(--dead)}.stat.dead .n{color:var(--dead)}
+
+  .toolbar{display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px;align-items:center;margin-bottom:8px}
+  .filters{display:flex;flex-wrap:wrap;gap:7px}
+  .fbtn{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.05em;background:var(--panel);border:1px solid var(--line);color:var(--dim);padding:7px 12px;cursor:pointer;text-transform:uppercase;transition:.15s}
+  .fbtn:hover{border-color:var(--cyan-dim);color:var(--text)}
+  .fbtn.active{background:var(--cyan);color:var(--ink);border-color:var(--cyan);font-weight:700}
+  .hint{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint);letter-spacing:.04em}
+
+  .colhead{display:grid;grid-template-columns:150px 26px 215px 26px 150px 26px 1fr;padding:14px 14px 6px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)}
+  .colhead span:nth-child(1){grid-column:1}.colhead .c-route{grid-column:3}.colhead .c-fire{grid-column:5}.colhead .c-res{grid-column:7}
+  @media(max-width:820px){.colhead{display:none}}
+
+  .section{border:1px solid var(--line);margin-bottom:13px;background:var(--ink2)}
+  .sec-head{display:flex;align-items:center;gap:13px;padding:13px 16px;cursor:pointer;user-select:none;background:linear-gradient(180deg,var(--panel),var(--ink2));transition:.2s}
+  .section.open .sec-head{border-bottom:1px solid var(--line)}
+  .sec-head:hover{background:var(--panel2)}
+  .sec-idx{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);border:1px solid var(--cyan-dim);padding:3px 7px;letter-spacing:.1em}
+  .sec-title{font-size:14.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;flex:1}
+  .sec-count{font-family:'JetBrains Mono',monospace;font-size:10.5px;display:flex;gap:6px}
+  .sec-count i{font-style:normal;padding:2px 6px;border-radius:2px;font-weight:700}
+  .chev{transition:transform .25s;color:var(--faint);font-size:12px}
+  .section.open .chev{transform:rotate(90deg)}
+  .sec-body{display:none;padding:4px 12px 12px}
+  .section.open .sec-body{display:block}
+
+  .flow{display:grid;grid-template-columns:150px 26px 215px 26px 150px 26px 1fr;align-items:stretch;margin-top:8px;cursor:pointer}
+  @media(max-width:820px){.flow{grid-template-columns:1fr}.arrow{display:none}}
+  .box{border:1px solid var(--line2);background:var(--panel);padding:9px 12px;display:flex;flex-direction:column;justify-content:center;min-height:54px;border-radius:6px}
+  .box .bt{font-size:14px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+  .box .bs{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:3px;line-height:1.3;word-break:break-word}
+  .box.neutral .bt{font-weight:500;color:var(--dim)}
+  .arrow{display:flex;align-items:center;justify-content:center;color:var(--cyan-dim);font-size:16px;font-weight:700}
+  .box.ok{border-color:rgba(70,211,154,.4);background:rgba(70,211,154,.07)}.box.ok .bt{color:var(--ok)}
+  .box.partial{border-color:rgba(242,184,75,.4);background:rgba(242,184,75,.07)}.box.partial .bt{color:var(--partial)}
+  .box.broken{border-color:rgba(255,106,114,.45);background:rgba(255,106,114,.08)}.box.broken .bt{color:var(--broken)}
+  .box.dead{border-color:rgba(124,138,168,.4);background:rgba(124,138,168,.08)}.box.dead .bt{color:var(--dead)}
+  .box .caveat{font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:4px;line-height:1.35}
+  .box.partial .caveat{color:#ffe4b0}.box.broken .caveat{color:#ffc4c7}.box.dead .caveat{color:#c2cde0}.box.ok .caveat{color:#bfe9d6}
+  .flow:hover .box{border-color:var(--cyan-dim)}
+
+  .detail{display:none;border:1px solid var(--cyan-dim);border-top:none;background:var(--ink);padding:14px 16px;margin-top:-2px;border-radius:0 0 6px 6px}
+  .detail.open{display:block}
+  .detail .drow{display:grid;grid-template-columns:130px 1fr;gap:14px;padding:5px 0;border-bottom:1px solid var(--line2)}
+  .detail .drow:last-child{border-bottom:none}
+  .detail .dk{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);padding-top:2px}
+  .detail .dv{font-size:13.5px;color:var(--text);line-height:1.55}
+  .detail .dv code{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--panel);padding:1px 5px;border-radius:3px;color:var(--cyan);border:1px solid var(--line2)}
+  .actors{display:flex;flex-wrap:wrap;gap:5px}
+  .actor{font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--dim)}
+  .hopline{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+  .hop{font-family:'JetBrains Mono',monospace;font-size:11.5px;background:var(--panel);border:1px solid var(--line);padding:4px 8px;border-radius:3px}
+  .hop .m{color:var(--cyan);font-weight:700;margin-right:5px}
+
+  .drift{border:1px solid var(--line);background:var(--ink2);margin-top:24px}
+  .drift h2{font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:13px 16px;border-bottom:1px solid var(--line);background:var(--panel);color:var(--broken)}
+  .drift.good h2{color:var(--ok)}
+  .drift ul{list-style:none;padding:13px 16px;display:grid;gap:9px}
+  .drift li{font-size:13px;padding-left:18px;position:relative;color:var(--dim);line-height:1.55}
+  .drift li::before{content:"▸";position:absolute;left:0;color:var(--broken)}
+  .drift.good li::before{color:var(--ok)}
+  .drift li b{color:var(--text)}
+  .drift li code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan);background:var(--panel);padding:1px 5px;border-radius:3px}
+
+  footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.04em;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
+    <h1>SMS Thread<span class="sub">One conversation — read history, send via Twilio, clear the unread badge. The one place SMS send is wired correctly.</span></h1>
+    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>6147cd1</b></div>
+  </header>
+
+  <div class="crumb"><a href="index.html">all maps</a> · <a href="phone-atlas.html">phone</a> · <a href="live-map-atlas.html">live map</a> › sms thread</div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="filters" id="filters">
+      <button class="fbtn active" data-f="all">All</button>
+      <button class="fbtn" data-f="ok">Works</button>
+      <button class="fbtn" data-f="partial">Partial</button>
+      <button class="fbtn" data-f="broken">Broken</button>
+      <button class="fbtn" data-f="dead">Dead-code</button>
+    </div>
+    <div class="hint">click any row to open full detail · conversation_id is real here — send works</div>
+  </div>
+
+  <div class="colhead"><span>action</span><span class="c-route">route it calls</span><span class="c-fire">what fires</span><span class="c-res">result</span></div>
+
+  <div id="atlas"></div>
+
+  <div class="drift">
+    <h2>⚠ Screen-level drift flags</h2>
+    <ul>
+      <li><b>Web header never shows the contact name.</b> <code>SmsThread</code> expects <code>data.conversation</code>, but <code>GET /sms/conversations/:id/messages</code> returns a <b>bare array</b> — so the header always falls back to "Conversation". Android sidesteps this by pulling the conversation from the already-loaded list.</li>
+      <li><b>Broken alias route</b> <code>/phone/sms/:conversationId</code> (App.jsx:111): the param is <code>conversationId</code> but the component reads <code>useParams().id</code> → <code>undefined</code> → <code>GET /sms/conversations/undefined/messages</code> 404. The live path <code>/phone/thread/:id</code> works. Latent — nothing links to the alias.</li>
+      <li><b>This is the correct SMS-send surface.</b> Unlike the Job-Detail / Customer-Detail message tabs (bare-array endpoints where <code>conversation_id</code> is never populated, breaking inline send), the dedicated thread carries a real <code>conversation_id</code>, so <code>POST /sms/conversations/:id/send</code> succeeds.</li>
+      <li><b>UNVERIFIED:</b> Twilio delivery-status callbacks (the insert hard-codes <code>status:'delivered'</code>); whether inbound messages webhook into the same <code>sms_messages</code> table.</li>
+    </ul>
+  </div>
+
+  <footer>
+    UltimatePro Screen Atlas · SMS Conversation Thread · rendered from sms-thread.md (Action-Map Schema v1)<br>
+    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+  </footer>
+</div>
+
+<script>
+const SECTIONS=[
+ {idx:"01",title:"Thread",items:["load-messages","send","mark-read","autoscroll","header-name"]},
+ {idx:"02",title:"Nav",items:["back","open-via-sms-alias"]},
+];
+const A={
+"load-messages":{label:"Load messages",status:"ok",route:"GET /sms/conversations/:id/messages",fires:"read history",result:"bubbles",caveat:"real conversation_id",
+ d:{purpose:"Read the full message history for one conversation.",actors:["office","owner"],vis:"on screen open",chain:[["GET","/sms/conversations/:id/messages"]],parity:"MATCH — web useGet; Android repo.getConversationMessages(id). Returns a bare array ordered created_at ASC. The id comes from the route param (web) / tapped row (Android) — this screen is the one place send is wired correctly because the conversation_id is real."}},
+"send":{label:"Send reply",status:"ok",route:"POST /sms/conversations/:id/send",fires:"Twilio send + insert",result:"new bubble",caveat:"body key 'message'",
+ d:{purpose:"Send an outbound SMS to the customer.",actors:["office","owner"],vis:"bottom input + send button; disabled while empty/sending",chain:[["POST","/sms/conversations/:id/send"]],parity:"MATCH — body {message} on both (web mutate {message:body}; Android mapOf('message' to message)), matching backend const {message}=req.body. Twilio sendSMS → insert outbound row (status:'delivered') → UPDATE last_message_at → client refetch."}},
+"mark-read":{label:"Mark read",status:"ok",route:"side effect of GET messages",fires:"unread_count=0",result:"badge cleared",
+ d:{purpose:"Clear the unread badge when the thread opens.",actors:["office","owner"],vis:"automatic (server side-effect)",chain:[["GET","/sms/conversations/:id/messages"]],parity:"MATCH — server-side UPDATE sms_conversations SET unread_count=0; both surfaces trigger it by loading the thread."}},
+"autoscroll":{label:"Auto-scroll",status:"ok",route:"— UI only",fires:"scroll to last",result:"pinned to newest",
+ d:{purpose:"Keep the latest message in view on load and after sending.",actors:["office","owner"],vis:"automatic",chain:[],parity:"MATCH — web bottomRef.scrollIntoView on messages.length; Android animateScrollToItem(lastIndex) on threadMessages.size."}},
+"header-name":{label:"Header name",status:"partial",route:"— derived, no fetch",fires:"read conv object",result:"name / fallback",caveat:"web always falls back",
+ d:{purpose:"Show the customer name / phone at the top of the thread.",actors:["office","owner"],vis:"top bar",chain:[],parity:"DIVERGENT — Web header NEVER shows the name: it reads data?.conversation, but the messages endpoint returns a bare array (no conversation field), so it always falls back to 'Conversation'. Android reads threadConversation from the already-loaded list (conversations.find{it.id==conversationId}), showing the real name when arrived from Messages; falls back to 'Messages' only on a cold deep-link."}},
+"back":{label:"Back",status:"ok",route:"— nav",fires:"pop",result:"Messages list",
+ d:{purpose:"Return to the conversation list.",actors:["office","owner"],vis:"top-left arrow",chain:[],parity:"MATCH — web navigate(-1); Android onBack."}},
+"open-via-sms-alias":{label:"Open via /phone/sms alias",status:"broken",route:"GET /sms/conversations/undefined/messages",fires:"404",result:"empty thread",caveat:"param-name mismatch",
+ d:{purpose:"Alternate URL also wired to this screen.",actors:["office","owner"],vis:"web only; reachable by direct URL",chain:[["GET","/sms/conversations/undefined/messages"]],parity:"WEB-ONLY (broken) — route declares /phone/sms/:conversationId (App.jsx:111) but SmsThread reads useParams().id, which is undefined here → fetches /sms/conversations/undefined/messages (404). The working route is /phone/thread/:id (what Phone.jsx navigates to). Latent: nothing links to the alias. Fix: read id ?? conversationId, or rename the route param to :id."}},
+};
+const atlas=document.getElementById('atlas');
+const counts={ok:0,partial:0,broken:0,dead:0};
+SECTIONS.forEach(sec=>{
+  const local={ok:0,partial:0,broken:0,dead:0};
+  sec.items.forEach(id=>{const s=A[id].status;local[s]++;counts[s]++});
+  const cc=Object.entries(local).filter(([,n])=>n>0).map(([k,n])=>`<i style="color:var(--${k});background:rgba(255,255,255,.04)">${n}</i>`).join('');
+  const el=document.createElement('div');el.className='section open';
+  el.innerHTML=`<div class="sec-head"><span class="sec-idx">${sec.idx}</span><span class="sec-title">${sec.title}</span><span class="sec-count">${cc}</span><span class="chev">▶</span></div><div class="sec-body">${sec.items.map(row).join('')}</div>`;
+  el.querySelector('.sec-head').addEventListener('click',()=>el.classList.toggle('open'));
+  atlas.appendChild(el);
+});
+function row(id){
+  const a=A[id],s=a.status;
+  const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
+  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  return `<div class="flowwrap" data-status="${s}">
+    <div class="flow" onclick="toggle('${id}')">
+      <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
+      <div class="arrow">→</div>
+      <div class="box neutral"><div class="bt">calls</div><div class="bs">${a.route}</div></div>
+      <div class="arrow">→</div>
+      <div class="box neutral"><div class="bs">${fires}</div></div>
+      <div class="arrow">→</div>
+      <div class="box ${s}"><div class="bt">${a.result}</div>${caveat}</div>
+    </div>
+    <div class="detail" id="d-${id}">
+      <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
+      <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
+      <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
+    </div>
+  </div>`;
+}
+function toggle(id){document.getElementById('d-'+id).classList.toggle('open');}
+document.getElementById('stats').innerHTML=`
+ <div class="stat total"><div class="n">${Object.values(counts).reduce((a,b)=>a+b,0)}</div><div class="l">actions</div></div>
+ <div class="stat ok"><div class="n">${counts.ok}</div><div class="l">works</div></div>
+ <div class="stat partial"><div class="n">${counts.partial}</div><div class="l">partial</div></div>
+ <div class="stat broken"><div class="n">${counts.broken}</div><div class="l">broken</div></div>
+ <div class="stat dead"><div class="n">${counts.dead}</div><div class="l">dead-code</div></div>`;
+document.querySelectorAll('.fbtn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  const f=b.dataset.f;
+  document.querySelectorAll('.flowwrap').forEach(w=>{w.style.display=(f==='all'||w.dataset.status===f)?'':'none';});
+  document.querySelectorAll('.section').forEach(sec=>{
+    const any=[...sec.querySelectorAll('.flowwrap')].some(w=>w.style.display!=='none');
+    sec.style.display=any?'':'none';if(any&&f!=='all')sec.classList.add('open');
+  });
+}));
+</script>
+</body>
+</html>
