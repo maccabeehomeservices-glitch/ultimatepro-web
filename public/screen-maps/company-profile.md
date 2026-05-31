@@ -124,10 +124,10 @@ Both surfaces: `GET /company` → the full `companies` row; map into the form. W
 - **request_body:** web `{...form, logo_url}` = `{name, phone, email, address, city, state, zip, website, tagline, logo_url}`; Android the same (all trimmed)
 - **side_effects:** updates the `companies` row; `updated_at = NOW()`.
 - **end_state:** "Company profile saved!".
-- **failure_modes:** **403 if not owner/admin**; potential **500 if `tagline`/`website` columns are absent** in the live DB (see drift — they're referenced by the handler but not defined in any committed schema/migration).
+- **failure_modes:** **403 if not owner/admin**. (Earlier "500 if `tagline`/`website` missing" risk is **resolved** — both columns confirmed present in the production DB via live schema introspection; see drift.)
 - **parity:** MATCH — same endpoint + same body keys on both surfaces.
 - **status:** OK
-- **status_note:** UNVERIFIED column risk on `tagline`/`website` (see drift); wiring itself is correct (right path, right keys, COALESCE).
+- **status_note:** `tagline`/`website` columns confirmed to exist in production (live schema introspection); wiring is correct (right path, right keys, COALESCE). No Save-500 risk.
 
 ### `company-profile.back`
 - **label:** Back
@@ -148,7 +148,7 @@ Both surfaces: `GET /company` → the full `companies` row; map into the form. W
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **`tagline` & `website` are referenced but not defined in committed SQL.** `PUT /company` writes `tagline = COALESCE($14, tagline)` and `website = COALESCE($15, website)` (company.js:56–57) and both clients read/send them, but neither column appears in `schema.sql` `companies` nor in any `db/migrate_*.sql`. **UNVERIFIED** whether they exist in the production DB (likely added out-of-band). If they are absent, the *entire* Save `UPDATE` 500s — not just those two fields.
+- **`tagline` & `website` exist in production (no Save-500 risk).** `PUT /company` writes `tagline = COALESCE($14, tagline)` and `website = COALESCE($15, website)` (company.js:56–57) and both clients read/send them. These columns are **not** in `schema.sql` `companies` or any `db/migrate_*.sql`, but they **are confirmed present in the production database via live schema introspection** — i.e. the committed-SQL absence is a schema-scatter artifact (added out-of-band), not a runtime risk. Save works; the action was never broken on this basis.
 - **Backend-supported columns with no input on either surface:** `PUT /company` also accepts `country`, `timezone`, `currency`, `tax_rate`, and `settings` (JSONB), but **no field on web or Android captures them**. The Batch-E task's hypothesised `tax_label`, `terms`, `default_tax_rate`, and `profile_mode` **do not exist** as columns (schema has `tax_rate`, not `default_tax_rate`); they are simply not part of this screen.
 - **Logo upload & removal persist immediately**, independent of the main Save button (each is its own server write). Removing a logo clears the URL but does **not** delete the Cloudinary asset.
 - **Gating asymmetry:** the page loads for any authenticated user (`GET` is `auth` only), but Save and logo upload are `ownerOrAdmin` — a non-admin can edit the form and only discover the 403 on Save.

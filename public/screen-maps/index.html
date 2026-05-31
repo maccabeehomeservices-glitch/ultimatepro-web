@@ -91,9 +91,12 @@ const MAPS=[
   {nm:"Team Members",id:"team-members",href:"team-members-atlas.html",desc:"Manage app users (list/create/edit/deactivate/reactivate). Android is correct; web is broken vs the current API.",counts:{ok:3,partial:2,broken:1,dead:0}},
   {nm:"Roster Technicians",id:"roster-techs",href:"roster-techs-atlas.html",desc:"CRUD for field techs without app logins — name, phone, email, commission %, CC-fee %. Clean web ↔ Android.",counts:{ok:5,partial:0,broken:0,dead:0}},
   {nm:"Job Sources",id:"job-sources",href:"job-sources-atlas.html",desc:"3 tabs — source contacts (profit_allocation_pct feeds the profit engine), ad channels, commission rules.",counts:{ok:13,partial:0,broken:0,dead:0}},
+  {nm:"Review Platforms",id:"review-platforms",href:"review-platforms-atlas.html",desc:"CRUD for review links (Google, Yelp, …). The default active platform's URL goes on payment receipts. Well-matched web ↔ Android.",counts:{ok:8,partial:0,broken:0,dead:0}},
+  {nm:"Online Booking",id:"online-booking",href:"online-booking-atlas.html",desc:"Configure the public /book page. Android is correct & exposes the link; web drops most fields (wrong keys / nested-vs-flat).",counts:{ok:6,partial:2,broken:4,dead:0}},
+  {nm:"Membership Plans",id:"membership-plans",href:"membership-plans-atlas.html",desc:"CRUD for plan templates. Frequency drives recurring jobs — web's annual/semi-annual values mis-schedule.",counts:{ok:4,partial:2,broken:0,dead:0}},
+  {nm:"Notifications",id:"notifications",href:"notifications-atlas.html",desc:"Settings sub-page (preferences). Five toggles → localStorage only; nothing reads them, backend routes are no-op stubs.",counts:{ok:2,partial:1,broken:0,dead:1}},
 ];
 const PENDING=[
-  "Review Platforms","Online Booking","Membership Plans","Notifications",
   "Custom Fields","Ailot / Automation Rules","Integrations (QuickBooks)",
 ];
 
