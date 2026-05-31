@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UltimatePro · Atlas — Prioritized Fix List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0f1e;--ink2:#0e1528;--panel:#121a30;--panel2:#16203a;
+    --line:#23314f;--line2:#1b2740;--cyan:#5ec8e8;--cyan-dim:#2b6b85;
+    --text:#dbe6f5;--dim:#8ea3c4;--faint:#5e7197;
+    --ok:#46d39a;--partial:#f2b84b;--broken:#ff6a72;--dead:#7c8aa8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:'Archivo',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);
+    background-size:46px 46px;background-position:-1px -1px}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 22px 110px}
+  header.mast{border-bottom:1px solid var(--line);padding:40px 0 26px;margin-bottom:18px;position:relative}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:13px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan)}
+  h1{font-size:clamp(32px,5.5vw,58px);font-weight:900;letter-spacing:-.02em;line-height:.96;text-transform:uppercase}
+  h1 .sub{display:block;font-size:.30em;font-weight:600;letter-spacing:.04em;color:var(--dim);margin-top:11px;text-transform:none}
+  .stamp{position:absolute;top:40px;right:0;border:1.5px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 12px;letter-spacing:.08em;text-align:right;line-height:1.7;transform:rotate(-1.5deg);background:rgba(94,200,232,.04)}
+  .stamp b{color:var(--text)}
+  @media(max-width:700px){.stamp{position:static;display:inline-block;margin-top:16px;transform:none}}
+  .crumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);margin-bottom:18px}
+  .crumb a{color:var(--cyan);text-decoration:none}
+
+  .stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);margin:24px 0}
+  .stat{flex:1;min-width:110px;background:var(--ink2);padding:15px 17px;position:relative}
+  .stat .n{font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+  .stat .l{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .stat.total::before{background:var(--cyan)}.stat.total .n{color:var(--cyan)}
+  .stat.broken::before{background:var(--broken)}.stat.broken .n{color:var(--broken)}
+  .stat.partial::before{background:var(--partial)}.stat.partial .n{color:var(--partial)}
+  .stat.dead::before{background:var(--dead)}.stat.dead .n{color:var(--dead)}
+
+  .causes{border:1px solid var(--cyan-dim);background:rgba(94,200,232,.05);margin:8px 0 26px;border-radius:8px}
+  .causes h2{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:13px 16px 6px;color:var(--cyan)}
+  .causes p.lead{font-size:12.5px;color:var(--dim);padding:0 16px 10px;line-height:1.55}
+  .causes ul{list-style:none;padding:0 16px 14px;display:grid;gap:8px}
+  .causes li{font-size:13px;color:var(--dim);line-height:1.5;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+  .tag{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.04em;flex-shrink:0;border:1px solid var(--cyan-dim);color:var(--cyan);background:rgba(94,200,232,.08)}
+  .causes li b{color:var(--text)}
+  .causes li .hits{color:var(--faint);font-family:'JetBrains Mono',monospace;font-size:11px}
+
+  .tier{margin-bottom:22px}
+  .tier-head{display:flex;align-items:baseline;gap:12px;padding:12px 4px 10px;border-bottom:2px solid var(--line);margin-bottom:4px}
+  .tier-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink);background:var(--cyan);padding:3px 9px;border-radius:4px;font-weight:700;letter-spacing:.08em}
+  .tier-title{font-size:16px;font-weight:900;letter-spacing:.02em;text-transform:uppercase}
+  .tier-sub{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint);margin-left:auto;text-align:right}
+
+  .frow{display:grid;grid-template-columns:188px 88px 1fr 250px;gap:14px;align-items:start;padding:11px 12px;border-bottom:1px solid var(--line2);border-left:3px solid var(--line);background:var(--ink2)}
+  .frow:hover{background:var(--panel)}
+  @media(max-width:860px){.frow{grid-template-columns:1fr;gap:5px}}
+  .frow.broken{border-left-color:var(--broken)}
+  .frow.partial{border-left-color:var(--partial)}
+  .frow.dead{border-left-color:var(--dead)}
+  .f-screen a{font-size:13.5px;font-weight:700;color:var(--text);text-decoration:none}
+  .f-screen a:hover{color:var(--cyan)}
+  .f-action{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:2px}
+  .f-status{display:flex;flex-direction:column;gap:4px;align-items:flex-start}
+  .pill{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;text-transform:uppercase}
+  .pill.broken{color:var(--broken);background:rgba(255,106,114,.14)}
+  .pill.partial{color:var(--partial);background:rgba(242,184,75,.13)}
+  .pill.dead{color:var(--dead);background:rgba(124,138,168,.14)}
+  .f-reason{font-size:13px;color:var(--text);line-height:1.45}
+  .f-route{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);background:var(--panel);border:1px solid var(--line2);border-radius:4px;padding:5px 8px;line-height:1.4;word-break:break-word;align-self:start}
+  .rowtag{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-dim);color:var(--cyan);background:rgba(94,200,232,.08);letter-spacing:.03em}
+
+  footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.04em;line-height:1.9}
+  footer a{color:var(--cyan);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">UltimatePro · Screen Atlas · fix backlog</div>
+    <h1>Prioritized Fix List<span class="sub">Every broken / partial / dead action across the 29 maps, ordered by business importance — core job & money loop first.</span></h1>
+    <div class="stamp">ATLAS<br><b>2026-05-31</b><br>commit · <b>7c84e05</b></div>
+  </header>
+
+  <div class="crumb"><a href="index.html">all maps</a> · <a href="spine-overview.html">by spine</a> › fix list</div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="causes">
+    <h2>⚡ Recurring root-causes — fix once, clear many</h2>
+    <p class="lead">Three wrong-key / unregistered-route bugs each break the same flow on multiple screens. Fixing the one cause clears every tagged row below.</p>
+    <ul>
+      <li><span class="tag">SIG</span><span><b>signature_data-vs-signature wrong key.</b> Web posts <code>signature_data</code>; the sign handlers want <code>signature</code> → 400, no signature saved. <span class="hits">hits: Job Detail · Invoice Detail · Estimate Builder (×2)</span></span></li>
+      <li><span class="tag">SMS-CONV</span><span><b>bare-array, no conversation_id.</b> The job/customer message endpoints return a bare array, so <code>conversation_id</code> is null and the web send composer is hidden/dead. <span class="hits">hits: Job Detail (messages) · Customer Detail (messages)</span></span></li>
+      <li><span class="tag">SCANPAY-404</span><span><b>POST /payments/scanpay/charge unregistered.</b> The ScanPay charge route was never mounted → "Route not found". <span class="hits">hits: Invoice Detail · Payments</span></span></li>
+    </ul>
+  </div>
+
+  <div id="tiers"></div>
+
+  <footer>
+    UltimatePro Screen Atlas · prioritized fix list · 60 actions pulled verbatim from the 29 screen maps<br>
+    See also: <a href="index.html">all maps (index)</a> · <a href="spine-overview.html">overview by spine</a>. Reasons are quoted from each map's action data; reality on disk wins.
+  </footer>
+</div>
+
+<script>
+const TIERS=[
+ {n:"TIER 1",title:"Core job & money loop",sub:"New Job · Job Detail · Complete Job · Estimate · Invoice · Payments · Customer · Calendar · Dashboard",rows:[
+  ["New Job","new-job","Paste Ticket","partial","web = review modal · Android = instant parse","POST /jobs/parse-ticket",""],
+  ["New Job","new-job","Customer match/create","partial","web requires a customer · Android auto-creates","GET /customers · POST /customers",""],
+  ["New Job","new-job","Save Job","partial","payload differs web vs Android","POST /jobs · edit: PUT /jobs/:id",""],
+  ["New Job","new-job","Date + Time","broken","web UTC/null-safe · Android local + blank→now","part of POST /jobs",""],
+  ["New Job","new-job","Save & Send","partial","web texts CUSTOMER · Android texts TECH","web: /jobs/:id/dispatch · Android: /roster-techs/notify-tech",""],
+  ["New Job","new-job","Status dropdown","dead","collected but never saved (web edit only)","not sent",""],
+  ["Job Detail","job-detail","Dispatch","partial","web sends no location → ETA weak","POST /jobs/:id/dispatch",""],
+  ["Job Detail","job-detail","Arrived","partial","web has no confirm step","POST /jobs/:id/arrived",""],
+  ["Job Detail","job-detail","Delete","partial","tech sees button → gets 403","DELETE /jobs/:id",""],
+  ["Job Detail","job-detail","Status","partial","web completion skips profit guard","/status or /complete",""],
+  ["Job Detail","job-detail","Source badge","partial","web omits commission line","display",""],
+  ["Job Detail","job-detail","Completion banner","partial","web has no completion sheet","GET /completion",""],
+  ["Job Detail","job-detail","Reminder method","broken","web sends wrong key → silent no-op","PATCH /reminder-method",""],
+  ["Job Detail","job-detail","Linked Job card","partial","web has no linked-job card","navigate",""],
+  ["Job Detail","job-detail","Line Items card","partial","different source than web invoice items","display",""],
+  ["Job Detail","job-detail","Notes editor","broken","web PATCH /jobs/:id → 404","PUT /jobs/:id · web: PATCH",""],
+  ["Job Detail","job-detail","Tech/Partner perms","broken","web: no UI + wrong verb (404)","PUT /jobs/:id · web: PATCH",""],
+  ["Job Detail","job-detail","Send To Tech","partial","web can't pick an unassigned roster tech","notify-tech / send-to-partner",""],
+  ["Job Detail","job-detail","Before/After photos","broken","web binds to columns that don't exist → never display","POST /uploads → /jobs/:id/photos",""],
+  ["Job Detail","job-detail","Charge Payment","broken","web reads missing field + wrong keys → always fails","web: POST /estimates/:id/collect-deposit",""],
+  ["Job Detail","job-detail","Restore","broken","endpoint doesn't exist → 404","POST /jobs/:id/restore",""],
+  ["Job Detail","job-detail","Completed","partial","web can't enter parts/CC → splits wrong","POST /jobs/:id/complete",""],
+  ["Job Detail","job-detail","Signature pad","dead","web modal never opens + wrong payload key","POST /jobs/:id/signature","SIG"],
+  ["Job Detail","job-detail","Details/History/Messages","broken","web can never send a job SMS (convId null)","GET /history · /sms · POST /send","SMS-CONV"],
+  ["Complete Job","complete-job","Complete Job","partial","web sends only notes (no parts/CC)","POST /jobs/:id/complete",""],
+  ["Complete Job","complete-job","Parts / CC / split inputs","broken","web never sends these → partner earnings overstated","part of POST /complete",""],
+  ["Complete Job","complete-job","Payment Collected dropdown","dead","backend never reads payment_method","sent as payment_method",""],
+  ["Complete Job","complete-job","Confirm Completion","partial","web has no confirm surface","GET /completion · POST /completion/confirm",""],
+  ["Estimate Builder","estimate-builder","Get Signature","broken","web sends signature_data; handler wants signature","POST /estimates/:id/sign","SIG"],
+  ["Estimate Builder","estimate-builder","Present GBB Options","broken","web mis-wired to signature; Android has PresentTiersScreen","opens signature modal (no route)","SIG"],
+  ["Estimate Builder","estimate-builder","Attach Photo","broken","web sends a file; handler wants JSON {url}","POST /estimates/:id/add-photo",""],
+  ["Invoice Detail","invoice-detail","Capture Signature","broken","web sends signature_data; handler wants signature","POST /invoices/:id/sign","SIG"],
+  ["Invoice Detail","invoice-detail","Charge via ScanPay","broken","route never registered","POST /payments/scanpay/charge","SCANPAY-404"],
+  ["Payments","payments","Charge via ScanPay","broken","route never registered","POST /payments/scanpay/charge","SCANPAY-404"],
+  ["Customer Detail","customer-detail","Jobs/Estimates/Invoices tabs","partial","Android has no estimates/invoices tabs","GET /jobs|estimates|invoices?customer_id",""],
+  ["Customer Detail","customer-detail","Messages — view + send","broken","bare array → convId null → composer hidden","GET /sms/customer/:id/messages · POST /sms/conversations/:cid/send","SMS-CONV"],
+  ["Dashboard","dashboard","KPI tiles","partial","different metrics; Android tiles static","web: 2 tiles → /phone",""],
+  ["Dashboard","dashboard","View all (memberships)","broken","no /memberships web route","navigate /memberships",""],
+ ]},
+ {n:"TIER 2",title:"Money reporting & techs",sub:"Payroll · Reports · Roster Technicians · Team Members · Job Sources · Review Platforms",rows:[
+  ["Payroll","payroll","Lock / Mark-Paid period","dead","endpoints exist, no audited UI caller","POST /payroll/periods/:id/lock · /mark-paid",""],
+  ["Team Members","team-members","List users","partial","web names blank","GET /users",""],
+  ["Team Members","team-members","Add / invite user","broken","name + bad role enum","POST /users",""],
+  ["Team Members","team-members","Edit user","partial","web can't edit names","PUT /users/:id",""],
+ ]},
+ {n:"TIER 3",title:"Partner & ops",sub:"Network · Inventory · Phone/SMS · SMS Thread · Live Map · Membership Plans · Online Booking",rows:[
+  ["Inventory","inventory","Transfer → truck","broken","web hits unregistered /transfer; Android uses send-items","POST /inventory/transfer",""],
+  ["SMS Thread","sms-thread","Header name","partial","web always falls back","— derived, no fetch",""],
+  ["SMS Thread","sms-thread","Open via /phone/sms alias","broken","param-name mismatch","GET /sms/conversations/undefined/messages",""],
+  ["Live Map","live-map","Open tech from pin","partial","web info-only","Android: onJob(current_job_id)",""],
+  ["Membership Plans","membership-plans","Add plan","partial","web annual/semi_annual mis-schedule","POST /memberships/plans",""],
+  ["Membership Plans","membership-plans","Edit plan","partial","web resets is_active=true","PUT /memberships/plans/:id",""],
+  ["Online Booking","online-booking","Load settings","partial","web misreads most keys","GET /settings/booking",""],
+  ["Online Booking","online-booking","Display name + tagline","broken","business_name vs company_display_name","PUT /settings/booking",""],
+  ["Online Booking","online-booking","Service areas","broken","zip vs zip_code","PUT /settings/booking",""],
+  ["Online Booking","online-booking","Appointment reminders","broken","nested vs flat reminder_*","PUT /settings/booking",""],
+  ["Online Booking","online-booking","Follow-up reminders","broken","nested vs flat followup_*","PUT /settings/booking",""],
+  ["Online Booking","online-booking","Save settings","partial","web can 400","PUT /settings/booking (upsert)",""],
+ ]},
+ {n:"TIER 4",title:"Settings / admin / integrations",sub:"Company Profile · Notifications · Custom Fields · Automation · Integrations/QuickBooks · Settings",rows:[
+  ["Notifications","notifications","Toggle a preference ×5","partial","no consumer · no server","— localStorage write",""],
+  ["Notifications","notifications","Backend notif endpoints","dead","no table, unused by web","GET/PUT /settings/notifications",""],
+  ["Custom Fields","custom-fields","Add field","partial","Android 'dropdown' invalid","POST /company/custom-fields",""],
+  ["Custom Fields","custom-fields","Edit field","partial","Android Type/Entity dropped","PUT /company/custom-fields/:id",""],
+  ["Automation (Ailot)","automation","Add / edit / delete rule","dead","backend-only","POST/PUT/DELETE /company/joby-rules",""],
+  ["Integrations (QuickBooks)","integrations","Stripe (coming soon)","dead","placeholder only","— no handler",""],
+ ]},
+];
+
+const tiersEl=document.getElementById('tiers');
+const totals={broken:0,partial:0,dead:0};
+TIERS.forEach(t=>{
+  const rows=t.rows.map(r=>{
+    const [screen,id,action,status,reason,route,tag]=r;
+    totals[status]++;
+    const tagHtml=tag?`<span class="rowtag">${tag}</span>`:'';
+    return `<div class="frow ${status}">
+      <div class="f-screen"><a href="${id}-atlas.html">${screen}</a><div class="f-action">${action}</div></div>
+      <div class="f-status"><span class="pill ${status}">${status}</span>${tagHtml}</div>
+      <div class="f-reason">${reason}</div>
+      <div class="f-route">${route}</div>
+    </div>`;
+  }).join('');
+  tiersEl.innerHTML+=`<div class="tier">
+    <div class="tier-head"><span class="tier-num">${t.n}</span><span class="tier-title">${t.title}</span><span class="tier-sub">${t.rows.length} items</span></div>
+    ${rows}
+  </div>`;
+});
+
+const total=totals.broken+totals.partial+totals.dead;
+document.getElementById('stats').innerHTML=`
+ <div class="stat total"><div class="n">${total}</div><div class="l">fix items</div></div>
+ <div class="stat broken"><div class="n">${totals.broken}</div><div class="l">broken</div></div>
+ <div class="stat partial"><div class="n">${totals.partial}</div><div class="l">partial</div></div>
+ <div class="stat dead"><div class="n">${totals.dead}</div><div class="l">dead</div></div>`;
+</script>
+</body>
+</html>

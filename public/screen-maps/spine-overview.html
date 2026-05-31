@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UltimatePro · Atlas Overview — by Spine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0a0f1e;--ink2:#0e1528;--panel:#121a30;--panel2:#16203a;
+    --line:#23314f;--line2:#1b2740;--cyan:#5ec8e8;--cyan-dim:#2b6b85;
+    --text:#dbe6f5;--dim:#8ea3c4;--faint:#5e7197;
+    --ok:#46d39a;--partial:#f2b84b;--broken:#ff6a72;--dead:#7c8aa8;
+    --lifecycle:#5ec8e8;--money:#46d39a;--comm:#c084fc;--identity:#f2b84b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--ink);color:var(--text);font-family:'Archivo',sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased;
+    background-image:linear-gradient(var(--line2) 1px,transparent 1px),linear-gradient(90deg,var(--line2) 1px,transparent 1px);
+    background-size:46px 46px;background-position:-1px -1px}
+  .wrap{max-width:1180px;margin:0 auto;padding:0 22px 110px}
+  header.mast{border-bottom:1px solid var(--line);padding:40px 0 26px;margin-bottom:18px;position:relative}
+  .eyebrow{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--cyan);margin-bottom:13px;display:flex;align-items:center;gap:10px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--cyan)}
+  h1{font-size:clamp(32px,5.5vw,58px);font-weight:900;letter-spacing:-.02em;line-height:.96;text-transform:uppercase}
+  h1 .sub{display:block;font-size:.30em;font-weight:600;letter-spacing:.04em;color:var(--dim);margin-top:11px;text-transform:none}
+  .stamp{position:absolute;top:40px;right:0;border:1.5px solid var(--cyan-dim);color:var(--cyan);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px 12px;letter-spacing:.08em;text-align:right;line-height:1.7;transform:rotate(-1.5deg);background:rgba(94,200,232,.04)}
+  .stamp b{color:var(--text)}
+  @media(max-width:700px){.stamp{position:static;display:inline-block;margin-top:16px;transform:none}}
+  .crumb{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);margin-bottom:18px}
+  .crumb a{color:var(--cyan);text-decoration:none}
+
+  .stats{display:flex;flex-wrap:wrap;gap:1px;background:var(--line);border:1px solid var(--line);margin:24px 0}
+  .stat{flex:1;min-width:120px;background:var(--ink2);padding:15px 17px;position:relative}
+  .stat .n{font-size:28px;font-weight:900;font-family:'JetBrains Mono',monospace;line-height:1}
+  .stat .l{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-top:6px}
+  .stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px}
+  .stat.s0::before{background:var(--lifecycle)}.stat.s0 .n{color:var(--lifecycle)}
+  .stat.s1::before{background:var(--money)}.stat.s1 .n{color:var(--money)}
+  .stat.s2::before{background:var(--comm)}.stat.s2 .n{color:var(--comm)}
+  .stat.s3::before{background:var(--identity)}.stat.s3 .n{color:var(--identity)}
+
+  .intro{font-size:13.5px;color:var(--dim);line-height:1.6;max-width:760px;margin:6px 0 8px}
+  .intro code{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cyan)}
+
+  .spine{border:1px solid var(--line);margin-bottom:14px;background:var(--ink2)}
+  .spine-head{display:flex;align-items:center;gap:13px;padding:15px 18px;background:linear-gradient(180deg,var(--panel),var(--ink2));border-bottom:1px solid var(--line)}
+  .spine-dot{width:13px;height:13px;border-radius:3px;flex-shrink:0}
+  .spine-title{font-size:17px;font-weight:900;letter-spacing:.03em;text-transform:uppercase}
+  .spine-desc{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--faint);letter-spacing:.03em;margin-left:auto;text-align:right}
+  .spine-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);border:1px solid var(--line);padding:3px 8px;border-radius:10px;flex-shrink:0}
+  .rows{padding:6px 10px 12px}
+  .srow{display:grid;grid-template-columns:215px 1fr 92px;gap:14px;align-items:center;padding:9px 10px;border-bottom:1px solid var(--line2);text-decoration:none}
+  .srow:last-child{border-bottom:none}
+  .srow:hover{background:var(--panel)}
+  @media(max-width:720px){.srow{grid-template-columns:1fr;gap:4px}}
+  .srow .nm{font-size:14.5px;font-weight:700;color:var(--text)}
+  .srow .id{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--faint);margin-top:1px}
+  .srow .note{font-size:13px;color:var(--dim);line-height:1.45}
+  .pill{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;padding:3px 9px;border-radius:10px;text-align:center;text-transform:uppercase;justify-self:start}
+  .pill.ok{color:var(--ok);background:rgba(70,211,154,.12)}
+  .pill.partial{color:var(--partial);background:rgba(242,184,75,.13)}
+  .pill.broken{color:var(--broken);background:rgba(255,106,114,.14)}
+  .pill.dead{color:var(--dead);background:rgba(124,138,168,.14)}
+
+  footer{margin-top:34px;padding-top:18px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faint);letter-spacing:.04em;line-height:1.9}
+  footer a{color:var(--cyan);text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="eyebrow">UltimatePro · Screen Atlas · 29 screens mapped</div>
+    <h1>Atlas Overview<span class="sub">The 29 mapped screens, grouped by the four spines their actions touch. A screen appears under every spine it acts on.</span></h1>
+    <div class="stamp">ATLAS<br><b>2026-05-31</b><br>commit · <b>7c84e05</b></div>
+  </header>
+
+  <div class="crumb"><a href="index.html">all maps</a> · <a href="fix-list.html">fix list</a> › overview by spine</div>
+
+  <p class="intro">Spine membership is read from each map's <code>side_effects</code> / action data — which of the four cross-cutting concerns a screen's buttons actually move. The badge on each row is that screen's <b>worst</b> action status (ok → partial → broken → dead). Click any screen to open its atlas.</p>
+
+  <div class="stats" id="stats"></div>
+
+  <div id="spines"></div>
+
+  <footer>
+    UltimatePro Screen Atlas · overview by spine · derived from the 29 screen maps in /screen-maps/<br>
+    See also: <a href="index.html">all maps (index)</a> · <a href="fix-list.html">prioritized fix list</a>. Facts are pulled from each map; reality on disk wins.
+  </footer>
+</div>
+
+<script>
+const SPINES=[
+ {key:"lifecycle",title:"Lifecycle",color:"var(--lifecycle)",desc:"status changes · create / delete / restore records",
+  screens:[
+   {nm:"New Job",id:"new-job",note:"Creates the job record — schedule, customer, assignment.",status:"broken"},
+   {nm:"Job Detail",id:"job-detail",note:"The status engine: dispatch → arrived → complete, plus delete & restore.",status:"broken"},
+   {nm:"Complete Job",id:"complete-job",note:"Flips the job to completed and writes earnings.",status:"broken"},
+   {nm:"Calendar",id:"calendar",note:"Date-filtered view of scheduled jobs.",status:"ok"},
+   {nm:"Customers",id:"customers",note:"Create, import, and bulk-delete customer records.",status:"ok"},
+   {nm:"Customer Detail",id:"customer-detail",note:"Browse a customer's jobs / estimates / invoices.",status:"broken"},
+   {nm:"Dashboard",id:"dashboard",note:"Paste-ticket parses pasted text into a new job.",status:"broken"},
+   {nm:"Estimate Builder",id:"estimate-builder",note:"Author → send → sign → convert an estimate into a job/invoice.",status:"broken"},
+   {nm:"Inventory",id:"inventory",note:"Part records across warehouse + trucks — transfer, restock, auto-deduct.",status:"broken"},
+   {nm:"Membership Plans",id:"membership-plans",note:"Plan templates; enrolling a customer schedules recurring jobs.",status:"partial"},
+   {nm:"Custom Fields",id:"custom-fields",note:"Defines extra fields stored on job/customer/estimate/invoice records.",status:"partial"},
+   {nm:"Online Booking",id:"online-booking",note:"Public booking page turns a request into a booking → job.",status:"broken"},
+   {nm:"Live Map",id:"live-map",note:"Status-colored job pins; tap → Job Detail.",status:"partial"},
+   {nm:"Automation (Ailot)",id:"automation",note:"Rules fire on job status transitions (started / completed / cancelled…).",status:"dead"},
+  ]},
+ {key:"money",title:"Money",color:"var(--money)",desc:"earnings · profit · payments · deposits · commissions · invoices · payroll",
+  screens:[
+   {nm:"Complete Job",id:"complete-job",note:"Writes the three-slice profit split + earnings — web omits parts/CC → splits wrong.",status:"broken"},
+   {nm:"Job Detail",id:"job-detail",note:"Charge-payment, complete → profit/earnings, line-item totals.",status:"broken"},
+   {nm:"Invoice Detail",id:"invoice-detail",note:"Collect on an invoice — send, charge, ScanPay, receipt, deposit.",status:"broken"},
+   {nm:"Estimate Builder",id:"estimate-builder",note:"Deposit + convert to invoice — front of the money spine.",status:"broken"},
+   {nm:"Payments",id:"payments",note:"Record / charge a payment, ScanPay, receipt, ledger.",status:"broken"},
+   {nm:"Payroll",id:"payroll",note:"Field-team earnings off the profit engine.",status:"dead"},
+   {nm:"Reports",id:"reports",note:"Business reporting — revenue, profit, by source.",status:"ok"},
+   {nm:"Dashboard",id:"dashboard",note:"Revenue / KPI tiles, 2nd-chance, memberships.",status:"broken"},
+   {nm:"Membership Plans",id:"membership-plans",note:"Recurring plan price + billing cadence.",status:"partial"},
+   {nm:"Job Sources",id:"job-sources",note:"profit_allocation_pct feeds the profit engine; tech commission rules.",status:"ok"},
+   {nm:"Roster Technicians",id:"roster-techs",note:"Per-tech commission % and CC-fee %.",status:"ok"},
+   {nm:"Network",id:"network",note:"Bilateral revenue split with contractor partners.",status:"ok"},
+   {nm:"Integrations (QuickBooks)",id:"integrations",note:"Pushes customers / invoices / payments to QuickBooks Online.",status:"dead"},
+  ]},
+ {key:"comm",title:"Communication",color:"var(--comm)",desc:"SMS · push · email · receipts · reminders",
+  screens:[
+   {nm:"Phone / SMS",id:"phone",note:"Call + SMS hub; second-chance lead recovery (Android).",status:"ok"},
+   {nm:"SMS Thread",id:"sms-thread",note:"One conversation — read history, send via Twilio.",status:"broken"},
+   {nm:"Job Detail",id:"job-detail",note:"Messages tab + dispatch/arrived SMS + reminder method (web SMS send broken).",status:"broken"},
+   {nm:"Customer Detail",id:"customer-detail",note:"Per-customer SMS thread (web composer hidden — convId null).",status:"broken"},
+   {nm:"New Job",id:"new-job",note:"Save & Send texts the customer (web) / the tech (Android).",status:"broken"},
+   {nm:"Invoice Detail",id:"invoice-detail",note:"Send the invoice + payment receipt.",status:"broken"},
+   {nm:"Review Platforms",id:"review-platforms",note:"The review link appended to payment receipts.",status:"ok"},
+   {nm:"Automation (Ailot)",id:"automation",note:"Rules send templated SMS/email to customer / tech / owner.",status:"dead"},
+   {nm:"Online Booking",id:"online-booking",note:"Appointment + follow-up reminders, confirmation message.",status:"broken"},
+   {nm:"Notifications",id:"notifications",note:"Which app notifications fire (device-local only; inert).",status:"dead"},
+  ]},
+ {key:"identity",title:"Identity",color:"var(--identity)",desc:"permissions · partner visibility · roles · ownership",
+  screens:[
+   {nm:"Team Members",id:"team-members",note:"App users + roles (admin/manager/tech/dispatcher), deactivate/reactivate.",status:"broken"},
+   {nm:"Roster Technicians",id:"roster-techs",note:"Field techs without app logins.",status:"ok"},
+   {nm:"Company Profile",id:"company-profile",note:"The tenant's identity — name, logo, contact, UltimatePro network ID.",status:"ok"},
+   {nm:"Network",id:"network",note:"Contractor partners — what a partner can see, invite, pause.",status:"ok"},
+   {nm:"Job Detail",id:"job-detail",note:"Tech/partner permissions + send-to-partner (web wrong verb → 404).",status:"broken"},
+   {nm:"Settings",id:"settings",note:"Config hub — routes to team, roster, company, integrations.",status:"ok"},
+   {nm:"Job Sources",id:"job-sources",note:"Source contacts / referral partners.",status:"ok"},
+   {nm:"Integrations (QuickBooks)",id:"integrations",note:"OAuth connection + token ownership per company.",status:"dead"},
+  ]},
+];
+
+const spinesEl=document.getElementById('spines');
+SPINES.forEach((sp,i)=>{
+  const rows=sp.screens.map(s=>`<a class="srow" href="${s.id}-atlas.html">
+     <div><div class="nm">${s.nm}</div><div class="id">${s.id}</div></div>
+     <div class="note">${s.note}</div>
+     <span class="pill ${s.status}">${s.status}</span>
+   </a>`).join('');
+  spinesEl.innerHTML+=`<div class="spine">
+    <div class="spine-head">
+      <span class="spine-dot" style="background:${sp.color}"></span>
+      <span class="spine-title" style="color:${sp.color}">${sp.title}</span>
+      <span class="spine-count">${sp.screens.length} screens</span>
+      <span class="spine-desc">${sp.desc}</span>
+    </div>
+    <div class="rows">${rows}</div>
+  </div>`;
+});
+
+document.getElementById('stats').innerHTML=SPINES.map((sp,i)=>`
+  <div class="stat s${i}"><div class="n">${sp.screens.length}</div><div class="l">${sp.title}</div></div>`).join('')
+  + `<div class="stat s0" style="--lifecycle:var(--cyan)"><div class="n">29</div><div class="l">screens total</div></div>`;
+</script>
+</body>
+</html>
