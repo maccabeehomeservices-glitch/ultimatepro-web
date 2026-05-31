@@ -87,11 +87,14 @@ const MAPS=[
   {nm:"SMS Thread",id:"sms-thread",href:"sms-thread-atlas.html",desc:"One conversation — read history, send via Twilio, clear unread. The one place SMS send is wired correctly.",counts:{ok:5,partial:1,broken:1,dead:0}},
   {nm:"Live Map",id:"live-map",href:"live-map-atlas.html",desc:"Active job pins + live tech pins on Google Maps — tap to detail, jump to the job. Web polls 30s, Android techs 15s.",counts:{ok:7,partial:1,broken:0,dead:0}},
   {nm:"Settings",id:"settings",href:"settings-atlas.html",desc:"The settings landing — each row navigates to a config sub-page. Android 'More' doubles as a nav hub.",counts:{ok:16,partial:0,broken:0,dead:0}},
+  {nm:"Company Profile",id:"company-profile",href:"company-profile-atlas.html",desc:"Edit the tenant's identity — name, tagline, contact, address, logo. One PUT /company; logo to Cloudinary.",counts:{ok:7,partial:0,broken:0,dead:0}},
+  {nm:"Team Members",id:"team-members",href:"team-members-atlas.html",desc:"Manage app users (list/create/edit/deactivate/reactivate). Android is correct; web is broken vs the current API.",counts:{ok:3,partial:2,broken:1,dead:0}},
+  {nm:"Roster Technicians",id:"roster-techs",href:"roster-techs-atlas.html",desc:"CRUD for field techs without app logins — name, phone, email, commission %, CC-fee %. Clean web ↔ Android.",counts:{ok:5,partial:0,broken:0,dead:0}},
+  {nm:"Job Sources",id:"job-sources",href:"job-sources-atlas.html",desc:"3 tabs — source contacts (profit_allocation_pct feeds the profit engine), ad channels, commission rules.",counts:{ok:13,partial:0,broken:0,dead:0}},
 ];
 const PENDING=[
-  "Company Profile","Team Members","Roster Technicians","Review Platforms","Online Booking",
-  "Job Sources","Membership Plans","Notifications","Custom Fields","Ailot / Automation Rules",
-  "Integrations (QuickBooks)",
+  "Review Platforms","Online Booking","Membership Plans","Notifications",
+  "Custom Fields","Ailot / Automation Rules","Integrations (QuickBooks)",
 ];
 
 const grid=document.getElementById('grid');
