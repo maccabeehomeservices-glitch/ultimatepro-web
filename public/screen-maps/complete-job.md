@@ -16,7 +16,7 @@
 | `route_web` | inline Complete modal in `JobDetail` (JobDetail.jsx ~1495–1605); partner-split form + live calc render when `agreement_id != null` |
 | `primary_actors` | tech-user (submit), owner (review/confirm) |
 | `purpose` | The money spine's terminal action. Locks the job outcome, runs profit allocation, and writes earnings. For partner jobs it captures the parts/CC inputs that drive the sender/receiver split and routes the result through a confirm step. |
-| `last_verified` | 2026-05-31 · Phase 1 Complete Job money fix (web partner-split form + live calc + Status-completed reroute) |
+| `last_verified` | 2026-06-01 · Commit A: earnings = real collected money — gross unified to getJobGross (summed completed payments); /complete branches fully-paid→completed+earnings vs balance→holding+no-earnings. Commit B (payment-event trigger) pending. |
 
 ### load_sequence
 Android: dedicated screen loads job summary + (partner jobs) builds a live split calculator. Job Detail's completion banner separately calls `GET /jobs/:id/completion`. Web: modal opens; for partner jobs it renders the same parts/CC form + a live split calculator using the already-loaded `jobInvoice.total` as gross (mirrors Android's `getInvoices().firstOrNull()`). Web still never calls `GET /completion`.
@@ -41,12 +41,12 @@ Android: dedicated screen loads job summary + (partner jobs) builds a live split
 - **confirm:** —
 - **route_chain:** `POST /jobs/:id/complete`
 - **request_body:** **partner job (both surfaces):** `{parts_paid_by, parts_amount, payment_collected_by, cc_fee_amount, cc_fee_paid_by, notes?}` (parts_amount 0 when "none", cc_fee_amount 0 when toggle off). **non-partner (both surfaces):** `{notes?}` only. Web now builds the same body as Android (Phase 1); the dead `payment_method` was removed.
-- **side_effects:** `profit-calc`, `earnings-write` (`tech_earnings`, user XOR roster), `update-record` (`job_completion_details` upsert, status `pending`), `reimbursement-write` (if tech_reimbursement>0), `status-change` (job → `completed`), `commission-resolve`
-- **end_state:** Job `completed`; `job_completion_details` written (status `pending`); `tech_earnings` row(s) written; profit split across source/tech/company (or sender/receiver for partner).
-- **failure_modes:** `validation-reject` (400 "Profit allocation conflict" when source%+tech%>100).
-- **parity:** MATCH — web now captures parts/CC for partner jobs and sends the identical body; non-partner sends notes only.
+- **side_effects:** `profit-calc`, `update-record` (`job_completion_details` upsert, status `pending` — always, persists the parts/CC inputs), `status-change` (→ `completed` if fully paid, else `holding`), and **only when fully paid:** `earnings-write` (`tech_earnings`, user XOR roster), `reimbursement-write` (if tech_reimbursement>0), `commission-resolve`. `actual_end` set in both cases.
+- **end_state:** **Branches on the invoice balance (Commit A, 2026-06-01).** If `SUM(invoice.balance_due) = 0` (fully paid, or no invoice → $0): status `completed`, earnings written on **gross = collected payments** (`getJobGross`), dated to today. If a balance remains: status `holding` + `actual_end` (work done) + `job_completion_details` saved (status `pending`, persists parts/CC) but **NO earnings yet** — those fire when the balance later clears (Commit B). Gross for the split = `getJobGross` (summed completed payments), not the billed invoice total.
+- **failure_modes:** `validation-reject` (400 "Profit allocation conflict" when source%+tech%>100 — runs before any mutation, before the holding/completed branch).
+- **parity:** MATCH — both surfaces send the same body; the holding/earnings-on-paid logic is backend-side (no client change).
 - **status:** OK
-- **status_note:** Phase 1 (2026-05-31): web partner jobs now send parts/CC, so web-completed partner jobs produce the same `job_completion_details` numbers as Android. `divergent-logic` cleared.
+- **status_note:** Commit A (2026-06-01): earnings = real collected money. Gross unified to `getJobGross` = `SUM(payments.amount WHERE status='completed')` joined to the job's invoices (one source of truth, mirrors the collections report). Completion now branches: fully paid → `completed` + earnings (dated today); balance remaining → `holding` + `actual_end` + completion record saved, no earnings. **Commit B pending:** the payment/refund/ScanPay trigger that fires a holding job's earnings when its balance later clears (today a holding job does NOT auto-complete on later payment yet).
 
 ### `complete-job.partner-split`
 - **label:** Parts / CC-fee / payment-collected inputs (partner jobs)
@@ -137,11 +137,12 @@ Android: dedicated screen loads job summary + (partner jobs) builds a live split
 
 ## THE MONEY MATH (reference)
 
-- **Guard:** `source% + effectiveTechPct > 100` → HTTP 400 "Profit allocation conflict". Runs only on `/complete` (NOT on the `/status?completed` legacy path).
-- **Partner split:** `net = gross − parts_amount − cc_fee_amount`; `sender_earns = net·senderPct%`, `receiver_earns = net·receiverPct%`; then CC absorption subtracted per `cc_fee_paid_by` (sender / receiver / split 50-50).
-- **Tech three-slice:** `netProfit = gross − material_cost` (material_cost from `job_line_items`, *not* the complete-body parts); `source = netProfit·sourcePct%`, `tech = netProfit·techPct%` (owner/admin → techPct=0), `company = remainder`.
+- **Gross (Commit A, 2026-06-01):** `gross = getJobGross(jobId)` = `SUM(payments.amount WHERE status='completed')` joined to the job's invoices — **real collected money**, one source of truth (utils/profit.js, mirrors the collections report). Replaced the old billed sources (latest-invoice / line-items / amount_paid). Earnings fire **only when fully paid** (`SUM(invoice.balance_due)=0`); a completion with a balance → `holding` + `actual_end`, no earnings yet.
+- **Guard:** `source% + effectiveTechPct > 100` → HTTP 400 "Profit allocation conflict". Runs before any mutation (before the holding/completed branch).
+- **Partner split:** `net = gross − parts_amount − cc_fee_amount`; `sender_earns = net·senderPct%`, `receiver_earns = net·receiverPct%`; then CC absorption subtracted per `cc_fee_paid_by` (sender / receiver / split 50-50). Gross now = collected payments.
+- **Tech three-slice:** `netProfit = gross − material_cost` (`gross` = collected payments; material_cost from `job_line_items`); `source = netProfit·sourcePct%`, `tech = netProfit·techPct%` (owner/admin → techPct=0), `company = remainder`.
 - **4 actors:** owner self → techPct 0; roster tech → `roster_techs.commission_pct`, writes `roster_tech_id`; app-user tech → full material-policy branching; partner-received → sender/receiver split + the receiver's assigned actor also gets a `tech_earnings` row.
-- **Writes (in order):** `job_completion_details` (status `pending`) → `jobs` (status `completed`, actual_end) → `tech_earnings` (DELETE then INSERT) → `material_reimbursements` (if any).
+- **Writes (fully-paid):** `job_completion_details` (status `pending`) → `jobs` (status `completed`, actual_end) → `tech_earnings` (DELETE then INSERT, dated `created_at=NOW()` = clear-day) → `material_reimbursements` (if any). **Writes (holding):** `job_completion_details` (status `pending`, persists parts/CC) → `jobs` (status `holding`, actual_end). No `tech_earnings`.
 
 ---
 
@@ -153,4 +154,7 @@ Android: dedicated screen loads job summary + (partner jobs) builds a live split
 - **Two completion paths — web side closed (Phase 1):** web's Status modal "Completed" now opens the Complete modal instead of `POST /status?completed`, so web completion always runs the `/complete` path (guard + partner split + `job_completion_details`), mirroring Android. The legacy backend `/status?completed` branch still EXISTS but web no longer uses it for completion. **Honest caveat:** the `/status?completed` branch also runs three side-effects that `/complete` does NOT — source-contact notify, truck inventory deduction, membership `next_job_date` advance (jobs.js 879-934). Android completes via `/complete` only, so it already skips these; web now matches Android. Porting those three into `/complete` is a recommended **backend follow-up** (out of this web-only scope).
 - **`tip_amount` column** exists on `job_completion_details` but neither surface captures a tip → always 0 (dead column).
 - **`/complete` is not transactional** — a post-hook failure can leave the job `completed` with no `tech_earnings` row (silent partial state).
-- **Gross source differs:** partner split reads gross from the latest invoice; the tech slice derives subtotal from line items (fallback invoice.total → amount_paid). A job where these differ values the two off different numbers.
+- **Gross sources UNIFIED (Commit A, 2026-06-01):** all earnings/profit gross now flows through one helper `getJobGross` = summed completed payments. Replaced the prior 3 drifted sources: partner-split latest-invoice (jobs.js), three-slice line-items→invoice→amount_paid (profit.js `saveJobEarnings`), and legacy `calculateTechEarnings` line-items SUM (jobs.js). (Note: `sources.js` "revenue by source" report intentionally stays **billed** revenue — a distinct concept from collected earnings; not changed.)
+- **Earnings = real collected money (Commit A):** earnings fire only when an invoice's balance is fully paid; partial → `holding` + `actual_end`, no earnings. The completion record (parts/CC) is persisted at holding (status `pending`) so the split can be finalized later. **Commit B pending:** the payment/refund/ScanPay event trigger that fires a holding job's earnings on balance-clear — until B ships, a holding job does NOT auto-complete when a later payment clears it (owner can `POST /payroll/recalculate/:jobId` or re-complete as a stopgap).
+- **`$0`-collected completion:** a fully-paid job with `getJobGross=0` (no payments / no invoice) → `completed` with $0 earnings (intended: only real money pays out).
+- **Holding now has two meanings:** estimate-deposit holding (`actual_end` null, deposit taken, work pending) vs work-done holding (`actual_end` set, balance owed). Distinguish by `actual_end`.
