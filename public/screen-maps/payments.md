@@ -16,7 +16,7 @@
 | `route_web` | `/payments` → `Payments` (Payments.jsx, read-only list) + the payment/receipt **modals inside** `InvoiceDetail` |
 | `primary_actors` | office, owner, tech |
 | `purpose` | Take the money and confirm it: record a manual payment (cash / card / check / etc.), run a ScanPay QR or payment-link charge with live polling, send a receipt, and review the payments ledger. Web collects payment in an Invoice-Detail modal and shows a read-only payments list; Android has a dedicated method-grid PaymentScreen + ScanPay dialogs + ReceiptScreen. |
-| `last_verified` | 2026-05-31 · Phase 0 [SCANPAY-404] fix · commit: 3e40117 |
+| `last_verified` | 2026-06-01 · Money Commit B: payment-event earnings trigger (clear-day) + refund clawback + ScanPay earnings-gap fix · backend commit: 2269f85 |
 
 ### load_sequence
 Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. Web payment modal lives on the already-loaded invoice. Web Payments list: `GET /payments?from&to&page&limit` → `{payments, total_collected}`.
@@ -133,6 +133,21 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **status:** OK
 - **status_note:** Web page is read-only (no create/refund controls).
 
+### `payments.money-trigger` (server-side, no UI)
+- **label:** Earnings fire on the clear-day (Money Commit B)
+- **section:** money model
+- **actors:** system
+- **purpose:** Make earnings track REAL kept money. When a payment / ScanPay charge / refund changes a job's invoice balance, `reconcileJobEarnings(jobId, companyId)` (`backend/utils/profit.js`) reconciles the job's money.
+- **route_chain:** fired AFTER the balance update inside `POST /invoices/:id/payment`, `POST /payments/:id/refund`, and the ScanPay webhook (`handleScanPayWebhook`).
+- **side_effects (the rule):**
+  - Acts ONLY on **work-done** jobs (`actual_end` set). A payment on a not-yet-completed job or a deposit-holding job (`actual_end` null) does NOT auto-complete it; the tech still marks the work done, and `/complete` then fires earnings (it sees the balance already cleared).
+  - **Balance clears to 0** on a work-done holding job → status `holding` → `completed`; writes `tech_earnings` on `getJobGross` (collected money) dated **NOW = the clear-day**, and recomputes the partner split in `job_completion_details` (kept `pending` for the sender to confirm).
+  - **Refund** lowers collected money → `getJobGross` nets `refund_amount`, so `tech_earnings` recomputes DOWN; if the refund reopened a balance, the job flips `completed` → `holding` and a previously `confirmed` partner split resets to `pending`.
+- **end_state:** Earnings = real collected money, dated to the day the money actually moved; payroll/reports pick them up in that day's period.
+- **parity:** BACKEND-ONLY (no Android/web UI surface). Mirrors and completes the `/complete` money branch from Commit A.
+- **status:** OK
+- **status_note:** Money Commit B (2026-06-01). REPLACES the ScanPay webhook's old bare `UPDATE jobs SET status='completed'` that completed the job WITHOUT writing earnings (the no-earnings gap is fixed). Idempotent (`saveJobEarnings` DELETE+INSERT; split recompute+upsert) so it cannot double-fire vs the `/complete` path. The full money model (collect → settle → clawback) is now complete (Commit A + B).
+
 ---
 
 ## SCREEN-LEVEL DRIFT FLAGS
@@ -142,4 +157,6 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **`POST /payments` (standalone create) has no audited consumer** — it validates method, applies to the invoice (`applyPaymentToInvoice`), and notifies the owner on payments ≥ $500, but `InvoiceDetail` and the `/payments` page both use `POST /invoices/:id/payment` / read-only `GET /payments` instead. `paymentsApi.create` is **UNVERIFIED** for a live caller.
 - **Two payment-write paths** — `POST /invoices/:id/payment` (used by the UIs) and `POST /payments` (standalone); both insert a completed `payments` row and update the invoice, via slightly different code.
 - **Method-set note:** Android offers Venmo/CashApp; these ride `/invoices/:id/payment` as `method='venmo'`. The final `payments_method_check` (per the data-model audit) includes `venmo`/`cashapp` but excludes `card`/`scanpay`/`paypal`.
+- **ScanPay earnings-gap FIXED** (Money Commit B, 2026-06-01): the webhook previously force-completed the linked job with a bare `UPDATE status='completed'` and wrote NO earnings. It now calls `reconcileJobEarnings`, which completes the job AND fires earnings on collected money dated to the ScanPay clear-day. A job paid via ScanPay *before* the work was marked done (`actual_end` null) is NOT auto-completed (Decision 3a: payment alone does not imply the work is finished).
+- **Refund clawback** (Money Commit B): `getJobGross` nets `refund_amount`; the refund handler calls `reconcileJobEarnings`, so a refund drops `tech_earnings` to the now-lower kept amount, reopens `completed` → `holding` if a balance reopens, and resets a confirmed partner split to `pending`. The collections report (`routes/reports.js`) was also netted to `SUM(amount - refund_amount)` so it agrees with `getJobGross`.
 - **UNVERIFIED:** Android `PaymentsScreen` (list) contents; the exact ScanPay request/response bodies beyond the ApiService signatures; whether any screen calls `POST /payments`.

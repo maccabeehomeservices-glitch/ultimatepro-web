@@ -100,8 +100,8 @@
 <div class="wrap">
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Complete Job<span class="sub">The money spine's last step — lock the job, run profit, write earnings.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Commit A · <b>earnings = collected money</b></div>
+    <h1>Complete Job<span class="sub">The money spine's last step: lock the job, run profit, write earnings.</span></h1>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Commit A+B · <b>earnings = collected money</b><br>backend · <b>2269f85</b></div>
   </header>
   <div class="crumb"><a href="index.html">all maps</a> · <a href="job-detail-atlas.html">job detail</a> · <a href="new-job-atlas.html">new job</a> › complete job</div>
   <div class="stats" id="stats"></div>
@@ -135,10 +135,11 @@
       <li><b>Web "Payment Collected" dropdown: RESOLVED (Phase 1)</b> — the dead <code>payment_method</code> select was removed; web no longer sends it. Who-collected now rides <code>payment_collected_by</code> on partner jobs.</li>
       <li><b>No web confirm surface</b> — <code>GET /jobs/:id/completion</code> and <code>POST /completion/confirm</code> exist and are used by Android; web calls neither, so a partner sender on web can't confirm a split. (Unchanged.)</li>
       <li><b>Two completion paths — web side closed (Phase 1):</b> web's Status modal "Completed" now opens the Complete modal instead of <code>POST /status?completed</code>, so web completion always runs <code>/complete</code> (guard + partner split + completion record), mirroring Android. The legacy <code>/status?completed</code> branch still exists but web no longer uses it. Caveat: that branch also runs source-notify + inventory deduction + membership advance that <code>/complete</code> does not — Android skips them too; porting them into <code>/complete</code> is a backend follow-up.</li>
-      <li><b>Earnings = real collected money (Commit A, 2026-06-01).</b> Gross unified to one helper <code>getJobGross</code> = SUM(completed payments) for the job (replaced 3 billed sources: latest-invoice, line-items chain, legacy SUM). <code>/complete</code> now branches: fully paid (<code>SUM(balance_due)=0</code>) → <code>completed</code> + earnings (dated today); balance remaining → <code>holding</code> + <code>actual_end</code> + completion record saved, NO earnings. <b>Commit B pending:</b> the payment/refund/ScanPay trigger that fires a holding job's earnings on balance-clear.</li>
+      <li><b>Earnings = real collected money (Commit A, 2026-06-01).</b> Gross unified to one helper <code>getJobGross</code> = SUM(completed payments, net of refunds) for the job (replaced 3 billed sources: latest-invoice, line-items chain, legacy SUM). <code>/complete</code> now branches: fully paid (<code>SUM(balance_due)=0</code>) → <code>completed</code> + earnings (dated today); balance remaining → <code>holding</code> + <code>actual_end</code> + completion record saved, NO earnings.</li>
+      <li><b>Commit B BUILT (2026-06-01, backend 2269f85):</b> <code>reconcileJobEarnings(jobId)</code> is the payment-event trigger, wired into <code>POST /invoices/:id/payment</code>, <code>POST /payments/:id/refund</code>, and the ScanPay webhook. A later payment clearing a work-done holding job's balance auto-completes it + fires earnings on <code>getJobGross</code> dated to the clear-day + recomputes the partner split (kept pending). Refunds claw back (earnings drop, reopened balance flips completed→holding). Deposit-holding (<code>actual_end</code> null) is never auto-completed. Money model complete.</li>
       <li><code>tip_amount</code> column exists but neither surface captures a tip → always 0.</li>
-      <li><b><code>/complete</code> is not transactional</b> — a post-hook failure can leave the job completed with no <code>tech_earnings</code> row.</li>
-      <li><b>$0-collected completion</b> → completed with $0 earnings (intended). <b>Holding has two meanings</b> — estimate-deposit (actual_end null) vs work-done-unpaid (actual_end set).</li>
+      <li><b><code>/complete</code> is not transactional:</b> a post-hook failure can leave the job completed with no <code>tech_earnings</code> row.</li>
+      <li><b>$0-collected completion</b> → completed with $0 earnings (intended). <b>Holding has two meanings:</b> estimate-deposit (actual_end null) vs work-done-unpaid (actual_end set).</li>
     </ul>
   </div>
 
@@ -154,7 +155,7 @@ const SECTIONS=[
 ];
 const A={
 "submit":{label:"Complete Job",status:"ok",route:"POST /jobs/:id/complete",fires:"profit calc + earnings",result:"job completed",
- d:{purpose:"Lock the job, run profit allocation, write earnings (only when fully paid). The money spine's terminal action.",actors:["tech-user","owner"],vis:"always (guard blocks if source%+tech% > 100)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH — same body both surfaces. Commit A (2026-06-01): gross = getJobGross (summed completed payments). /complete branches: SUM(balance_due)=0 → completed + earnings dated today; balance remaining → holding + actual_end + completion record saved (parts/CC persisted), NO earnings until the balance clears (Commit B). Backend-only logic; clients unchanged."}},
+ d:{purpose:"Lock the job, run profit allocation, write earnings (only when fully paid). The money spine's terminal action.",actors:["tech-user","owner"],vis:"always (guard blocks if source%+tech% > 100)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH: same body both surfaces. Commit A (2026-06-01): gross = getJobGross (summed completed payments). /complete branches: SUM(balance_due)=0 → completed + earnings dated today; balance remaining → holding + actual_end + completion record saved (parts/CC persisted), NO earnings until the balance clears (Commit B). Backend-only logic; clients unchanged."}},
 "partner-split":{label:"Parts / CC / split inputs",status:"ok",route:"part of POST /complete",fires:"net = gross − parts − CC",result:"sender/receiver split",
  d:{purpose:"Capture the deductions that drive the sender/receiver split: who supplied parts, parts amount, who collected, CC fee + who absorbs it.",actors:["tech-user","owner"],vis:"both surfaces, only when agreement_id != null (partner job). Web renders the same form (Phase 1).",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1) — web renders parts chips (Company/Technician/No Parts), parts amount, payment-collected chips, a CC-fee toggle + amount + absorbed-by chips (Sender/Receiver/Split 50/50), and a live split calculator off the loaded invoice total. Values sent are sender/receiver/none/split exactly as Android."}},
 "notes":{label:"Completion Notes",status:"ok",route:"part of POST /complete",fires:"save note",result:"note saved",
