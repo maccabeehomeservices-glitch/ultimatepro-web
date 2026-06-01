@@ -2,6 +2,9 @@
 // Mirror of android/.../JobScreens.kt dateBoundsFor() / sortFor() / humanizeScheduled().
 // Returns local-naive ISO strings (yyyy-MM-ddTHH:mm:ss) — matches Android format
 // so the backend's TIMESTAMPTZ comparison treats them as wall-clock local time.
+import { formatInTimeZone } from 'date-fns-tz';
+
+const HUMANIZE_DEFAULT_TZ = 'America/New_York';
 
 const isoDate = (d) => {
   const y = d.getFullYear();
@@ -68,17 +71,20 @@ export function sortFor(range, customTo) {
   return 'upcoming';
 }
 
-/** Humanize a scheduled timestamp: null → "Unscheduled", today → "Today, 2:00 PM", etc. */
-export function humanizeScheduled(iso) {
+/** Humanize a scheduled timestamp in the job's zone: null → "Unscheduled", today → "Today, 2:00 PM EDT".
+ *  `zone` is the job's effective_timezone (falls back to ET). The displayed TIME is rendered in
+ *  that zone with a zone label; the Today/Tomorrow day bucket stays viewer-local (separate item). */
+export function humanizeScheduled(iso, zone) {
   if (!iso) return 'Unscheduled';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return 'Unscheduled';
+  const tz = zone || HUMANIZE_DEFAULT_TZ;
 
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const sched = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const daysDiff = Math.round((sched - today) / (1000 * 60 * 60 * 24));
 
-  const time = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const time = formatInTimeZone(d, tz, 'h:mm a zzz');
   if (daysDiff === 0) return `Today, ${time}`;
   if (daysDiff === 1) return `Tomorrow, ${time}`;
   if (daysDiff >= -6 && daysDiff <= 6) {
