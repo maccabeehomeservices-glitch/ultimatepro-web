@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Customer Detail<span class="sub">The 360° on one customer, stats, contacts, memberships, portal, and their jobs/estimates/invoices/messages.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>9366abe</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br><b>Android entity-tabs</b> · estimates + invoices</div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="customers-atlas.html">customers</a> · <a href="job-detail-atlas.html">job detail</a> › customer detail</div>
@@ -140,10 +140,10 @@
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
       <li><b>Web customer Messages can't send</b>, <code>/sms/customer/:id/messages</code> returns a bare array with no <code>conversation_id</code>, so web's <code>convId</code> is always null and the composer is hidden. Android reads <code>conversationId</code> off the messages and opens the thread. (Same bug as Job-Detail messages.)</li>
-      <li><b>Tab models diverge</b>, web has Jobs / Estimates / Invoices / Messages tabs; Android has Details + Messages (jobs inline, <b>no estimates/invoices tabs</b>).</li>
+      <li><b>Tab models RESOLVED (2026-06-01):</b> both platforms now browse jobs / estimates / invoices / messages. Web: Jobs / Estimates / Invoices / Messages tabs; Android: Details (jobs inline) / Messages / Estimates / Invoices, reusing the shared <code>EstimateRow</code>/<code>InvoiceRow</code> composables.</li>
       <li><b>Stats card + editable Notes are web-only</b>, Android doesn't load <code>/customers/:id/stats</code> here and shows notes read-only.</li>
       <li><b>This screen does not use <code>/customers/:id/history</code></b>, it loads <code>/stats</code> + per-entity <code>?customer_id=</code> queries (history is the Job-Detail source).</li>
-      <li><b>UNVERIFIED:</b> Android's lower Details list (jobs list, membership-add UI, address) at CustomerScreens.kt 600–748, loads are present but the add-membership interaction wasn't read; whether Android shows estimates/invoices anywhere.</li>
+      <li><b>UNVERIFIED:</b> Android's lower Details list (jobs list, membership-add UI, address) at CustomerScreens.kt 600–748, loads are present but the add-membership interaction wasn't read. (Estimates/invoices browsing is now built on Android as its own tabs.)</li>
     </ul>
   </div>
 
@@ -178,8 +178,8 @@ const A={
  d:{purpose:"View and assign membership plans.",actors:["office","owner"],vis:"always (card with Add)",chain:[["GET","/memberships/customer/:id"],["POST","/memberships/customer/:id"]],parity:"MATCH (web verified), add body {plan_id, start_date} inserts a customer_memberships row. Android loads memberships+plans too; its add UI lives lower in the Details list (interaction UNVERIFIED)."}},
 "portal":{label:"Customer Portal",status:"ok",route:"build /portal/:token",fires:"copy/share/open",result:"link shared",caveat:"web adds Open Portal",
  d:{purpose:"Share the magic-link portal where the customer can view/approve/pay.",actors:["office","owner"],vis:"when portal_token exists",chain:[],parity:"MATCH, both Copy + Share the {serverRoot}/portal/:token link; web additionally has an 'Open Portal' link. No server call (clipboard / share sheet)."}},
-"entity-tabs":{label:"Jobs/Estimates/Invoices tabs",status:"partial",route:"GET /jobs|estimates|invoices?customer_id",fires:"browse + open",result:"entity detail",caveat:"Android has no estimates/invoices tabs",
- d:{purpose:"Browse the customer's jobs, estimates, and invoices and open each.",actors:["office","owner"],vis:"web: 4 tabs (Jobs/Estimates/Invoices/Messages); Android: 2 tabs (Details/Messages), jobs inside Details, no estimates/invoices tabs",chain:[["GET","/jobs?customer_id="],["GET","/estimates?customer_id="],["GET","/invoices?customer_id="]],parity:"DIVERGENT, web browses all three entity types; Android shows only jobs (in Details). Estimates/Invoices browsing from the customer is web-only. Rows → /jobs/:id, /estimates/:id, /invoices/:id."}},
+"entity-tabs":{label:"Jobs/Estimates/Invoices tabs",status:"ok",route:"GET /jobs|estimates|invoices?customer_id",fires:"browse + open",result:"entity detail",caveat:"both platforms now browse jobs/estimates/invoices",
+ d:{purpose:"Browse the customer's jobs, estimates, and invoices and open each.",actors:["office","owner"],vis:"web: 4 tabs (Jobs/Estimates/Invoices/Messages); Android (2026-06-01): 4 tabs (Details/Messages/Estimates/Invoices), jobs inside Details, Estimates+Invoices their own tabs",chain:[["GET","/jobs?customer_id="],["GET","/estimates?customer_id="],["GET","/invoices?customer_id="]],parity:"MATCH (2026-06-01), both platforms browse all three entity types and open each. Android reuses the shared EstimateRow/InvoiceRow composables + the estimates/{id} and invoices/{id} detail routes; tabs lazy-load via getEstimates(custId)/getInvoices(custId). Rows → /jobs/:id, /estimates/:id, /invoices/:id."}},
 "messages-send":{label:"Messages, view + send",status:"ok",route:"GET /sms/customer/:id/messages · POST /sms/conversations/:cid/send",fires:"send reply",result:"reply sent",caveat:"Phase 0 [SMS-CONV] fix, convId from first message",
  d:{purpose:"See and reply to the SMS thread with this customer.",actors:["office","owner"],vis:"Messages tab",chain:[["GET","/sms/customer/:id/messages"],["POST","/sms/conversations/:convId/send"]],parity:"MATCH, Phase 0 [SMS-CONV] (2026-05-31): web now derives convId from the first message object (msgs[0]?.conversation_id), mirroring Android customerMessages.firstOrNull()?.conversationId; the send box enables and reply works on existing threads. Both surfaces disable send when there are zero prior messages (parity-matched). Same fix as the Job-Detail messages tab."}},
 };

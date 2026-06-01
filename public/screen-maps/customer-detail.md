@@ -15,8 +15,8 @@
 | `route_android` | `customers/{id}` → `CustomerDetailScreen` (CustomerScreens.kt 371–748) |
 | `route_web` | `/customers/:id` → `CustomerDetail` (CustomerDetail.jsx, 652 lines) |
 | `primary_actors` | office, owner |
-| `purpose` | The 360° view of one customer: stats, contact methods (+ add/delete phones/emails), address/navigate, memberships, notes, the customer portal link, and their jobs / estimates / invoices / messages. Web splits the entities into four tabs; Android shows Details + Messages (jobs inline). |
-| `last_verified` | 2026-05-31 · Phase 0 [SMS-CONV] messaging fix · commit: 6d11289 |
+| `purpose` | The 360° view of one customer: stats, contact methods (+ add/delete phones/emails), address/navigate, memberships, notes, the customer portal link, and their jobs / estimates / invoices / messages. Both platforms now browse all four: web in four tabs, Android in Details (jobs inline) + Messages + Estimates + Invoices tabs. |
+| `last_verified` | 2026-06-01 · Android Estimates + Invoices tabs added (full customer history on both platforms; entity-tabs parity now MATCH). Prior: Phase 0 [SMS-CONV] messaging fix. |
 
 ### load_sequence
 **Web:** `GET /customers/:id`, `GET /customers/:id/stats`, `GET /customers/:id/contacts`, `GET /memberships/customer/:id`, `GET /memberships/plans`; per-tab: `GET /jobs?customer_id=`, `GET /estimates?customer_id=`, `GET /invoices?customer_id=`, `GET /sms/customer/:id/messages`. **Android:** `loadCustomer`, `loadContacts`, `loadCustomerJobs`, `loadCustomerMemberships`, `loadPlans` on RESUME; `loadCustomerMessages` on the Messages tab. **Note:** this screen does **not** call `/customers/:id/history`, it uses `/stats` + per-entity `?customer_id=` queries. (`/history` is the Job-Detail history source.)
@@ -180,17 +180,17 @@
 - **section:** tabs
 - **actors:** office, owner
 - **purpose:** Browse the customer's jobs, estimates, and invoices, and open each.
-- **visibility:** web: four tabs (Jobs / Estimates / Invoices / Messages). Android: two tabs (Details / Messages), jobs render inside Details; **no estimates/invoices tabs**.
+- **visibility:** web: four tabs (Jobs / Estimates / Invoices / Messages). Android: four tabs (Details / Messages / Estimates / Invoices) via a ScrollableTabRow; jobs render inside Details, Estimates + Invoices are their own tabs (2026-06-01).
 - **precondition:** n/a
 - **confirm:** n/a
-- **route_chain:** web per-tab `GET /jobs?customer_id=`, `GET /estimates?customer_id=`, `GET /invoices?customer_id=`; rows → `/jobs/:id`, `/estimates/:id`, `/invoices/:id`.
+- **route_chain:** both per-tab `GET /jobs?customer_id=`, `GET /estimates?customer_id=`, `GET /invoices?customer_id=`; rows → `/jobs/:id`, `/estimates/:id`, `/invoices/:id`. Android Estimates/Invoices tabs lazy-load via `loadCustomerEstimates`/`loadCustomerInvoices` (repo `getEstimates(custId)`/`getInvoices(custId)`) on tab select, mirroring web.
 - **request_body:** n/a
 - **side_effects:** `navigate`
 - **end_state:** Job / Estimate / Invoice detail.
 - **failure_modes:** none.
-- **parity:** DIVERGENT, web browses all three entity types in tabs; Android shows only jobs (in Details) and has no estimates/invoices lists on this screen.
-- **status:** PARTIAL
-- **status_note:** Estimates/Invoices browsing from the customer is web-only.
+- **parity:** MATCH, both platforms now browse the customer's jobs, estimates, and invoices (plus messages) and open each. Android reuses the shared `EstimateRow`/`InvoiceRow` composables (extracted from the Estimate/Invoice list screens) and the existing `estimates/{id}` / `invoices/{id}` detail routes.
+- **status:** OK
+- **status_note:** 2026-06-01: Android Customer Detail gained Estimates + Invoices tabs (full customer history on both platforms). Backend endpoints already supported `customer_id`; Android-only change. Web unchanged.
 
 ### `customer-detail.messages-send`
 - **label:** Messages tab, view + send
@@ -214,7 +214,7 @@
 ## SCREEN-LEVEL DRIFT FLAGS
 
 - **Web customer Messages can't send**, `/sms/customer/:id/messages` returns a bare array with no `conversation_id`, so web's `convId` is always null and the composer is hidden. Android reads `conversationId` off the messages and opens the thread. (Identical to the Job-Detail messages bug.)
-- **Tab models diverge**, web has Jobs / Estimates / Invoices / Messages tabs; Android has Details + Messages (jobs inline, **no estimates/invoices tabs**).
+- **Tab models RESOLVED (2026-06-01):** both platforms now browse jobs / estimates / invoices / messages. Web uses Jobs / Estimates / Invoices / Messages tabs; Android uses Details (jobs inline) / Messages / Estimates / Invoices. Android reuses the shared `EstimateRow`/`InvoiceRow` composables.
 - **Stats card + editable Notes are web-only**, Android doesn't load `/customers/:id/stats` here and shows notes read-only.
 - **This screen does not use `/customers/:id/history`**, it loads `/stats` + per-entity `?customer_id=` queries. (`/history` is the Job-Detail source.)
-- **UNVERIFIED:** Android's lower Details list (jobs list, membership add UI, address) at CustomerScreens.kt 600–748, loads are present (`loadCustomerJobs`, `loadCustomerMemberships`, `loadPlans`) but the exact add-membership interaction was not read; whether Android shows estimates/invoices anywhere.
+- **UNVERIFIED:** Android's lower Details list (jobs list, membership add UI, address) at CustomerScreens.kt 600–748, loads are present (`loadCustomerJobs`, `loadCustomerMemberships`, `loadPlans`) but the exact add-membership interaction was not read. (Estimates/invoices browsing is now built on Android as its own tabs.)
