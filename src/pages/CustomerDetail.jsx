@@ -89,8 +89,11 @@ export default function CustomerDetail() {
     setMessagesLoading(true);
     api.get(`/sms/customer/${id}/messages`)
       .then(res => {
-        setMessages(res.data?.messages || (Array.isArray(res.data) ? res.data : []));
-        setConvId(res.data?.conversation_id || null);
+        const msgs = res.data?.messages || (Array.isArray(res.data) ? res.data : []);
+        setMessages(msgs);
+        // Mirror Android: derive convId from the first message object (the bare-array
+        // response carries no top-level conversation_id). Empty thread → null → composer hidden.
+        setConvId(msgs[0]?.conversation_id ?? null);
       })
       .catch(() => setMessages([]))
       .finally(() => setMessagesLoading(false));

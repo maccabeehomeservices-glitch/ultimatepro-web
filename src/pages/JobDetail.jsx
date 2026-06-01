@@ -240,8 +240,11 @@ export default function JobDetail() {
     setMessagesLoading(true);
     api.get(`/sms/job/${id}/messages`)
       .then(res => {
-        setJobMessages(res.data?.messages || (Array.isArray(res.data) ? res.data : []));
-        setConvId(res.data?.conversation_id || null);
+        const msgs = res.data?.messages || (Array.isArray(res.data) ? res.data : []);
+        setJobMessages(msgs);
+        // Mirror Android: derive convId from the first message object (the bare-array
+        // response carries no top-level conversation_id). Empty thread → null → composer hidden.
+        setConvId(msgs[0]?.conversation_id ?? null);
       })
       .catch(() => setJobMessages([]))
       .finally(() => setMessagesLoading(false));

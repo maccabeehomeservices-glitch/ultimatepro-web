@@ -16,7 +16,7 @@
 | `route_web` | `/customers/:id` → `CustomerDetail` (CustomerDetail.jsx, 652 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The 360° view of one customer: stats, contact methods (+ add/delete phones/emails), address/navigate, memberships, notes, the customer portal link, and their jobs / estimates / invoices / messages. Web splits the entities into four tabs; Android shows Details + Messages (jobs inline). |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 9366abe |
+| `last_verified` | 2026-05-31 · Phase 0 [SMS-CONV] messaging fix · commit: 6d11289 |
 
 ### load_sequence
 **Web:** `GET /customers/:id`, `GET /customers/:id/stats`, `GET /customers/:id/contacts`, `GET /memberships/customer/:id`, `GET /memberships/plans`; per-tab: `GET /jobs?customer_id=`, `GET /estimates?customer_id=`, `GET /invoices?customer_id=`, `GET /sms/customer/:id/messages`. **Android:** `loadCustomer`, `loadContacts`, `loadCustomerJobs`, `loadCustomerMemberships`, `loadPlans` on RESUME; `loadCustomerMessages` on the Messages tab. **Note:** this screen does **not** call `/customers/:id/history` — it uses `/stats` + per-entity `?customer_id=` queries. (`/history` is the Job-Detail history source.)
@@ -212,10 +212,10 @@
 - **request_body:** send `{ message }`
 - **side_effects:** sends an SMS reply.
 - **end_state:** web → message NOT sendable (see below); Android → opens the SMS thread screen.
-- **failure_modes:** `wrong-shape` — `GET /sms/customer/:id/messages` returns a **bare array** (no `conversation_id`); web reads `res.data?.conversation_id` → always `null` → the send box is hidden ("No SMS conversation found"). Web can view but **cannot send**.
-- **parity:** DIVERGENT — Android derives `conversationId` from the message objects and opens the thread (`onSmsThread`); web's inline send is dead because `convId` is never populated.
-- **status:** BROKEN
-- **status_note:** Same array-vs-object bug as the Job-Detail messages tab.
+- **failure_modes:** **fixed** (2026-05-31): web now derives `convId` from the first message object (`msgs[0]?.conversation_id`), mirroring Android `customerMessages.firstOrNull()?.conversationId`, so the send box enables and reply works once a thread exists. Starting a brand-new conversation (zero prior messages) is disabled on both web AND Android (parity-matched, pre-existing).
+- **parity:** MATCH — both derive `conversationId`/`convId` from the message objects and reply to the existing thread; both disable send when there are zero prior messages.
+- **status:** OK
+- **status_note:** Phase 0 [SMS-CONV] (2026-05-31): web inline reply fixed (convId from first message object, like Android). Same fix as the Job-Detail messages tab. Empty-thread start remains disabled on both surfaces (parity-matched, not a regression).
 
 ---
 

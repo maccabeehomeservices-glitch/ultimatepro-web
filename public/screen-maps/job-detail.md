@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-05-31 · Phase 0 [SIG] signature key fix · commit: 8f788ce |
+| `last_verified` | 2026-05-31 · Phase 0 [SMS-CONV] messaging fix · commit: 6d11289 |
 
 ### load_sequence
 
@@ -600,10 +600,10 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **request_body:** message send `{message}`
 - **side_effects:** `sms-customer` (on send)
 - **end_state:** Tab content shown; message sent.
-- **failure_modes:** Web Messages: `field-mismatch` — `GET /sms/job/:jobId/messages` returns a bare array with no `conversation_id`, so web `convId` is always null → reply box never enabled → web can never send a job SMS. Android derives convId from message objects.
-- **parity:** PARTIAL — History not role-gated on web; web Messages send is broken.
-- **status:** BROKEN
-- **status_note:** Web cannot send a job message (convId always null). History role-gating absent on web.
+- **failure_modes:** Web Messages send **fixed** (2026-05-31): web now derives `convId` from the first message object (`msgs[0]?.conversation_id`), mirroring Android `jobMessages.firstOrNull()?.conversationId`, so the composer enables and send works once a thread exists. Starting a brand-new conversation (zero prior messages) is disabled on both web AND Android (parity-matched, pre-existing). Remaining divergence: the History tab is not role-gated on web (`canViewHistory` enforced only on Android).
+- **parity:** PARTIAL — messaging now matches Android (convId derived from message objects); History still not role-gated on web.
+- **status:** PARTIAL
+- **status_note:** Phase 0 [SMS-CONV] (2026-05-31): web Messages send fixed (convId from first message object, like Android). Row stays PARTIAL only for the separate History role-gating divergence; the messaging concern is resolved. Empty-thread start disabled on both surfaces (parity-matched).
 
 ---
 
