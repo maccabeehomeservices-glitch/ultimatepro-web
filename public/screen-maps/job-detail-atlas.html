@@ -119,7 +119,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Job Detail<span class="sub">Read each row left → right: button → route it calls → what fires → result.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb fixes + History gate</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb + History + photos</b></div>
   </header>
   <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5e7197;margin-bottom:18px"><a href="index.html" style="color:#5ec8e8;text-decoration:none">all maps</a> · job detail › <a href="new-job-atlas.html" style="color:#5ec8e8;text-decoration:none">new job</a></div>
 
@@ -240,8 +240,8 @@ const A={
 "profit-override":{label:"Profit Allocation Edit",status:"ok",route:"PUT /jobs/:id",fires:"save override",result:"override saved",caveat:"web only — Android has no on-screen card here",
  d:{purpose:"Override the per-job split when default source%+tech% conflict; live >100% guard.",actors:["owner"],vis:"web only",chain:[["PUT","/jobs/:id"]],parity:"WEB-ONLY"}},
 
-"photos":{label:"Before/After photos",status:"broken",route:"POST /uploads → /jobs/:id/photos",fires:"attach photo",result:"photos in columns",caveat:"web binds to columns that don't exist → never display",
- d:{purpose:"Document the job with categorized before/after photos.",actors:["tech-user","owner","office"],vis:"always",chain:[["POST","/uploads"],["POST","/jobs/:id/photos"]],parity:"PARTIAL — Android works (purpose-tagged uploads). Web broken: binds to jobs.before_photos/after_photos (don't exist; only photos[] does); upload params sent in body but backend reads query → entity_id null. No web delete."}},
+"photos":{label:"Before/After photos",status:"ok",route:"POST/GET /uploads?purpose=",fires:"attach photo",result:"photos in columns",
+ d:{purpose:"Document the job with categorized before/after photos.",actors:["tech-user","owner","office"],vis:"always",chain:[["POST","/uploads"],["GET","/uploads"]],parity:"MATCH (Phase 2) — web now uploads with QUERY params (entity_type=job, entity_id, purpose=before_photo|after_photo) + multipart file, and reads back via GET /uploads?purpose= splitting before/after, mirroring Android getUploads (JobScreens.kt:262-263). Dropped the dead POST /jobs/:id/photos + the phantom jobs.before_photos/after_photos column reads. (Per-photo delete still web-absent — minor.)"}},
 
 "parts":{label:"Add Part / list",status:"ok",route:"GET/POST/DELETE /jobs/:id/parts",fires:"save/delete part",result:"parts list updated",
  d:{purpose:"Record parts used and who paid (company/tech) — the data the profit math depends on.",actors:["tech-user","owner","office"],vis:"always",chain:[["GET","/jobs/:id/parts"],["POST","/jobs/:id/parts"],["DELETE","/jobs/:id/parts/:partId"]],parity:"MATCH — web appends locally without refetch but correct"}},

@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-06-01 · Phase 2 Commit 1 (notes/reminder/restore→OK; permissions verb fixed, UI pending) + Commit 2 (History role-gating: tabs PARTIAL→OK, web mirrors Android) |
+| `last_verified` | 2026-06-01 · Phase 2 Commit 1 (notes/reminder/restore→OK; perms verb fixed, UI pending) + Commit 2 (History role-gating→OK) + Commit 3 (photos→OK: web mirrors Android /uploads query+purpose) |
 
 ### load_sequence
 
@@ -460,14 +460,14 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **visibility:** always
 - **precondition:** —
 - **confirm:** —
-- **route_chain:** Android: `POST /uploads?purpose=before_photo|after_photo&entity_type=job&entity_id=` → read via `GET /uploads`. Web: `POST /uploads` (entity/purpose in **body**) → `POST /jobs/:id/photos {photo_url}`.
-- **request_body:** Android query params; web body params (ignored by query-param backend).
-- **side_effects:** `photo-attach`
+- **route_chain:** Both: `POST /uploads?entity_type=job&entity_id=&purpose=before_photo|after_photo` (query params + multipart `file`) → read via `GET /uploads?entity_type=job&entity_id=&purpose=…`. (Phase 2: web now mirrors Android; dropped the dead `POST /jobs/:id/photos` + the phantom `before_photos`/`after_photos` column reads.)
+- **request_body:** multipart `file` + entity/purpose as **query** params.
+- **side_effects:** `photo-attach` (row in `file_uploads`, purpose-tagged)
 - **end_state:** Photos appear in Before/After columns.
-- **failure_modes:** Web: `schema-gap` (binds to non-existent `jobs.before_photos`/`after_photos`) + `field-mismatch` (upload params in body, backend reads query → entity_id null).
-- **parity:** PARTIAL — Android works (purpose-tagged file_uploads, read back correctly); web fully broken.
-- **status:** BROKEN
-- **status_note:** Web before/after never display: (a) binds to columns that don't exist on `jobs` (only `photos[]` exists); (b) upload params ignored → file lands with entity_id=null; then `/jobs/:id/photos` writes URL into `jobs.photos[]` (never shown). No per-photo delete on web.
+- **failure_modes:** none
+- **parity:** MATCH — both upload with query params + purpose to `/uploads` and read back via `GET /uploads?purpose=`, splitting before/after.
+- **status:** OK
+- **status_note:** Phase 2 (2026-06-01): web upload now sends `{entity_type:'job', entity_id, purpose:'${type}_photo'}` as **query** params (JobDetail.jsx:~552) and reads back via `loadPhotos()` GET `/uploads?...purpose=` (JobDetail.jsx:~537), mirroring Android `getUploads` (JobScreens.kt:262-263). The dead `/jobs/:id/photos` call and `jobData.before_photos/after_photos` reads are removed. (Per-photo delete still web-absent — minor, separate.)
 
 ### `job-detail.parts`
 - **label:** Add Part / parts list / per-part delete

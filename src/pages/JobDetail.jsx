@@ -191,13 +191,14 @@ export default function JobDetail() {
 
   const jobData = job?.job || job;
 
-  // ── sync notes + photos ────────────────────────────────────────────────────
+  // ── sync notes ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!jobData) return;
     if (jobData.notes != null) setNotes(jobData.notes || '');
-    setBeforePhotos(jobData.before_photos || []);
-    setAfterPhotos(jobData.after_photos  || []);
   }, [jobData?.id]);
+
+  // ── load before/after photos via /uploads (mirror Android getUploads) ───────
+  useEffect(() => { if (id) loadPhotos(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (jobData?.reminder_method != null) setReminderMethod(jobData.reminder_method || '');
@@ -525,21 +526,32 @@ export default function JobDetail() {
     finally { setNotesSaving(false); }
   }
 
+  // Load before/after photos from /uploads (mirror Android getUploads: query params + purpose).
+  async function loadPhotos() {
+    try {
+      const [b, a] = await Promise.all([
+        api.get('/uploads', { params: { entity_type: 'job', entity_id: id, purpose: 'before_photo' } }),
+        api.get('/uploads', { params: { entity_type: 'job', entity_id: id, purpose: 'after_photo' } }),
+      ]);
+      setBeforePhotos(b.data || []);
+      setAfterPhotos(a.data || []);
+    } catch { /* keep prior on transient error */ }
+  }
+
   async function handlePhotoUpload(e, type) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingPhoto(true);
     try {
+      // Mirror Android: file as multipart "file"; entity/purpose as QUERY params (uploads.js reads req.query).
+      // purpose: 'before' → 'before_photo', 'after' → 'after_photo'. No /jobs/:id/photos.
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('entity_type', 'job');
-      formData.append('entity_id', id);
-      formData.append('purpose', type);
-      const uploadRes = await api.post('/uploads', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      const photoUrl = uploadRes.data?.url;
-      if (!photoUrl) throw new Error('Upload failed');
-      await api.post(`/jobs/${id}/photos`, { photo_url: photoUrl });
-      refetch();
+      await api.post('/uploads', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        params: { entity_type: 'job', entity_id: id, purpose: `${type}_photo` },
+      });
+      await loadPhotos();
       showSnack('Photo uploaded', 'success');
     } catch (err) { showSnack(err?.response?.data?.error || 'Failed to upload photo', 'error'); }
     finally { setUploadingPhoto(false); e.target.value = ''; }
