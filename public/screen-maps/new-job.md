@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline — it parses raw notes into a pre-filled form and looks up the customer. |
-| `last_verified` | 2026-06-01 · Phase 1 F2/F2b/F3; TZ 1/3 (backend foundation); TZ 2/3 (Path B converter — web sends scheduled_local+coords, backend resolves zone + converts to UTC, web displays in effective_timezone). Android write+display = commit 3/3. |
+| `last_verified` | 2026-06-01 · Phase 1 F2/F2b/F3; TZ feature COMPLETE (1/3 backend foundation, 2/3 web Path B, 3/3 Android). Both surfaces send scheduled_local+coords; backend converts to UTC + stores job_timezone; both display in effective_timezone with zone label. |
 
 ### load_sequence
 Form loads local state; pulls dropdown data: users (team), roster techs, job sources, ad channels, network connections. In edit mode (`/jobs/:id/edit`) it first loads the job via `GET /jobs/:id`.
@@ -96,10 +96,10 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **request_body:** `scheduled_start` (ISO string or null)
 - **side_effects:** `update-record`
 - **end_state:** Job carries the chosen start time (or none).
-- **failure_modes:** `divergent-logic` (Android-only now) — **web is fixed (TZ 2/3):** web sends a naive wall-clock (`scheduled_local`) + captured coords; the backend resolves the address zone (`tz-lookup`) and converts to a UTC instant (luxon), storing `job_timezone`. Web read sites (Calendar, Job Detail, edit-prefill) display in `effective_timezone` with a zone label (date-fns-tz). **Android still sends a naive-local string with no offset (`${date}T${time}:00`) and string-slices on read** — fixed in commit 3/3.
-- **parity:** PARTIAL — web now writes + displays correctly in the job's zone (2pm stays 2pm on web end-to-end); Android still uses the naive-local write + string-slice read until 3/3.
-- **status:** PARTIAL
-- **status_note:** Backend converter is the single source of truth (TZ commit 2/3 / Path B, 2026-06-01): client sends `{ scheduled_local, lat, lng }`; POST/PUT resolve zone = `tz-lookup(lat,lng) → company.timezone → 'America/New_York'`, convert wall-clock→UTC, and persist `job_timezone` synchronously at create (closes B1 — body coords no longer skip zone resolution). Web captures coords from Places, sends `scheduled_local` (no client UTC convert), and formats reads in `effective_timezone`. Blank date → `null` preserved (F2); F2b status-flip intact. **Remaining: Android (commit 3/3)** must adopt the same `{ scheduled_local, lat, lng }` contract + zone-aware display. Existing jobs need the one-time `scripts/backfill-job-timezones.js` to populate `job_timezone` from their stored coords.
+- **failure_modes:** none — both surfaces now send `{ scheduled_local (naive wall-clock), lat, lng }`; the backend (Path B) resolves the address zone and converts to a UTC instant, and both surfaces display in `effective_timezone`. 2pm stays 2pm end-to-end and cross-platform.
+- **parity:** MATCH — web (TZ 2/3) and Android (TZ 3/3) write the same `{ scheduled_local, lat, lng }` contract and render the stored UTC instant in the job's zone with a zone label. Blank date → `null` on both (F2).
+- **status:** OK
+- **status_note:** Timezone fully resolved on both platforms (TZ 3/3 closes the feature, 2026-06-01). Each job carries its address timezone (`jobs.job_timezone`, resolved from lat/lng via `tz-lookup`); the backend is the single converter (luxon: `scheduled_local` + zone → UTC `TIMESTAMPTZ`); responses expose `effective_timezone` (`job_timezone → companies.timezone → 'America/New_York'`). Web uses date-fns-tz, Android uses java.time (native on minSdk 26) to display in that zone. Both capture Places coords. F2 blank→null + F2b status-flip intact. Existing jobs: run the one-time `scripts/backfill-job-timezones.js` to populate `job_timezone` from stored coords (until then they fall back to company tz, which displays sanely).
 
 ### `new-job.assign`
 - **label:** Assign (self / team / roster / partner)
@@ -193,7 +193,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **scheduled_start timezone drift** (Issue 1, web RESOLVED — Android pending 3/3): **web (TZ 2/3)** now sends `{ scheduled_local, lat, lng }`; the backend (Path B) resolves the address zone (`tz-lookup`), converts wall-clock→UTC (luxon), and stores `job_timezone`; web reads display in `effective_timezone` with a zone label (date-fns-tz). So 2pm stays 2pm across the web Calendar, Job Detail, and edit form. **Android still writes naive-local + string-slices on read** — commit 3/3. Backfill `scripts/backfill-job-timezones.js` populates `job_timezone` for pre-existing coord'd jobs.
+- **scheduled_start timezone: RESOLVED both platforms (TZ 1/3+2/3+3/3).** Each job carries its address timezone; the backend (Path B) is the single converter (`scheduled_local` + coords → resolve zone → UTC `TIMESTAMPTZ` + store `job_timezone`); both web (date-fns-tz) and Android (java.time, minSdk 26) display the stored instant in `effective_timezone` with a zone label. 2pm stays 2pm end-to-end and cross-platform. Blank→null (F2) + status-flip (F2b) intact. One-time `scripts/backfill-job-timezones.js` populates `job_timezone` for pre-existing coord'd jobs.
 - **Status auto-flip on edit (Phase 1 F2b):** `PUT /jobs/:id` now promotes `unscheduled → scheduled` when a date is added on edit (previously it left a stale `unscheduled` badge on a dated job). The reverse (clearing a date) is not reachable through PUT — it COALESCEs `scheduled_start`, so a null payload means "keep" — deferred follow-up.
 - **Customer-required asymmetry:** web blocks without a customer; Android auto-creates one.
 - **"Save & Send" RESOLVED (Phase 1 F3):** both surfaces now notify the assigned tech via `/roster-techs/notify-tech`; the premature customer dispatch at creation was removed.
