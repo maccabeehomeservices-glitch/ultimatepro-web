@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline — it parses raw notes into a pre-filled form and looks up the customer. |
-| `last_verified` | 2026-06-01 · Phase 1 New Job F2 (Android blank-date → null) + F2b (PUT status flip) + F3 (web Save & Send → tech notify). Issue 1 (timezone) still open. |
+| `last_verified` | 2026-06-01 · Phase 1 New Job F2 + F2b + F3; TZ commit 1/3 backend foundation (jobs.job_timezone + tz-lookup in geocode + effective_timezone in responses). Issue 1 client write/display = commits 2/3. |
 
 ### load_sequence
 Form loads local state; pulls dropdown data: users (team), roster techs, job sources, ad channels, network connections. In edit mode (`/jobs/:id/edit`) it first loads the job via `GET /jobs/:id`.
@@ -99,7 +99,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **failure_modes:** `divergent-logic` (timezone only, still open) — both surfaces are now null-safe: blank date → `null` on web AND Android (Phase 1 F2; Android's "now" fabrication removed). Date-only defaults to noon on both (web `scheduled_time || '12:00'`, Android `schedTime.ifBlank { "12:00" }`). **Still divergent on timezone:** web sends UTC ISO (`dt.toISOString()`), Android sends a naive-local string with no offset (`${date}T${time}:00`) — Issue 1, next commit.
 - **parity:** PARTIAL — null/blank handling now matches; the same wall-clock can still persist as a different instant because of the UTC-vs-naive write divergence (Issue 1).
 - **status:** PARTIAL
-- **status_note:** Phase 1 F2 (2026-06-01): Android blank date no longer fabricates "now" — it sends `null` like web, killing the phantom-calendar bug; blank-date jobs are created `unscheduled` (findable via `created_at`). Backend PUT also flips `unscheduled → scheduled` when a date is added on edit (F2b). **Remaining (Issue 1):** the timezone representation still differs (web UTC, Android naive-local) and read-back is split between Date-parse and string-slice, so a web-vs-Android job can still render/land at a different time until that fix.
+- **status_note:** Phase 1 F2 (2026-06-01): Android blank date no longer fabricates "now" — it sends `null` like web, killing the phantom-calendar bug; blank-date jobs are created `unscheduled` (findable via `created_at`). Backend PUT also flips `unscheduled → scheduled` when a date is added on edit (F2b). **Timezone backend foundation landed (TZ commit 1/3, 2026-06-01):** new `jobs.job_timezone` column, resolved from the address lat/lng via the local `tz-lookup` lib inside `geocodeAndStore` (no Google Time Zone API); job responses now carry `job_timezone` + a computed `effective_timezone` (`job_timezone → companies.timezone → 'America/New_York'`). **Remaining (Issue 1, commits 2/3):** the client write contract is unchanged this commit, and the read-back display is still split between Date-parse and string-slice, so a web-vs-Android job can still render at a different time until the client display fix.
 
 ### `new-job.assign`
 - **label:** Assign (self / team / roster / partner)
@@ -193,7 +193,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **scheduled_start timezone drift** (Issue 1, still open — biggest risk): web sends UTC ISO, Android sends naive-local; same wall-clock → possibly different stored instant. Read-back is also split between Date-parse (converts) and string-slice (does not), so some surfaces render the wrong time. NULL/blank handling is now fixed (Phase 1 F2: both null on blank). Next commit.
+- **scheduled_start timezone drift** (Issue 1, partially addressed — biggest risk): web sends UTC ISO, Android sends naive-local; same wall-clock → possibly different stored instant. Read-back is also split between Date-parse (converts) and string-slice (does not), so some surfaces render the wrong time. NULL/blank handling is fixed (Phase 1 F2). **Backend TZ foundation landed (commit 1/3):** `jobs.job_timezone` resolved from lat/lng via `tz-lookup` in `geocodeAndStore`; responses expose `job_timezone` + `effective_timezone` (job→company→`America/New_York`). Client write contract + display fixes are commits 2/3.
 - **Status auto-flip on edit (Phase 1 F2b):** `PUT /jobs/:id` now promotes `unscheduled → scheduled` when a date is added on edit (previously it left a stale `unscheduled` badge on a dated job). The reverse (clearing a date) is not reachable through PUT — it COALESCEs `scheduled_start`, so a null payload means "keep" — deferred follow-up.
 - **Customer-required asymmetry:** web blocks without a customer; Android auto-creates one.
 - **"Save & Send" RESOLVED (Phase 1 F3):** both surfaces now notify the assigned tech via `/roster-techs/notify-tech`; the premature customer dispatch at creation was removed.

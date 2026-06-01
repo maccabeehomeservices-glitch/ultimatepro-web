@@ -122,7 +122,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>New Job<span class="sub">The front door — turn a call, booking, or pasted ticket into a job, then Save.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 1 · <b>F2/F2b/F3</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>F2/F2b/F3 + <b>TZ 1/3</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="job-detail-atlas.html">job detail</a> › new job</div>
@@ -203,7 +203,7 @@ const A={
 "save":{label:"Save Job",status:"partial",route:"POST /jobs  ·  edit: PUT /jobs/:id",fires:"create job",result:"job created",caveat:"payload differs web vs Android",
  d:{purpose:"Create the job (or save edits). The core action.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"],["PUT","/jobs/:id"]],parity:"PARTIAL — web sends description(=notes), omits source label / linked_job_id / skip_duplicate_check. Android sends source label + linked_job_id + skip_duplicate_check, omits description, sends notify_* always. Both functional. Backend sets status scheduled if assigned else unscheduled; fires job_assigned Joby rule, push, socket, geocode."}},
 "scheduled-start":{label:"Date + Time",status:"partial",route:"part of POST /jobs",fires:"set schedule",result:"scheduled_start saved",caveat:"timezone still divergent (Issue 1) · blank→null now fixed",
- d:{purpose:"Set when the job is scheduled.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL (Phase 1 F2) — null/blank handling now matches: blank date → null on BOTH surfaces (Android's 'now' fabrication removed); date-only defaults to noon on both. Backend PUT also flips unscheduled→scheduled when a date is added on edit (F2b). STILL DIVERGENT on timezone: web sends UTC ISO, Android sends naive-local; read-back is split between Date-parse and string-slice — Issue 1, next commit."}},
+ d:{purpose:"Set when the job is scheduled.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL (Phase 1 F2) — null/blank handling now matches: blank date → null on BOTH surfaces (Android's 'now' fabrication removed); date-only defaults to noon on both. Backend PUT also flips unscheduled→scheduled when a date is added on edit (F2b). TZ backend foundation landed (commit 1/3): jobs.job_timezone resolved from lat/lng via tz-lookup in geocodeAndStore; responses expose job_timezone + effective_timezone (job→company→America/New_York). STILL DIVERGENT on timezone write/display: web sends UTC ISO, Android sends naive-local; read-back split between Date-parse and string-slice — client write + display = commits 2/3."}},
 "assign":{label:"Assign",status:"ok",route:"part of POST /jobs",fires:"set assignee",result:"scheduled / unscheduled",caveat:"partner → assign later via Job Detail 'Send To'",
  d:{purpose:"Choose who does the job: self, team member, roster tech, or partner.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL — web inline tabs+dropdown; Android button→dialog. Partner sends no field on either surface; both defer partner-forwarding to Job Detail. Backend sets status scheduled when assigned."}},
 "send-via":{label:"Save & Send",status:"ok",route:"both: /roster-techs/notify-tech",fires:"notify tech",result:"assigned tech notified",
