@@ -119,7 +119,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Job Detail<span class="sub">Read each row left → right: button → route it calls → what fires → result.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb + History + photos</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb+History+photos+perms</b></div>
   </header>
   <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5e7197;margin-bottom:18px"><a href="index.html" style="color:#5ec8e8;text-decoration:none">all maps</a> · job detail › <a href="new-job-atlas.html" style="color:#5ec8e8;text-decoration:none">new job</a></div>
 
@@ -227,8 +227,8 @@ const A={
 
 "notes":{label:"Notes editor",status:"ok",route:"PUT /jobs/:id",fires:"save notes",result:"notes saved",
  d:{purpose:"Free-text job notes; save on focus-lost.",actors:["owner","office","tech-user"],vis:"always",chain:[["PUT","/jobs/:id"]],parity:"MATCH (Phase 2) — web now saves via jobsApi.update PUT /jobs/:id {notes} (JobDetail.jsx:520), mirroring Android. The non-existent PATCH /jobs/:id is gone."}},
-"permissions":{label:"Tech/Partner perms",status:"broken",route:"PUT /jobs/:id",fires:"save perms",result:"perms saved",caveat:"verb fixed; no UI trigger yet",
- d:{purpose:"On a shared job, control which actions the receiving tech may perform.",actors:["owner","office","partner"],vis:"Android by sent_by/sent_to; web handler exists with no JSX trigger",chain:[["PUT","/jobs/:id"]],parity:"PARTIAL — Android editor works; web handler now posts the correct PUT /jobs/:id (Phase 2, JobDetail.jsx:350) but no JSX renders a toggle to call it. Stays BROKEN until the UI lands (separate commit)."}},
+"permissions":{label:"Tech/Partner perms",status:"ok",route:"PUT /jobs/:id",fires:"save perms",result:"perms saved",
+ d:{purpose:"On a shared job, control which actions the receiving partner company may perform.",actors:["owner","office","partner"],vis:"editable Partner Permissions card when sent_to && !sent_by (sender) — both surfaces",chain:[["PUT","/jobs/:id"]],parity:"MATCH (Phase 2 C4) — web now renders a toggle-per-key Partner Permissions card (JobDetail.jsx:~1125, gated sent_to && !sent_by) → Toggle → handleTechPermToggle → jobsApi.update PUT → refetch. Same 6 keys + editor defaults as Android (TechPermissionsSheet, JobScreens.kt:2826/2835); view_history matches the canViewHistory gate. Android-only read-only receiver card is a minor remainder."}},
 
 "send-to-tech":{label:"Send To Tech",status:"partial",route:"notify-tech / send-to-partner",fires:"notify recipient",result:"recipient notified",caveat:"web can't pick an unassigned roster tech",
  d:{purpose:"Notify a recipient — roster tech, app-user tech, or network partner.",actors:["owner","office"],vis:"hidden when deleted/cancelled",chain:[["POST","/roster-techs/notify-tech"],["POST","/jobs/:id/send-to-partner"]],parity:"PARTIAL — Android has 3 recipient paths; web treats assigned tech as roster_tech and always hits notify-tech (tech_id ignored)"}},

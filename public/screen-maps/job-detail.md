@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-06-01 · Phase 2 Commit 1 (notes/reminder/restore→OK; perms verb fixed, UI pending) + Commit 2 (History role-gating→OK) + Commit 3 (photos→OK: web mirrors Android /uploads query+purpose) |
+| `last_verified` | 2026-06-01 · Phase 2 Job Detail commits 1-4: notes/reminder/restore→OK, History gate→OK, photos→OK, permissions toggle UI→OK (all web mirrors Android). Remaining BROKEN: charge-payment. |
 
 ### load_sequence
 
@@ -372,17 +372,17 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **section:** permissions
 - **actors:** owner, office (editor); partner (read-only view)
 - **purpose:** On a shared job, control which actions the receiving tech may perform (notes/payments/photos/parts/edit/cancel/history).
-- **visibility:** Android: read-only card when `sent_by_company_id != null`; editable when `sent_to_company_id != null && sent_by_company_id == null`. Web: handler exists but no JSX renders a toggle.
-- **precondition:** Partner-shared job.
+- **visibility:** Both: editable "Partner Permissions" card when `sent_to_company_id != null && sent_by_company_id == null` (you sent the job to a partner). (Phase 2 C4: web added the toggle card, mirroring Android JobScreens.kt:1870.) Android also has a read-only "Your Permissions" card on the receiver side (`sent_by_company_id != null`) — still Android-only, minor.
+- **precondition:** Partner-shared job (sender side).
 - **confirm:** —
-- **route_chain:** Both: `PUT /jobs/:id` (updateJob, `{tech_permissions}`). (Phase 2 corrected the web verb; Android editable card unchanged.)
-- **request_body:** `{tech_permissions}`
+- **route_chain:** Both: `PUT /jobs/:id` (updateJob, `{tech_permissions}`).
+- **request_body:** `{tech_permissions}` — 6 keys: `collect_payments, add_notes, take_photos, edit_details, cancel_job, view_history`.
 - **side_effects:** `update-record`, `permission-gate`
-- **end_state:** Permissions saved on the shared job.
-- **failure_modes:** Web: `dead-code` — `handleTechPermToggle` now posts the correct `PUT /jobs/:id` via `jobsApi.update` (verb fixed), but **no JSX renders a toggle** that calls it.
-- **parity:** PARTIAL — Android has a working editor; web handler is correct but has no UI.
-- **status:** BROKEN
-- **status_note:** Phase 2 (2026-06-01): verb corrected (`handleTechPermToggle` → `jobsApi.update` PUT, JobDetail.jsx:350), so the handler will work once wired. Toggle UI still pending — separate later commit. Stays BROKEN until the UI lands.
+- **end_state:** Permissions saved on the shared job; gates (e.g. `canViewHistory`) reflect after reload.
+- **failure_modes:** none
+- **parity:** MATCH — both render an editable toggle card with the same 6 keys + defaults (view_history default-allow, others default-deny) and PUT `{tech_permissions}`.
+- **status:** OK
+- **status_note:** Phase 2 C4 (2026-06-01): web now renders a toggle-per-key "Partner Permissions" card (JobDetail.jsx:~1125, gated `sent_to && !sent_by`, `Toggle` → `handleTechPermToggle` → `jobsApi.update` PUT → `refetch`). Keys + editor defaults mirror Android (`TECH_PERM_KEYS`), so `view_history` matches the Commit-2 `canViewHistory` gate. Web `techPerms` init normalized to the same 6 keys (dropped the legacy `add_parts`).
 
 ### `job-detail.send-to-tech`
 - **label:** "Send To" / "📤 Send to Tech"

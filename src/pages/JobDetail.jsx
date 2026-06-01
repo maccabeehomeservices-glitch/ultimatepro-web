@@ -56,6 +56,16 @@ const PAYMENT_METHODS = [
   { value: 'ach',         label: 'ACH'         },
 ];
 
+// Mirror Android TechPermissionsSheet (JobScreens.kt:2826-2833): same keys, same labels.
+const TECH_PERM_KEYS = [
+  ['collect_payments', 'Collect Payments'],
+  ['add_notes',        'Add Notes'],
+  ['take_photos',      'Take Photos'],
+  ['edit_details',     'Edit Job Details'],
+  ['cancel_job',       'Cancel Job'],
+  ['view_history',     'View Job History'],
+];
+
 const tabList = [
   { id: 'details',  label: 'Details'  },
   { id: 'history',  label: 'History'  },
@@ -206,9 +216,16 @@ export default function JobDetail() {
 
   useEffect(() => {
     if (!jobData) return;
-    setTechPerms(jobData.tech_permissions || {
-      view_history: true, collect_payments: true, take_photos: true,
-      add_parts: false, edit_details: false, cancel_job: false,
+    // Normalize to Android's 6 keys + editor semantics (JobScreens.kt:2835):
+    // view_history default-allow (!== false); all others default-deny (=== true).
+    const tp = jobData.tech_permissions || {};
+    setTechPerms({
+      collect_payments: tp.collect_payments === true,
+      add_notes:        tp.add_notes === true,
+      take_photos:      tp.take_photos === true,
+      edit_details:     tp.edit_details === true,
+      cancel_job:       tp.cancel_job === true,
+      view_history:     tp.view_history !== false,
     });
   }, [jobData?.id]);
 
@@ -352,6 +369,7 @@ export default function JobDetail() {
     try {
       await jobsApi.update(id, { tech_permissions: updated });
       showSnack('Saved', 'success');
+      refetch();  // so canViewHistory + other gates reflect the change
     } catch {
       setTechPerms(prev => ({ ...prev, [key]: !value }));
       showSnack('Failed to save', 'error');
@@ -1121,6 +1139,23 @@ export default function JobDetail() {
                 </div>
               </div>
             </Card>
+
+            {/* Partner Permissions — mirror Android (JobScreens.kt:1870): editable when YOU sent
+                this job to a partner (sent_to set, you're the sender). Toggles → PUT /jobs/:id. */}
+            {jobData.sent_to_company_id && !jobData.sent_by_company_id && (
+              <Card className="mt-3">
+                <h3 className="text-sm font-semibold text-gray-900">Partner Permissions</h3>
+                <p className="text-xs text-gray-500 mb-2">Control what the partner company can do with this job.</p>
+                <div className="divide-y divide-gray-100">
+                  {TECH_PERM_KEYS.map(([key, label]) => (
+                    <div key={key} className="flex items-center justify-between py-2 min-h-[44px]">
+                      <span className="text-sm text-gray-700">{label}</span>
+                      <Toggle checked={!!techPerms[key]} onChange={e => handleTechPermToggle(key, e.target.checked)} />
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            )}
 
             {/* Section 12: Parts — list + Add Parts + Charge Payment in same row (FIX 8) */}
             <div>
