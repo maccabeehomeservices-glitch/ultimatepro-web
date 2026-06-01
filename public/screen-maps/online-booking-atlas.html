@@ -148,7 +148,7 @@
 
   <footer>
     UltimatePro Screen Atlas · Online Booking · rendered from online-booking.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,29 +161,29 @@ const SECTIONS=[
 ];
 const A={
 "load":{label:"Load settings",status:"partial",route:"GET /settings/booking",fires:"SELECT (auto-create row)",result:"form populated",caveat:"web misreads most keys",
- d:{purpose:"Fetch the booking config into the form.",actors:["owner","admin"],vis:"on open",chain:[["GET","/settings/booking"]],parity:"DIVERGENT — Android reads companyDisplayName/companyTagline, serviceAreas[].zipCode/.radiusMiles, flat reminder/followup → populates fully. Web reads business_name/tagline/appointment_reminders/followup_reminders and service_areas[].zip/.radius → shows blank name/tagline, default-off reminders, and 'undefined — undefined mi' for existing areas. GET auto-INSERTs a default row if none."}},
+ d:{purpose:"Fetch the booking config into the form.",actors:["owner","admin"],vis:"on open",chain:[["GET","/settings/booking"]],parity:"DIVERGENT, Android reads companyDisplayName/companyTagline, serviceAreas[].zipCode/.radiusMiles, flat reminder/followup → populates fully. Web reads business_name/tagline/appointment_reminders/followup_reminders and service_areas[].zip/.radius → shows blank name/tagline, default-off reminders, and 'undefined, undefined mi' for existing areas. GET auto-INSERTs a default row if none."}},
 "enable-toggle":{label:"Enable booking",status:"ok",route:"PUT /settings/booking {enabled}",fires:"set enabled",result:"page on/off",
- d:{purpose:"Master on/off for the public booking page.",actors:["owner","admin"],vis:"top toggle",chain:[["PUT","/settings/booking"]],parity:"MATCH — both send enabled; it persists on both. This is the one key web sends that the backend reads."}},
+ d:{purpose:"Master on/off for the public booking page.",actors:["owner","admin"],vis:"top toggle",chain:[["PUT","/settings/booking"]],parity:"MATCH, both send enabled; it persists on both. This is the one key web sends that the backend reads."}},
 "appearance":{label:"Display name + tagline",status:"broken",route:"PUT /settings/booking",fires:"web wrong keys → ignored",result:"discarded on web",caveat:"business_name vs company_display_name",
- d:{purpose:"Branding shown on the booking page.",actors:["owner","admin"],vis:"text inputs",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT — Android sends {company_display_name, company_tagline}; web sends {business_name, tagline}. Backend reads company_display_name/company_tagline → web values silently ignored (COALESCE-null keeps old). Nothing persists from web."}},
+ d:{purpose:"Branding shown on the booking page.",actors:["owner","admin"],vis:"text inputs",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT, Android sends {company_display_name, company_tagline}; web sends {business_name, tagline}. Backend reads company_display_name/company_tagline → web values silently ignored (COALESCE-null keeps old). Nothing persists from web."}},
 "availability":{label:"Days / windows / max",status:"ok",route:"PUT /settings/booking",fires:"set working_days/time_windows/max",result:"availability saved",caveat:"Android-only UI",
- d:{purpose:"Define when slots are offered and capacity.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY — web has no UI for working_days, time_windows, or max_bookings_per_window (columns exist; web never sends/shows them). Works on Android."}},
+ d:{purpose:"Define when slots are offered and capacity.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY, web has no UI for working_days, time_windows, or max_bookings_per_window (columns exist; web never sends/shows them). Works on Android."}},
 "service-areas":{label:"Service areas",status:"broken",route:"PUT /settings/booking",fires:"web wrong keys → 400",result:"save fails on web",caveat:"zip vs zip_code",
- d:{purpose:"Limit booking to ZIPs within a radius.",actors:["owner","admin"],vis:"list + add",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT — backend validates {zip_code (5-digit), radius_miles (1–100)} and geocodes new ZIPs. Android sends zip_code/radius_miles/label (+ a matching 5-digit/1–100 dialog). Web sends {zip, radius} → display shows 'undefined — undefined mi' AND Save throws 400 'Invalid zip_code: undefined' when a web-added area is present."}},
+ d:{purpose:"Limit booking to ZIPs within a radius.",actors:["owner","admin"],vis:"list + add",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT, backend validates {zip_code (5-digit), radius_miles (1–100)} and geocodes new ZIPs. Android sends zip_code/radius_miles/label (+ a matching 5-digit/1–100 dialog). Web sends {zip, radius} → display shows 'undefined, undefined mi' AND Save throws 400 'Invalid zip_code: undefined' when a web-added area is present."}},
 "services-offered":{label:"Services offered",status:"ok",route:"PUT /settings/booking {services}",fires:"set services",result:"services saved",caveat:"Android-only UI",
- d:{purpose:"List bookable service types.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY — web has no services UI."}},
+ d:{purpose:"List bookable service types.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY, web has no services UI."}},
 "confirmation-message":{label:"Confirmation message",status:"ok",route:"PUT /settings/booking {confirmation_message}",fires:"set confirmation_message",result:"saved",caveat:"Android-only UI",
- d:{purpose:"Message shown after a customer books.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY — web has no confirmation-message field."}},
+ d:{purpose:"Message shown after a customer books.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY, web has no confirmation-message field."}},
 "appointment-reminders":{label:"Appointment reminders",status:"broken",route:"PUT /settings/booking",fires:"web nested → ignored",result:"discarded on web",caveat:"nested vs flat reminder_*",
- d:{purpose:"Remind customers N hours before the appointment.",actors:["owner","admin"],vis:"toggle + hours + method",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT — Android sends flat reminder_enabled/reminder_hours_before/reminder_method; web sends a nested appointment_reminders object → backend reads flat keys, so all three are ignored. Web reminder config never saves."}},
+ d:{purpose:"Remind customers N hours before the appointment.",actors:["owner","admin"],vis:"toggle + hours + method",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT, Android sends flat reminder_enabled/reminder_hours_before/reminder_method; web sends a nested appointment_reminders object → backend reads flat keys, so all three are ignored. Web reminder config never saves."}},
 "followup-reminders":{label:"Follow-up reminders",status:"broken",route:"PUT /settings/booking",fires:"web nested → ignored",result:"discarded on web",caveat:"nested vs flat followup_*",
- d:{purpose:"Remind customers about unpaid invoices after service.",actors:["owner","admin"],vis:"toggle + days/repeat/max + method",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT — Android sends flat followup_enabled/followup_days_after/followup_repeat_every/followup_max_reminders/followup_method; web sends a nested followup_reminders object → ignored. Web follow-up config never saves."}},
+ d:{purpose:"Remind customers about unpaid invoices after service.",actors:["owner","admin"],vis:"toggle + days/repeat/max + method",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT, Android sends flat followup_enabled/followup_days_after/followup_repeat_every/followup_max_reminders/followup_method; web sends a nested followup_reminders object → ignored. Web follow-up config never saves."}},
 "save":{label:"Save settings",status:"partial",route:"PUT /settings/booking (upsert)",fires:"UPSERT COALESCE",result:"only enabled persists (web)",caveat:"web can 400",
- d:{purpose:"Persist the whole config.",actors:["owner","admin"],vis:"Save button",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT — Android's Save persists every field correctly; on web only enabled actually persists (everything else dropped by wrong keys/shape), and a web-added service area makes the request 400 ('Invalid zip_code: undefined'). UPSERT on company_id, COALESCE per field. Mechanism is fine; web's payload keys are the problem."}},
+ d:{purpose:"Persist the whole config.",actors:["owner","admin"],vis:"Save button",chain:[["PUT","/settings/booking"]],parity:"DIVERGENT, Android's Save persists every field correctly; on web only enabled actually persists (everything else dropped by wrong keys/shape), and a web-added service area makes the request 400 ('Invalid zip_code: undefined'). UPSERT on company_id, COALESCE per field. Mechanism is fine; web's payload keys are the problem."}},
 "booking-link":{label:"Public booking link",status:"ok",route:"/book?company=<ucm_id>",fires:"display + copy",result:"URL copied",caveat:"Android-only",
- d:{purpose:"Show/copy the public booking URL.",actors:["owner","admin"],vis:"Android only — shown when enabled + UCM ID loaded",chain:[["GET","/book?company=<ultimatecrm_id> (public)"]],parity:"ANDROID-ONLY — web exposes no booking URL on this page. /book is a real public route (server.js:94 → routes/book.js, no auth). Web users can't discover/share the link from this screen."}},
+ d:{purpose:"Show/copy the public booking URL.",actors:["owner","admin"],vis:"Android only, shown when enabled + UCM ID loaded",chain:[["GET","/book?company=<ultimatecrm_id> (public)"]],parity:"ANDROID-ONLY, web exposes no booking URL on this page. /book is a real public route (server.js:94 → routes/book.js, no auth). Web users can't discover/share the link from this screen."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -199,7 +199,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -214,7 +214,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

@@ -1,4 +1,4 @@
-# Screen Map — Online Booking
+# Screen Map, Online Booking
 
 > **Format:** Action-Map Schema v1. Source of truth; the HTML atlas is rendered from it.
 > When code changes this screen, update this file in the same commit. Reality on disk wins.
@@ -45,11 +45,11 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **purpose:** Fetch the booking config into the form.
 - **visibility:** on open.
 - **route_chain:** `GET /settings/booking` (auto-creates the row if missing)
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** may INSERT a default `booking_settings` row.
 - **end_state:** Form populated.
-- **failure_modes:** **web maps almost nothing** — it reads `business_name`/`tagline`/`appointment_reminders`/`followup_reminders` and `service_areas[].zip/.radius`, but the row has `company_display_name`/`company_tagline`/flat `reminder_*`/`followup_*` and `service_areas[].zip_code/.radius_miles` → web shows blank name/tagline, default-off reminders, and "undefined — undefined mi" for any existing area.
-- **parity:** DIVERGENT — Android reads the correct keys (`companyDisplayName`, `companyTagline`, `serviceAreas[].zipCode/.radiusMiles`, flat reminder/followup) and populates fully.
+- **failure_modes:** **web maps almost nothing**, it reads `business_name`/`tagline`/`appointment_reminders`/`followup_reminders` and `service_areas[].zip/.radius`, but the row has `company_display_name`/`company_tagline`/flat `reminder_*`/`followup_*` and `service_areas[].zip_code/.radius_miles` → web shows blank name/tagline, default-off reminders, and "undefined, undefined mi" for any existing area.
+- **parity:** DIVERGENT, Android reads the correct keys (`companyDisplayName`, `companyTagline`, `serviceAreas[].zipCode/.radiusMiles`, flat reminder/followup) and populates fully.
 - **status:** PARTIAL
 - **status_note:** Only `enabled` round-trips on web; the rest of the loaded config is misread.
 
@@ -64,10 +64,9 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **side_effects:** sets `booking_settings.enabled`.
 - **end_state:** Booking page on/off.
 - **failure_modes:** none (this is the one key web sends that the backend reads).
-- **parity:** MATCH — both send `enabled`; it persists on both.
+- **parity:** MATCH, both send `enabled`; it persists on both.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `online-booking.appearance`
 - **label:** Display name + tagline
 - **section:** general
@@ -79,7 +78,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **side_effects:** updates `company_display_name` / `company_tagline` (Android only).
 - **end_state:** Branding saved (Android); discarded (web).
 - **failure_modes:** **web sends `business_name`/`tagline`, the backend reads `company_display_name`/`company_tagline`** → silently ignored (COALESCE-null keeps old values). Nothing persists from web.
-- **parity:** DIVERGENT — Android uses the correct keys; web uses wrong keys → no-op.
+- **parity:** DIVERGENT, Android uses the correct keys; web uses wrong keys → no-op.
 - **status:** BROKEN
 - **status_note:** Wrong request keys; web edits never save.
 
@@ -94,7 +93,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **side_effects:** updates those columns.
 - **end_state:** Availability saved.
 - **failure_modes:** none on Android.
-- **parity:** ANDROID-ONLY — **web has no UI for working days, time windows, or max-per-window** (the columns exist; web simply never sends or shows them).
+- **parity:** ANDROID-ONLY, **web has no UI for working days, time windows, or max-per-window** (the columns exist; web simply never sends or shows them).
 - **status:** OK
 - **status_note:** Works on Android; absent on web.
 
@@ -108,8 +107,8 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **request_body:** Android `[{zip_code, radius_miles, label}]`; **web `[{zip, radius}]`** ✗
 - **side_effects:** updates `service_areas` + `zip_lat_cache` (Android).
 - **end_state:** Areas saved (Android); save fails (web).
-- **failure_modes:** **web sends `{zip, radius}`; backend requires `zip_code`/`radius_miles`** → on Save with any web-added area, validation throws **400 "Invalid zip_code: undefined"**, failing the entire Save. Web also renders existing areas as "undefined — undefined mi" (reads `.zip`/`.radius`).
-- **parity:** DIVERGENT — Android matches the contract (and a 5-digit/1–100 dialog); web's keys break both display and save.
+- **failure_modes:** **web sends `{zip, radius}`; backend requires `zip_code`/`radius_miles`** → on Save with any web-added area, validation throws **400 "Invalid zip_code: undefined"**, failing the entire Save. Web also renders existing areas as "undefined, undefined mi" (reads `.zip`/`.radius`).
+- **parity:** DIVERGENT, Android matches the contract (and a 5-digit/1–100 dialog); web's keys break both display and save.
 - **status:** BROKEN
 - **status_note:** Wrong keys → display broken + Save 400 when a web-added area is present.
 
@@ -124,10 +123,9 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **side_effects:** updates `services`.
 - **end_state:** Services saved.
 - **failure_modes:** none on Android.
-- **parity:** ANDROID-ONLY — web has no services UI.
+- **parity:** ANDROID-ONLY, web has no services UI.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `online-booking.confirmation-message`
 - **label:** Confirmation message
 - **section:** services
@@ -139,10 +137,9 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **side_effects:** updates `confirmation_message`.
 - **end_state:** Saved.
 - **failure_modes:** none on Android.
-- **parity:** ANDROID-ONLY — web has no confirmation-message field.
+- **parity:** ANDROID-ONLY, web has no confirmation-message field.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `online-booking.appointment-reminders`
 - **label:** Appointment reminders
 - **section:** reminders
@@ -154,7 +151,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **side_effects:** updates the flat `reminder_*` columns (Android).
 - **end_state:** Reminders saved (Android); discarded (web).
 - **failure_modes:** **web sends a nested `appointment_reminders` object; backend reads flat `reminder_enabled`/`reminder_hours_before`/`reminder_method`** → all three ignored.
-- **parity:** DIVERGENT — Android sends flat keys; web's nested object is a no-op.
+- **parity:** DIVERGENT, Android sends flat keys; web's nested object is a no-op.
 - **status:** BROKEN
 - **status_note:** Nested-vs-flat shape mismatch; web reminder config never saves.
 
@@ -169,7 +166,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **side_effects:** updates flat `followup_*` (Android).
 - **end_state:** Saved (Android); discarded (web).
 - **failure_modes:** **web sends a nested `followup_reminders` object; backend reads flat `followup_*`** → ignored.
-- **parity:** DIVERGENT — same nested-vs-flat mismatch as appointment reminders.
+- **parity:** DIVERGENT, same nested-vs-flat mismatch as appointment reminders.
 - **status:** BROKEN
 - **status_note:** Web follow-up config never saves.
 
@@ -180,11 +177,11 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **purpose:** Persist the whole config.
 - **visibility:** Save button.
 - **route_chain:** `PUT /settings/booking` (UPSERT on company_id, COALESCE per field)
-- **request_body:** the full settings object (web's keys mostly don't match — see fields above)
+- **request_body:** the full settings object (web's keys mostly don't match, see fields above)
 - **side_effects:** updates `booking_settings`.
 - **end_state:** "Settings saved".
 - **failure_modes:** **on web, only `enabled` actually persists**; everything else is dropped (wrong keys/shape), and if a web-added service area is present the request **400s** ("Invalid zip_code: undefined").
-- **parity:** DIVERGENT — Android's Save persists every field correctly; web's Save is effectively an enabled-only toggle that can 400.
+- **parity:** DIVERGENT, Android's Save persists every field correctly; web's Save is effectively an enabled-only toggle that can 400.
 - **status:** PARTIAL
 - **status_note:** Mechanism is fine; web's payload keys are the problem.
 
@@ -193,13 +190,13 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **section:** link
 - **actors:** owner, admin
 - **purpose:** Show/copy the public booking URL.
-- **visibility:** Android only — shown when enabled + UCM ID loaded.
+- **visibility:** Android only, shown when enabled + UCM ID loaded.
 - **route_chain:** displays `https://…/book?company=<ultimatecrm_id>` (served by `routes/book.js`, mounted public at `/book`, no auth) + Copy
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** clipboard.
 - **end_state:** URL copied.
 - **failure_modes:** none.
-- **parity:** ANDROID-ONLY — **web exposes no booking URL anywhere on this page**. The `/book?company=<UCM_ID>` route is real and public (server.js:94 → book.js).
+- **parity:** ANDROID-ONLY, **web exposes no booking URL anywhere on this page**. The `/book?company=<UCM_ID>` route is real and public (server.js:94 → book.js).
 - **status:** OK
 - **status_note:** Confirmed `/book` route exists (public). Web users can't discover or share the link from this screen.
 
@@ -210,14 +207,13 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **purpose:** Return to Settings.
 - **visibility:** top-left.
 - **route_chain:** web `navigate('/settings')`; Android `onBack`
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** none.
 - **end_state:** Settings landing.
 - **failure_modes:** none.
 - **parity:** MATCH.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ---
 
 ## SCREEN-LEVEL DRIFT FLAGS

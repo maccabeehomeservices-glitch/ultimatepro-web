@@ -1,4 +1,4 @@
-# Screen Map — Inventory
+# Screen Map, Inventory
 
 > **Format:** Action-Map Schema v1. Source of truth; the HTML atlas is rendered from it.
 > When code changes this screen, update this file in the same commit. Reality on disk wins.
@@ -36,14 +36,14 @@
 - **actors:** owner, manager
 - **purpose:** Turn the whole inventory feature on/off (gates deduction + the screens).
 - **visibility:** Android InventoryScreen shows an "Enable Inventory" button when disabled; web exposes the toggle in the Settings module (not the Inventory page).
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** `GET /inventory/settings` · `PUT /inventory/settings`
 - **request_body:** `{ enabled }`
 - **side_effects:** upserts `inventory_settings.enabled`.
 - **end_state:** Inventory enabled/disabled.
 - **failure_modes:** none.
-- **parity:** PARTIAL — same endpoint; Android hosts the toggle on the Inventory screen, web in Settings.
+- **parity:** PARTIAL, same endpoint; Android hosts the toggle on the Inventory screen, web in Settings.
 - **status:** OK
 - **status_note:** When disabled, the on-completion deduction is skipped.
 
@@ -53,17 +53,16 @@
 - **actors:** owner, manager
 - **purpose:** Set the on-hand count of a warehouse item.
 - **visibility:** Warehouse tab.
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** `PUT /inventory/warehouse/:id`
 - **request_body:** `{ quantity }`
 - **side_effects:** updates `warehouse_inventory.qty_on_hand`.
 - **end_state:** Count saved.
 - **failure_modes:** none.
-- **parity:** MATCH — both edit warehouse counts.
+- **parity:** MATCH, both edit warehouse counts.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `inventory.truck-stock-edit`
 - **label:** Truck item count (Save)
 - **section:** stock
@@ -71,16 +70,15 @@
 - **purpose:** Set the on-hand count of an item on a specific truck.
 - **visibility:** Trucks tab (web) / `TruckStockScreen` (Android).
 - **precondition:** a truck is selected.
-- **confirm:** —
+- **confirm:** n/a
 - **route_chain:** `PUT /inventory/trucks/:truckId/stock/:itemId`
 - **request_body:** `{ qty_on_hand, min_qty }`
 - **side_effects:** updates `truck_inventory.qty_on_hand`/`min_qty`.
 - **end_state:** Count saved.
 - **failure_modes:** none.
-- **parity:** MATCH — same endpoint; web inline on the Trucks tab, Android on a dedicated screen.
+- **parity:** MATCH, same endpoint; web inline on the Trucks tab, Android on a dedicated screen.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `inventory.my-truck`
 - **label:** My Truck (on-hand + low-stock)
 - **section:** stock
@@ -88,16 +86,15 @@
 - **purpose:** A tech sees their own truck's stock and low-stock flags.
 - **visibility:** My Truck tab.
 - **precondition:** the user has an assigned truck.
-- **confirm:** —
+- **confirm:** n/a
 - **route_chain:** `GET /inventory/tech-truck/:userId`
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** read-only (returns truck + `item_count` + `low_stock_count`).
 - **end_state:** Truck stock shown.
 - **failure_modes:** none.
-- **parity:** MATCH — read-only view of the tech's truck.
+- **parity:** MATCH, read-only view of the tech's truck.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `inventory.transfer-to-truck`
 - **label:** Transfer (warehouse → truck)
 - **section:** move-stock
@@ -106,12 +103,12 @@
 - **visibility:** web Warehouse tab "→ Truck"; Android "Send items to truck" on `TruckStockScreen`.
 - **precondition:** a destination truck + quantity.
 - **confirm:** transfer modal.
-- **route_chain:** web `POST /inventory/transfer` — **route does not exist**; Android `POST /inventory/trucks/:truckId/send-items`.
+- **route_chain:** web `POST /inventory/transfer`, **route does not exist**; Android `POST /inventory/trucks/:truckId/send-items`.
 - **request_body:** web `{ item_id, truck_id, quantity }`; Android send-items `{ items }`.
 - **side_effects:** intended: decrement warehouse, increment truck. On web → 404 catch-all (nothing moves). On Android → `send-items` moves stock.
 - **end_state:** web → error snackbar; Android → stock transferred.
-- **failure_modes:** `route-404` (web) — `/inventory/transfer` is unregistered; the real endpoints are `send-items` / `return-items`.
-- **parity:** DIVERGENT — Android uses the registered `send-items`; web posts to a non-existent `/inventory/transfer`.
+- **failure_modes:** `route-404` (web), `/inventory/transfer` is unregistered; the real endpoints are `send-items` / `return-items`.
+- **parity:** DIVERGENT, Android uses the registered `send-items`; web posts to a non-existent `/inventory/transfer`.
 - **status:** BROKEN
 - **status_note:** Web "Transfer to Truck" always 404s; only Android's send-items path works.
 
@@ -128,10 +125,9 @@
 - **side_effects:** inserts a `restock_requests` row (status `pending`) + `restock_request_items`.
 - **end_state:** Request sent to office.
 - **failure_modes:** none observed.
-- **parity:** MATCH — both create a restock request.
+- **parity:** MATCH, both create a restock request.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `inventory.restock-fulfill`
 - **label:** Fulfill Request
 - **section:** move-stock
@@ -145,10 +141,9 @@
 - **side_effects:** sets `restock_request_items.qty_fulfilled`, **adds to `truck_inventory.qty_on_hand` (+= qty_fulfilled, upsert)**, sets request `status='fulfilled'`, `fulfilled_at`, `fulfilled_by`.
 - **end_state:** Truck stock increased; request closed.
 - **failure_modes:** none observed.
-- **parity:** ANDROID-ONLY — web can create requests but has no fulfill UI.
+- **parity:** ANDROID-ONLY, web can create requests but has no fulfill UI.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `inventory.completion-deduction`
 - **label:** Auto-deduct on job completion
 - **section:** auto
@@ -156,13 +151,13 @@
 - **purpose:** Subtract used parts from the assigned tech's truck when a job completes.
 - **visibility:** automatic (no button).
 - **precondition:** `inventory_settings.enabled` and the assigned tech has an active truck.
-- **confirm:** —
+- **confirm:** n/a
 - **route_chain:** automatic in `POST /jobs/:id/status` (status=completed); plus a manual `POST /inventory/deduct-job/:jobId`.
 - **request_body:** manual `{ truck_id, items:[{pricebook_item_id, qty}] }`
 - **side_effects:** **automatic** (jobs.js ~898–929): when enabled, finds the tech's truck and runs `UPDATE truck_inventory SET qty_on_hand = GREATEST(0, qty_on_hand − used)` for each invoice line item with a `pricebook_item_id`. The **manual** endpoint decrements the given items on a given truck (`GREATEST(0, qty − qty)`).
 - **end_state:** Truck stock reduced by the job's parts.
 - **failure_modes:** none observed (errors are caught/logged, never block completion).
-- **parity:** MATCH — the deduction is server-side and fires from job completion regardless of surface.
+- **parity:** MATCH, the deduction is server-side and fires from job completion regardless of surface.
 - **status:** OK
 - **status_note:** Driven by invoice line items' `pricebook_item_id`; items without one aren't deducted.
 
@@ -170,8 +165,8 @@
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **Web "Transfer to Truck" is broken (404)** — it posts to `POST /inventory/transfer`, which is not a registered route; the real warehouse→truck move is `POST /inventory/trucks/:truckId/send-items` (used by Android). Web warehouse→truck transfers never happen.
-- **Restock fulfill is Android-only** — web lists restock requests read-only; only Android's `RestockRequestDetailScreen` fulfills (`PUT /restock-requests/:id/fulfill`, which adds to truck stock).
-- **Enable toggle lives in different places** — Android InventoryScreen ("Enable Inventory"); web in the Settings module. Same `PUT /inventory/settings`.
-- **On-completion deduction is automatic + server-side** — fires inside `POST /jobs/:id/status` (completed) when enabled, deducting invoice line items from the tech's truck; a separate manual `/deduct-job` endpoint also exists.
+- **Web "Transfer to Truck" is broken (404)**, it posts to `POST /inventory/transfer`, which is not a registered route; the real warehouse→truck move is `POST /inventory/trucks/:truckId/send-items` (used by Android). Web warehouse→truck transfers never happen.
+- **Restock fulfill is Android-only**, web lists restock requests read-only; only Android's `RestockRequestDetailScreen` fulfills (`PUT /restock-requests/:id/fulfill`, which adds to truck stock).
+- **Enable toggle lives in different places**, Android InventoryScreen ("Enable Inventory"); web in the Settings module. Same `PUT /inventory/settings`.
+- **On-completion deduction is automatic + server-side**, fires inside `POST /jobs/:id/status` (completed) when enabled, deducting invoice line items from the tech's truck; a separate manual `/deduct-job` endpoint also exists.
 - **UNVERIFIED:** exact web Settings location/host of the inventory toggle; Android InventoryScreen warehouse-edit + my-truck specifics; whether `/deduct-job` (manual) has any UI caller.

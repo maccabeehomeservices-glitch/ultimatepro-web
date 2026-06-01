@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Live Map<span class="sub">Active job pins + live tech pins on Google Maps — tap to detail, jump to the job. Web polls 30s, Android techs 15s.</span></h1>
+    <h1>Live Map<span class="sub">Active job pins + live tech pins on Google Maps, tap to detail, jump to the job. Web polls 30s, Android techs 15s.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>6147cd1</b></div>
   </header>
 
@@ -141,15 +141,15 @@
     <ul>
       <li><b>Poll cadence differs:</b> web reloads jobs+techs together every <b>30 s</b>; Android polls techs every <b>15 s</b> and loads jobs once (on open / resume / manual refresh). Tech positions are fresher on Android.</li>
       <li><b>Tech-pin navigation is Android-only.</b> Web tech pins are display-only (name + current job / "Available"); Android tech pins open the tech's <code>in_progress</code> job via <code>onJob(current_job_id)</code>.</li>
-      <li><b>Two different hardcoded Google Maps API keys in client source</b> — web JS SDK key (<code>…kJiNQ</code>, LiveMap.jsx:5) and Android geocoding key (<code>…vQjyk</code>, LiveMapScreen.kt:118). Both committed in plaintext; rotate/restrict is a security follow-up.</li>
-      <li><b><code>GET /gps/live</code> is a bare array</b> filtered to techs that pinged within 5 min (role technician, is_active), LATERAL-joined to their current <code>in_progress</code> job. Depends on the field app sending <code>POST /gps/ping</code> — <b>UNVERIFIED</b> here.</li>
+      <li><b>Two different hardcoded Google Maps API keys in client source</b>, web JS SDK key (<code>…kJiNQ</code>, LiveMap.jsx:5) and Android geocoding key (<code>…vQjyk</code>, LiveMapScreen.kt:118). Both committed in plaintext; rotate/restrict is a security follow-up.</li>
+      <li><b><code>GET /gps/live</code> is a bare array</b> filtered to techs that pinged within 5 min (role technician, is_active), LATERAL-joined to their current <code>in_progress</code> job. Depends on the field app sending <code>POST /gps/ping</code>, <b>UNVERIFIED</b> here.</li>
       <li><b>Silent pin drops:</b> jobs with neither coords nor a geocodable address, and failed geocodes, are dropped with no user-visible message on both surfaces.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Live Map · rendered from live-map.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -160,21 +160,21 @@ const SECTIONS=[
 ];
 const A={
 "load-jobs":{label:"Load job pins",status:"ok",route:"GET /jobs?status=scheduled,en_route,in_progress,unscheduled",fires:"plot pins",result:"status-colored pins",caveat:"web limit=200",
- d:{purpose:"Show active jobs as status-colored pins.",actors:["office","owner"],vis:"on open",chain:[["GET","/jobs?status=scheduled,en_route,in_progress,unscheduled"]],parity:"MATCH — same endpoint + status filter (web limit=200; Android page=1 then filters isActive). Web reloads jobs every 30s with the tech poll; Android loads jobs once on open + on resume/refresh. Color: web statusColor(); Android jobStatusHue()."}},
+ d:{purpose:"Show active jobs as status-colored pins.",actors:["office","owner"],vis:"on open",chain:[["GET","/jobs?status=scheduled,en_route,in_progress,unscheduled"]],parity:"MATCH, same endpoint + status filter (web limit=200; Android page=1 then filters isActive). Web reloads jobs every 30s with the tech poll; Android loads jobs once on open + on resume/refresh. Color: web statusColor(); Android jobStatusHue()."}},
 "load-techs":{label:"Load tech pins",status:"ok",route:"GET /gps/live",fires:"plot blue pins",result:"live tech pins",caveat:"web poll 30s / Android 15s",
- d:{purpose:"Show live technician locations (blue pins).",actors:["office","owner"],vis:"on open, then polled",chain:[["GET","/gps/live"]],parity:"PARTIAL (timing) — web polls every 30s, Android every 15s. Bare array; server filters role=technician, is_active, recorded_at>=now-5min, LATERAL-joins current in_progress job. Web tolerates the bare array via gpsRes.data?.techs||gpsRes.data. Depends on the field app sending POST /gps/ping (UNVERIFIED)."}},
+ d:{purpose:"Show live technician locations (blue pins).",actors:["office","owner"],vis:"on open, then polled",chain:[["GET","/gps/live"]],parity:"PARTIAL (timing), web polls every 30s, Android every 15s. Bare array; server filters role=technician, is_active, recorded_at>=now-5min, LATERAL-joins current in_progress job. Web tolerates the bare array via gpsRes.data?.techs||gpsRes.data. Depends on the field app sending POST /gps/ping (UNVERIFIED)."}},
 "job-pin-open":{label:"Open Job from pin",status:"ok",route:"nav → Job Detail",fires:"navigate",result:"Job Detail",
- d:{purpose:"Jump from a job pin to that job's detail.",actors:["office","owner"],vis:"tap a job pin",chain:[],parity:"MATCH — web InfoWindow 'View Job →' <a href=/jobs/:id> intercepted to SPA navigate; Android bottom card OpenInNew → onJob(job.id). Web InfoWindow also warns when address_verified===false."}},
+ d:{purpose:"Jump from a job pin to that job's detail.",actors:["office","owner"],vis:"tap a job pin",chain:[],parity:"MATCH, web InfoWindow 'View Job →' <a href=/jobs/:id> intercepted to SPA navigate; Android bottom card OpenInNew → onJob(job.id). Web InfoWindow also warns when address_verified===false."}},
 "tech-pin-open":{label:"Open tech from pin",status:"partial",route:"Android: onJob(current_job_id)",fires:"detail / nav",result:"tech info (+ job on Android)",caveat:"web info-only",
- d:{purpose:"Inspect a technician and, on Android, jump to the job they're on.",actors:["office","owner"],vis:"tap a tech pin",chain:[],parity:"DIVERGENT — Web tech pin is info-only (name + current_job_title or 'Available', no navigation). Android shows a bottom card (name / current job / address) with OpenInNew → onJob(current_job_id) when the tech has an in_progress job. The tech→job jump exists only on Android."}},
+ d:{purpose:"Inspect a technician and, on Android, jump to the job they're on.",actors:["office","owner"],vis:"tap a tech pin",chain:[],parity:"DIVERGENT, Web tech pin is info-only (name + current_job_title or 'Available', no navigation). Android shows a bottom card (name / current job / address) with OpenInNew → onJob(current_job_id) when the tech has an in_progress job. The tech→job jump exists only on Android."}},
 "geocode-fallback":{label:"Geocode fallback",status:"ok",route:"client Google geocoding",fires:"resolve coords",result:"pin placed",caveat:"different API keys",
- d:{purpose:"Place a pin even when the row has no stored lat/lng.",actors:["office","owner"],vis:"automatic",chain:[],parity:"MATCH (behavior) — both prefer stored coords, else geocode client-side (web google.maps.Geocoder; Android GET maps.googleapis.com/maps/api/geocode/json, in-memory cached). Two DIFFERENT hardcoded API keys (see drift). status!=OK → pin silently skipped."}},
-"auto-zoom":{label:"Auto-fit to pins",status:"ok",route:"— UI only",fires:"fit bounds",result:"framed pins",
- d:{purpose:"Frame all pins on first load.",actors:["office","owner"],vis:"automatic, once",chain:[],parity:"MATCH — web map.fitBounds; Android newLatLngBounds (once, guarded by hasAutoZoomed). Default center 36.8529,-75.978 zoom 11 on both."}},
+ d:{purpose:"Place a pin even when the row has no stored lat/lng.",actors:["office","owner"],vis:"automatic",chain:[],parity:"MATCH (behavior), both prefer stored coords, else geocode client-side (web google.maps.Geocoder; Android GET maps.googleapis.com/maps/api/geocode/json, in-memory cached). Two DIFFERENT hardcoded API keys (see drift). status!=OK → pin silently skipped."}},
+"auto-zoom":{label:"Auto-fit to pins",status:"ok",route:", UI only",fires:"fit bounds",result:"framed pins",
+ d:{purpose:"Frame all pins on first load.",actors:["office","owner"],vis:"automatic, once",chain:[],parity:"MATCH, web map.fitBounds; Android newLatLngBounds (once, guarded by hasAutoZoomed). Default center 36.8529,-75.978 zoom 11 on both."}},
 "refresh":{label:"Refresh",status:"ok",route:"web fetchData / Android refresh()",fires:"reload",result:"fresh pins",caveat:"Android reloads jobs only",
- d:{purpose:"Manually re-pull the map.",actors:["office","owner"],vis:"refresh button (web) / resume + refresh (Android)",chain:[],parity:"PARTIAL — web refresh reloads both feeds (jobs+techs); Android manual refresh() → loadJobPins() reloads jobs only (techs stay on their 15s loop)."}},
+ d:{purpose:"Manually re-pull the map.",actors:["office","owner"],vis:"refresh button (web) / resume + refresh (Android)",chain:[],parity:"PARTIAL, web refresh reloads both feeds (jobs+techs); Android manual refresh() → loadJobPins() reloads jobs only (techs stay on their 15s loop)."}},
 "back":{label:"Back",status:"ok",route:"web /dashboard / Android onBack",fires:"navigate",result:"previous screen",
- d:{purpose:"Leave the map.",actors:["office","owner"],vis:"top-left",chain:[],parity:"MATCH — web hard-routes to /dashboard; Android pops the back stack."}},
+ d:{purpose:"Leave the map.",actors:["office","owner"],vis:"top-left",chain:[],parity:"MATCH, web hard-routes to /dashboard; Android pops the back stack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -190,7 +190,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -205,7 +205,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI / client-side only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI / client-side only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

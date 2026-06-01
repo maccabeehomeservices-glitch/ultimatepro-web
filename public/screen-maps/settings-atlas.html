@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Settings<span class="sub">The settings landing — each row navigates to a config sub-page. Android's "More" doubles as a nav hub. Sub-pages mapped separately.</span></h1>
+    <h1>Settings<span class="sub">The settings landing, each row navigates to a config sub-page. Android's "More" doubles as a nav hub. Sub-pages mapped separately.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>6147cd1</b></div>
   </header>
 
@@ -139,16 +139,16 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Android "More" ≠ web "Settings".</b> Android's screen is a combined nav hub + settings menu: it adds Views (Calendar / Live Map / Reports), Finance (Estimates / Invoices / Payments), Payroll, Price Book, My Network, Inventory, a "My UltimatePro ID" card, and Sign-Out — none on the web Settings landing (web reaches those via its own nav). Same destinations, different placement.</li>
+      <li><b>Android "More" ≠ web "Settings".</b> Android's screen is a combined nav hub + settings menu: it adds Views (Calendar / Live Map / Reports), Finance (Estimates / Invoices / Payments), Payroll, Price Book, My Network, Inventory, a "My UltimatePro ID" card, and Sign-Out, none on the web Settings landing (web reaches those via its own nav). Same destinations, different placement.</li>
       <li><b>Notifications is a sub-page on web but inline toggles on Android.</b> Web <code>/settings/notifications</code> is a dedicated screen; Android shows 5 inline toggles writing <b>device-local</b> <code>NotificationPreferences</code> (not server-synced). Not the same surface.</li>
-      <li><b>All 11 web sub-page routes are registered</b> (App.jsx:121–131) — every Settings landing link resolves, no 404s. Those 11 sub-pages are the remaining unmapped screens tracked in the index.</li>
+      <li><b>All 11 web sub-page routes are registered</b> (App.jsx:121–131), every Settings landing link resolves, no 404s. Those 11 sub-pages are the remaining unmapped screens tracked in the index.</li>
       <li><b>UNVERIFIED:</b> whether the web app exposes the Android-only items (UCM-ID card, inline notification prefs, in-settings logout) elsewhere; the sub-page internals (out of scope for this landing map).</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Settings (landing) · rendered from settings.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -160,37 +160,37 @@ const SECTIONS=[
 ];
 const A={
 "company":{label:"Company Profile",status:"ok",route:"NavLink → /settings/company",fires:"navigate",result:"Company Profile",
- d:{purpose:"Open company profile (name, logo, contact, address).",actors:["owner"],vis:"always",chain:[["NAV","/settings/company"]],parity:"MATCH — Android Business → 'Company Profile' (onCompanyProfile). Target route → CompanyProfile (registered)."}},
+ d:{purpose:"Open company profile (name, logo, contact, address).",actors:["owner"],vis:"always",chain:[["NAV","/settings/company"]],parity:"MATCH, Android Business → 'Company Profile' (onCompanyProfile). Target route → CompanyProfile (registered)."}},
 "team":{label:"Team Members",status:"ok",route:"NavLink → /settings/team",fires:"navigate",result:"Team Members",
- d:{purpose:"Manage app users, roles, access.",actors:["owner"],vis:"always",chain:[["NAV","/settings/team"]],parity:"MATCH — Android Business → 'Team Members' (onTeamMembers). Target → UserManagement (registered)."}},
+ d:{purpose:"Manage app users, roles, access.",actors:["owner"],vis:"always",chain:[["NAV","/settings/team"]],parity:"MATCH, Android Business → 'Team Members' (onTeamMembers). Target → UserManagement (registered)."}},
 "technicians":{label:"Roster Technicians",status:"ok",route:"NavLink → /settings/technicians",fires:"navigate",result:"Roster Technicians",
- d:{purpose:"Manage field techs without app logins.",actors:["owner"],vis:"always",chain:[["NAV","/settings/technicians"]],parity:"MATCH — Android Business → 'Technicians' (onTechnicians). Target → RosterTechs (registered)."}},
+ d:{purpose:"Manage field techs without app logins.",actors:["owner"],vis:"always",chain:[["NAV","/settings/technicians"]],parity:"MATCH, Android Business → 'Technicians' (onTechnicians). Target → RosterTechs (registered)."}},
 "review-platforms":{label:"Review Platforms",status:"ok",route:"NavLink → /settings/review-platforms",fires:"navigate",result:"Review Platforms",
- d:{purpose:"Manage review links sent with receipts.",actors:["owner"],vis:"always",chain:[["NAV","/settings/review-platforms"]],parity:"MATCH — Android Business → 'Review Platforms' (onReviewPlatforms). Registered."}},
+ d:{purpose:"Manage review links sent with receipts.",actors:["owner"],vis:"always",chain:[["NAV","/settings/review-platforms"]],parity:"MATCH, Android Business → 'Review Platforms' (onReviewPlatforms). Registered."}},
 "online-booking":{label:"Online Booking",status:"ok",route:"NavLink → /settings/online-booking",fires:"navigate",result:"Online Booking",
- d:{purpose:"Configure the customer self-booking link.",actors:["owner"],vis:"always",chain:[["NAV","/settings/online-booking"]],parity:"MATCH — Android Business → 'Online Booking' (onOnlineBooking). Registered."}},
+ d:{purpose:"Configure the customer self-booking link.",actors:["owner"],vis:"always",chain:[["NAV","/settings/online-booking"]],parity:"MATCH, Android Business → 'Online Booking' (onOnlineBooking). Registered."}},
 "job-sources":{label:"Job Sources",status:"ok",route:"NavLink → /settings/job-sources",fires:"navigate",result:"Job Sources",
- d:{purpose:"Track where jobs come from.",actors:["owner"],vis:"always",chain:[["NAV","/settings/job-sources"]],parity:"MATCH — Android Business → 'Job Sources' (onJobSources). Registered."}},
+ d:{purpose:"Track where jobs come from.",actors:["owner"],vis:"always",chain:[["NAV","/settings/job-sources"]],parity:"MATCH, Android Business → 'Job Sources' (onJobSources). Registered."}},
 "membership-plans":{label:"Membership Plans",status:"ok",route:"NavLink → /settings/membership-plans",fires:"navigate",result:"Membership Plans",
- d:{purpose:"Define recurring service plans.",actors:["owner"],vis:"always",chain:[["NAV","/settings/membership-plans"]],parity:"MATCH — Android Business → 'Membership Plans' (onMembershipPlans). NOTE: the standalone /memberships web nav route was flagged missing earlier; this Settings sub-page route IS registered and works."}},
+ d:{purpose:"Define recurring service plans.",actors:["owner"],vis:"always",chain:[["NAV","/settings/membership-plans"]],parity:"MATCH, Android Business → 'Membership Plans' (onMembershipPlans). NOTE: the standalone /memberships web nav route was flagged missing earlier; this Settings sub-page route IS registered and works."}},
 "custom-fields":{label:"Custom Fields",status:"ok",route:"NavLink → /settings/custom-fields",fires:"navigate",result:"Custom Fields",
- d:{purpose:"Add custom data fields to jobs/customers/estimates.",actors:["owner"],vis:"always",chain:[["NAV","/settings/custom-fields"]],parity:"MATCH — Android Business → 'Custom Fields' (onCustomFields). Registered."}},
+ d:{purpose:"Add custom data fields to jobs/customers/estimates.",actors:["owner"],vis:"always",chain:[["NAV","/settings/custom-fields"]],parity:"MATCH, Android Business → 'Custom Fields' (onCustomFields). Registered."}},
 "automation":{label:"Ailot (Automation)",status:"ok",route:"NavLink → /settings/automation",fires:"navigate",result:"Automation Rules",
- d:{purpose:"Smart automation rules.",actors:["owner"],vis:"always",chain:[["NAV","/settings/automation"]],parity:"MATCH — Android Business → '⚡ Ailot' (onAilot). Target → AutomationRules (registered)."}},
+ d:{purpose:"Smart automation rules.",actors:["owner"],vis:"always",chain:[["NAV","/settings/automation"]],parity:"MATCH, Android Business → '⚡ Ailot' (onAilot). Target → AutomationRules (registered)."}},
 "integrations":{label:"Integrations",status:"ok",route:"NavLink → /settings/integrations",fires:"navigate",result:"Integrations (QuickBooks)",
- d:{purpose:"Connect QuickBooks Online and other tools.",actors:["owner"],vis:"always",chain:[["NAV","/settings/integrations"]],parity:"MATCH — Android Business → 'Integrations' (onIntegrations). Registered."}},
+ d:{purpose:"Connect QuickBooks Online and other tools.",actors:["owner"],vis:"always",chain:[["NAV","/settings/integrations"]],parity:"MATCH, Android Business → 'Integrations' (onIntegrations). Registered."}},
 "notifications":{label:"Notifications",status:"ok",route:"NavLink → /settings/notifications",fires:"navigate (web) / inline (Android)",result:"Notifications sub-page",caveat:"Android = inline toggles",
- d:{purpose:"Manage notification preferences.",actors:["owner","office"],vis:"always",chain:[["NAV","/settings/notifications"]],parity:"DIVERGENT — web navigates to a Notifications sub-page; Android has NO sub-page, showing inline toggles on 'More' (New Jobs, Job Status Updates, Partner Jobs, New Bookings, Estimate Signed) writing device-local NotificationPreferences via notifPrefs.setX(...). Different surfaces for the same concept. Web nav resolves; Android prefs are device-local, not server-synced."}},
-"dark-mode":{label:"Dark Mode toggle",status:"ok",route:"— UI only",fires:"toggle theme",result:"theme toggled",
- d:{purpose:"Toggle dark theme.",actors:["owner","office"],vis:"always (inline toggle, no navigation)",chain:[],parity:"MATCH — both inline toggles on the landing. Web writes localStorage.up_dark_mode + classList.toggle('dark'); Android onToggleDark."}},
-"version":{label:"Version / Built",status:"ok",route:"— display only",fires:"show version",result:"version text",
- d:{purpose:"Show app version + build time.",actors:["owner","office"],vis:"footer",chain:[],parity:"MATCH — web __APP_VERSION__ / __BUILD_TIME__ footer; Android BuildConfig.VERSION_NAME (build VERSION_CODE) + BUILD_TIMESTAMP in About."}},
+ d:{purpose:"Manage notification preferences.",actors:["owner","office"],vis:"always",chain:[["NAV","/settings/notifications"]],parity:"DIVERGENT, web navigates to a Notifications sub-page; Android has NO sub-page, showing inline toggles on 'More' (New Jobs, Job Status Updates, Partner Jobs, New Bookings, Estimate Signed) writing device-local NotificationPreferences via notifPrefs.setX(...). Different surfaces for the same concept. Web nav resolves; Android prefs are device-local, not server-synced."}},
+"dark-mode":{label:"Dark Mode toggle",status:"ok",route:", UI only",fires:"toggle theme",result:"theme toggled",
+ d:{purpose:"Toggle dark theme.",actors:["owner","office"],vis:"always (inline toggle, no navigation)",chain:[],parity:"MATCH, both inline toggles on the landing. Web writes localStorage.up_dark_mode + classList.toggle('dark'); Android onToggleDark."}},
+"version":{label:"Version / Built",status:"ok",route:", display only",fires:"show version",result:"version text",
+ d:{purpose:"Show app version + build time.",actors:["owner","office"],vis:"footer",chain:[],parity:"MATCH, web __APP_VERSION__ / __BUILD_TIME__ footer; Android BuildConfig.VERSION_NAME (build VERSION_CODE) + BUILD_TIMESTAMP in About."}},
 "android-more-shortcuts":{label:"'More' nav shortcuts",status:"ok",route:"Android callbacks",fires:"navigate",result:"target screen",caveat:"Android-only placement",
- d:{purpose:"On Android, 'More' also links to Calendar, Live Map, Reports, Estimates, Invoices, Payments, Payroll, Price Book, My Network, Inventory.",actors:["owner","office"],vis:"Android only",chain:[],parity:"ANDROID-ONLY (placement) — onCalendar/onLiveMap/onReports/onEstimates/onInvoices/onPayments/onPayroll/onPricebook/onNetwork/onInventory. Web reaches these via its bottom nav / dedicated routes, not from Settings."}},
+ d:{purpose:"On Android, 'More' also links to Calendar, Live Map, Reports, Estimates, Invoices, Payments, Payroll, Price Book, My Network, Inventory.",actors:["owner","office"],vis:"Android only",chain:[],parity:"ANDROID-ONLY (placement), onCalendar/onLiveMap/onReports/onEstimates/onInvoices/onPayments/onPayroll/onPricebook/onNetwork/onInventory. Web reaches these via its bottom nav / dedicated routes, not from Settings."}},
 "android-ucm-id":{label:"My UltimatePro ID",status:"ok",route:"GET network id → copy/share",fires:"copy / Intent.ACTION_SEND",result:"ID copied/shared",caveat:"Android-only",
- d:{purpose:"Show the company's network ID; copy or share it.",actors:["owner"],vis:"Android only",chain:[["GET","/network/my-id (repo.getMyNetworkId)"]],parity:"ANDROID-ONLY — the web Settings landing has no UCM-ID card. ucmId = ultimatecrm_id; copy → clipboard; share → Intent.ACTION_SEND."}},
+ d:{purpose:"Show the company's network ID; copy or share it.",actors:["owner"],vis:"Android only",chain:[["GET","/network/my-id (repo.getMyNetworkId)"]],parity:"ANDROID-ONLY, the web Settings landing has no UCM-ID card. ucmId = ultimatecrm_id; copy → clipboard; share → Intent.ACTION_SEND."}},
 "android-sign-out":{label:"Sign Out",status:"ok",route:"confirm → onLogout",fires:"end session",result:"signed out",caveat:"Android-only here",
- d:{purpose:"Log out (with confirm dialog).",actors:["owner","office"],vis:"Android only (on this screen)",chain:[],parity:"ANDROID-ONLY (on this screen) — web Settings landing has no Sign-Out row; web logout lives elsewhere in the app chrome."}},
+ d:{purpose:"Log out (with confirm dialog).",actors:["owner","office"],vis:"Android only (on this screen)",chain:[],parity:"ANDROID-ONLY (on this screen), web Settings landing has no Sign-Out row; web logout lives elsewhere in the app chrome."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -206,7 +206,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -221,7 +221,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

@@ -10,7 +10,6 @@ import { useAuth } from '../hooks/useAuth';
 import api, { formatDate, formatTime, jobsApi } from '../lib/api';
 import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select, Toggle, StepperInput } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
-import SignaturePad from '../components/SignaturePad';
 import { formatInJobZone } from '../lib/timezone';
 
 const JOB_STATUSES = [
@@ -168,9 +167,7 @@ export default function JobDetail() {
   const [techPerms, setTechPerms]         = useState(null);
   const [techPermSaving, setTechPermSaving] = useState(false);
 
-  // Signature / complete / delete
-  const [showSignature, setShowSignature]   = useState(false);
-  const [savingSig, setSavingSig]           = useState(false);
+  // Complete / delete
   const [showComplete, setShowComplete]     = useState(false);
   const [completionNotes, setCompletionNotes] = useState('');
   const [completing, setCompleting]         = useState(false);
@@ -393,16 +390,6 @@ export default function JobDetail() {
     finally { setHistLoading(prev => ({ ...prev, [section]: false })); }
   }
 
-  async function handleCaptureSignature(base64) {
-    setSavingSig(true);
-    try {
-      await jobsApi.captureSignature(id, base64);
-      setShowSignature(false);
-      showSnack('Signature captured!', 'success');
-      refetch();
-    } catch (err) { showSnack(err.response?.data?.error || 'Failed to save signature', 'error'); }
-    finally { setSavingSig(false); }
-  }
 
   async function handleCompleteJob() {
     setCompleting(true);
@@ -1545,11 +1532,6 @@ export default function JobDetail() {
             )}
           </div>
          )}
-      </Modal>
-
-      {/* Signature */}
-      <Modal isOpen={showSignature} onClose={() => setShowSignature(false)} title="Customer Signature">
-        <SignaturePad onSave={handleCaptureSignature} onCancel={() => setShowSignature(false)} />
       </Modal>
 
       {/* Complete Job */}

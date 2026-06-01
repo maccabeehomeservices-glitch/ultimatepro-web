@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>UltimatePro · Atlas Overview — by Spine</title>
+<title>UltimatePro · Atlas Overview, by Spine</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -78,7 +78,7 @@
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="fix-list.html">fix list</a> › overview by spine</div>
 
-  <p class="intro">Spine membership is read from each map's <code>side_effects</code> / action data — which of the four cross-cutting concerns a screen's buttons actually move. The badge on each row is that screen's <b>worst</b> action status (ok → partial → broken → dead). Click any screen to open its atlas.</p>
+  <p class="intro">Spine membership is read from each map's <code>side_effects</code> / action data, which of the four cross-cutting concerns a screen's buttons actually move. The badge on each row is that screen's <b>worst</b> action status (ok → partial → broken → dead). Click any screen to open its atlas.</p>
 
   <div class="stats" id="stats"></div>
 
@@ -94,7 +94,7 @@
 const SPINES=[
  {key:"lifecycle",title:"Lifecycle",color:"var(--lifecycle)",desc:"status changes · create / delete / restore records",
   screens:[
-   {nm:"New Job",id:"new-job",note:"Creates the job record — schedule, customer, assignment.",status:"broken"},
+   {nm:"New Job",id:"new-job",note:"Creates the job record, schedule, customer, assignment.",status:"broken"},
    {nm:"Job Detail",id:"job-detail",note:"The status engine: dispatch → arrived → complete, plus delete & restore.",status:"broken"},
    {nm:"Complete Job",id:"complete-job",note:"Flips the job to completed and writes earnings.",status:"partial"},
    {nm:"Calendar",id:"calendar",note:"Date-filtered view of scheduled jobs.",status:"ok"},
@@ -102,7 +102,7 @@ const SPINES=[
    {nm:"Customer Detail",id:"customer-detail",note:"Browse a customer's jobs / estimates / invoices.",status:"broken"},
    {nm:"Dashboard",id:"dashboard",note:"Paste-ticket parses pasted text into a new job.",status:"broken"},
    {nm:"Estimate Builder",id:"estimate-builder",note:"Author → send → sign → convert an estimate into a job/invoice.",status:"broken"},
-   {nm:"Inventory",id:"inventory",note:"Part records across warehouse + trucks — transfer, restock, auto-deduct.",status:"broken"},
+   {nm:"Inventory",id:"inventory",note:"Part records across warehouse + trucks, transfer, restock, auto-deduct.",status:"broken"},
    {nm:"Membership Plans",id:"membership-plans",note:"Plan templates; enrolling a customer schedules recurring jobs.",status:"partial"},
    {nm:"Custom Fields",id:"custom-fields",note:"Defines extra fields stored on job/customer/estimate/invoice records.",status:"partial"},
    {nm:"Online Booking",id:"online-booking",note:"Public booking page turns a request into a booking → job.",status:"broken"},
@@ -113,11 +113,11 @@ const SPINES=[
   screens:[
    {nm:"Complete Job",id:"complete-job",note:"Writes the three-slice profit split + earnings; web now captures parts/CC for partner jobs (Phase 1).",status:"partial"},
    {nm:"Job Detail",id:"job-detail",note:"Charge-payment, complete → profit/earnings, line-item totals.",status:"broken"},
-   {nm:"Invoice Detail",id:"invoice-detail",note:"Collect on an invoice — send, charge, ScanPay, receipt, deposit.",status:"broken"},
-   {nm:"Estimate Builder",id:"estimate-builder",note:"Deposit + convert to invoice — front of the money spine.",status:"broken"},
+   {nm:"Invoice Detail",id:"invoice-detail",note:"Collect on an invoice, send, charge, ScanPay, receipt, deposit.",status:"broken"},
+   {nm:"Estimate Builder",id:"estimate-builder",note:"Deposit + convert to invoice, front of the money spine.",status:"broken"},
    {nm:"Payments",id:"payments",note:"Record / charge a payment, ScanPay, receipt, ledger.",status:"broken"},
    {nm:"Payroll",id:"payroll",note:"Field-team earnings off the profit engine.",status:"dead"},
-   {nm:"Reports",id:"reports",note:"Business reporting — revenue, profit, by source.",status:"ok"},
+   {nm:"Reports",id:"reports",note:"Business reporting, revenue, profit, by source.",status:"ok"},
    {nm:"Dashboard",id:"dashboard",note:"Revenue / KPI tiles, 2nd-chance, memberships.",status:"broken"},
    {nm:"Membership Plans",id:"membership-plans",note:"Recurring plan price + billing cadence.",status:"partial"},
    {nm:"Job Sources",id:"job-sources",note:"profit_allocation_pct feeds the profit engine; tech commission rules.",status:"ok"},
@@ -128,9 +128,9 @@ const SPINES=[
  {key:"comm",title:"Communication",color:"var(--comm)",desc:"SMS · push · email · receipts · reminders",
   screens:[
    {nm:"Phone / SMS",id:"phone",note:"Call + SMS hub; second-chance lead recovery (Android).",status:"ok"},
-   {nm:"SMS Thread",id:"sms-thread",note:"One conversation — read history, send via Twilio.",status:"broken"},
+   {nm:"SMS Thread",id:"sms-thread",note:"One conversation, read history, send via Twilio.",status:"broken"},
    {nm:"Job Detail",id:"job-detail",note:"Messages tab + dispatch/arrived SMS + reminder method (web SMS send broken).",status:"broken"},
-   {nm:"Customer Detail",id:"customer-detail",note:"Per-customer SMS thread (web composer hidden — convId null).",status:"broken"},
+   {nm:"Customer Detail",id:"customer-detail",note:"Per-customer SMS thread (web composer hidden, convId null).",status:"broken"},
    {nm:"New Job",id:"new-job",note:"Save & Send texts the customer (web) / the tech (Android).",status:"broken"},
    {nm:"Invoice Detail",id:"invoice-detail",note:"Send the invoice + payment receipt.",status:"broken"},
    {nm:"Review Platforms",id:"review-platforms",note:"The review link appended to payment receipts.",status:"ok"},
@@ -142,10 +142,10 @@ const SPINES=[
   screens:[
    {nm:"Team Members",id:"team-members",note:"App users + roles (admin/manager/tech/dispatcher), deactivate/reactivate.",status:"broken"},
    {nm:"Roster Technicians",id:"roster-techs",note:"Field techs without app logins.",status:"ok"},
-   {nm:"Company Profile",id:"company-profile",note:"The tenant's identity — name, logo, contact, UltimatePro network ID.",status:"ok"},
-   {nm:"Network",id:"network",note:"Contractor partners — what a partner can see, invite, pause.",status:"ok"},
+   {nm:"Company Profile",id:"company-profile",note:"The tenant's identity, name, logo, contact, UltimatePro network ID.",status:"ok"},
+   {nm:"Network",id:"network",note:"Contractor partners, what a partner can see, invite, pause.",status:"ok"},
    {nm:"Job Detail",id:"job-detail",note:"Tech/partner permissions + send-to-partner (web wrong verb → 404).",status:"broken"},
-   {nm:"Settings",id:"settings",note:"Config hub — routes to team, roster, company, integrations.",status:"ok"},
+   {nm:"Settings",id:"settings",note:"Config hub, routes to team, roster, company, integrations.",status:"ok"},
    {nm:"Job Sources",id:"job-sources",note:"Source contacts / referral partners.",status:"ok"},
    {nm:"Integrations (QuickBooks)",id:"integrations",note:"OAuth connection + token ownership per company.",status:"dead"},
   ]},

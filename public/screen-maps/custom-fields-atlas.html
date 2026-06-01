@@ -142,14 +142,14 @@
       <li><b>Android's <code>dropdown</code> field type is invalid.</b> The backend validator + <code>custom_fields.field_type</code> CHECK use <b><code>select</code></b>; Android sends <b><code>dropdown</code></b>, so creating a dropdown from Android <b>400s ("Invalid field type")</b>. Web uses <code>select</code> correctly.</li>
       <li><b>Android edit drops Type/Entity.</b> <code>PUT /company/custom-fields/:id</code> only honours <code>label, options, required, sort_order, active</code>. Android's edit dialog exposes &amp; sends Type and Entity, but they're silently ignored. Web hides those on edit (correct).</li>
       <li><b>Entity &amp; type coverage differ.</b> Web: 4 entities (job/customer/estimate/invoice) + all 8 field types. Android: 3 entities (no <code>invoice</code>) + 5 types (text/number/dropdown/date/checkbox), missing select/textarea/phone/email. Invoice fields are invisible on Android.</li>
-      <li><b>Definitions vs values.</b> This screen edits <code>custom_fields</code> (definitions). Captured values live in the entity's <code>custom_fields</code> JSONB — confirmed for jobs (<code>jobs.custom_fields</code>, jobs.js:370/701). Soft-deleting a definition hides the input but keeps stored values.</li>
-      <li><b>Soft delete, no real reactivation.</b> <code>DELETE</code> sets <code>active=false</code> and the list loads only <code>active=true</code>, so a removed field can't be reopened (Android's Active toggle is moot). <code>sort_order</code> exists but neither surface sets it (always 0). Android's delete dialog says "permanently deleted" — it's actually a soft delete.</li>
+      <li><b>Definitions vs values.</b> This screen edits <code>custom_fields</code> (definitions). Captured values live in the entity's <code>custom_fields</code> JSONB, confirmed for jobs (<code>jobs.custom_fields</code>, jobs.js:370/701). Soft-deleting a definition hides the input but keeps stored values.</li>
+      <li><b>Soft delete, no real reactivation.</b> <code>DELETE</code> sets <code>active=false</code> and the list loads only <code>active=true</code>, so a removed field can't be reopened (Android's Active toggle is moot). <code>sort_order</code> exists but neither surface sets it (always 0). Android's delete dialog says "permanently deleted", it's actually a soft delete.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Custom Fields · rendered from custom-fields.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,15 +161,15 @@ const SECTIONS=[
 ];
 const A={
 "list":{label:"List fields",status:"ok",route:"GET /company/custom-fields",fires:"SELECT active fields",result:"grouped by entity",caveat:"Android hides invoice",
- d:{purpose:"Show defined fields grouped by Jobs/Customers/Estimates/Invoices.",actors:["owner","admin"],vis:"on open",chain:[["GET","/company/custom-fields"]],parity:"MATCH (mostly) — both GET /company/custom-fields (active only, ORDER BY entity, sort_order). Web groups all 4 entities; Android's ENTITIES is job/customer/estimate only → it never renders an invoice group, so invoice fields created on web won't appear on Android."}},
+ d:{purpose:"Show defined fields grouped by Jobs/Customers/Estimates/Invoices.",actors:["owner","admin"],vis:"on open",chain:[["GET","/company/custom-fields"]],parity:"MATCH (mostly), both GET /company/custom-fields (active only, ORDER BY entity, sort_order). Web groups all 4 entities; Android's ENTITIES is job/customer/estimate only → it never renders an invoice group, so invoice fields created on web won't appear on Android."}},
 "create":{label:"Add field",status:"partial",route:"POST /company/custom-fields",fires:"validate + INSERT",result:"field created (Android dropdown 400s)",caveat:"Android 'dropdown' invalid",
- d:{purpose:"Create a new custom field definition.",actors:["owner","admin"],vis:"'Add Field' (web) / + (Android)",chain:[["POST","/company/custom-fields"]],parity:"DIVERGENT — web's 8 type options exactly match the backend (select for dropdowns) and all 4 entities work. Android offers only 5 types (text/number/dropdown/date/checkbox) and its 'dropdown' is NOT a valid field_type (validator + CHECK use 'select') → Android dropdown 400s 'Invalid field type'; only text/number/date/checkbox succeed from Android, and it lacks select/textarea/phone/email + the invoice entity. field_key derived from label (^[a-z0-9_]+$)."}},
+ d:{purpose:"Create a new custom field definition.",actors:["owner","admin"],vis:"'Add Field' (web) / + (Android)",chain:[["POST","/company/custom-fields"]],parity:"DIVERGENT, web's 8 type options exactly match the backend (select for dropdowns) and all 4 entities work. Android offers only 5 types (text/number/dropdown/date/checkbox) and its 'dropdown' is NOT a valid field_type (validator + CHECK use 'select') → Android dropdown 400s 'Invalid field type'; only text/number/date/checkbox succeed from Android, and it lacks select/textarea/phone/email + the invoice entity. field_key derived from label (^[a-z0-9_]+$)."}},
 "edit":{label:"Edit field",status:"partial",route:"PUT /company/custom-fields/:id",fires:"COALESCE label/options/required/active",result:"label/options/required saved",caveat:"Android Type/Entity dropped",
- d:{purpose:"Update a field's label / options / required (and active).",actors:["owner","admin"],vis:"edit per row",chain:[["PUT","/company/custom-fields/:id"]],parity:"DIVERGENT — PUT honours only label, options, required, sort_order, active. Web sends just {label, options, required} (hides Type/Entity on edit — correct). Android sends {label, field_type, entity, required, active, options}: field_type & entity are silently ignored by the server (the user's type/entity change no-ops). Android adds an Active toggle web lacks — but inactive fields can't be reloaded (GET filters active=true), so reactivation is effectively unreachable on both."}},
+ d:{purpose:"Update a field's label / options / required (and active).",actors:["owner","admin"],vis:"edit per row",chain:[["PUT","/company/custom-fields/:id"]],parity:"DIVERGENT, PUT honours only label, options, required, sort_order, active. Web sends just {label, options, required} (hides Type/Entity on edit, correct). Android sends {label, field_type, entity, required, active, options}: field_type & entity are silently ignored by the server (the user's type/entity change no-ops). Android adds an Active toggle web lacks, but inactive fields can't be reloaded (GET filters active=true), so reactivation is effectively unreachable on both."}},
 "delete":{label:"Delete field (soft)",status:"ok",route:"DELETE /company/custom-fields/:id",fires:"active=false",result:"hidden from forms",caveat:"soft delete",
- d:{purpose:"Remove a field from forms.",actors:["owner","admin"],vis:"trash per row, with confirm",chain:[["DELETE","/company/custom-fields/:id"]],parity:"MATCH — both soft-delete (UPDATE active=false; row kept, data preserved). Field disappears from the list (GET filters active). Web's copy is accurate ('hidden from forms, existing data preserved'); Android's dialog says 'permanently deleted', which is wrong."}},
+ d:{purpose:"Remove a field from forms.",actors:["owner","admin"],vis:"trash per row, with confirm",chain:[["DELETE","/company/custom-fields/:id"]],parity:"MATCH, both soft-delete (UPDATE active=false; row kept, data preserved). Field disappears from the list (GET filters active). Web's copy is accurate ('hidden from forms, existing data preserved'); Android's dialog says 'permanently deleted', which is wrong."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -185,7 +185,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -200,7 +200,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

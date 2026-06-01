@@ -1,4 +1,4 @@
-# Screen Map — Payments (Collect + Receipt)
+# Screen Map, Payments (Collect + Receipt)
 
 > **Format:** Action-Map Schema v1. Source of truth; the HTML atlas is rendered from it.
 > When code changes this screen, update this file in the same commit. Reality on disk wins.
@@ -44,7 +44,7 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **side_effects:** inserts a `payments` row (`completed`), recomputes `amount_paid`/`balance_due`, sets `status` paid (≤0) else partial, sets `payment_method`+`paid_at`, fires Joby `invoice_paid` when fully paid.
 - **end_state:** Payment recorded; Android → ReceiptScreen (`onPaid`).
 - **failure_modes:** none (both payloads match the handler).
-- **parity:** PARTIAL — same endpoint; web inline modal (5 methods), Android dedicated method-grid screen (6 methods incl. ScanPay).
+- **parity:** PARTIAL, same endpoint; web inline modal (5 methods), Android dedicated method-grid screen (6 methods incl. ScanPay).
 - **status:** OK
 - **status_note:** Both record manual methods through `/invoices/:id/payment` (not the standalone `POST /payments`).
 
@@ -61,7 +61,7 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **side_effects:** creates a ScanPay order; on paid → `onPaid` (→ ReceiptScreen).
 - **end_state:** Payment captured via processor.
 - **failure_modes:** none observed (route exists).
-- **parity:** ANDROID-ONLY — web has no QR generate path here (its only ScanPay button is the broken `scanpay/charge`).
+- **parity:** ANDROID-ONLY, web has no QR generate path here (its only ScanPay button is the broken `scanpay/charge`).
 - **status:** OK
 - **status_note:** `GET /invoices/:id/scanpay-qr` also exists but is not surfaced by the web Invoice Detail.
 
@@ -80,8 +80,7 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **failure_modes:** none observed (route exists).
 - **parity:** ANDROID-ONLY.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `payments.scanpay-charge`
 - **label:** "📲 ScanPay QR / 🔗 ScanPay Link"
 - **section:** collect
@@ -95,7 +94,7 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **side_effects:** creates a ScanPay order (`createScanPayInvoice`); Link SMS-texts the checkout URL; on paid, refetches the invoice.
 - **end_state:** Payment captured via the ScanPay checkout URL.
 - **failure_modes:** none observed.
-- **parity:** MATCH — web now mirrors Android's QR/link dialogs + polling (Phase 0 [SCANPAY-404] fix, 2026-05-31). The dead `POST /payments/scanpay/charge` button was removed; that route never existed. The leftover `scanpayCharge` method is an unused remnant on both clients.
+- **parity:** MATCH, web now mirrors Android's QR/link dialogs + polling (Phase 0 [SCANPAY-404] fix, 2026-05-31). The dead `POST /payments/scanpay/charge` button was removed; that route never existed. The leftover `scanpayCharge` method is an unused remnant on both clients.
 - **status:** OK
 - **status_note:** Phase 0 [SCANPAY-404] (2026-05-31): the only working ScanPay path was always Android's QR/link; web now uses the same. Direct charge is not part of this ScanPay integration.
 
@@ -112,7 +111,7 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **side_effects:** builds a receipt SMS (`amount_paid`, invoice #, company) + optional default `review_platforms` link; sends SMS + email.
 - **end_state:** Receipt sent.
 - **failure_modes:** none observed.
-- **parity:** PARTIAL — same endpoint; web inline modal vs Android `ReceiptScreen`.
+- **parity:** PARTIAL, same endpoint; web inline modal vs Android `ReceiptScreen`.
 - **status:** OK
 - **status_note:** Mirrors the invoice-detail `send-receipt` action.
 
@@ -122,14 +121,14 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 - **actors:** office, owner
 - **purpose:** Review collected payments over a date range; tap through to the invoice.
 - **visibility:** web `/payments` page (always). Android has a `PaymentsScreen` (not deep-read).
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** `GET /payments?from&to&page&limit`
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** read-only; returns `{payments, total_collected, total}`.
 - **end_state:** Ledger shown; rows link to `/invoices/:invoice_id`.
 - **failure_modes:** none.
-- **parity:** PARTIAL — web list verified; Android `PaymentsScreen` exists but was **not deep-read** (UNVERIFIED).
+- **parity:** PARTIAL, web list verified; Android `PaymentsScreen` exists but was **not deep-read** (UNVERIFIED).
 - **status:** OK
 - **status_note:** Web page is read-only (no create/refund controls).
 
@@ -152,10 +151,10 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **Web ScanPay now works** (Phase 0 [SCANPAY-404] fix, 2026-05-31) — web has ScanPay QR + Link buttons using `POST /payments/scanpay-qr` / `/scanpay-link` + `GET /scanpay-status/:invoiceId` polling (3 s / 5 s), mirroring Android. The non-existent `POST /payments/scanpay/charge` was removed; it was never a real route (a stale backend test for it was also removed).
-- **ScanPay QR/link generate flow is now on both surfaces** — web mirrors Android's QR-image + texted-link dialogs. (`GET /invoices/:id/scanpay-qr` returns only a portal URL, not a ScanPay order, so neither surface uses it for the charge flow.)
-- **`POST /payments` (standalone create) has no audited consumer** — it validates method, applies to the invoice (`applyPaymentToInvoice`), and notifies the owner on payments ≥ $500, but `InvoiceDetail` and the `/payments` page both use `POST /invoices/:id/payment` / read-only `GET /payments` instead. `paymentsApi.create` is **UNVERIFIED** for a live caller.
-- **Two payment-write paths** — `POST /invoices/:id/payment` (used by the UIs) and `POST /payments` (standalone); both insert a completed `payments` row and update the invoice, via slightly different code.
+- **Web ScanPay now works** (Phase 0 [SCANPAY-404] fix, 2026-05-31), web has ScanPay QR + Link buttons using `POST /payments/scanpay-qr` / `/scanpay-link` + `GET /scanpay-status/:invoiceId` polling (3 s / 5 s), mirroring Android. The non-existent `POST /payments/scanpay/charge` was removed; it was never a real route (a stale backend test for it was also removed).
+- **ScanPay QR/link generate flow is now on both surfaces**, web mirrors Android's QR-image + texted-link dialogs. (`GET /invoices/:id/scanpay-qr` returns only a portal URL, not a ScanPay order, so neither surface uses it for the charge flow.)
+- **`POST /payments` (standalone create) has no audited consumer**, it validates method, applies to the invoice (`applyPaymentToInvoice`), and notifies the owner on payments ≥ $500, but `InvoiceDetail` and the `/payments` page both use `POST /invoices/:id/payment` / read-only `GET /payments` instead. `paymentsApi.create` is **UNVERIFIED** for a live caller.
+- **Two payment-write paths**, `POST /invoices/:id/payment` (used by the UIs) and `POST /payments` (standalone); both insert a completed `payments` row and update the invoice, via slightly different code.
 - **Method-set note:** Android offers Venmo/CashApp; these ride `/invoices/:id/payment` as `method='venmo'`. The final `payments_method_check` (per the data-model audit) includes `venmo`/`cashapp` but excludes `card`/`scanpay`/`paypal`.
 - **ScanPay earnings-gap FIXED** (Money Commit B, 2026-06-01): the webhook previously force-completed the linked job with a bare `UPDATE status='completed'` and wrote NO earnings. It now calls `reconcileJobEarnings`, which completes the job AND fires earnings on collected money dated to the ScanPay clear-day. A job paid via ScanPay *before* the work was marked done (`actual_end` null) is NOT auto-completed (Decision 3a: payment alone does not imply the work is finished).
 - **Refund clawback** (Money Commit B): `getJobGross` nets `refund_amount`; the refund handler calls `reconcileJobEarnings`, so a refund drops `tech_earnings` to the now-lower kept amount, reopens `completed` → `holding` if a balance reopens, and resets a confirmed partner split to `pending`. The collections report (`routes/reports.js`) was also netted to `SUM(amount - refund_amount)` so it agrees with `getJobGross`.

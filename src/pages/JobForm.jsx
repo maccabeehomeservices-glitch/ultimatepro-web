@@ -123,8 +123,6 @@ export default function JobForm() {
     source_option: 'company',  // 'company' | contact id | channel id
     // type
     job_type: 'Service',
-    // edit-only
-    status: 'unscheduled',
   });
 
   // ── customer search ────────────────────────────────────────────────────────
@@ -295,7 +293,6 @@ export default function JobForm() {
       notify_sms: true, notify_email: false, notify_push: true,
       source_option,
       job_type: j.type ? (j.type.charAt(0).toUpperCase() + j.type.slice(1)) : 'Service',
-      status: j.status || 'unscheduled',
     });
     setCustomerSearch(j.customer_name || j.customer?.name || '');
   }, [isEdit, jobData]);
@@ -914,25 +911,6 @@ export default function JobForm() {
           )}
         </Card>
 
-        {/* ── STATUS (edit only) ─────────────────────────────────────────── */}
-        {isEdit && (
-          <Card>
-            <SectionLabel>Status</SectionLabel>
-            <select value={form.status}
-              onChange={e => setForm(prev => ({ ...prev, status: e.target.value }))}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
-              {[
-                { value:'unscheduled', label:'Unscheduled' },
-                { value:'scheduled',   label:'Scheduled'   },
-                { value:'en_route',    label:'En Route'    },
-                { value:'in_progress', label:'In Progress' },
-                { value:'completed',   label:'Completed'   },
-                { value:'holding',     label:'Holding'     },
-                { value:'cancelled',   label:'Cancelled'   },
-              ].map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-            </select>
-          </Card>
-        )}
 
         {/* ── ACTION BUTTONS ─────────────────────────────────────────────── */}
         <div className="flex gap-3 pb-4">

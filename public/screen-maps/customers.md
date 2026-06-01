@@ -1,4 +1,4 @@
-# Screen Map — Customers (List)
+# Screen Map, Customers (List)
 
 > **Format:** Action-Map Schema v1. Source of truth; the HTML atlas is rendered from it.
 > When code changes this screen, update this file in the same commit. Reality on disk wins.
@@ -36,51 +36,48 @@
 - **actors:** office, owner
 - **purpose:** Find customers by name/phone/email.
 - **visibility:** always
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** `GET /customers?search=` (web debounced 300 ms; Android live `vm.load`)
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** `read-refresh`
 - **end_state:** Filtered list.
 - **failure_modes:** none.
-- **parity:** MATCH — both filter via the `search` query param.
+- **parity:** MATCH, both filter via the `search` query param.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `customers.type-filter`
 - **label:** All / Residential / Commercial chips
 - **section:** filters
 - **actors:** office, owner
 - **purpose:** Filter the list by customer type.
 - **visibility:** web only.
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** `GET /customers?type=residential|commercial`
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** `read-refresh`
 - **end_state:** Filtered list.
 - **failure_modes:** none.
-- **parity:** WEB-ONLY — Android shows a type badge per row but has no type filter (search only).
+- **parity:** WEB-ONLY, Android shows a type badge per row but has no type filter (search only).
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `customers.refresh`
 - **label:** Refresh
 - **section:** header
 - **actors:** office, owner
 - **purpose:** Reload the list.
 - **visibility:** always
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** re-issues `GET /customers`
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** `read-refresh`
 - **end_state:** Fresh list.
 - **failure_modes:** none.
-- **parity:** PARTIAL — web has a Refresh button; Android uses pull-to-refresh + an `ON_RESUME` reload.
+- **parity:** PARTIAL, web has a Refresh button; Android uses pull-to-refresh + an `ON_RESUME` reload.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `customers.pagination`
 - **label:** Load more / scroll
 - **section:** list footer
@@ -88,30 +85,29 @@
 - **purpose:** Page through results beyond the first 50.
 - **visibility:** web: a "Load more customers..." button when a full page (50) returned. Android: scroll list.
 - **precondition:** more results exist.
-- **confirm:** —
+- **confirm:** n/a
 - **route_chain:** `GET /customers?page=N&limit=50`
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** appends to the list.
 - **end_state:** More rows.
 - **failure_modes:** none observed.
-- **parity:** DIVERGENT — web is explicit page-increment "Load more"; Android's pagination behavior inside `vm.load` is **UNVERIFIED** (no visible load-more control).
+- **parity:** DIVERGENT, web is explicit page-increment "Load more"; Android's pagination behavior inside `vm.load` is **UNVERIFIED** (no visible load-more control).
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `customers.customer-open`
 - **label:** Customer row/card
 - **section:** list
 - **actors:** office, owner
 - **purpose:** Open a customer's detail.
 - **visibility:** when not in selection mode.
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** navigate `/customers/:id`
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** `navigate`
 - **end_state:** Customer Detail.
 - **failure_modes:** none.
-- **parity:** MATCH — both open Customer Detail (Android long-press enters selection mode instead).
+- **parity:** MATCH, both open Customer Detail (Android long-press enters selection mode instead).
 - **status:** OK
 - **status_note:** Rows show Member / Returning badges (web) and a type/Member badge (Android).
 
@@ -121,34 +117,32 @@
 - **actors:** office, owner
 - **purpose:** Create a new customer.
 - **visibility:** always (FAB + header icon; web empty-state also has "Add Customer").
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** navigate `/customers/new` → `POST /customers` (on save in the form)
-- **request_body:** (form) — not built on this screen
+- **request_body:** (form), not built on this screen
 - **side_effects:** `navigate`
 - **end_state:** New Customer form.
 - **failure_modes:** none.
-- **parity:** MATCH — both have a FAB/header "New".
+- **parity:** MATCH, both have a FAB/header "New".
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `customers.import`
 - **label:** Import
 - **section:** header
 - **actors:** office, owner
 - **purpose:** Bulk-import customers from a file.
 - **visibility:** always (header icon/button).
-- **precondition:** —
-- **confirm:** —
+- **precondition:** n/a
+- **confirm:** n/a
 - **route_chain:** navigate `/import?type=customers` → Import wizard (`POST /import/preview` / `/import/execute`)
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** `navigate`
 - **end_state:** Import wizard.
 - **failure_modes:** none.
-- **parity:** MATCH — both link to the customers import wizard.
+- **parity:** MATCH, both link to the customers import wizard.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ### `customers.bulk-delete`
 - **label:** Select → Delete Selected
 - **section:** selection mode
@@ -158,20 +152,19 @@
 - **precondition:** ≥1 selected.
 - **confirm:** web `confirm()`; Android AlertDialog.
 - **route_chain:** `DELETE /customers/:id` (looped per selected id)
-- **request_body:** —
+- **request_body:** n/a
 - **side_effects:** deletes each customer row; reloads page 1.
 - **end_state:** Selected customers removed.
 - **failure_modes:** none observed (web swallows individual failures in the loop).
-- **parity:** MATCH — both bulk-delete via repeated `DELETE /customers/:id`.
+- **parity:** MATCH, both bulk-delete via repeated `DELETE /customers/:id`.
 - **status:** OK
-- **status_note:** —
-
+- **status_note:** n/a
 ---
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **Type filter is web-only** — Android shows a type badge per row but offers no residential/commercial filter (search only).
-- **Pagination differs** — web has an explicit "Load more" (page++); Android's in-`vm.load` paging is UNVERIFIED (no visible control).
-- **Refresh** — web button vs Android pull-to-refresh + `ON_RESUME`.
-- **Selection entry differs** — web "Select" button vs Android long-press; both bulk-delete the same way.
+- **Type filter is web-only**, Android shows a type badge per row but offers no residential/commercial filter (search only).
+- **Pagination differs**, web has an explicit "Load more" (page++); Android's in-`vm.load` paging is UNVERIFIED (no visible control).
+- **Refresh**, web button vs Android pull-to-refresh + `ON_RESUME`.
+- **Selection entry differs**, web "Select" button vs Android long-press; both bulk-delete the same way.
 - **UNVERIFIED:** Android `CustomerViewModel.load` pagination; the exact `{customers}` response fields used for Member/Returning badges (`job_count`/`has_membership` web vs `has_active_membership` Android).

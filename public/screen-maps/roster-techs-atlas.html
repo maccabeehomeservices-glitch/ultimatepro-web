@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Roster Technicians<span class="sub">CRUD for field techs without app logins — name, phone, email, commission %, CC-fee %. Clean, fully matched web ↔ Android.</span></h1>
+    <h1>Roster Technicians<span class="sub">CRUD for field techs without app logins, name, phone, email, commission %, CC-fee %. Clean, fully matched web ↔ Android.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>41d0a83</b></div>
   </header>
 
@@ -141,15 +141,15 @@
     <ul>
       <li><b><code>roster_techs</code> table DDL is not in committed SQL.</b> The table is used across roster-techs.js, jobs.js, payroll.js, profit.js, reports.js, cron.js, but no <code>CREATE TABLE roster_techs</code> exists in <code>db/schema.sql</code> or any <code>db/migrate_*.sql</code>. <b>UNVERIFIED</b> column types; the columns <code>name, phone, email, commission_pct, cc_fee_pct, is_active, company_id</code> are used consistently by the handler + both clients.</li>
       <li><b>Input bounds differ.</b> Android uses steppers clamped to commission 0–100 % and CC-fee 0–10 %; web uses free <code>type="number"</code> inputs (no min/max), so web could submit out-of-range / negative percentages (backend stores whatever is sent).</li>
-      <li><b>CC-fee % is roster-only.</b> Unlike <code>users</code> (commission_pct but no cc_fee_pct), roster techs carry <code>cc_fee_pct</code> — this screen is the only place it's edited.</li>
+      <li><b>CC-fee % is roster-only.</b> Unlike <code>users</code> (commission_pct but no cc_fee_pct), roster techs carry <code>cc_fee_pct</code>, this screen is the only place it's edited.</li>
       <li><b>Title mismatch:</b> web "Roster Technicians" vs Android "Technicians" (cosmetic); same <code>roster_techs</code> table.</li>
-      <li><b>Gating is inline regex</b> (<code>req.userRole.match(/owner|admin/)</code>), not the shared <code>ownerOrAdmin</code> middleware — behaviourally equivalent here, different pattern. GET is open to any authenticated user.</li>
+      <li><b>Gating is inline regex</b> (<code>req.userRole.match(/owner|admin/)</code>), not the shared <code>ownerOrAdmin</code> middleware, behaviourally equivalent here, different pattern. GET is open to any authenticated user.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Roster Technicians · rendered from roster-techs.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,15 +161,15 @@ const SECTIONS=[
 ];
 const A={
 "list":{label:"List roster techs",status:"ok",route:"GET /roster-techs",fires:"SELECT active techs",result:"tech cards",
- d:{purpose:"Show active roster technicians with commission/CC-fee.",actors:["owner","admin"],vis:"on open",chain:[["GET","/roster-techs"]],parity:"MATCH — web useGet('/roster-techs') (data?.techs||data?.technicians||data → bare array); Android repo.getRosterTechs(). Server returns active only (is_active=true ORDER BY name), so deactivated techs never appear on either surface."}},
+ d:{purpose:"Show active roster technicians with commission/CC-fee.",actors:["owner","admin"],vis:"on open",chain:[["GET","/roster-techs"]],parity:"MATCH, web useGet('/roster-techs') (data?.techs||data?.technicians||data → bare array); Android repo.getRosterTechs(). Server returns active only (is_active=true ORDER BY name), so deactivated techs never appear on either surface."}},
 "create":{label:"Add technician",status:"ok",route:"POST /roster-techs",fires:"INSERT roster_techs",result:"new tech",caveat:"owner/admin · name req",
- d:{purpose:"Add a roster tech.",actors:["owner","admin"],vis:"'Add' (web) / FAB (Android)",chain:[["POST","/roster-techs"]],parity:"MATCH — same endpoint + body {name,phone,email,commission_pct,cc_fee_pct}. Web coerces pcts with Number()||0; Android sends Doubles. Both require a name client-side; backend also requires name. 400 if name missing; 403 if not owner/admin."}},
+ d:{purpose:"Add a roster tech.",actors:["owner","admin"],vis:"'Add' (web) / FAB (Android)",chain:[["POST","/roster-techs"]],parity:"MATCH, same endpoint + body {name,phone,email,commission_pct,cc_fee_pct}. Web coerces pcts with Number()||0; Android sends Doubles. Both require a name client-side; backend also requires name. 400 if name missing; 403 if not owner/admin."}},
 "edit":{label:"Edit technician",status:"ok",route:"PUT /roster-techs/:id",fires:"COALESCE update",result:"updated tech",caveat:"owner/admin",
- d:{purpose:"Update a roster tech's fields.",actors:["owner","admin"],vis:"edit icon per row",chain:[["PUT","/roster-techs/:id"]],parity:"MATCH — same endpoint + body keys. COALESCE update of name, phone, email, commission_pct, cc_fee_pct, is_active. 403 if not owner/admin; 404 if not found."}},
+ d:{purpose:"Update a roster tech's fields.",actors:["owner","admin"],vis:"edit icon per row",chain:[["PUT","/roster-techs/:id"]],parity:"MATCH, same endpoint + body keys. COALESCE update of name, phone, email, commission_pct, cc_fee_pct, is_active. 403 if not owner/admin; 404 if not found."}},
 "delete":{label:"Delete technician",status:"ok",route:"DELETE /roster-techs/:id",fires:"is_active=false + unassign jobs",result:"removed from list",caveat:"soft delete + unassign",
- d:{purpose:"Remove a roster tech and unassign them from open jobs.",actors:["owner","admin"],vis:"trash icon per row",chain:[["DELETE","/roster-techs/:id"]],parity:"MATCH — both DELETE /roster-techs/:id → UPDATE is_active=false PLUS UPDATE jobs SET assigned_roster_tech_id=NULL for that tech's non-completed/cancelled/deleted jobs. Android's dialog accurately says 'removed and unassigned from any open jobs'; web says 'cannot be undone' (it's a soft delete, but the job-unassign is real). 403 if not owner/admin."}},
+ d:{purpose:"Remove a roster tech and unassign them from open jobs.",actors:["owner","admin"],vis:"trash icon per row",chain:[["DELETE","/roster-techs/:id"]],parity:"MATCH, both DELETE /roster-techs/:id → UPDATE is_active=false PLUS UPDATE jobs SET assigned_roster_tech_id=NULL for that tech's non-completed/cancelled/deleted jobs. Android's dialog accurately says 'removed and unassigned from any open jobs'; web says 'cannot be undone' (it's a soft delete, but the job-unassign is real). 403 if not owner/admin."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -185,7 +185,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -200,7 +200,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

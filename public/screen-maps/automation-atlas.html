@@ -139,17 +139,17 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>No create/edit/delete UI on either surface.</b> Both web and Android are list + active-toggle only. The backend POST/full-PUT/DELETE for joby_rules exist (ownerOrAdmin) but are unreachable from the app — rules are seeded server-side (<code>db/setup.js</code>). Android's "Configure rules on the web app" empty-state hint is inaccurate (web can't create them either).</li>
-      <li><b>Trigger-label maps are cosmetic and partly wrong.</b> Actually-fired events: <code>estimate_approved, job_assigned, job_en_route, job_started, job_completed, job_cancelled, invoice_sent, invoice_paid</code>. Web's TRIGGER_LABELS uses <code>estimate_signed</code> (never fired — real event is <code>estimate_approved</code>) + <code>invoice_overdue</code>/<code>booking_received</code>/<code>job_status_changed</code> (not fired by audited routes); Android's align better but lack <code>job_assigned</code>/<code>job_started</code>. Labels don't affect firing (rules match the stored trigger_event string).</li>
+      <li><b>No create/edit/delete UI on either surface.</b> Both web and Android are list + active-toggle only. The backend POST/full-PUT/DELETE for joby_rules exist (ownerOrAdmin) but are unreachable from the app, rules are seeded server-side (<code>db/setup.js</code>). Android's "Configure rules on the web app" empty-state hint is inaccurate (web can't create them either).</li>
+      <li><b>Trigger-label maps are cosmetic and partly wrong.</b> Actually-fired events: <code>estimate_approved, job_assigned, job_en_route, job_started, job_completed, job_cancelled, invoice_sent, invoice_paid</code>. Web's TRIGGER_LABELS uses <code>estimate_signed</code> (never fired, real event is <code>estimate_approved</code>) + <code>invoice_overdue</code>/<code>booking_received</code>/<code>job_status_changed</code> (not fired by audited routes); Android's align better but lack <code>job_assigned</code>/<code>job_started</code>. Labels don't affect firing (rules match the stored trigger_event string).</li>
       <li><b><code>executeRule</code> ignores <code>type</code> and <code>dispatch_logic</code>.</b> Firing only sends notifications per the notify_* flags + templates. A <code>type:'auto_dispatch'</code> rule does NOT auto-dispatch through fireJobyRules; <code>autoDispatch()</code> is a separate engine function called from the jobs route.</li>
-      <li><b>Web's ACTION_LABELS don't match the type enum.</b> Web maps create_invoice/notify_office/… but <code>joby_rules.type</code> is CHECK-constrained to auto_dispatch/alert/reminder/cancel_flow — only auto_dispatch overlaps, so most rules show their raw type string. (Android's ACTION_LABELS are a different non-matching set.)</li>
+      <li><b>Web's ACTION_LABELS don't match the type enum.</b> Web maps create_invoice/notify_office/… but <code>joby_rules.type</code> is CHECK-constrained to auto_dispatch/alert/reminder/cancel_flow, only auto_dispatch overlaps, so most rules show their raw type string. (Android's ACTION_LABELS are a different non-matching set.)</li>
       <li><b>Delayed rules depend on cron.</b> <code>delay_minutes>0</code> writes a <code>joby_pending</code> notification row processed later (utils/cron.js); immediate rules fire inline. Neither screen surfaces pending/queued state.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Automation (Ailot) · rendered from automation.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -162,17 +162,17 @@ const SECTIONS=[
 ];
 const A={
 "list":{label:"List rules",status:"ok",route:"GET /company/joby-rules",fires:"SELECT joby_rules",result:"rule cards",
- d:{purpose:"Show all automation rules with their on/off state.",actors:["owner","admin"],vis:"on open",chain:[["GET","/company/joby-rules"]],parity:"MATCH — web companyApi.getJobyRules(); Android repo.getJobyRules(). Android adds a Refresh button; web auto-loads. Rules are seeded server-side (no create UI), so the list is whatever exists for the company."}},
-"view-detail":{label:"Expand rule detail",status:"ok",route:"— renders loaded fields",fires:"show config",result:"detail panel",caveat:"web richer than Android",
- d:{purpose:"Inspect a rule's configuration.",actors:["owner","admin"],vis:"web chevron expands; Android inline summary",chain:[],parity:"PARTIAL — web's expandable panel shows the most: delay, notify_customer/tech/owner, dispatch_logic, and the full SMS + email templates. Android shows only a summary (trigger label, action label, delay) — no notify flags, no dispatch logic, no templates. Both read-only."}},
+ d:{purpose:"Show all automation rules with their on/off state.",actors:["owner","admin"],vis:"on open",chain:[["GET","/company/joby-rules"]],parity:"MATCH, web companyApi.getJobyRules(); Android repo.getJobyRules(). Android adds a Refresh button; web auto-loads. Rules are seeded server-side (no create UI), so the list is whatever exists for the company."}},
+"view-detail":{label:"Expand rule detail",status:"ok",route:", renders loaded fields",fires:"show config",result:"detail panel",caveat:"web richer than Android",
+ d:{purpose:"Inspect a rule's configuration.",actors:["owner","admin"],vis:"web chevron expands; Android inline summary",chain:[],parity:"PARTIAL, web's expandable panel shows the most: delay, notify_customer/tech/owner, dispatch_logic, and the full SMS + email templates. Android shows only a summary (trigger label, action label, delay), no notify flags, no dispatch logic, no templates. Both read-only."}},
 "toggle-active":{label:"Toggle rule on/off",status:"ok",route:"PUT /company/joby-rules/:id {active}",fires:"set active",result:"rule enabled/disabled",caveat:"only write either UI does",
- d:{purpose:"Enable/disable a rule.",actors:["owner","admin"],vis:"switch per rule",chain:[["PUT","/company/joby-rules/:id"]],parity:"MATCH — both do an optimistic toggle + PUT {active} and revert on failure. This is the ONLY write either surface performs. An inactive rule is skipped by fireJobyRules (WHERE active=true). 403 if not owner/admin → both revert."}},
-"manage-crud":{label:"Add / edit / delete rule",status:"dead",route:"POST/PUT/DELETE /company/joby-rules",fires:"— no UI calls it",result:"unreachable from app",caveat:"backend-only",
- d:{purpose:"Create, fully edit, or remove a rule.",actors:["owner","admin"],vis:"none — no button on either surface",chain:[["POST","/company/joby-rules"],["DELETE","/company/joby-rules/:id"]],parity:"dead — the CRUD endpoints are functional (ownerOrAdmin) but NO audited client calls them. Neither web nor Android renders an add/edit/delete control; only the active toggle is wired. Rules are seeded server-side (db/setup.js). POST body {name,type,trigger_event,delay_minutes,notify_*,sms_template,email_subject,email_template,dispatch_logic}. UNVERIFIED whether an unaudited admin/seed path beyond setup.js creates them."}},
+ d:{purpose:"Enable/disable a rule.",actors:["owner","admin"],vis:"switch per rule",chain:[["PUT","/company/joby-rules/:id"]],parity:"MATCH, both do an optimistic toggle + PUT {active} and revert on failure. This is the ONLY write either surface performs. An inactive rule is skipped by fireJobyRules (WHERE active=true). 403 if not owner/admin → both revert."}},
+"manage-crud":{label:"Add / edit / delete rule",status:"dead",route:"POST/PUT/DELETE /company/joby-rules",fires:", no UI calls it",result:"unreachable from app",caveat:"backend-only",
+ d:{purpose:"Create, fully edit, or remove a rule.",actors:["owner","admin"],vis:"none, no button on either surface",chain:[["POST","/company/joby-rules"],["DELETE","/company/joby-rules/:id"]],parity:"dead, the CRUD endpoints are functional (ownerOrAdmin) but NO audited client calls them. Neither web nor Android renders an add/edit/delete control; only the active toggle is wired. Rules are seeded server-side (db/setup.js). POST body {name,type,trigger_event,delay_minutes,notify_*,sms_template,email_subject,email_template,dispatch_logic}. UNVERIFIED whether an unaudited admin/seed path beyond setup.js creates them."}},
 "rule-firing":{label:"Rule engine (fireJobyRules)",status:"ok",route:"fireJobyRules(event, job, companyId)",fires:"match + executeRule / queue",result:"notifications sent/queued",caveat:"type ignored",
- d:{purpose:"Execute matching rules when a trigger event occurs.",actors:["system"],vis:"server-side (not user-facing here)",chain:[["SELECT","joby_rules WHERE trigger_event=? AND active=true"]],parity:"MATCH (server, surface-agnostic) — per rule: delay_minutes>0 queues a notifications row (type 'joby_pending', cron-processed); else executeRule now. executeRule sends SMS/email to customer (notify_customer + phone + sms_template), tech (notify_tech), owner (notify_owner), filling {{job_number}}/{{customer_name}}/{{tech_name}}/… templates. IMPORTANT: executeRule IGNORES rule.type (only notify_* + templates matter); a type:'auto_dispatch' rule just notifies — real autoDispatch() is separate. Confirmed fired events: estimate_approved, job_assigned, job_en_route, job_started, job_completed, job_cancelled, invoice_sent, invoice_paid."}},
+ d:{purpose:"Execute matching rules when a trigger event occurs.",actors:["system"],vis:"server-side (not user-facing here)",chain:[["SELECT","joby_rules WHERE trigger_event=? AND active=true"]],parity:"MATCH (server, surface-agnostic), per rule: delay_minutes>0 queues a notifications row (type 'joby_pending', cron-processed); else executeRule now. executeRule sends SMS/email to customer (notify_customer + phone + sms_template), tech (notify_tech), owner (notify_owner), filling {{job_number}}/{{customer_name}}/{{tech_name}}/… templates. IMPORTANT: executeRule IGNORES rule.type (only notify_* + templates matter); a type:'auto_dispatch' rule just notifies, real autoDispatch() is separate. Confirmed fired events: estimate_approved, job_assigned, job_en_route, job_started, job_completed, job_cancelled, invoice_sent, invoice_paid."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -188,7 +188,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -203,7 +203,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

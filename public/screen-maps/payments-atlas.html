@@ -100,7 +100,7 @@
 <div class="wrap">
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Payments<span class="sub">Take the money and confirm it — record, ScanPay, receipt, ledger.</span></h1>
+    <h1>Payments<span class="sub">Take the money and confirm it, record, ScanPay, receipt, ledger.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Money Commit B · <b>clear-day trigger</b><br>backend · <b>2269f85</b></div>
   </header>
   <div class="crumb"><a href="index.html">all maps</a> · <a href="invoice-detail-atlas.html">invoice detail</a> · <a href="estimate-builder-atlas.html">estimate builder</a> › payments</div>
@@ -123,8 +123,8 @@
     <ul>
       <li><b>Record payment:</b> <code>POST /invoices/:id/payment</code> inserts a completed <code>payments</code> row, recomputes amount_paid/balance, sets status paid (≤0) else partial, fires Joby <code>invoice_paid</code> when fully paid.</li>
       <li><b>ScanPay QR / Link:</b> <code>POST /payments/scanpay-qr</code> / <code>scanpay-link</code> create a processor order; the dialog polls <code>GET /payments/scanpay-status/:invoiceId</code> (3s QR / 5s link) until paid → onPaid.</li>
-      <li><b>Receipt:</b> <code>POST /invoices/:id/send-receipt</code> — SMS/email "$amount_paid received" + optional review link.</li>
-      <li><b>Standalone create:</b> <code>POST /payments</code> validates the method, applies to the invoice, and notifies the owner on payments ≥ $500 — but no audited UI calls it.</li>
+      <li><b>Receipt:</b> <code>POST /invoices/:id/send-receipt</code>, SMS/email "$amount_paid received" + optional review link.</li>
+      <li><b>Standalone create:</b> <code>POST /payments</code> validates the method, applies to the invoice, and notifies the owner on payments ≥ $500, but no audited UI calls it.</li>
       <li><b>Earnings on the clear-day (Money Commit B):</b> after any payment / refund / ScanPay charge updates a balance, <code>reconcileJobEarnings(jobId)</code> runs. Balance clears to 0 on a work-done holding job → completes it + writes <code>tech_earnings</code> on <code>getJobGross</code> (collected money) dated <b>NOW = clear-day</b> + recomputes the partner split (kept pending). Refund → <code>getJobGross</code> nets <code>refund_amount</code>, earnings recompute down, reopened balance flips completed→holding. ScanPay no longer completes a job without earnings.</li>
     </ul>
   </div>
@@ -133,9 +133,9 @@
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
       <li><b>Web ScanPay 404: RESOLVED (Phase 0 [SCANPAY-404], 3e40117):</b> web now uses Android's scanpay-qr / scanpay-link + scanpay-status polling; the dead <code>POST /payments/scanpay/charge</code> button was removed. <b>ScanPay earnings-gap also FIXED (Money Commit B):</b> the webhook's old bare <code>UPDATE status='completed'</code> wrote no earnings; it now calls <code>reconcileJobEarnings</code> (completes + fires earnings on the clear-day). A ScanPay payment before work is marked done (<code>actual_end</code> null) does NOT auto-complete (Decision 3a).</li>
-      <li><b>ScanPay QR/link generate is Android-only</b> — web never surfaces it (<code>GET /invoices/:id/scanpay-qr</code> is unused by web Invoice Detail).</li>
-      <li><b><code>POST /payments</code> has no audited consumer</b> — it validates method, applies to the invoice, and owner-notifies ≥ $500, but the UIs use <code>POST /invoices/:id/payment</code> / read-only <code>GET /payments</code>. paymentsApi.create's caller is UNVERIFIED.</li>
-      <li><b>Two payment-write paths</b> — <code>/invoices/:id/payment</code> (used) vs <code>/payments</code> (standalone); both insert a completed payments row + update the invoice via slightly different code.</li>
+      <li><b>ScanPay QR/link generate is Android-only</b>, web never surfaces it (<code>GET /invoices/:id/scanpay-qr</code> is unused by web Invoice Detail).</li>
+      <li><b><code>POST /payments</code> has no audited consumer</b>, it validates method, applies to the invoice, and owner-notifies ≥ $500, but the UIs use <code>POST /invoices/:id/payment</code> / read-only <code>GET /payments</code>. paymentsApi.create's caller is UNVERIFIED.</li>
+      <li><b>Two payment-write paths</b>, <code>/invoices/:id/payment</code> (used) vs <code>/payments</code> (standalone); both insert a completed payments row + update the invoice via slightly different code.</li>
       <li><b>Method-set:</b> Android offers Venmo/CashApp (ride <code>/invoices/:id/payment</code> as method='venmo'); the final payments_method_check includes venmo/cashapp but excludes card/scanpay/paypal.</li>
       <li><b>UNVERIFIED:</b> Android PaymentsScreen (list) contents; exact ScanPay request/response bodies beyond ApiService; whether any screen calls <code>POST /payments</code>.</li>
     </ul>
@@ -143,7 +143,7 @@
 
   <footer>
     UltimatePro Screen Atlas · Payments (Collect + Receipt) · rendered from payments.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 <script>
@@ -153,17 +153,17 @@ const SECTIONS=[
 ];
 const A={
 "record-payment":{label:"Record Payment",status:"ok",route:"POST /invoices/:id/payment",fires:"payment row + status",result:"paid / partial",caveat:"web modal (5 methods) · Android grid (6, incl ScanPay)",
- d:{purpose:"Record a manually-collected payment against the invoice.",actors:["office","owner","tech"],vis:"web Invoice-Detail modal when status != paid; Android PaymentScreen method grid (amount prefilled to balance_due).",chain:[["POST","/invoices/:id/payment"]],parity:"PARTIAL — same endpoint; web {amount,method,notes}, Android vm.recordPayment(id,method,amount,notes). Inserts a completed payments row, recomputes amount_paid/balance, sets status, fires Joby invoice_paid when fully paid. Android → ReceiptScreen on success."}},
+ d:{purpose:"Record a manually-collected payment against the invoice.",actors:["office","owner","tech"],vis:"web Invoice-Detail modal when status != paid; Android PaymentScreen method grid (amount prefilled to balance_due).",chain:[["POST","/invoices/:id/payment"]],parity:"PARTIAL, same endpoint; web {amount,method,notes}, Android vm.recordPayment(id,method,amount,notes). Inserts a completed payments row, recomputes amount_paid/balance, sets status, fires Joby invoice_paid when fully paid. Android → ReceiptScreen on success."}},
 "scanpay-qr":{label:"ScanPay QR",status:"ok",route:"POST /payments/scanpay-qr",fires:"QR + poll scanpay-status (3s)",result:"payment captured",caveat:"Android-only",
- d:{purpose:"Show a ScanPay QR the customer scans, and watch for completion.",actors:["office","owner","tech"],vis:"Android PaymentScreen (method scanpay_qr). Web has no QR generate flow on the invoice.",chain:[["POST","/payments/scanpay-qr"],["GET","/payments/scanpay-status/:invoiceId"]],parity:"ANDROID-ONLY — createScanPayQr(id, amount); the QR dialog polls scanpay-status every 3s until paid → onPaid → ReceiptScreen."}},
+ d:{purpose:"Show a ScanPay QR the customer scans, and watch for completion.",actors:["office","owner","tech"],vis:"Android PaymentScreen (method scanpay_qr). Web has no QR generate flow on the invoice.",chain:[["POST","/payments/scanpay-qr"],["GET","/payments/scanpay-status/:invoiceId"]],parity:"ANDROID-ONLY, createScanPayQr(id, amount); the QR dialog polls scanpay-status every 3s until paid → onPaid → ReceiptScreen."}},
 "scanpay-link":{label:"ScanPay Link",status:"ok",route:"POST /payments/scanpay-link",fires:"SMS link + poll (5s)",result:"payment captured",caveat:"Android-only",
- d:{purpose:"Text the customer a ScanPay payment link and watch for completion.",actors:["office","owner","tech"],vis:"Android PaymentScreen (method scanpay_link). Not surfaced on web.",chain:[["POST","/payments/scanpay-link"],["GET","/payments/scanpay-status/:invoiceId"]],parity:"ANDROID-ONLY — createScanPayLink(id, amount, cust_phone); dialog shows sms_sent/phone_used and polls scanpay-status every 5s."}},
+ d:{purpose:"Text the customer a ScanPay payment link and watch for completion.",actors:["office","owner","tech"],vis:"Android PaymentScreen (method scanpay_link). Not surfaced on web.",chain:[["POST","/payments/scanpay-link"],["GET","/payments/scanpay-status/:invoiceId"]],parity:"ANDROID-ONLY, createScanPayLink(id, amount, cust_phone); dialog shows sms_sent/phone_used and polls scanpay-status every 5s."}},
 "scanpay-charge":{label:"ScanPay QR / Link",status:"ok",route:"POST /payments/scanpay-qr · /scanpay-link",fires:"create order + poll",result:"paid via checkout URL",caveat:"Phase 0 [SCANPAY-404] fix: QR/link + polling",
  d:{purpose:"Collect the balance via ScanPay (QR scan or texted payment link), polling until paid.",actors:["office","owner"],vis:"web + Android Invoice Detail, when status != paid",chain:[["POST","/payments/scanpay-qr"],["POST","/payments/scanpay-link"],["GET","/payments/scanpay-status/:invoiceId"]],parity:"MATCH. Phase 0 [SCANPAY-404] (2026-05-31): web now mirrors Android's QR/link dialogs + status polling (QR 3s, Link 5s). The dead /payments/scanpay/charge button was removed; that route never existed. The working ScanPay path was always QR/link."}},
 "send-receipt":{label:"Send Receipt",status:"ok",route:"POST /invoices/:id/send-receipt",fires:"SMS/email receipt",result:"receipt sent",caveat:"web modal · Android ReceiptScreen",
- d:{purpose:"Send the customer a payment receipt (optionally with a review link).",actors:["office","owner"],vis:"web Invoice-Detail receipt modal (paid/partial); Android ReceiptScreen (paid if not receipt_sent, and partial).",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL — same endpoint; web inline modal vs Android ReceiptScreen. Builds the receipt SMS (amount_paid, invoice #, company) + optional default review_platforms link, sends SMS + email."}},
+ d:{purpose:"Send the customer a payment receipt (optionally with a review link).",actors:["office","owner"],vis:"web Invoice-Detail receipt modal (paid/partial); Android ReceiptScreen (paid if not receipt_sent, and partial).",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL, same endpoint; web inline modal vs Android ReceiptScreen. Builds the receipt SMS (amount_paid, invoice #, company) + optional default review_platforms link, sends SMS + email."}},
 "ledger":{label:"Payments list",status:"ok",route:"GET /payments?from&to",fires:"read ledger",result:"total collected + rows",caveat:"web read-only · Android PaymentsScreen UNVERIFIED",
- d:{purpose:"Review collected payments over a date range; tap through to the invoice.",actors:["office","owner"],vis:"web /payments page; Android has a PaymentsScreen (not deep-read).",chain:[["GET","/payments?from&to&page&limit"]],parity:"PARTIAL — web list verified (read-only; returns {payments,total_collected,total}, rows link to /invoices/:invoice_id). Android PaymentsScreen exists but was not deep-read (UNVERIFIED). No create/refund controls on the web page."}},
+ d:{purpose:"Review collected payments over a date range; tap through to the invoice.",actors:["office","owner"],vis:"web /payments page; Android has a PaymentsScreen (not deep-read).",chain:[["GET","/payments?from&to&page&limit"]],parity:"PARTIAL, web list verified (read-only; returns {payments,total_collected,total}, rows link to /invoices/:invoice_id). Android PaymentsScreen exists but was not deep-read (UNVERIFIED). No create/refund controls on the web page."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -179,7 +179,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -194,7 +194,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

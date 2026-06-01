@@ -100,7 +100,7 @@
 <div class="wrap">
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Estimate Builder<span class="sub">Author it, send it, sign it, deposit it, convert it — the front of the money spine.</span></h1>
+    <h1>Estimate Builder<span class="sub">Author it, send it, sign it, deposit it, convert it, the front of the money spine.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>cca244c</b></div>
   </header>
   <div class="crumb"><a href="index.html">all maps</a> · <a href="invoice-detail-atlas.html">invoice detail</a> · <a href="payments-atlas.html">payments</a> › estimate builder</div>
@@ -121,7 +121,7 @@
   <div class="moneybox">
     <h2>The money math (reference)</h2>
     <ul>
-      <li><b>Sign:</b> status → <b>approved</b>, sets approved_at, fires Joby <code>estimate_approved</code>, emails OFFICE_EMAIL, pushes "Estimate Signed". (Web's sign is broken — wrong key.)</li>
+      <li><b>Sign:</b> status → <b>approved</b>, sets approved_at, fires Joby <code>estimate_approved</code>, emails OFFICE_EMAIL, pushes "Estimate Signed". (Web's sign is broken, wrong key.)</li>
       <li><b>Send:</b> status → <b>sent</b>; web then polls every 10s for the remote signature.</li>
       <li><b>Convert:</b> estimate → new invoice; web optionally merges existing job-invoice items (Keep & Add / Replace).</li>
       <li><b>Collect deposit:</b> inserts a completed <code>payments</code> row, sets deposit_collected, and moves the linked job to <b>holding</b>; returns remaining_balance. Correct keys here (<code>amount_collected</code>, <code>payment_method</code>).</li>
@@ -131,9 +131,9 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Web estimate signature is broken</b> — <code>captureSignature</code> sends <code>signature_data</code>; <code>/estimates/:id/sign</code> reads <code>signature</code> → 400. (Same wrong-key class as invoice/job.)</li>
-      <li><b>Web "Present GBB Options" is mis-wired</b> — opens the broken signature modal instead of presenting tiers. Android has a real PresentTiersScreen + <code>POST /estimates/:id/select-tier</code>; web reads /tiers for display but never selects.</li>
-      <li><b>Web "Attach Photo" is broken</b> — posts a multipart file to an endpoint that wants JSON <code>{url}</code> and has no multer → 400. Android sends <code>{url}</code> → works.</li>
+      <li><b>Web estimate signature is broken</b>, <code>captureSignature</code> sends <code>signature_data</code>; <code>/estimates/:id/sign</code> reads <code>signature</code> → 400. (Same wrong-key class as invoice/job.)</li>
+      <li><b>Web "Present GBB Options" is mis-wired</b>, opens the broken signature modal instead of presenting tiers. Android has a real PresentTiersScreen + <code>POST /estimates/:id/select-tier</code>; web reads /tiers for display but never selects.</li>
+      <li><b>Web "Attach Photo" is broken</b>, posts a multipart file to an endpoint that wants JSON <code>{url}</code> and has no multer → 400. Android sends <code>{url}</code> → works.</li>
       <li><b>collect-deposit here is the CORRECT path</b> (<code>amount_collected</code>/<code>payment_method</code>), unlike the Job-Detail deposit (wrong keys + non-existent estimate_id).</li>
       <li><b>deposit-settings is Android-only</b> on the detail screen; web configures deposits in the builder. Android also guards edit-after-signed with a re-sign warning.</li>
       <li><b>UNVERIFIED:</b> the builder save payload (<code>POST /estimates</code> / <code>PUT /estimates/:id</code>), GBB tier authoring, select-tier body beyond <code>{tier_id}</code>.</li>
@@ -142,7 +142,7 @@
 
   <footer>
     UltimatePro Screen Atlas · Estimate Builder / Detail · rendered from estimate-builder.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 <script>
@@ -153,23 +153,23 @@ const SECTIONS=[
 ];
 const A={
 "send-for-signature":{label:"Send for Signature",status:"ok",route:"POST /estimates/:id/send",fires:"SMS/email + status sent",result:"awaiting signature",caveat:"web modal + 10s poll · Android EstimateSendScreen",
- d:{purpose:"Email/SMS the estimate so the customer can sign remotely.",actors:["office","owner"],vis:"web when !isSigned; Android unsigned (button varies GBB/non-GBB)",chain:[["POST","/estimates/:id/send"]],parity:"PARTIAL — same endpoint; web inline recipient modal then polls refetch() every 10s while status='sent', Android dedicated EstimateSendScreen. Web persists new recipients to the customer profile after sending."}},
-"get-signature":{label:"Get Signature",status:"ok",route:"POST /estimates/:id/sign",fires:"save signature",result:"status → approved",caveat:"Phase 0 [SIG] fix — web now sends {signature, signer_name}",
- d:{purpose:"Capture an in-person signature (moves the estimate to approved).",actors:["office","owner","tech"],vis:"web always (modal); Android non-GBB → EstimateSignScreen",chain:[["POST","/estimates/:id/sign"]],parity:"MATCH — Phase 0 [SIG] fix (2026-05-31): web now posts {signature, signer_name}, matching the handler (estimates.js:597) and Android signEstimate (CrmRepository.kt:334). On success the backend sets status approved, fires Joby estimate_approved, emails OFFICE_EMAIL, pushes. Web estimate signing works."}},
+ d:{purpose:"Email/SMS the estimate so the customer can sign remotely.",actors:["office","owner"],vis:"web when !isSigned; Android unsigned (button varies GBB/non-GBB)",chain:[["POST","/estimates/:id/send"]],parity:"PARTIAL, same endpoint; web inline recipient modal then polls refetch() every 10s while status='sent', Android dedicated EstimateSendScreen. Web persists new recipients to the customer profile after sending."}},
+"get-signature":{label:"Get Signature",status:"ok",route:"POST /estimates/:id/sign",fires:"save signature",result:"status → approved",caveat:"Phase 0 [SIG] fix, web now sends {signature, signer_name}",
+ d:{purpose:"Capture an in-person signature (moves the estimate to approved).",actors:["office","owner","tech"],vis:"web always (modal); Android non-GBB → EstimateSignScreen",chain:[["POST","/estimates/:id/sign"]],parity:"MATCH, Phase 0 [SIG] fix (2026-05-31): web now posts {signature, signer_name}, matching the handler (estimates.js:597) and Android signEstimate (CrmRepository.kt:334). On success the backend sets status approved, fires Joby estimate_approved, emails OFFICE_EMAIL, pushes. Web estimate signing works."}},
 "present-gbb":{label:"Present GBB Options",status:"broken",route:"opens signature modal (no route)",fires:"nothing (mislabeled)",result:"broken signature modal",caveat:"web mis-wired to signature; Android has PresentTiersScreen",
- d:{purpose:"(Intended) present Good/Better/Best tiers for the customer to pick.",actors:["office","owner"],vis:"web: GBB, not signed, status != sent",chain:[],parity:"DIVERGENT — web's button calls setShowSignature(true) (opens the broken signature modal) and never calls a present/select-tier endpoint. Android has a dedicated PresentTiersScreen → POST /estimates/:id/select-tier {tier_id}. The web detail reads /estimates/:id/tiers for display only."}},
+ d:{purpose:"(Intended) present Good/Better/Best tiers for the customer to pick.",actors:["office","owner"],vis:"web: GBB, not signed, status != sent",chain:[],parity:"DIVERGENT, web's button calls setShowSignature(true) (opens the broken signature modal) and never calls a present/select-tier endpoint. Android has a dedicated PresentTiersScreen → POST /estimates/:id/select-tier {tier_id}. The web detail reads /estimates/:id/tiers for display only."}},
 "convert-to-invoice":{label:"Convert to Invoice",status:"ok",route:"POST /estimates/:id/convert-to-invoice",fires:"create invoice",result:"invoice created",caveat:"web adds keep/replace merge · Android vm.convert",
- d:{purpose:"Turn a signed estimate into an invoice.",actors:["office","owner"],vis:"web when isSigned; Android non-GBB row button",chain:[["POST","/estimates/:id/convert-to-invoice"]],parity:"PARTIAL — same endpoint; web offers convert right after signing and runs a Keep & Add / Replace merge (PUT /invoices/:id with [...new, ...old]) when the job already has an invoice. Android just converts."}},
+ d:{purpose:"Turn a signed estimate into an invoice.",actors:["office","owner"],vis:"web when isSigned; Android non-GBB row button",chain:[["POST","/estimates/:id/convert-to-invoice"]],parity:"PARTIAL, same endpoint; web offers convert right after signing and runs a Keep & Add / Replace merge (PUT /invoices/:id with [...new, ...old]) when the job already has an invoice. Android just converts."}},
 "collect-deposit":{label:"Collect Deposit",status:"ok",route:"POST /estimates/:id/collect-deposit",fires:"payment row + job→holding",result:"deposit recorded",caveat:"CORRECT keys (vs the Job-Detail deposit)",
- d:{purpose:"Record a deposit against a signed, deposit-required estimate.",actors:["office","owner"],vis:"web isSigned && deposit_required && !deposit_collected; Android same",chain:[["POST","/estimates/:id/collect-deposit"]],parity:"PARTIAL — same endpoint; web inline modal (sends {amount_collected, payment_method} — correct), Android DepositCollectionScreen. Backend inserts a completed payments row, sets deposit_collected, moves the linked job to 'holding', returns remaining_balance. This is the correct deposit path (contrast Job-Detail's wrong-key deposit)."}},
+ d:{purpose:"Record a deposit against a signed, deposit-required estimate.",actors:["office","owner"],vis:"web isSigned && deposit_required && !deposit_collected; Android same",chain:[["POST","/estimates/:id/collect-deposit"]],parity:"PARTIAL, same endpoint; web inline modal (sends {amount_collected, payment_method}, correct), Android DepositCollectionScreen. Backend inserts a completed payments row, sets deposit_collected, moves the linked job to 'holding', returns remaining_balance. This is the correct deposit path (contrast Job-Detail's wrong-key deposit)."}},
 "deposit-settings":{label:"Deposit settings",status:"ok",route:"PUT /estimates/:id/deposit-settings",fires:"update deposit cols",result:"deposit configured",caveat:"Android-only on detail; web does it in the builder",
- d:{purpose:"Configure whether a deposit is required and how much.",actors:["office","owner"],vis:"Android DepositSettingsDialog on detail; web configures in the builder",chain:[["PUT","/estimates/:id/deposit-settings"]],parity:"ANDROID-ONLY — vm.saveDepositSettings(id, required, amount, type) → {deposit_required, deposit_amount, deposit_type}."}},
+ d:{purpose:"Configure whether a deposit is required and how much.",actors:["office","owner"],vis:"Android DepositSettingsDialog on detail; web configures in the builder",chain:[["PUT","/estimates/:id/deposit-settings"]],parity:"ANDROID-ONLY, vm.saveDepositSettings(id, required, amount, type) → {deposit_required, deposit_amount, deposit_type}."}},
 "edit":{label:"Edit Estimate",status:"ok",route:"navigate → builder (POST/PUT estimates)",fires:"open builder",result:"builder open",caveat:"Android warns 're-sign' when signed",
- d:{purpose:"Open the builder to change the estimate.",actors:["office","owner"],vis:"always",chain:[["PUT","/estimates/:id"]],parity:"PARTIAL — Android shows 'Editing will require a new signature. Continue?' when already signed; web navigates directly. Builder save payload UNVERIFIED this pass."}},
+ d:{purpose:"Open the builder to change the estimate.",actors:["office","owner"],vis:"always",chain:[["PUT","/estimates/:id"]],parity:"PARTIAL, Android shows 'Editing will require a new signature. Continue?' when already signed; web navigates directly. Builder save payload UNVERIFIED this pass."}},
 "delete":{label:"Delete Estimate",status:"ok",route:"DELETE /estimates/:id",fires:"delete row",result:"estimate deleted",caveat:"web hides when signed; Android always (confirm)",
- d:{purpose:"Delete the estimate.",actors:["office","owner"],vis:"web only when !isSigned; Android always (confirm dialog)",chain:[["DELETE","/estimates/:id"]],parity:"PARTIAL — web hides delete once signed; Android allows it behind a confirm."}},
+ d:{purpose:"Delete the estimate.",actors:["office","owner"],vis:"web only when !isSigned; Android always (confirm dialog)",chain:[["DELETE","/estimates/:id"]],parity:"PARTIAL, web hides delete once signed; Android allows it behind a confirm."}},
 "attach-photo":{label:"Attach Photo",status:"broken",route:"POST /estimates/:id/add-photo",fires:"nothing (400)",result:"no photo attached",caveat:"web sends a file; handler wants JSON {url}",
- d:{purpose:"Attach a photo to the estimate.",actors:["office","owner","tech"],vis:"web always; Android attaches via the upload flow (sends a URL)",chain:[["POST","/estimates/:id/add-photo"]],parity:"DIVERGENT — web posts a raw multipart file, but the handler reads req.body.url with NO multer → 400 'Photo URL required'. Android addEstimatePhoto sends {url} (after a separate upload) → works."}},
+ d:{purpose:"Attach a photo to the estimate.",actors:["office","owner","tech"],vis:"web always; Android attaches via the upload flow (sends a URL)",chain:[["POST","/estimates/:id/add-photo"]],parity:"DIVERGENT, web posts a raw multipart file, but the handler reads req.body.url with NO multer → 400 'Photo URL required'. Android addEstimatePhoto sends {url} (after a separate upload) → works."}},
 "back":{label:"Back",status:"ok",route:"navigate",fires:"leave",result:"job or estimates list",
  d:{purpose:"Leave the estimate (web returns to the linked job if any, else the list).",actors:["office","owner","tech"],vis:"always",chain:[],parity:"MATCH"}},
 };
@@ -187,7 +187,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -202,7 +202,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

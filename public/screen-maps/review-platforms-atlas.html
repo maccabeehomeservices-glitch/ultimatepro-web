@@ -139,17 +139,17 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b><code>display_order</code> does not exist.</b> The Batch-F task hypothesised it, but the <code>review_platforms</code> DDL (settings.js:11–20) has only <code>platform_name, url, is_default, is_active, created_at</code>. Ordering is <code>is_default DESC, created_at ASC</code> — no per-row sort field or UI for one.</li>
+      <li><b><code>display_order</code> does not exist.</b> The Batch-F task hypothesised it, but the <code>review_platforms</code> DDL (settings.js:11–20) has only <code>platform_name, url, is_default, is_active, created_at</code>. Ordering is <code>is_default DESC, created_at ASC</code>, no per-row sort field or UI for one.</li>
       <li><b>Column is <code>platform_name</code>, request key is <code>name</code>.</b> POST/PUT map <code>name → platform_name</code>; both clients read <code>platform_name</code> back. Not a bug (web's getPlatformName defends against either), but worth knowing.</li>
       <li><b>Receipt link confirmed.</b> The default active platform's URL is what Send Receipt appends (<code>invoices.js:645</code>, fallback <code>:650</code> = first active); tech-notify uses the same (<code>roster-techs.js:116</code>). Deleting/deactivating the default silently changes which link receipts use.</li>
-      <li><b>No owner/admin gating.</b> <code>/settings/review-platforms</code> routes are <code>auth</code> only — any authenticated user can add/edit/delete (and thereby change the receipt link).</li>
+      <li><b>No owner/admin gating.</b> <code>/settings/review-platforms</code> routes are <code>auth</code> only, any authenticated user can add/edit/delete (and thereby change the receipt link).</li>
       <li><b>Table created by startup migration</b> (settings.js IF NOT EXISTS on boot), not in <code>schema.sql</code>. The set-default affordance differs (web per-card button vs Android sheet checkbox).</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Review Platforms · rendered from review-platforms.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,21 +161,21 @@ const SECTIONS=[
 ];
 const A={
 "list":{label:"List platforms",status:"ok",route:"GET /settings/review-platforms",fires:"SELECT review_platforms",result:"platform cards",
- d:{purpose:"Show configured review platforms (default first).",actors:["owner","admin"],vis:"on open",chain:[["GET","/settings/review-platforms"]],parity:"MATCH — web settingsApi.getReviewPlatforms(); Android repo.getReviewPlatforms(). Order is_default DESC, created_at ASC. Cards show name (platform_name), url, Default badge, active toggle."}},
-"quick-add":{label:"Quick-add template",status:"ok",route:"— prefill form",fires:"prefill name+url",result:"add form prefilled",caveat:"web 6 / Android 4 templates",
- d:{purpose:"Pre-fill the add form for a known platform.",actors:["owner","admin"],vis:"'QUICK ADD' chips/buttons",chain:[],parity:"PARTIAL — web offers 6 templates (Google, Yelp, Facebook, Thumbtack, Angi, BBB) with icons + URL prefixes, filtered to hide already-added ones; Android offers 4 static buttons (Google, Thumbtack, Facebook, Yelp) with URL hints, not filtered. Same end result (prefill → Save)."}},
+ d:{purpose:"Show configured review platforms (default first).",actors:["owner","admin"],vis:"on open",chain:[["GET","/settings/review-platforms"]],parity:"MATCH, web settingsApi.getReviewPlatforms(); Android repo.getReviewPlatforms(). Order is_default DESC, created_at ASC. Cards show name (platform_name), url, Default badge, active toggle."}},
+"quick-add":{label:"Quick-add template",status:"ok",route:", prefill form",fires:"prefill name+url",result:"add form prefilled",caveat:"web 6 / Android 4 templates",
+ d:{purpose:"Pre-fill the add form for a known platform.",actors:["owner","admin"],vis:"'QUICK ADD' chips/buttons",chain:[],parity:"PARTIAL, web offers 6 templates (Google, Yelp, Facebook, Thumbtack, Angi, BBB) with icons + URL prefixes, filtered to hide already-added ones; Android offers 4 static buttons (Google, Thumbtack, Facebook, Yelp) with URL hints, not filtered. Same end result (prefill → Save)."}},
 "add":{label:"Add platform",status:"ok",route:"POST /settings/review-platforms",fires:"INSERT (name→platform_name)",result:"new platform",caveat:"name + url required",
- d:{purpose:"Create a review platform.",actors:["owner","admin"],vis:"'+ Add' (web) / FAB (Android)",chain:[["POST","/settings/review-platforms"]],parity:"MATCH — both POST {name,...}; server maps name→platform_name. Web add form sends only name+url; Android sheet can also set is_default. INSERT (company_id, platform_name, url, is_default, is_active); if is_default, clears existing default first. 400 if name or url missing."}},
+ d:{purpose:"Create a review platform.",actors:["owner","admin"],vis:"'+ Add' (web) / FAB (Android)",chain:[["POST","/settings/review-platforms"]],parity:"MATCH, both POST {name,...}; server maps name→platform_name. Web add form sends only name+url; Android sheet can also set is_default. INSERT (company_id, platform_name, url, is_default, is_active); if is_default, clears existing default first. 400 if name or url missing."}},
 "edit":{label:"Edit platform",status:"ok",route:"PUT /settings/review-platforms/:id",fires:"COALESCE update",result:"updated card",
- d:{purpose:"Update a platform's name/url.",actors:["owner","admin"],vis:"edit per card",chain:[["PUT","/settings/review-platforms/:id"]],parity:"MATCH — same endpoint + keys. COALESCE update of platform_name, url, is_default, is_active. 404 if not found / wrong company."}},
+ d:{purpose:"Update a platform's name/url.",actors:["owner","admin"],vis:"edit per card",chain:[["PUT","/settings/review-platforms/:id"]],parity:"MATCH, same endpoint + keys. COALESCE update of platform_name, url, is_default, is_active. 404 if not found / wrong company."}},
 "toggle-active":{label:"Toggle active",status:"ok",route:"PUT /settings/review-platforms/:id {is_active}",fires:"set is_active",result:"toggled",
- d:{purpose:"Enable/disable a platform (inactive ones aren't used for receipts).",actors:["owner","admin"],vis:"switch per card",chain:[["PUT","/settings/review-platforms/:id"]],parity:"MATCH — web updateReviewPlatform(id,{is_active}); Android updatePlatform(id,null,null,null,!isActive)."}},
+ d:{purpose:"Enable/disable a platform (inactive ones aren't used for receipts).",actors:["owner","admin"],vis:"switch per card",chain:[["PUT","/settings/review-platforms/:id"]],parity:"MATCH, web updateReviewPlatform(id,{is_active}); Android updatePlatform(id,null,null,null,!isActive)."}},
 "set-default":{label:"Set as default",status:"ok",route:"PUT /settings/review-platforms/:id {is_default:true}",fires:"clear others + set",result:"Default badge moves",caveat:"affordance differs",
- d:{purpose:"Choose which platform's link goes on receipts.",actors:["owner","admin"],vis:"web inline 'Default' button on cards; Android checkbox in add/edit sheet",chain:[["PUT","/settings/review-platforms/:id"]],parity:"DIVERGENT — same endpoint/effect, different affordance: web has a one-tap inline 'Default' button per non-default active card; Android only exposes it via the add/edit sheet's 'Set as default' checkbox. Server clears every other default first (single-default invariant)."}},
+ d:{purpose:"Choose which platform's link goes on receipts.",actors:["owner","admin"],vis:"web inline 'Default' button on cards; Android checkbox in add/edit sheet",chain:[["PUT","/settings/review-platforms/:id"]],parity:"DIVERGENT, same endpoint/effect, different affordance: web has a one-tap inline 'Default' button per non-default active card; Android only exposes it via the add/edit sheet's 'Set as default' checkbox. Server clears every other default first (single-default invariant)."}},
 "delete":{label:"Delete platform",status:"ok",route:"DELETE /settings/review-platforms/:id",fires:"hard DELETE",result:"platform gone",caveat:"hard delete",
- d:{purpose:"Remove a platform.",actors:["owner","admin"],vis:"trash per card",chain:[["DELETE","/settings/review-platforms/:id"]],parity:"MATCH — both hard-delete (not soft). Web shows a confirm modal; Android deletes on the trash tap. 404 if not found. Receipts lose that link."}},
+ d:{purpose:"Remove a platform.",actors:["owner","admin"],vis:"trash per card",chain:[["DELETE","/settings/review-platforms/:id"]],parity:"MATCH, both hard-delete (not soft). Web shows a confirm modal; Android deletes on the trash tap. 404 if not found. Receipts lose that link."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -191,7 +191,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -206,7 +206,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

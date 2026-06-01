@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Team Members<span class="sub">Manage app users — list, create, edit, deactivate, reactivate. Android is correct; the web page is broken against the current API.</span></h1>
+    <h1>Team Members<span class="sub">Manage app users, list, create, edit, deactivate, reactivate. Android is correct; the web page is broken against the current API.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>41d0a83</b></div>
   </header>
 
@@ -142,14 +142,14 @@
       <li><b>Web uses <code>name</code>; the API uses <code>first_name</code>/<code>last_name</code>.</b> This one mismatch breaks three things on web: list names render blank (avatar "?"), create always 400s ("First name required"), and edit can never change names. Android uses the split fields throughout.</li>
       <li><b>Web role <code>&lt;select&gt;</code> is wrong.</b> Options are <code>tech</code>/<code>admin</code>/<code>owner</code>; the API enum is <code>admin/manager/technician/dispatcher</code>. So <code>tech</code> and <code>owner</code> both 400 ("Invalid role"), and <code>manager</code>/<code>dispatcher</code> are unavailable on web. Android's dropdown is exactly the valid set.</li>
       <li><b><code>commission_pct</code> / <code>hourly_rate</code> have no input on either surface.</b> The API accepts them on create/update but neither screen sends them (stay at the <code>0</code> default).</li>
-      <li><b><code>worker_type</code> &amp; <code>material_policy</code> are <code>users</code> columns</b> (migrate_materials.sql) but <code>users.js</code> never reads/writes them — managed elsewhere. <b><code>pay_model</code> does not exist</b> as a column anywhere.</li>
+      <li><b><code>worker_type</code> &amp; <code>material_policy</code> are <code>users</code> columns</b> (migrate_materials.sql) but <code>users.js</code> never reads/writes them, managed elsewhere. <b><code>pay_model</code> does not exist</b> as a column anywhere.</li>
       <li><b>Soft-delete:</b> <code>DELETE /users/:id</code> only sets <code>is_active=false</code>. Web's "cannot be undone" copy is misleading and web offers no reactivate; Android shows an Inactive badge + reactivate.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Team Members · rendered from team-members.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,17 +161,17 @@ const SECTIONS=[
 ];
 const A={
 "list":{label:"List users",status:"partial",route:"GET /users",fires:"SELECT users",result:"user cards",caveat:"web names blank",
- d:{purpose:"Show all team members with role badges.",actors:["owner","admin"],vis:"on open",chain:[["GET","/users"]],parity:"DIVERGENT — Android renders '${first_name} ${last_name}', email, phone, role badge + an Inactive badge for deactivated users. Web reads u.name / u.name?.[0] but the API returns first_name/last_name and NO name field → blank names, avatar '?'; web also doesn't distinguish inactive users. Endpoint itself is fine."}},
+ d:{purpose:"Show all team members with role badges.",actors:["owner","admin"],vis:"on open",chain:[["GET","/users"]],parity:"DIVERGENT, Android renders '${first_name} ${last_name}', email, phone, role badge + an Inactive badge for deactivated users. Web reads u.name / u.name?.[0] but the API returns first_name/last_name and NO name field → blank names, avatar '?'; web also doesn't distinguish inactive users. Endpoint itself is fine."}},
 "create":{label:"Add / invite user",status:"broken",route:"POST /users",fires:"validate + INSERT",result:"web ALWAYS 400s",caveat:"name + bad role enum",
- d:{purpose:"Create a new team member with a password.",actors:["owner","admin"],vis:"'+ Add User' (web) / PersonAdd (Android)",chain:[["POST","/users"]],parity:"DIVERGENT — Android sends {first_name,last_name,email,phone,role,password} with role∈{technician,dispatcher,manager,admin} → works. Web sends {name,email,phone,role,password}: (1) no first_name/last_name → 400 'First name required'; (2) role select offers tech/admin/owner but tech & owner aren't in the API enum → 'Invalid role'. Web create is non-functional as shipped. Duplicate email → 409."}},
+ d:{purpose:"Create a new team member with a password.",actors:["owner","admin"],vis:"'+ Add User' (web) / PersonAdd (Android)",chain:[["POST","/users"]],parity:"DIVERGENT, Android sends {first_name,last_name,email,phone,role,password} with role∈{technician,dispatcher,manager,admin} → works. Web sends {name,email,phone,role,password}: (1) no first_name/last_name → 400 'First name required'; (2) role select offers tech/admin/owner but tech & owner aren't in the API enum → 'Invalid role'. Web create is non-functional as shipped. Duplicate email → 409."}},
 "edit":{label:"Edit user",status:"partial",route:"PUT /users/:id",fires:"COALESCE update",result:"partial on web",caveat:"web can't edit names",
- d:{purpose:"Change a user's contact/role (+password on Android).",actors:["owner","admin"],vis:"edit per row (non-owner; Android also requires active)",chain:[["PUT","/users/:id"]],parity:"DIVERGENT — Android sends first_name/last_name/email/phone/role(+password) and edits everything. Web sends {name,email,phone,role}: name is ignored (first/last unchanged via COALESCE-NULL), and role 'tech'/'owner' → 400. Email/phone/valid-role do persist. Editing an owner requires being the owner (users.js:102)."}},
+ d:{purpose:"Change a user's contact/role (+password on Android).",actors:["owner","admin"],vis:"edit per row (non-owner; Android also requires active)",chain:[["PUT","/users/:id"]],parity:"DIVERGENT, Android sends first_name/last_name/email/phone/role(+password) and edits everything. Web sends {name,email,phone,role}: name is ignored (first/last unchanged via COALESCE-NULL), and role 'tech'/'owner' → 400. Email/phone/valid-role do persist. Editing an owner requires being the owner (users.js:102)."}},
 "delete":{label:"Remove (deactivate)",status:"ok",route:"DELETE /users/:id",fires:"is_active=false",result:"deactivated",caveat:"soft delete",
- d:{purpose:"Revoke a user's access.",actors:["owner","admin"],vis:"delete per non-owner row",chain:[["DELETE","/users/:id"]],parity:"MATCH — both call DELETE /users/:id (soft delete: UPDATE is_active=false). Web mislabels it 'removed'/'cannot be undone' and keeps showing deactivated users (no filter/badge); Android shows Inactive + reactivate. 400 if you target your own id; 404 if not found."}},
+ d:{purpose:"Revoke a user's access.",actors:["owner","admin"],vis:"delete per non-owner row",chain:[["DELETE","/users/:id"]],parity:"MATCH, both call DELETE /users/:id (soft delete: UPDATE is_active=false). Web mislabels it 'removed'/'cannot be undone' and keeps showing deactivated users (no filter/badge); Android shows Inactive + reactivate. 400 if you target your own id; 404 if not found."}},
 "reactivate":{label:"Reactivate user",status:"ok",route:"PUT /users/:id/reactivate",fires:"is_active=true",result:"user active again",caveat:"Android-only UI",
- d:{purpose:"Restore a deactivated user.",actors:["owner","admin"],vis:"Android only — Refresh icon on inactive non-owner rows",chain:[["PUT","/users/:id/reactivate"]],parity:"ANDROID-ONLY — endpoint exists and works, but the web page has no reactivate UI (and shows no inactive state to trigger it)."}},
+ d:{purpose:"Restore a deactivated user.",actors:["owner","admin"],vis:"Android only, Refresh icon on inactive non-owner rows",chain:[["PUT","/users/:id/reactivate"]],parity:"ANDROID-ONLY, endpoint exists and works, but the web page has no reactivate UI (and shows no inactive state to trigger it)."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -187,7 +187,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -202,7 +202,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

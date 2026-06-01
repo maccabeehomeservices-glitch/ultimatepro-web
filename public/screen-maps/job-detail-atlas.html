@@ -119,7 +119,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Job Detail<span class="sub">Read each row left → right: button → route it calls → what fires → result.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>Job Detail bugs cleared</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>Job Detail bugs cleared</b><br><b>dead signature removed</b></div>
   </header>
   <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5e7197;margin-bottom:18px"><a href="index.html" style="color:#5ec8e8;text-decoration:none">all maps</a> · job detail › <a href="new-job-atlas.html" style="color:#5ec8e8;text-decoration:none">new job</a></div>
 
@@ -144,7 +144,7 @@
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
       <li><b>Route-404 (web): RESOLVED (Phase 2).</b> Notes + tech-permissions now use <code>PUT /jobs/:id</code> (via <code>jobsApi.update</code>); Restore now posts <code>/jobs/:id/status {unscheduled}</code> (mirrors Android). The non-existent <code>PATCH /jobs/:id</code> and <code>POST /jobs/:id/restore</code> are no longer called. (<code>scanpay/charge</code> resolved earlier.)</li>
-      <li><b>Two completion paths — web side closed (Phase 1):</b> <code>/status?completed</code> (simple calc, no &gt;100% guard) vs <code>/complete</code> (three-slice + guard). Web now routes completion only through <code>/complete</code>: the Status modal "Completed" opens the Complete modal, which renders parts/CC for partner jobs. Path A still exists on the backend but no web surface posts <code>completed</code> to it. Caveat: Path A's inventory-deduct/membership-advance/source-sms are not in <code>/complete</code> on either surface (backend follow-up).</li>
+      <li><b>Two completion paths, web side closed (Phase 1):</b> <code>/status?completed</code> (simple calc, no &gt;100% guard) vs <code>/complete</code> (three-slice + guard). Web now routes completion only through <code>/complete</code>: the Status modal "Completed" opens the Complete modal, which renders parts/CC for partner jobs. Path A still exists on the backend but no web surface posts <code>completed</code> to it. Caveat: Path A's inventory-deduct/membership-advance/source-sms are not in <code>/complete</code> on either surface (backend follow-up).</li>
       <li><b>payments.method check contradiction:</b> two boot migrations (server.js 558–561 vs 785); the later one drops <code>card</code>/<code>scanpay</code>/<code>paypal</code>.</li>
       <li><b>Schema scatter:</b> live schema = schema.sql + migrate_*.sql + server.js IIFE + jobs.js top-level ALTERs (≥3 places).</li>
     </ul>
@@ -152,16 +152,16 @@
   <div class="drift good">
     <h2>✓ Corrections to prior "known facts" (verified vs production)</h2>
     <ul>
-      <li><code>customer_memberships</code> <b>DOES</b> have <code>plan_name/plan_frequency/plan_price</code> — old rule was wrong.</li>
+      <li><code>customer_memberships</code> <b>DOES</b> have <code>plan_name/plan_frequency/plan_price</code>, old rule was wrong.</li>
       <li><code>pricebook_categories.taxable</code> <b>DOES</b> exist; <code>pricebook_items.taxable</code> too.</li>
-      <li><code>jobs.title</code> is <b>NOT NULL</b> — UI hides it but backend must supply <code>type || "Job"</code>.</li>
+      <li><code>jobs.title</code> is <b>NOT NULL</b>, UI hides it but backend must supply <code>type || "Job"</code>.</li>
       <li><code>review_platforms</code> uses <code>platform_name</code> not <code>name</code>; <code>payments.job_id</code> confirmed absent.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Job Detail · rendered from job-detail.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -178,7 +178,7 @@ const SECTIONS=[
  {idx:"09",title:"Estimates & Invoice",items:["estimates","invoice","profit-override"]},
  {idx:"10",title:"Photos",items:["photos"]},
  {idx:"11",title:"Parts & Charge",items:["parts","charge-payment"]},
- {idx:"12",title:"Final Actions",items:["send-receipt","cancel","restore","complete","signature"]},
+ {idx:"12",title:"Final Actions",items:["send-receipt","cancel","restore","complete"]},
  {idx:"13",title:"Tabs",items:["tabs"]},
 ];
 
@@ -186,34 +186,34 @@ const A={
 "back":{label:"Back",status:"ok",route:"navigate",fires:"go back",result:"previous screen",
  d:{purpose:"Return to wherever the user came from.",actors:["owner","office","tech-user","partner"],vis:"always",chain:[],parity:"MATCH"}},
 "dispatch":{label:"Dispatch",status:"partial",route:"POST /jobs/:id/dispatch",fires:"status + SMS",result:"En Route + text",caveat:"web sends no location → ETA weak",
- d:{purpose:"Tell the customer the tech is on the way; move job to En Route.",actors:["tech-user","owner","office"],vis:"status ∈ unscheduled/scheduled; Android also needs a phone",chain:[["POST","/jobs/:id/dispatch"]],parity:"PARTIAL — web omits phone gate, hardcodes location 0,0"}},
+ d:{purpose:"Tell the customer the tech is on the way; move job to En Route.",actors:["tech-user","owner","office"],vis:"status ∈ unscheduled/scheduled; Android also needs a phone",chain:[["POST","/jobs/:id/dispatch"]],parity:"PARTIAL, web omits phone gate, hardcodes location 0,0"}},
 "arrived":{label:"Arrived",status:"partial",route:"POST /jobs/:id/arrived",fires:"status + SMS",result:"In Progress",caveat:"web has no confirm step",
- d:{purpose:"Tell the customer the tech arrived; move to In Progress and start the work clock.",actors:["tech-user","owner","office"],vis:"status == en_route",chain:[["POST","/jobs/:id/arrived"]],parity:"PARTIAL — web lacks the confirm dialog"}},
+ d:{purpose:"Tell the customer the tech arrived; move to In Progress and start the work clock.",actors:["tech-user","owner","office"],vis:"status == en_route",chain:[["POST","/jobs/:id/arrived"]],parity:"PARTIAL, web lacks the confirm dialog"}},
 "edit":{label:"Edit",status:"ok",route:"navigate",fires:"open form",result:"edit screen",
  d:{purpose:"Open the job form to edit fields.",actors:["owner","office"],vis:"always",chain:[],parity:"MATCH"}},
 "delete":{label:"Delete",status:"partial",route:"DELETE /jobs/:id",fires:"archive job",result:"moved to deleted",caveat:"tech sees button → gets 403",
- d:{purpose:"Soft-archive the job (recoverable from search). Estimates/invoices kept.",actors:["owner","office"],vis:"status ≠ deleted",chain:[["DELETE","/jobs/:id"]],parity:"MATCH — but not role-gated client-side (managerUp on backend)"}},
+ d:{purpose:"Soft-archive the job (recoverable from search). Estimates/invoices kept.",actors:["owner","office"],vis:"status ≠ deleted",chain:[["DELETE","/jobs/:id"]],parity:"MATCH, but not role-gated client-side (managerUp on backend)"}},
 "status":{label:"Status",status:"ok",route:"/status (non-completed) · /complete",fires:"status change",result:"new status",
- d:{purpose:"Change job lifecycle state. The spine of the screen.",actors:["owner","office","tech-user"],vis:"always (clickable badge)",chain:[["POST","/jobs/:id/status"],["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1) — both surfaces route 'completed' to the full three-slice /complete flow with the >100% guard; web's Status modal 'Completed' now opens the Complete modal instead of posting to /status. Non-completed transitions share /status. Caveat: Path A's inventory-deduct/membership-advance/source-sms are not in /complete on either surface (backend follow-up)."}},
+ d:{purpose:"Change job lifecycle state. The spine of the screen.",actors:["owner","office","tech-user"],vis:"always (clickable badge)",chain:[["POST","/jobs/:id/status"],["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1), both surfaces route 'completed' to the full three-slice /complete flow with the >100% guard; web's Status modal 'Completed' now opens the Complete modal instead of posting to /status. Non-completed transitions share /status. Caveat: Path A's inventory-deduct/membership-advance/source-sms are not in /complete on either surface (backend follow-up)."}},
 
-"banner-received":{label:"Received-from banner",status:"ok",route:"display",fires:"—",result:"shows sender",
+"banner-received":{label:"Received-from banner",status:"ok",route:"display",fires:", ",result:"shows sender",
  d:{purpose:"Show this job was sent to you by a network partner.",actors:["owner","office"],vis:"sent_by_company ≠ null",chain:[],parity:"MATCH (informational)"}},
 "banner-sent-confirm":{label:"Sent-to + Confirm",status:"ok",route:"POST /confirm-partner-status",fires:"resolve status",result:"confirmed/disputed",
  d:{purpose:"When a partner changes a shared job's status, the sender confirms or disputes it.",actors:["owner","office","partner"],vis:"sent_to present with pending partner_status",chain:[["POST","/jobs/:id/confirm-partner-status"]],parity:"MATCH"}},
 "badge-source":{label:"Source badge",status:"partial",route:"display",fires:"show source",result:"source + commission",caveat:"web omits commission line",
- d:{purpose:"Show where the job came from and, for non-techs, the resolved commission %.",actors:["owner","office"],vis:"source present; commission gated !isTech",chain:[],parity:"PARTIAL — Android shows commission %, web does not"}},
-"banner-membership":{label:"Membership banner",status:"ok",route:"display",fires:"—",result:"shows membership",
+ d:{purpose:"Show where the job came from and, for non-techs, the resolved commission %.",actors:["owner","office"],vis:"source present; commission gated !isTech",chain:[],parity:"PARTIAL, Android shows commission %, web does not"}},
+"banner-membership":{label:"Membership banner",status:"ok",route:"display",fires:", ",result:"shows membership",
  d:{purpose:"Flag that this customer has an active membership.",actors:["owner","office"],vis:"membership present",chain:[],parity:"MATCH (informational)"}},
 "banner-completion":{label:"Completion banner",status:"partial",route:"GET /completion",fires:"open sheet",result:"profit-split detail",caveat:"web has no completion sheet",
- d:{purpose:"Show completion/confirmation state; owner opens the profit-split detail sheet.",actors:["owner","office"],vis:"completion record exists",chain:[["GET","/jobs/:id/completion"],["POST","/jobs/:id/completion/confirm"]],parity:"ANDROID-ONLY — web orphans both completion endpoints"}},
+ d:{purpose:"Show completion/confirmation state; owner opens the profit-split detail sheet.",actors:["owner","office"],vis:"completion record exists",chain:[["GET","/jobs/:id/completion"],["POST","/jobs/:id/completion/confirm"]],parity:"ANDROID-ONLY, web orphans both completion endpoints"}},
 
 "reminder-method":{label:"Reminder method",status:"ok",route:"PATCH /reminder-method",fires:"save method",result:"reminder set",
- d:{purpose:"Choose how the customer reminder is sent for a scheduled job.",actors:["owner","office"],vis:"Android: scheduled & not-yet-sent. Web: always.",chain:[["PATCH","/jobs/:id/reminder-method"]],parity:"MATCH (Phase 2) — web now sends {reminder_method: value || 'default'} (JobDetail.jsx:513), fixing the wrong key + the '' value. Android unchanged."}},
-"scheduled-display":{label:"Scheduled date/time",status:"ok",route:"display",fires:"—",result:"shows schedule",
+ d:{purpose:"Choose how the customer reminder is sent for a scheduled job.",actors:["owner","office"],vis:"Android: scheduled & not-yet-sent. Web: always.",chain:[["PATCH","/jobs/:id/reminder-method"]],parity:"MATCH (Phase 2), web now sends {reminder_method: value || 'default'} (JobDetail.jsx:513), fixing the wrong key + the '' value. Android unchanged."}},
+"scheduled-display":{label:"Scheduled date/time",status:"ok",route:"display",fires:", ",result:"shows schedule",
  d:{purpose:"Show when the job is scheduled.",actors:["owner","office","tech-user"],vis:"always (display only)",chain:[],parity:"MATCH"}},
 
 "source-type-assigned":{label:"Source/Type/Assigned",status:"ok",route:"navigate",fires:"open edit",result:"edit form",
- d:{purpose:"At-a-glance job attributes; tap any to edit.",actors:["owner","office"],vis:"always",chain:[],parity:"MATCH — minor fallback label differences"}},
+ d:{purpose:"At-a-glance job attributes; tap any to edit.",actors:["owner","office"],vis:"always",chain:[],parity:"MATCH, minor fallback label differences"}},
 
 "customer-card":{label:"Customer card",status:"ok",route:"navigate / dial / mail",fires:"open contact",result:"customer / dialer / mail",
  d:{purpose:"Reach the customer record, dial, email, or read the address.",actors:["owner","office","tech-user"],vis:"always",chain:[],parity:"MATCH"}},
@@ -221,46 +221,43 @@ const A={
  d:{purpose:"Jump to a linked job (go-back / warranty / follow-up).",actors:["owner","office","tech-user"],vis:"linked_job_id ≠ null",chain:[],parity:"ANDROID-ONLY"}},
 
 "navigate-site":{label:"Navigate (Job Site)",status:"ok",route:"maps intent",fires:"open maps",result:"navigation opens",caveat:"web adds 'address may be inaccurate' note",
- d:{purpose:"Open turn-by-turn navigation to the job address.",actors:["tech-user","owner"],vis:"address non-blank",chain:[],parity:"PARTIAL — web shows an address-verification warning (extra, not a defect)"}},
+ d:{purpose:"Open turn-by-turn navigation to the job address.",actors:["tech-user","owner"],vis:"address non-blank",chain:[],parity:"PARTIAL, web shows an address-verification warning (extra, not a defect)"}},
 "line-items-card":{label:"Line Items card",status:"partial",route:"display",fires:"show items",result:"items + total",caveat:"different source than web invoice items",
- d:{purpose:"Show line items recorded on the job.",actors:["owner","office","tech-user"],vis:"job.line_items present (Android)",chain:[],parity:"PARTIAL — Android shows job line_items here; web shows invoice line_items in the invoice card"}},
+ d:{purpose:"Show line items recorded on the job.",actors:["owner","office","tech-user"],vis:"job.line_items present (Android)",chain:[],parity:"PARTIAL, Android shows job line_items here; web shows invoice line_items in the invoice card"}},
 
 "notes":{label:"Notes editor",status:"ok",route:"PUT /jobs/:id",fires:"save notes",result:"notes saved",
- d:{purpose:"Free-text job notes; save on focus-lost.",actors:["owner","office","tech-user"],vis:"always",chain:[["PUT","/jobs/:id"]],parity:"MATCH (Phase 2) — web now saves via jobsApi.update PUT /jobs/:id {notes} (JobDetail.jsx:520), mirroring Android. The non-existent PATCH /jobs/:id is gone."}},
+ d:{purpose:"Free-text job notes; save on focus-lost.",actors:["owner","office","tech-user"],vis:"always",chain:[["PUT","/jobs/:id"]],parity:"MATCH (Phase 2), web now saves via jobsApi.update PUT /jobs/:id {notes} (JobDetail.jsx:520), mirroring Android. The non-existent PATCH /jobs/:id is gone."}},
 "permissions":{label:"Tech/Partner perms",status:"ok",route:"PUT /jobs/:id",fires:"save perms",result:"perms saved",
- d:{purpose:"On a shared job, control which actions the receiving partner company may perform.",actors:["owner","office","partner"],vis:"editable Partner Permissions card when sent_to && !sent_by (sender) — both surfaces",chain:[["PUT","/jobs/:id"]],parity:"MATCH (Phase 2 C4) — web now renders a toggle-per-key Partner Permissions card (JobDetail.jsx:~1125, gated sent_to && !sent_by) → Toggle → handleTechPermToggle → jobsApi.update PUT → refetch. Same 6 keys + editor defaults as Android (TechPermissionsSheet, JobScreens.kt:2826/2835); view_history matches the canViewHistory gate. Android-only read-only receiver card is a minor remainder."}},
+ d:{purpose:"On a shared job, control which actions the receiving partner company may perform.",actors:["owner","office","partner"],vis:"editable Partner Permissions card when sent_to && !sent_by (sender), both surfaces",chain:[["PUT","/jobs/:id"]],parity:"MATCH (Phase 2 C4), web now renders a toggle-per-key Partner Permissions card (JobDetail.jsx:~1125, gated sent_to && !sent_by) → Toggle → handleTechPermToggle → jobsApi.update PUT → refetch. Same 6 keys + editor defaults as Android (TechPermissionsSheet, JobScreens.kt:2826/2835); view_history matches the canViewHistory gate. Android-only read-only receiver card is a minor remainder."}},
 
 "send-to-tech":{label:"Send To Tech",status:"partial",route:"notify-tech / send-to-partner",fires:"notify recipient",result:"recipient notified",caveat:"web can't pick an unassigned roster tech",
- d:{purpose:"Notify a recipient — roster tech, app-user tech, or network partner.",actors:["owner","office"],vis:"hidden when deleted/cancelled",chain:[["POST","/roster-techs/notify-tech"],["POST","/jobs/:id/send-to-partner"]],parity:"PARTIAL — Android has 3 recipient paths; web treats assigned tech as roster_tech and always hits notify-tech (tech_id ignored)"}},
+ d:{purpose:"Notify a recipient, roster tech, app-user tech, or network partner.",actors:["owner","office"],vis:"hidden when deleted/cancelled",chain:[["POST","/roster-techs/notify-tech"],["POST","/jobs/:id/send-to-partner"]],parity:"PARTIAL, Android has 3 recipient paths; web treats assigned tech as roster_tech and always hits notify-tech (tech_id ignored)"}},
 
 "estimates":{label:"Create/Add Estimate",status:"ok",route:"GET /estimates?job_id + navigate",fires:"open builder",result:"estimate builder/detail",
  d:{purpose:"Build estimates from the job; view existing ones.",actors:["owner","office","tech-user"],vis:"Create when none; cards + Add when ≥1",chain:[["GET","/estimates?job_id="]],parity:"MATCH"}},
 "invoice":{label:"Add to Invoice",status:"ok",route:"POST /invoices + navigate",fires:"create/open invoice",result:"invoice opens",caveat:"web also adds line items inline (PUT)",
- d:{purpose:"Create-or-open the job's invoice; web also adds line items inline.",actors:["owner","office","tech-user"],vis:"label toggles by invoice existence",chain:[["GET","/invoices?job_id="],["POST","/invoices"],["PUT","/invoices/:id"]],parity:"PARTIAL — web inline Add-Charge modal; Android adds items on the invoice screen"}},
-"profit-override":{label:"Profit Allocation Edit",status:"ok",route:"PUT /jobs/:id",fires:"save override",result:"override saved",caveat:"web only — Android has no on-screen card here",
+ d:{purpose:"Create-or-open the job's invoice; web also adds line items inline.",actors:["owner","office","tech-user"],vis:"label toggles by invoice existence",chain:[["GET","/invoices?job_id="],["POST","/invoices"],["PUT","/invoices/:id"]],parity:"PARTIAL, web inline Add-Charge modal; Android adds items on the invoice screen"}},
+"profit-override":{label:"Profit Allocation Edit",status:"ok",route:"PUT /jobs/:id",fires:"save override",result:"override saved",caveat:"web only, Android has no on-screen card here",
  d:{purpose:"Override the per-job split when default source%+tech% conflict; live >100% guard.",actors:["owner"],vis:"web only",chain:[["PUT","/jobs/:id"]],parity:"WEB-ONLY"}},
 
 "photos":{label:"Before/After photos",status:"ok",route:"POST/GET /uploads?purpose=",fires:"attach photo",result:"photos in columns",
- d:{purpose:"Document the job with categorized before/after photos.",actors:["tech-user","owner","office"],vis:"always",chain:[["POST","/uploads"],["GET","/uploads"]],parity:"MATCH (Phase 2) — web now uploads with QUERY params (entity_type=job, entity_id, purpose=before_photo|after_photo) + multipart file, and reads back via GET /uploads?purpose= splitting before/after, mirroring Android getUploads (JobScreens.kt:262-263). Dropped the dead POST /jobs/:id/photos + the phantom jobs.before_photos/after_photos column reads. (Per-photo delete still web-absent — minor.)"}},
+ d:{purpose:"Document the job with categorized before/after photos.",actors:["tech-user","owner","office"],vis:"always",chain:[["POST","/uploads"],["GET","/uploads"]],parity:"MATCH (Phase 2), web now uploads with QUERY params (entity_type=job, entity_id, purpose=before_photo|after_photo) + multipart file, and reads back via GET /uploads?purpose= splitting before/after, mirroring Android getUploads (JobScreens.kt:262-263). Dropped the dead POST /jobs/:id/photos + the phantom jobs.before_photos/after_photos column reads. (Per-photo delete still web-absent, minor.)"}},
 
 "parts":{label:"Add Part / list",status:"ok",route:"GET/POST/DELETE /jobs/:id/parts",fires:"save/delete part",result:"parts list updated",
- d:{purpose:"Record parts used and who paid (company/tech) — the data the profit math depends on.",actors:["tech-user","owner","office"],vis:"always",chain:[["GET","/jobs/:id/parts"],["POST","/jobs/:id/parts"],["DELETE","/jobs/:id/parts/:partId"]],parity:"MATCH — web appends locally without refetch but correct"}},
+ d:{purpose:"Record parts used and who paid (company/tech), the data the profit math depends on.",actors:["tech-user","owner","office"],vis:"always",chain:[["GET","/jobs/:id/parts"],["POST","/jobs/:id/parts"],["DELETE","/jobs/:id/parts/:partId"]],parity:"MATCH, web appends locally without refetch but correct"}},
 "charge-payment":{label:"Charge Payment",status:"ok",route:"POST /invoices/:id/payment",fires:"record payment",result:"payment recorded",
- d:{purpose:"Collect payment on the job's invoice.",actors:["tech-user","owner","office"],vis:"both: jobInvoice present && status != 'paid' (no invoice → button hidden)",chain:[["POST","/invoices/:id/payment"]],parity:"MATCH (Phase 2) — web handleChargePayment (JobDetail.jsx:519) posts {method, amount} to /invoices/${jobInvoice.id}/payment (same endpoint Android uses), gated on an unpaid invoice, success refetches + reloads the invoice. Records a payments row + updates balance/status/ledger. The broken estimate collect-deposit path was abandoned (that estimate-deposit feature is untouched)."}},
+ d:{purpose:"Collect payment on the job's invoice.",actors:["tech-user","owner","office"],vis:"both: jobInvoice present && status != 'paid' (no invoice → button hidden)",chain:[["POST","/invoices/:id/payment"]],parity:"MATCH (Phase 2), web handleChargePayment (JobDetail.jsx:519) posts {method, amount} to /invoices/${jobInvoice.id}/payment (same endpoint Android uses), gated on an unpaid invoice, success refetches + reloads the invoice. Records a payments row + updates balance/status/ledger. The broken estimate collect-deposit path was abandoned (that estimate-deposit feature is untouched)."}},
 
 "send-receipt":{label:"Send Receipt",status:"ok",route:"→ invoice → POST /send-receipt",fires:"send receipt",result:"receipt sent",caveat:"web auto-opens receipt modal",
- d:{purpose:"Send the customer a receipt (with optional review request).",actors:["owner","office"],vis:"enabled iff invoice exists",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL — web auto-opens modal via route state; Android just opens the invoice. Modal works (review alias bug fixed in 6a67c97)."}},
+ d:{purpose:"Send the customer a receipt (with optional review request).",actors:["owner","office"],vis:"enabled iff invoice exists",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL, web auto-opens modal via route state; Android just opens the invoice. Modal works (review alias bug fixed in 6a67c97)."}},
 "cancel":{label:"Cancel Job",status:"ok",route:"POST /jobs/:id/status",fires:"status → cancelled",result:"job cancelled",
  d:{purpose:"Cancel the job; remove from tech view, keep editable by office.",actors:["owner","office"],vis:"status not deleted/cancelled",chain:[["POST","/jobs/:id/status"]],parity:"MATCH"}},
 "restore":{label:"Restore",status:"ok",route:"POST /jobs/:id/status {unscheduled}",fires:"restore job",result:"job restored",
- d:{purpose:"Restore an archived (deleted) job.",actors:["owner","office"],vis:"status == deleted (web)",chain:[["POST","/jobs/:id/status"]],parity:"MATCH (Phase 2) — web jobsApi.restore (api.js:192) now posts /jobs/:id/status {status:'unscheduled'}, mirroring Android restoreJob → updateJobStatus('unscheduled') (JobScreens.kt:212). The non-existent /restore route is no longer called. DRIFT corrected: Android mechanism was verified."}},
+ d:{purpose:"Restore an archived (deleted) job.",actors:["owner","office"],vis:"status == deleted (web)",chain:[["POST","/jobs/:id/status"]],parity:"MATCH (Phase 2), web jobsApi.restore (api.js:192) now posts /jobs/:id/status {status:'unscheduled'}, mirroring Android restoreJob → updateJobStatus('unscheduled') (JobScreens.kt:212). The non-existent /restore route is no longer called. DRIFT corrected: Android mechanism was verified."}},
 "complete":{label:"Completed",status:"ok",route:"POST /jobs/:id/complete",fires:"profit calc + earnings",result:"completed / holding / review",
- d:{purpose:"Lock in the job outcome and trigger profit allocation. The money spine's terminal action.",actors:["tech-user","owner"],vis:"hidden when deleted/cancelled/completed",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1) — web Complete modal renders the same parts/CC form as Android for partner jobs and sends the identical body; the dead payment_method was removed. >100% guard runs in /complete; web's Status modal 'Completed' now also routes here."}},
-"signature":{label:"Signature pad",status:"dead",route:"POST /jobs/:id/signature",fires:"save signature",result:"signature saved",caveat:"key fixed; no trigger on either surface (unbuilt)",
- d:{purpose:"Capture a signature on the job.",actors:["owner","office","customer"],vis:"web modal exists but is never opened; Android has no job-signature UI either",chain:[["POST","/jobs/:id/signature"]],parity:"Phase 0 [SIG] (2026-05-31): body key now signature_url, matching backend jobs.js:1011 + Android repo (CrmRepository.kt:262). Stays dead-code: no trigger wires the modal on web, and Android has the saveJobSignature repo method but no screen calls it. Unbuilt on both surfaces; wiring is a product decision, not a key bug."}},
-
+ d:{purpose:"Lock in the job outcome and trigger profit allocation. The money spine's terminal action.",actors:["tech-user","owner"],vis:"hidden when deleted/cancelled/completed",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1), web Complete modal renders the same parts/CC form as Android for partner jobs and sends the identical body; the dead payment_method was removed. >100% guard runs in /complete; web's Status modal 'Completed' now also routes here."}},
 "tabs":{label:"Details/History/Messages",status:"ok",route:"GET /history · /sms · POST /send",fires:"load tab / send SMS",result:"tab shown / message sent",
- d:{purpose:"Switch between job details, customer history, and the SMS thread.",actors:["owner","office","tech-user"],vis:"History gated by canViewHistory on both surfaces",chain:[["GET","/customers/:id/history"],["GET","/sms/job/:jobId/messages"],["POST","/sms/conversations/:id/send"]],parity:"MATCH — [SMS-CONV] fixed web Messages send (convId from first message object, like Android); empty-thread start disabled on both. Phase 2 (2026-06-01): web now gates History on canViewHistory = !isTech || tech_permissions.view_history !== false (JobDetail.jsx:~676), hiding the tab button + panel for techs — mirrors Android JobScreens.kt:1438."}},
+ d:{purpose:"Switch between job details, customer history, and the SMS thread.",actors:["owner","office","tech-user"],vis:"History gated by canViewHistory on both surfaces",chain:[["GET","/customers/:id/history"],["GET","/sms/job/:jobId/messages"],["POST","/sms/conversations/:id/send"]],parity:"MATCH, [SMS-CONV] fixed web Messages send (convId from first message object, like Android); empty-thread start disabled on both. Phase 2 (2026-06-01): web now gates History on canViewHistory = !isTech || tech_permissions.view_history !== false (JobDetail.jsx:~676), hiding the tab button + panel for techs, mirrors Android JobScreens.kt:1438."}},
 };
 
 const atlas=document.getElementById('atlas');
@@ -278,7 +275,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id];const s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `
   <div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
@@ -294,7 +291,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

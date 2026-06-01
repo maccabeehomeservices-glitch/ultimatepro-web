@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Phone / SMS<span class="sub">Call + SMS command center — web is a thin 2-tab list; Android adds CSR stats, numbers, second-chance, live queue.</span></h1>
+    <h1>Phone / SMS<span class="sub">Call + SMS command center, web is a thin 2-tab list; Android adds CSR stats, numbers, second-chance, live queue.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>6147cd1</b></div>
   </header>
 
@@ -139,16 +139,16 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Web Phone is a thin 2-tab list</b> (SMS conversations + call log, both read-only). Android adds CSR Stats, Numbers, click-to-call on the call log, Second-Chance lead recovery, and the Live Queue — all Android-only.</li>
-      <li><b>Second-Chance and Live Queue are Android-only</b> (confirmed) — there are no <code>/phone/second-chance</code> or <code>/phone/queue</code> web routes.</li>
-      <li><b>No dialer/campaign UI in the hub</b> — the backend has power-dialer endpoints (<code>/phone/dialer/campaign</code>, <code>/phone/dialer/:id/dial-next</code>) but neither the web Phone page nor the Android PhoneScreen read this pass surfaces a dialer. UNVERIFIED whether any unread screen does.</li>
+      <li><b>Web Phone is a thin 2-tab list</b> (SMS conversations + call log, both read-only). Android adds CSR Stats, Numbers, click-to-call on the call log, Second-Chance lead recovery, and the Live Queue, all Android-only.</li>
+      <li><b>Second-Chance and Live Queue are Android-only</b> (confirmed), there are no <code>/phone/second-chance</code> or <code>/phone/queue</code> web routes.</li>
+      <li><b>No dialer/campaign UI in the hub</b>, the backend has power-dialer endpoints (<code>/phone/dialer/campaign</code>, <code>/phone/dialer/:id/dial-next</code>) but neither the web Phone page nor the Android PhoneScreen read this pass surfaces a dialer. UNVERIFIED whether any unread screen does.</li>
       <li><b>UNVERIFIED:</b> LiveQueueScreen internals (coaching/barge: <code>POST /phone/coaching/join</code>, <code>POST /phone/mask</code>); the second_chance status enum beyond new/called_back/booked/lost.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Phone / SMS Hub · rendered from phone.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -160,19 +160,19 @@ const SECTIONS=[
 ];
 const A={
 "conversations-list":{label:"Messages list",status:"ok",route:"GET /sms/conversations",fires:"read convos",result:"open thread",caveat:"web auto-refresh 60s",
- d:{purpose:"List SMS conversations and open a thread.",actors:["office","owner"],vis:"web Messages tab (default); Android Messages tab",chain:[["GET","/sms/conversations"]],parity:"MATCH — both list conversations and open a thread (/phone/thread/:id web; SmsThreadScreen Android). Rows carry the real conversation_id (unlike the bare-array job/customer message endpoints)."}},
+ d:{purpose:"List SMS conversations and open a thread.",actors:["office","owner"],vis:"web Messages tab (default); Android Messages tab",chain:[["GET","/sms/conversations"]],parity:"MATCH, both list conversations and open a thread (/phone/thread/:id web; SmsThreadScreen Android). Rows carry the real conversation_id (unlike the bare-array job/customer message endpoints)."}},
 "call-log":{label:"Call Log",status:"ok",route:"GET /phone/calls",fires:"read calls",result:"call history",caveat:"Android adds click-to-call",
- d:{purpose:"Review inbound/outbound call history.",actors:["office","owner"],vis:"web Calls tab; Android Call-Log tab (default)",chain:[["GET","/phone/calls"]],parity:"PARTIAL — same endpoint; Android adds click-to-call (tel: dial intent on 'Call back') + richer rows (source tag, disposition, duration); web is display-only."}},
+ d:{purpose:"Review inbound/outbound call history.",actors:["office","owner"],vis:"web Calls tab; Android Call-Log tab (default)",chain:[["GET","/phone/calls"]],parity:"PARTIAL, same endpoint; Android adds click-to-call (tel: dial intent on 'Call back') + richer rows (source tag, disposition, duration); web is display-only."}},
 "csr-stats":{label:"CSR Stats",status:"ok",route:"GET /phone/csr-stats",fires:"read csr stats",result:"per-CSR cards",caveat:"Android-only",
- d:{purpose:"Per-CSR call + booking-rate stats.",actors:["owner","manager"],vis:"Android CSR-Stats tab only",chain:[["GET","/phone/csr-stats"]],parity:"ANDROID-ONLY — web has no CSR stats tab."}},
+ d:{purpose:"Per-CSR call + booking-rate stats.",actors:["owner","manager"],vis:"Android CSR-Stats tab only",chain:[["GET","/phone/csr-stats"]],parity:"ANDROID-ONLY, web has no CSR stats tab."}},
 "numbers":{label:"Numbers",status:"ok",route:"GET /phone/numbers",fires:"read lines",result:"number list",caveat:"Android-only",
- d:{purpose:"List configured phone numbers + source tags.",actors:["owner"],vis:"Android Numbers tab only",chain:[["GET","/phone/numbers"]],parity:"ANDROID-ONLY — web has no Numbers tab (active/inactive + source tag)."}},
+ d:{purpose:"List configured phone numbers + source tags.",actors:["owner"],vis:"Android Numbers tab only",chain:[["GET","/phone/numbers"]],parity:"ANDROID-ONLY, web has no Numbers tab (active/inactive + source tag)."}},
 "second-chance":{label:"Second-Chance Leads",status:"ok",route:"GET /phone/second-chance + PUT/POST",fires:"recover leads",result:"call back / book / lost / text",caveat:"Android-only screen",
- d:{purpose:"Recover unbooked/missed callers: call back, book, mark lost, or text.",actors:["office","owner"],vis:"Android banner (when total>0) → SecondChanceScreen. Web has no Second-Chance screen.",chain:[["GET","/phone/second-chance"],["PUT","/phone/second-chance/:id"],["POST","/phone/second-chance/:id/sms"]],parity:"ANDROID-ONLY — per-lead Call Back → dial + PUT status 'called_back'; Book → PUT {status:'booked'}; Lost → PUT {status:'lost'}; Send SMS → POST /phone/second-chance/:id/sms (texts the caller). Tabs New/Called/Booked/Lost. Confirms the earlier flag."}},
+ d:{purpose:"Recover unbooked/missed callers: call back, book, mark lost, or text.",actors:["office","owner"],vis:"Android banner (when total>0) → SecondChanceScreen. Web has no Second-Chance screen.",chain:[["GET","/phone/second-chance"],["PUT","/phone/second-chance/:id"],["POST","/phone/second-chance/:id/sms"]],parity:"ANDROID-ONLY, per-lead Call Back → dial + PUT status 'called_back'; Book → PUT {status:'booked'}; Lost → PUT {status:'lost'}; Send SMS → POST /phone/second-chance/:id/sms (texts the caller). Tabs New/Called/Booked/Lost. Confirms the earlier flag."}},
 "live-queue":{label:"Live Queue",status:"ok",route:"GET /phone/live-queue",fires:"read live calls",result:"live call list",caveat:"Android-only",
- d:{purpose:"See live/active calls in real time.",actors:["office","owner"],vis:"Android top-bar 'Live Queue' icon → LiveQueueScreen. Web has no Live Queue.",chain:[["GET","/phone/live-queue"]],parity:"ANDROID-ONLY — read-only live call state (active_calls). Confirms the earlier flag."}},
+ d:{purpose:"See live/active calls in real time.",actors:["office","owner"],vis:"Android top-bar 'Live Queue' icon → LiveQueueScreen. Web has no Live Queue.",chain:[["GET","/phone/live-queue"]],parity:"ANDROID-ONLY, read-only live call state (active_calls). Confirms the earlier flag."}},
 "refresh":{label:"Refresh",status:"ok",route:"re-issues active GET",fires:"reload",result:"fresh data",
- d:{purpose:"Re-pull the active tab.",actors:["office","owner"],vis:"always",chain:[],parity:"MATCH — both have a refresh; web also auto-refreshes conversations every 60s."}},
+ d:{purpose:"Re-pull the active tab.",actors:["office","owner"],vis:"always",chain:[],parity:"MATCH, both have a refresh; web also auto-refreshes conversations every 60s."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -188,7 +188,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -203,7 +203,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

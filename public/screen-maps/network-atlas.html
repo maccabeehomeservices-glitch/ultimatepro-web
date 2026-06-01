@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Network<span class="sub">Contractor partners — invite, agree a bilateral split (sums to 100), pause, and report.</span></h1>
+    <h1>Network<span class="sub">Contractor partners, invite, agree a bilateral split (sums to 100), pause, and report.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>79940c8</b></div>
   </header>
 
@@ -139,9 +139,9 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Web can't accept/decline a connection invite from Network</b> — <code>PUT /network/connections/:id/respond</code> exists and Android wires Accept/Decline, but the web screen only responds to <i>agreements</i>. A web-only invitee has no in-screen way to accept a partnership.</li>
-      <li><b>Partner-report send is split by surface</b> — Android sends from the Network screen (PartnerReportScreen); web sends from the Reports module's Partners tab (same <code>POST /network/connections/:id/report/send</code>).</li>
-      <li><b>Bilateral split enforced server-side</b> — <code>sender_keeps_pct + receiver_keeps_pct</code> must equal 100; proposing auto-declines the prior pending agreement; the accepted split is what Job-Complete applies to partner net.</li>
+      <li><b>Web can't accept/decline a connection invite from Network</b>, <code>PUT /network/connections/:id/respond</code> exists and Android wires Accept/Decline, but the web screen only responds to <i>agreements</i>. A web-only invitee has no in-screen way to accept a partnership.</li>
+      <li><b>Partner-report send is split by surface</b>, Android sends from the Network screen (PartnerReportScreen); web sends from the Reports module's Partners tab (same <code>POST /network/connections/:id/report/send</code>).</li>
+      <li><b>Bilateral split enforced server-side</b>, <code>sender_keeps_pct + receiver_keeps_pct</code> must equal 100; proposing auto-declines the prior pending agreement; the accepted split is what Job-Complete applies to partner net.</li>
       <li><b>Web detail is a modal; Android uses dedicated screens</b> (NetworkDetailScreen + PartnerReportScreen).</li>
       <li><b>UNVERIFIED:</b> Android counter-offer body on agreement-respond; whether any web notification path lets a web user accept a connection invite outside this screen.</li>
     </ul>
@@ -149,7 +149,7 @@
 
   <footer>
     UltimatePro Screen Atlas · Network (Partners) · rendered from network.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -163,19 +163,19 @@ const A={
 "my-ucm-id":{label:"Your UCM ID",status:"ok",route:"GET /network/my-id",fires:"copy id",result:"UCM id copied",
  d:{purpose:"Share your ultimatecrm_id so partners can find you.",actors:["owner","admin"],vis:"always",chain:[["GET","/network/my-id"]],parity:"MATCH"}},
 "search-connect":{label:"Search + Connect",status:"ok",route:"GET /network/search · POST /connections/invite",fires:"send invite",result:"connection pending",caveat:"phone / email / UCM id",
- d:{purpose:"Find a company by phone/email/UCM ID and send a connection invite.",actors:["owner","admin"],vis:"always",chain:[["GET","/network/search?q&type"],["POST","/network/connections/invite"]],parity:"MATCH — invite {search_value, search_type∈phone|email|ultimatecrm_id}. Inserts a contractor_connections row (pending, canonical a/b UUID ordering); re-invites a declined one. 404 no-company / 400 invite-self / 409 already-exists."}},
+ d:{purpose:"Find a company by phone/email/UCM ID and send a connection invite.",actors:["owner","admin"],vis:"always",chain:[["GET","/network/search?q&type"],["POST","/network/connections/invite"]],parity:"MATCH, invite {search_value, search_type∈phone|email|ultimatecrm_id}. Inserts a contractor_connections row (pending, canonical a/b UUID ordering); re-invites a declined one. 404 no-company / 400 invite-self / 409 already-exists."}},
 "connection-respond":{label:"Accept / Decline invite",status:"ok",route:"PUT /network/connections/:id/respond",fires:"status active/declined",result:"connection settled",caveat:"Android-only UI (web gap)",
- d:{purpose:"Respond to an incoming partnership invite.",actors:["owner","admin"],vis:"Android NetworkDetailScreen (Accept/Decline). Web has no accept/decline-connection UI.",chain:[["PUT","/network/connections/:id/respond"]],parity:"ANDROID-ONLY — endpoint exists ({action: accept|decline}; only the non-inviter, 403 otherwise) but the web Network screen never calls it (it only responds to agreements). A web-only invitee can't accept here."}},
+ d:{purpose:"Respond to an incoming partnership invite.",actors:["owner","admin"],vis:"Android NetworkDetailScreen (Accept/Decline). Web has no accept/decline-connection UI.",chain:[["PUT","/network/connections/:id/respond"]],parity:"ANDROID-ONLY, endpoint exists ({action: accept|decline}; only the non-inviter, 403 otherwise) but the web Network screen never calls it (it only responds to agreements). A web-only invitee can't accept here."}},
 "pause":{label:"Pause / Resume",status:"ok",route:"PUT /network/connections/:id/pause",fires:"toggle status",result:"paused/resumed",
- d:{purpose:"Toggle a partnership between active and paused.",actors:["owner","admin"],vis:"detail",chain:[["PUT","/network/connections/:id/pause"]],parity:"MATCH — toggles active↔paused (400 if not active/paused)."}},
+ d:{purpose:"Toggle a partnership between active and paused.",actors:["owner","admin"],vis:"detail",chain:[["PUT","/network/connections/:id/pause"]],parity:"MATCH, toggles active↔paused (400 if not active/paused)."}},
 "agreement-propose":{label:"Propose Agreement",status:"ok",route:"POST /network/agreements",fires:"insert agreement (pending)",result:"split proposed",caveat:"sender%+receiver%=100",
- d:{purpose:"Propose the bilateral revenue split + who gets reviews.",actors:["owner","admin"],vis:"detail (web: when no active/pending)",chain:[["POST","/network/agreements"]],parity:"MATCH — body {connection_id, sender_keeps_pct, receiver_keeps_pct, review_goes_to, notes} (web computes receiver = 100 − sender). Server validates sender+receiver==100 (else 400); auto-declines prior pending; connection must be active. This split is exactly what Job-Complete applies to partner net."}},
+ d:{purpose:"Propose the bilateral revenue split + who gets reviews.",actors:["owner","admin"],vis:"detail (web: when no active/pending)",chain:[["POST","/network/agreements"]],parity:"MATCH, body {connection_id, sender_keeps_pct, receiver_keeps_pct, review_goes_to, notes} (web computes receiver = 100 − sender). Server validates sender+receiver==100 (else 400); auto-declines prior pending; connection must be active. This split is exactly what Job-Complete applies to partner net."}},
 "agreement-respond":{label:"Accept / Decline agreement",status:"ok",route:"PUT /network/agreements/:id/respond",fires:"accept/decline",result:"split active/declined",caveat:"Android can also counter",
- d:{purpose:"Respond to a pending revenue-split proposal.",actors:["owner","admin"],vis:"detail, when a pending agreement exists",chain:[["PUT","/network/agreements/:id/respond"]],parity:"MATCH — {action: accept|decline}; Android additionally supports counter. An accepted agreement becomes the active split used on partner-job completion."}},
+ d:{purpose:"Respond to a pending revenue-split proposal.",actors:["owner","admin"],vis:"detail, when a pending agreement exists",chain:[["PUT","/network/agreements/:id/respond"]],parity:"MATCH, {action: accept|decline}; Android additionally supports counter. An accepted agreement becomes the active split used on partner-job completion."}},
 "partner-report-view":{label:"View Report",status:"ok",route:"GET /network/connections/:id/report",fires:"read partner $",result:"summary + jobs",
- d:{purpose:"Per-partner revenue/earnings over a date range.",actors:["owner","admin"],vis:"detail 'View Report' (web) / PartnerReportScreen (Android)",chain:[["GET","/network/connections/:id/report?date_from&date_to"]],parity:"MATCH — read-only (jobs + sender/receiver earnings + totals)."}},
+ d:{purpose:"Per-partner revenue/earnings over a date range.",actors:["owner","admin"],vis:"detail 'View Report' (web) / PartnerReportScreen (Android)",chain:[["GET","/network/connections/:id/report?date_from&date_to"]],parity:"MATCH, read-only (jobs + sender/receiver earnings + totals)."}},
 "partner-report-send":{label:"Send Partner Report",status:"ok",route:"POST /network/connections/:id/report/send",fires:"PDF + email",result:"report sent",caveat:"Android here; web sends from Reports",
- d:{purpose:"Email a partner their revenue report (PDF).",actors:["owner","admin"],vis:"Android PartnerReportScreen ('Send Report'). On web, partner-report send is in the Reports module's Partners tab, not Network.",chain:[["POST","/network/connections/:id/report/send"]],parity:"ANDROID-ONLY (on this screen) — body {date_from, date_to, recipient_email?}; emails a PDF to the office (+ optional partner). Web's Network detail only has 'View Report'."}},
+ d:{purpose:"Email a partner their revenue report (PDF).",actors:["owner","admin"],vis:"Android PartnerReportScreen ('Send Report'). On web, partner-report send is in the Reports module's Partners tab, not Network.",chain:[["POST","/network/connections/:id/report/send"]],parity:"ANDROID-ONLY (on this screen), body {date_from, date_to, recipient_email?}; emails a PDF to the office (+ optional partner). Web's Network detail only has 'View Report'."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -191,7 +191,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -206,7 +206,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

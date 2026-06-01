@@ -100,7 +100,7 @@
 <div class="wrap">
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Invoice Detail<span class="sub">Collect the money on one invoice — send, charge, sign, receipt, chase.</span></h1>
+    <h1>Invoice Detail<span class="sub">Collect the money on one invoice, send, charge, sign, receipt, chase.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>cca244c</b></div>
   </header>
   <div class="crumb"><a href="index.html">all maps</a> · <a href="estimate-builder-atlas.html">estimate builder</a> · <a href="payments-atlas.html">payments</a> › invoice detail</div>
@@ -131,8 +131,8 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>ScanPay charge is a 404</b> — <code>POST /payments/scanpay/charge</code> is never registered (only scanpay-qr / -link / -status / -webhook exist). Web "Charge via ScanPay" always fails; Android targets the same missing path.</li>
-      <li><b>Web invoice signature is broken</b> — web sends <code>signature_data</code>; the handler reads <code>signature</code> → 400 "Signature required". (Same wrong-key class as the Job-Detail signature.)</li>
+      <li><b>ScanPay charge is a 404</b>, <code>POST /payments/scanpay/charge</code> is never registered (only scanpay-qr / -link / -status / -webhook exist). Web "Charge via ScanPay" always fails; Android targets the same missing path.</li>
+      <li><b>Web invoice signature is broken</b>, web sends <code>signature_data</code>; the handler reads <code>signature</code> → 400 "Signature required". (Same wrong-key class as the Job-Detail signature.)</li>
       <li><b>Inline vs dedicated:</b> web does send / pay / sign / receipt in modals; Android routes each to a separate screen (InvoiceSend / Payment / InvoiceSign / Receipt).</li>
       <li><b>Charge-payment visibility differs:</b> web at any unpaid status; Android only at <code>signed</code>.</li>
       <li><b>Add Item is Android-only</b> on the detail screen; web edits items in InvoiceForm.</li>
@@ -142,7 +142,7 @@
 
   <footer>
     UltimatePro Screen Atlas · Invoice Detail · rendered from invoice-detail.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 <script>
@@ -153,19 +153,19 @@ const SECTIONS=[
 ];
 const A={
 "send-invoice":{label:"Send Invoice",status:"ok",route:"POST /invoices/:id/send",fires:"payment link + PDF + SMS/email",result:"invoice sent",caveat:"web modal · Android InvoiceSendScreen",
- d:{purpose:"Email/SMS the invoice with a hosted payment link and a generated PDF.",actors:["office","owner"],vis:"web status draft|sent; Android draft|sent button + top-bar Send when not paid",chain:[["POST","/invoices/:id/send"]],parity:"PARTIAL — same endpoint; web = inline recipient modal (email/phone checkboxes + add-new + save-to-profile), Android = dedicated InvoiceSendScreen. Mints a payment_links token (90d), attaches /pay/{token}, fetches job photos, renders PDF, then sends. (Explicit status='sent' write UNVERIFIED.)"}},
-"capture-signature":{label:"Capture Signature",status:"ok",route:"POST /invoices/:id/sign",fires:"save signature",result:"status → signed",caveat:"Phase 0 [SIG] fix — web now sends {signature}",
- d:{purpose:"Capture an on-screen customer signature on the invoice.",actors:["office","owner","tech"],vis:"web always; Android signs on InvoiceSignScreen (draft|sent)",chain:[["POST","/invoices/:id/sign"]],parity:"MATCH — Phase 0 [SIG] fix (2026-05-31): web's inline signature modal now posts {signature}, matching the handler (invoices.js:534) and Android signInvoice (CrmRepository.kt:361). Web invoice signing works. Sets customer_signature + status='signed'."}},
+ d:{purpose:"Email/SMS the invoice with a hosted payment link and a generated PDF.",actors:["office","owner"],vis:"web status draft|sent; Android draft|sent button + top-bar Send when not paid",chain:[["POST","/invoices/:id/send"]],parity:"PARTIAL, same endpoint; web = inline recipient modal (email/phone checkboxes + add-new + save-to-profile), Android = dedicated InvoiceSendScreen. Mints a payment_links token (90d), attaches /pay/{token}, fetches job photos, renders PDF, then sends. (Explicit status='sent' write UNVERIFIED.)"}},
+"capture-signature":{label:"Capture Signature",status:"ok",route:"POST /invoices/:id/sign",fires:"save signature",result:"status → signed",caveat:"Phase 0 [SIG] fix, web now sends {signature}",
+ d:{purpose:"Capture an on-screen customer signature on the invoice.",actors:["office","owner","tech"],vis:"web always; Android signs on InvoiceSignScreen (draft|sent)",chain:[["POST","/invoices/:id/sign"]],parity:"MATCH, Phase 0 [SIG] fix (2026-05-31): web's inline signature modal now posts {signature}, matching the handler (invoices.js:534) and Android signInvoice (CrmRepository.kt:361). Web invoice signing works. Sets customer_signature + status='signed'."}},
 "charge-payment":{label:"Charge Payment",status:"ok",route:"POST /invoices/:id/payment",fires:"payment row + status",result:"paid / partial",caveat:"web inline at any unpaid · Android only at 'signed' → PaymentScreen",
- d:{purpose:"Record a payment against the invoice.",actors:["office","owner","tech"],vis:"web: any time status != paid (amount/method/notes modal). Android: only at status 'signed' (sheet → Charge on site / Send payment link).",chain:[["POST","/invoices/:id/payment"]],parity:"DIVERGENT — web records inline; Android defers to PaymentScreen / payment-link. Handler inserts a completed payments row, recomputes amount_paid/balance_due, sets status paid (≤0) else partial, fires Joby invoice_paid when fully paid. Web payload {amount,method,notes} matches."}},
+ d:{purpose:"Record a payment against the invoice.",actors:["office","owner","tech"],vis:"web: any time status != paid (amount/method/notes modal). Android: only at status 'signed' (sheet → Charge on site / Send payment link).",chain:[["POST","/invoices/:id/payment"]],parity:"DIVERGENT, web records inline; Android defers to PaymentScreen / payment-link. Handler inserts a completed payments row, recomputes amount_paid/balance_due, sets status paid (≤0) else partial, fires Joby invoice_paid when fully paid. Web payload {amount,method,notes} matches."}},
 "scanpay-charge":{label:"ScanPay QR / Link",status:"ok",route:"POST /payments/scanpay-qr · /scanpay-link",fires:"create order + poll",result:"paid via checkout URL",caveat:"Phase 0 [SCANPAY-404] fix: QR/link + polling",
  d:{purpose:"Collect the balance via ScanPay: QR scan or texted payment link, polling until paid.",actors:["office","owner"],vis:"web + Android, when status != paid",chain:[["POST","/payments/scanpay-qr"],["POST","/payments/scanpay-link"],["GET","/payments/scanpay-status/:invoiceId"]],parity:"MATCH. Phase 0 [SCANPAY-404] (2026-05-31): web now mirrors Android's QR (qr_data_url) + link dialogs with status polling (QR 3s, Link 5s). The dead POST /payments/scanpay/charge button + paymentsApi.scanpayCharge were removed; that route never existed. createScanPayInvoice hits api.scanpay.tech; on paid the dialog closes and the invoice refetches."}},
 "send-receipt":{label:"Send Receipt",status:"ok",route:"POST /invoices/:id/send-receipt",fires:"SMS/email receipt",result:"receipt sent",caveat:"web modal · Android ReceiptScreen · optional review link",
- d:{purpose:"Send a paid/partial receipt, optionally with a review-request link.",actors:["office","owner"],vis:"web paid|partial|partially_paid; Android paid (if not receipt_sent) + partial. Auto-opens on web when arriving from Job Detail with state.openReceipt.",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL — same endpoint; web inline modal vs Android ReceiptScreen. Backend builds the receipt SMS (amount_paid, invoice #, company) + optional default review_platforms link, sends SMS + email."}},
+ d:{purpose:"Send a paid/partial receipt, optionally with a review-request link.",actors:["office","owner"],vis:"web paid|partial|partially_paid; Android paid (if not receipt_sent) + partial. Auto-opens on web when arriving from Job Detail with state.openReceipt.",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL, same endpoint; web inline modal vs Android ReceiptScreen. Backend builds the receipt SMS (amount_paid, invoice #, company) + optional default review_platforms link, sends SMS + email."}},
 "add-item":{label:"Add Item",status:"ok",route:"PUT /invoices/:id (line items)",fires:"items + totals update",result:"item added",caveat:"Android-only on this screen",
- d:{purpose:"Append pricebook items to the invoice from the detail screen.",actors:["office","owner","tech"],vis:"Android: always (button under line items). Web Invoice Detail has no add-item control (web edits items in InvoiceForm).",chain:[["PUT","/invoices/:id"]],parity:"ANDROID-ONLY — vm.addLineItems(id, picked) from the activity-scoped pricebook picker. Exact repo body UNVERIFIED (VM/repo not read)."}},
+ d:{purpose:"Append pricebook items to the invoice from the detail screen.",actors:["office","owner","tech"],vis:"Android: always (button under line items). Web Invoice Detail has no add-item control (web edits items in InvoiceForm).",chain:[["PUT","/invoices/:id"]],parity:"ANDROID-ONLY, vm.addLineItems(id, picked) from the activity-scoped pricebook picker. Exact repo body UNVERIFIED (VM/repo not read)."}},
 "followup":{label:"Stop / Resume Reminders",status:"ok",route:"PATCH /invoices/:id/stop-followup · reset-followup",fires:"toggle followup_stopped",result:"reminders paused/resumed",
- d:{purpose:"Pause or resume automatic unpaid-invoice follow-up reminders.",actors:["office","owner"],vis:"web when followup_count != null and not paid; Android status sent|overdue.",chain:[["PATCH","/invoices/:id/stop-followup"],["PATCH","/invoices/:id/reset-followup"]],parity:"MATCH — same two PATCH endpoints both surfaces. Stop sets followup_stopped; resume clears it and resets the count."}},
+ d:{purpose:"Pause or resume automatic unpaid-invoice follow-up reminders.",actors:["office","owner"],vis:"web when followup_count != null and not paid; Android status sent|overdue.",chain:[["PATCH","/invoices/:id/stop-followup"],["PATCH","/invoices/:id/reset-followup"]],parity:"MATCH, same two PATCH endpoints both surfaces. Stop sets followup_stopped; resume clears it and resets the count."}},
 "back":{label:"Back",status:"ok",route:"navigate",fires:"leave",result:"previous screen",
  d:{purpose:"Leave the invoice.",actors:["office","owner","tech"],vis:"always",chain:[],parity:"MATCH"}},
 };
@@ -183,7 +183,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -198,7 +198,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

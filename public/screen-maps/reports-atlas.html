@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Reports<span class="sub">Business reporting — web is a 4-tab analytics module with shareable statements; Android is dashboard cards.</span></h1>
+    <h1>Reports<span class="sub">Business reporting, web is a 4-tab analytics module with shareable statements; Android is dashboard cards.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>79940c8</b></div>
   </header>
 
@@ -139,17 +139,17 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Reports is heavily divergent</b> — web is a 4-tab analytics module (date range, partners, per-actor pay statements with shareable hosted send via <code>report_share_tokens</code>); Android Reports is a single dashboard-style screen (revenue/jobs/calls/top-techs/sources) with 3 CSV exports + a timesheet shortcut.</li>
+      <li><b>Reports is heavily divergent</b>, web is a 4-tab analytics module (date range, partners, per-actor pay statements with shareable hosted send via <code>report_share_tokens</code>); Android Reports is a single dashboard-style screen (revenue/jobs/calls/top-techs/sources) with 3 CSV exports + a timesheet shortcut.</li>
       <li><b>Web-only:</b> date-range controls, Partners tab, actor pay statements (<code>/reports/{tech,roster,source,self,partner}</code>), actor-report send (<code>report_share_tokens</code>). <b>Android-only:</b> the jobs/calls/top-techs cards in Reports.</li>
-      <li><b>Two homes for per-tech reports</b> — web <code>/reports/team/:userId</code> (Reports) vs Android <code>/payroll/tech-report/:userId</code> (Payroll); different endpoints + shapes.</li>
-      <li><b><code>report_column_preferences</code> UI is UNVERIFIED</b> — the table + endpoints exist (per-actor-type visible_columns) and the actor jobs table is a fixed 7-column set, but no audited screen sets column prefs this pass (SendReportModal/ExportReportMenu internals not read). Likely read server-side for PDF/CSV column sets.</li>
+      <li><b>Two homes for per-tech reports</b>, web <code>/reports/team/:userId</code> (Reports) vs Android <code>/payroll/tech-report/:userId</code> (Payroll); different endpoints + shapes.</li>
+      <li><b><code>report_column_preferences</code> UI is UNVERIFIED</b>, the table + endpoints exist (per-actor-type visible_columns) and the actor jobs table is a fixed 7-column set, but no audited screen sets column prefs this pass (SendReportModal/ExportReportMenu internals not read). Likely read server-side for PDF/CSV column sets.</li>
       <li><b>UNVERIFIED:</b> SendReportModal / ExportReportMenu request bodies; whether report_column_preferences is settable anywhere; Android TimesheetReportScreen specifics.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Reports · rendered from reports.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,25 +161,25 @@ const SECTIONS=[
 ];
 const A={
 "revenue-report":{label:"Revenue",status:"ok",route:"GET /reports/revenue · /reports/dashboard",fires:"read revenue",result:"KPIs + table / 3 totals",caveat:"web date-range table · Android dashboard block",
- d:{purpose:"Revenue by period + payment-method breakdown.",actors:["owner","manager"],vis:"web Revenue tab; Android Revenue card",chain:[["GET","/reports/revenue?from&to"],["GET","/reports/dashboard"]],parity:"DIVERGENT — web uses /reports/revenue with date range + per-period table (rows {period,cash,check,card,online,total,payment_count}); Android reads the dashboard revenue block (this_month/last_month/today, no date range, no table)."}},
+ d:{purpose:"Revenue by period + payment-method breakdown.",actors:["owner","manager"],vis:"web Revenue tab; Android Revenue card",chain:[["GET","/reports/revenue?from&to"],["GET","/reports/dashboard"]],parity:"DIVERGENT, web uses /reports/revenue with date range + per-period table (rows {period,cash,check,card,online,total,payment_count}); Android reads the dashboard revenue block (this_month/last_month/today, no date range, no table)."}},
 "sources-report":{label:"Job Sources",status:"ok",route:"GET /sources/report",fires:"read source ROI",result:"source rows",caveat:"web export+range · Android card",
- d:{purpose:"ROI by job source (network / source contacts / ad channels).",actors:["owner","manager"],vis:"web Sources tab; Android Sources card",chain:[["GET","/sources/report?date_from&date_to"]],parity:"PARTIAL — same endpoint both surfaces ({network, external_contacts, own_company}); web adds CSV export + date range, Android renders a grouped card and ignores the date range."}},
+ d:{purpose:"ROI by job source (network / source contacts / ad channels).",actors:["owner","manager"],vis:"web Sources tab; Android Sources card",chain:[["GET","/sources/report?date_from&date_to"]],parity:"PARTIAL, same endpoint both surfaces ({network, external_contacts, own_company}); web adds CSV export + date range, Android renders a grouped card and ignores the date range."}},
 "timesheets-report":{label:"Timesheets",status:"ok",route:"GET /timesheets/report",fires:"read hours",result:"per-tech hours",caveat:"web tab+filter · Android dedicated screen",
- d:{purpose:"Clock-in/out hours by technician.",actors:["owner","manager"],vis:"web Timesheets tab; Android 'Timesheet Report' shortcut → TimesheetReportScreen",chain:[["GET","/timesheets/report?start_date&end_date&user_id"]],parity:"PARTIAL — web has it as a tab with a tech filter + CSV export; Android routes to a dedicated TimesheetReportScreen."}},
+ d:{purpose:"Clock-in/out hours by technician.",actors:["owner","manager"],vis:"web Timesheets tab; Android 'Timesheet Report' shortcut → TimesheetReportScreen",chain:[["GET","/timesheets/report?start_date&end_date&user_id"]],parity:"PARTIAL, web has it as a tab with a tech filter + CSV export; Android routes to a dedicated TimesheetReportScreen."}},
 "partners-report":{label:"Partners",status:"ok",route:"GET /network/connections/:id/report",fires:"read partner $",result:"partner summary+jobs",caveat:"web tab; Android → Network module",
- d:{purpose:"Per-partner revenue/earnings over the period.",actors:["owner","manager"],vis:"web Partners tab only",chain:[["GET","/network/connections"],["GET","/network/connections/:id/report?date_from&date_to"]],parity:"WEB-ONLY — Android surfaces partner reports in the Network module (PartnerReportScreen), not the Reports screen."}},
+ d:{purpose:"Per-partner revenue/earnings over the period.",actors:["owner","manager"],vis:"web Partners tab only",chain:[["GET","/network/connections"],["GET","/network/connections/:id/report?date_from&date_to"]],parity:"WEB-ONLY, Android surfaces partner reports in the Network module (PartnerReportScreen), not the Reports screen."}},
 "jobs-calls-toptechs":{label:"Jobs/Calls/Top Techs",status:"ok",route:"GET /reports/dashboard",fires:"read dashboard",result:"jobs/calls/top-tech cards",caveat:"Android Reports only",
- d:{purpose:"At-a-glance jobs, calls, and top earners.",actors:["owner","manager"],vis:"Android Reports screen only",chain:[["GET","/reports/dashboard"]],parity:"ANDROID-ONLY — web shows these on the Dashboard, not in Reports."}},
+ d:{purpose:"At-a-glance jobs, calls, and top earners.",actors:["owner","manager"],vis:"Android Reports screen only",chain:[["GET","/reports/dashboard"]],parity:"ANDROID-ONLY, web shows these on the Dashboard, not in Reports."}},
 "date-range":{label:"Date range",status:"ok",route:"re-issues active GET with from/to",fires:"rescope",result:"reports rescoped",caveat:"web-only (chips + From/To)",
- d:{purpose:"Scope every web report tab.",actors:["owner","manager"],vis:"web only (This Week / Month / Last Month / YTD / Custom + date inputs)",chain:[],parity:"WEB-ONLY — Android Reports has no date-range control (uses dashboard defaults); the period concept appears only on web actor pages (their own chips)."}},
+ d:{purpose:"Scope every web report tab.",actors:["owner","manager"],vis:"web only (This Week / Month / Last Month / YTD / Custom + date inputs)",chain:[],parity:"WEB-ONLY, Android Reports has no date-range control (uses dashboard defaults); the period concept appears only on web actor pages (their own chips)."}},
 "csv-export":{label:"Export CSV",status:"ok",route:"GET /reports/{revenue,jobs,earnings}/export · /sources/report/export",fires:"download blob",result:"CSV saved",caveat:"web per-tab · Android per-card",
- d:{purpose:"Download a report as CSV.",actors:["owner","manager"],vis:"web per-tab + actor Export menu; Android per-card download icons",chain:[["GET","/reports/revenue/export"],["GET","/reports/jobs/export"],["GET","/reports/earnings/export"]],parity:"MATCH — both export CSVs (web per-tab incl. sources/timesheets; Android per-card revenue/jobs/earnings). Partner CSV is client-built."}},
+ d:{purpose:"Download a report as CSV.",actors:["owner","manager"],vis:"web per-tab + actor Export menu; Android per-card download icons",chain:[["GET","/reports/revenue/export"],["GET","/reports/jobs/export"],["GET","/reports/earnings/export"]],parity:"MATCH, both export CSVs (web per-tab incl. sources/timesheets; Android per-card revenue/jobs/earnings). Partner CSV is client-built."}},
 "actor-pay-statement":{label:"Actor pay statement",status:"ok",route:"GET /reports/{tech|roster|source|self|partner}/:id",fires:"read statement",result:"pay statement",caveat:"web pages (from Payroll drill-down)",
- d:{purpose:"Per-tech/roster/source pay statement: jobs table, comp summary (net = period tech profit + bonuses − deductions), all-time balance.",actors:["owner","manager"],vis:"web pages (/reports/team/:userId etc.), reached from Payroll drill-down",chain:[["GET","/reports/tech/:userId"],["GET","/reports/roster/:id"],["GET","/reports/source/:id"]],parity:"WEB-ONLY — Android's per-tech report lives in the Payroll module (/payroll/tech-report/:userId), not these /reports/* actor pages. Jobs table is a fixed 7-column 'essentials' set."}},
+ d:{purpose:"Per-tech/roster/source pay statement: jobs table, comp summary (net = period tech profit + bonuses − deductions), all-time balance.",actors:["owner","manager"],vis:"web pages (/reports/team/:userId etc.), reached from Payroll drill-down",chain:[["GET","/reports/tech/:userId"],["GET","/reports/roster/:id"],["GET","/reports/source/:id"]],parity:"WEB-ONLY, Android's per-tech report lives in the Payroll module (/payroll/tech-report/:userId), not these /reports/* actor pages. Jobs table is a fixed 7-column 'essentials' set."}},
 "actor-report-send":{label:"Send Report (statement)",status:"ok",route:"POST /reports/{tech|roster|source|self|partner}/:id/send",fires:"share token + PDF + email",result:"report dispatched",caveat:"manager-or-self gate · report_share_tokens",
- d:{purpose:"Email/SMS a shareable hosted pay statement to the actor.",actors:["owner","manager"],vis:"web actor pages (SendReportModal)",chain:[["POST","/reports/tech/:userId/send"]],parity:"WEB-ONLY — role-gated (manager, or self for own report → 403 otherwise). dispatchReport(...) builds the report, mints a report_share_tokens hosted view, generates a PDF, and emails (office + optional recipient). 400 when from/to missing. Android Reports has no statement-send."}},
+ d:{purpose:"Email/SMS a shareable hosted pay statement to the actor.",actors:["owner","manager"],vis:"web actor pages (SendReportModal)",chain:[["POST","/reports/tech/:userId/send"]],parity:"WEB-ONLY, role-gated (manager, or self for own report → 403 otherwise). dispatchReport(...) builds the report, mints a report_share_tokens hosted view, generates a PDF, and emails (office + optional recipient). 400 when from/to missing. Android Reports has no statement-send."}},
 "partner-send":{label:"Send Partner Report",status:"ok",route:"POST /network/connections/:id/report/send",fires:"PDF + email",result:"partner report sent",caveat:"web Partners tab",
- d:{purpose:"Email a partner their revenue report (PDF).",actors:["owner","manager"],vis:"web Partners tab (after loading a partner report)",chain:[["POST","/network/connections/:id/report/send"]],parity:"WEB-ONLY (on this screen) — body {date_from, date_to, recipient_email?}; always emails a PDF to the office, optionally to the partner. Android's partner reporting is in the Network module's PartnerReportScreen."}},
+ d:{purpose:"Email a partner their revenue report (PDF).",actors:["owner","manager"],vis:"web Partners tab (after loading a partner report)",chain:[["POST","/network/connections/:id/report/send"]],parity:"WEB-ONLY (on this screen), body {date_from, date_to, recipient_email?}; always emails a PDF to the office, optionally to the partner. Android's partner reporting is in the Network module's PartnerReportScreen."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -195,7 +195,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -210,7 +210,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

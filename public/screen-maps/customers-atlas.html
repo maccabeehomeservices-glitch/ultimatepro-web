@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Customers<span class="sub">Find a customer and act — search, filter, open, add, import, bulk-delete.</span></h1>
+    <h1>Customers<span class="sub">Find a customer and act, search, filter, open, add, import, bulk-delete.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>9366abe</b></div>
   </header>
 
@@ -129,7 +129,7 @@
       <button class="fbtn" data-f="broken">Broken</button>
       <button class="fbtn" data-f="dead">Dead-code</button>
     </div>
-    <div class="hint">click any row to open full detail · a clean list screen — find + navigate + bulk-delete</div>
+    <div class="hint">click any row to open full detail · a clean list screen, find + navigate + bulk-delete</div>
   </div>
 
   <div class="colhead"><span>action</span><span class="c-route">route it calls</span><span class="c-fire">what fires</span><span class="c-res">result</span></div>
@@ -139,16 +139,16 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Type filter is web-only</b> — Android shows a type badge per row but offers no residential/commercial filter (search only).</li>
-      <li><b>Pagination differs</b> — web has an explicit "Load more" (page++); Android's in-<code>vm.load</code> paging is UNVERIFIED (no visible control).</li>
-      <li><b>Refresh + selection entry differ</b> — web Refresh button + "Select" button; Android pull-to-refresh + ON_RESUME + long-press to select. Both bulk-delete via repeated <code>DELETE /customers/:id</code>.</li>
+      <li><b>Type filter is web-only</b>, Android shows a type badge per row but offers no residential/commercial filter (search only).</li>
+      <li><b>Pagination differs</b>, web has an explicit "Load more" (page++); Android's in-<code>vm.load</code> paging is UNVERIFIED (no visible control).</li>
+      <li><b>Refresh + selection entry differ</b>, web Refresh button + "Select" button; Android pull-to-refresh + ON_RESUME + long-press to select. Both bulk-delete via repeated <code>DELETE /customers/:id</code>.</li>
       <li><b>UNVERIFIED:</b> Android CustomerViewModel.load pagination; the exact response fields behind Member/Returning badges (<code>job_count</code>/<code>has_membership</code> web vs <code>has_active_membership</code> Android).</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Customers (List) · rendered from customers.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -159,21 +159,21 @@ const SECTIONS=[
 ];
 const A={
 "search":{label:"Search box",status:"ok",route:"GET /customers?search",fires:"filter list",result:"filtered list",
- d:{purpose:"Find customers by name/phone/email.",actors:["office","owner"],vis:"always",chain:[["GET","/customers?search="]],parity:"MATCH — both filter via the search query param (web debounced 300ms; Android live vm.load)."}},
+ d:{purpose:"Find customers by name/phone/email.",actors:["office","owner"],vis:"always",chain:[["GET","/customers?search="]],parity:"MATCH, both filter via the search query param (web debounced 300ms; Android live vm.load)."}},
 "type-filter":{label:"Type chips",status:"ok",route:"GET /customers?type",fires:"filter by type",result:"filtered list",caveat:"web-only",
- d:{purpose:"Filter the list by customer type (residential/commercial).",actors:["office","owner"],vis:"web only",chain:[["GET","/customers?type="]],parity:"WEB-ONLY — Android shows a type badge per row but has no type filter (search only)."}},
+ d:{purpose:"Filter the list by customer type (residential/commercial).",actors:["office","owner"],vis:"web only",chain:[["GET","/customers?type="]],parity:"WEB-ONLY, Android shows a type badge per row but has no type filter (search only)."}},
 "refresh":{label:"Refresh",status:"ok",route:"GET /customers",fires:"reload",result:"fresh list",caveat:"web button · Android pull-to-refresh + ON_RESUME",
- d:{purpose:"Reload the list.",actors:["office","owner"],vis:"always",chain:[["GET","/customers"]],parity:"PARTIAL — web Refresh button; Android pull-to-refresh + an ON_RESUME reload."}},
+ d:{purpose:"Reload the list.",actors:["office","owner"],vis:"always",chain:[["GET","/customers"]],parity:"PARTIAL, web Refresh button; Android pull-to-refresh + an ON_RESUME reload."}},
 "pagination":{label:"Load more",status:"ok",route:"GET /customers?page=N&limit=50",fires:"append rows",result:"more rows",caveat:"web Load-more · Android paging unverified",
- d:{purpose:"Page through results beyond the first 50.",actors:["office","owner"],vis:"web: 'Load more' when a full page returned; Android: scroll",chain:[["GET","/customers?page=N&limit=50"]],parity:"DIVERGENT — web is explicit page-increment Load-more; Android's pagination inside vm.load is UNVERIFIED (no visible control)."}},
+ d:{purpose:"Page through results beyond the first 50.",actors:["office","owner"],vis:"web: 'Load more' when a full page returned; Android: scroll",chain:[["GET","/customers?page=N&limit=50"]],parity:"DIVERGENT, web is explicit page-increment Load-more; Android's pagination inside vm.load is UNVERIFIED (no visible control)."}},
 "customer-open":{label:"Customer row",status:"ok",route:"navigate /customers/:id",fires:"navigate",result:"customer detail",
- d:{purpose:"Open a customer's detail.",actors:["office","owner"],vis:"when not in selection mode",chain:[],parity:"MATCH — both open Customer Detail (Android long-press enters selection mode instead). Rows show Member/Returning badges (web) and type/Member (Android)."}},
+ d:{purpose:"Open a customer's detail.",actors:["office","owner"],vis:"when not in selection mode",chain:[],parity:"MATCH, both open Customer Detail (Android long-press enters selection mode instead). Rows show Member/Returning badges (web) and type/Member (Android)."}},
 "new-customer":{label:"+ New",status:"ok",route:"navigate /customers/new",fires:"navigate",result:"new customer form",
- d:{purpose:"Create a new customer.",actors:["office","owner"],vis:"always (FAB + header icon; web empty-state too)",chain:[["POST","/customers"]],parity:"MATCH — both have a FAB/header 'New'; the form posts /customers on save."}},
+ d:{purpose:"Create a new customer.",actors:["office","owner"],vis:"always (FAB + header icon; web empty-state too)",chain:[["POST","/customers"]],parity:"MATCH, both have a FAB/header 'New'; the form posts /customers on save."}},
 "import":{label:"Import",status:"ok",route:"navigate /import?type=customers",fires:"navigate",result:"import wizard",
- d:{purpose:"Bulk-import customers from a file.",actors:["office","owner"],vis:"always",chain:[["POST","/import/preview"],["POST","/import/execute"]],parity:"MATCH — both link to the customers import wizard."}},
+ d:{purpose:"Bulk-import customers from a file.",actors:["office","owner"],vis:"always",chain:[["POST","/import/preview"],["POST","/import/execute"]],parity:"MATCH, both link to the customers import wizard."}},
 "bulk-delete":{label:"Select → Delete",status:"ok",route:"DELETE /customers/:id (loop)",fires:"delete each",result:"customers removed",caveat:"web Select btn · Android long-press",
- d:{purpose:"Delete several customers at once.",actors:["office","owner"],vis:"web Select → checkboxes; Android long-press → selection",chain:[["DELETE","/customers/:id"]],parity:"MATCH — both bulk-delete via repeated DELETE /customers/:id behind a confirm. Web confirm() / Android AlertDialog."}},
+ d:{purpose:"Delete several customers at once.",actors:["office","owner"],vis:"web Select → checkboxes; Android long-press → selection",chain:[["DELETE","/customers/:id"]],parity:"MATCH, both bulk-delete via repeated DELETE /customers/:id behind a confirm. Web confirm() / Android AlertDialog."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -189,7 +189,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -204,7 +204,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

@@ -140,16 +140,16 @@
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
       <li><b>Fully device-local; nothing is server-synced.</b> Web saves to <code>localStorage['up_notification_prefs']</code>; Android saves to local <code>NotificationPreferences</code>. Switching devices / reinstalling loses the settings; the server has no record.</li>
-      <li><b>The web toggles are inert.</b> <code>up_notification_prefs</code> is read <b>only</b> by the page that writes it (to re-render its own switches). No other web code consults it, and it's never sent to the server — so toggling "New Jobs" off does <b>not</b> stop New-Job notifications. Effectively a placeholder UI.</li>
+      <li><b>The web toggles are inert.</b> <code>up_notification_prefs</code> is read <b>only</b> by the page that writes it (to re-render its own switches). No other web code consults it, and it's never sent to the server, so toggling "New Jobs" off does <b>not</b> stop New-Job notifications. Effectively a placeholder UI.</li>
       <li><b>The backend endpoints are no-op stubs.</b> <code>GET /settings/notifications</code> returns a constant all-true object; <code>PUT</code> echoes the body without writing. There is no <code>notification_preferences</code> table. Any future client that trusts these silently loses its settings.</li>
       <li><b>Surface mismatch (matches the Batch-D finding).</b> Web has a dedicated sub-page; Android has no sub-page and shows the same five toggles inline on the Settings landing. Both device-local.</li>
-      <li><b>Five keys:</b> <code>new_jobs</code>, <code>job_status</code>, <code>partner_jobs</code>, <code>new_bookings</code>, <code>estimate_signed</code> — same set as the Android landing toggles.</li>
+      <li><b>Five keys:</b> <code>new_jobs</code>, <code>job_status</code>, <code>partner_jobs</code>, <code>new_bookings</code>, <code>estimate_signed</code>, same set as the Android landing toggles.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Notifications (settings sub-page) · rendered from notifications.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -160,14 +160,14 @@ const SECTIONS=[
  {idx:"03",title:"Nav",items:["back"]},
 ];
 const A={
-"load-prefs":{label:"Load preferences",status:"ok",route:"— localStorage read",fires:"read up_notification_prefs",result:"5 toggles rendered",
- d:{purpose:"Show the five toggle states.",actors:["owner","admin","office"],vis:"on open",chain:[],parity:"DIVERGENT — web reads localStorage on a dedicated sub-page; Android reads inline toggle states from its local NotificationPreferences on the Settings landing. Same five concepts, different surface + local store. Defaults all-true if localStorage empty/corrupt."}},
-"toggle-pref":{label:"Toggle a preference ×5",status:"partial",route:"— localStorage write",fires:"write up_notification_prefs",result:"'Saved' (no effect)",caveat:"no consumer · no server",
- d:{purpose:"Turn New Jobs / Job Status / Partner Jobs / New Bookings / Estimate Signed on or off.",actors:["owner","admin","office"],vis:"five switches",chain:[],parity:"DIVERGENT — web writes up_notification_prefs (localStorage); Android writes its local NotificationPreferences. Neither is server-synced; the web value has NO consumer (read only by this page to re-render). The toggle saves locally (works mechanically) but gates nothing — never sent to the server, so it can't affect FCM-pushed notifications."}},
+"load-prefs":{label:"Load preferences",status:"ok",route:", localStorage read",fires:"read up_notification_prefs",result:"5 toggles rendered",
+ d:{purpose:"Show the five toggle states.",actors:["owner","admin","office"],vis:"on open",chain:[],parity:"DIVERGENT, web reads localStorage on a dedicated sub-page; Android reads inline toggle states from its local NotificationPreferences on the Settings landing. Same five concepts, different surface + local store. Defaults all-true if localStorage empty/corrupt."}},
+"toggle-pref":{label:"Toggle a preference ×5",status:"partial",route:", localStorage write",fires:"write up_notification_prefs",result:"'Saved' (no effect)",caveat:"no consumer · no server",
+ d:{purpose:"Turn New Jobs / Job Status / Partner Jobs / New Bookings / Estimate Signed on or off.",actors:["owner","admin","office"],vis:"five switches",chain:[],parity:"DIVERGENT, web writes up_notification_prefs (localStorage); Android writes its local NotificationPreferences. Neither is server-synced; the web value has NO consumer (read only by this page to re-render). The toggle saves locally (works mechanically) but gates nothing, never sent to the server, so it can't affect FCM-pushed notifications."}},
 "server-endpoints":{label:"Backend notif endpoints",status:"dead",route:"GET/PUT /settings/notifications",fires:"stub (no persist)",result:"echo / constant",caveat:"no table, unused by web",
- d:{purpose:"Nominal server API for notification preferences.",actors:["system"],vis:"not user-facing",chain:[["GET","/settings/notifications"],["PUT","/settings/notifications"]],parity:"dead — GET returns a hard-coded all-true object (no table read); PUT echoes the request body and persists nothing. No notification_preferences table. The web page never calls them; Android uses device-local NotificationPreferences. UNVERIFIED whether any unaudited caller hits them, but this web page and the Android landing do not."}},
+ d:{purpose:"Nominal server API for notification preferences.",actors:["system"],vis:"not user-facing",chain:[["GET","/settings/notifications"],["PUT","/settings/notifications"]],parity:"dead, GET returns a hard-coded all-true object (no table read); PUT echoes the request body and persists nothing. No notification_preferences table. The web page never calls them; Android uses device-local NotificationPreferences. UNVERIFIED whether any unaudited caller hits them, but this web page and the Android landing do not."}},
 "back":{label:"Back",status:"ok",route:"web /settings",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin","office"],vis:"top-left",chain:[],parity:"WEB-ONLY (as a back action) — web navigate('/settings'); Android has no sub-page to back out of (toggles are inline on the landing)."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin","office"],vis:"top-left",chain:[],parity:"WEB-ONLY (as a back action), web navigate('/settings'); Android has no sub-page to back out of (toggles are inline on the landing)."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -183,7 +183,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -198,7 +198,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (local only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (local only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

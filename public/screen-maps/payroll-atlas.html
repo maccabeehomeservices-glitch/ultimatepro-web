@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Payroll<span class="sub">Pay the field team — earnings off the profit engine. Web = thin list; Android = the whole hub.</span></h1>
+    <h1>Payroll<span class="sub">Pay the field team, earnings off the profit engine. Web = thin list; Android = the whole hub.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>79940c8</b></div>
   </header>
 
@@ -139,17 +139,17 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Massive surface asymmetry</b> — web Payroll is a read-only earnings list (<code>/reports/earnings</code>) with CSV export + drill-down; the whole hub (company P&amp;L, balance-owed, bonuses, deductions, pay settings, simulator, reimbursements, job report) is <b>Android-only</b> via <code>/payroll/*</code>.</li>
-      <li><b>Two earnings endpoints</b> — web <code>/reports/earnings</code> (SUM(amount)); Android <code>/payroll/summary</code> (SUM(tech_profit) + bonuses/deductions → balance_owed). Same tech_earnings table, different math/columns.</li>
-      <li><b>Period finalize appears unwired</b> — <code>payroll_periods</code> lock/mark-paid endpoints exist (lock links unpaid earnings + sets total_payout; mark-paid flips paid flags) but no audited screen calls them; the UI "period" is just a date filter.</li>
-      <li><b>Web drill-down is name-matched</b> — <code>/reports/earnings</code> rows carry no ids, so web resolves actor ids by name against the directory endpoints; a name miss silently disables the drill-down.</li>
+      <li><b>Massive surface asymmetry</b>, web Payroll is a read-only earnings list (<code>/reports/earnings</code>) with CSV export + drill-down; the whole hub (company P&amp;L, balance-owed, bonuses, deductions, pay settings, simulator, reimbursements, job report) is <b>Android-only</b> via <code>/payroll/*</code>.</li>
+      <li><b>Two earnings endpoints</b>, web <code>/reports/earnings</code> (SUM(amount)); Android <code>/payroll/summary</code> (SUM(tech_profit) + bonuses/deductions → balance_owed). Same tech_earnings table, different math/columns.</li>
+      <li><b>Period finalize appears unwired</b>, <code>payroll_periods</code> lock/mark-paid endpoints exist (lock links unpaid earnings + sets total_payout; mark-paid flips paid flags) but no audited screen calls them; the UI "period" is just a date filter.</li>
+      <li><b>Web drill-down is name-matched</b>, <code>/reports/earnings</code> rows carry no ids, so web resolves actor ids by name against the directory endpoints; a name miss silently disables the drill-down.</li>
       <li><b>UNVERIFIED:</b> Android tech-settings PUT body, simulate body; whether any unread sub-screen finalizes a payroll_periods record; the By-Tech tab specifics.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Payroll · rendered from payroll.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,27 +161,27 @@ const SECTIONS=[
 ];
 const A={
 "date-range":{label:"Date range / Period",status:"ok",route:"GET /reports/earnings · /payroll/summary",fires:"scope window",result:"earnings recomputed",caveat:"web From/To · Android period chips",
- d:{purpose:"Scope the payroll window.",actors:["owner","manager"],vis:"always",chain:[["GET","/reports/earnings?from&to"],["GET","/payroll/summary"]],parity:"DIVERGENT — web exposes explicit From/To date inputs; Android uses preset period chips (today/week/month/custom) and a different endpoint."}},
+ d:{purpose:"Scope the payroll window.",actors:["owner","manager"],vis:"always",chain:[["GET","/reports/earnings?from&to"],["GET","/payroll/summary"]],parity:"DIVERGENT, web exposes explicit From/To date inputs; Android uses preset period chips (today/week/month/custom) and a different endpoint."}},
 "earnings-list":{label:"Earnings by actor",status:"ok",route:"GET /reports/earnings · /payroll/summary",fires:"read tech_earnings",result:"per-actor totals",caveat:"web list+table · Android tech cards",
- d:{purpose:"Show each actor's earnings for the window.",actors:["owner","manager"],vis:"always",chain:[["GET","/reports/earnings"],["GET","/payroll/summary"]],parity:"DIVERGENT — same tech_earnings table, different endpoints/richness. Both UNION user + roster + source (roster last_name '(Roster)', source '(Source)'). Web shows name/jobs/total; Android shows sales/material/earnings/bonuses/deductions/balance-owed."}},
+ d:{purpose:"Show each actor's earnings for the window.",actors:["owner","manager"],vis:"always",chain:[["GET","/reports/earnings"],["GET","/payroll/summary"]],parity:"DIVERGENT, same tech_earnings table, different endpoints/richness. Both UNION user + roster + source (roster last_name '(Roster)', source '(Source)'). Web shows name/jobs/total; Android shows sales/material/earnings/bonuses/deductions/balance-owed."}},
 "company-overview":{label:"Company P&L overview",status:"ok",route:"GET /payroll/summary (totals)",fires:"read summary",result:"company financials",caveat:"Android Overview tab only",
- d:{purpose:"Company-level profit summary (Sales/Material/Source/Tech Payout/Company Profit/Jobs).",actors:["owner","manager"],vis:"Android Overview tab",chain:[["GET","/payroll/summary"]],parity:"ANDROID-ONLY — web has no company-profit overview (just per-actor earnings)."}},
+ d:{purpose:"Company-level profit summary (Sales/Material/Source/Tech Payout/Company Profit/Jobs).",actors:["owner","manager"],vis:"Android Overview tab",chain:[["GET","/payroll/summary"]],parity:"ANDROID-ONLY, web has no company-profit overview (just per-actor earnings)."}},
 "actor-drilldown":{label:"Open actor report",status:"ok",route:"web /reports/{team|roster|source}/:id · Android /payroll/tech-report/:userId",fires:"navigate",result:"actor report",caveat:"web ids resolved by name",
- d:{purpose:"Drill into one actor's detailed report.",actors:["owner","manager"],vis:"when an id resolves (web) / always (Android)",chain:[["GET","/reports/team/:userId"],["GET","/payroll/tech-report/:userId"]],parity:"DIVERGENT — web routes to the Reports module's actor pages (/reports/team|roster|source/:id); Android opens its own tech-report endpoint/screen. Web resolves the actor id by matching names against /users/technicians, /roster-techs, /sources/contacts (earnings rows carry no ids); a miss silently disables the drill-down."}},
+ d:{purpose:"Drill into one actor's detailed report.",actors:["owner","manager"],vis:"when an id resolves (web) / always (Android)",chain:[["GET","/reports/team/:userId"],["GET","/payroll/tech-report/:userId"]],parity:"DIVERGENT, web routes to the Reports module's actor pages (/reports/team|roster|source/:id); Android opens its own tech-report endpoint/screen. Web resolves the actor id by matching names against /users/technicians, /roster-techs, /sources/contacts (earnings rows carry no ids); a miss silently disables the drill-down."}},
 "export-csv":{label:"Export CSV",status:"ok",route:"GET /reports/earnings/export",fires:"download blob",result:"CSV saved",caveat:"web-only",
- d:{purpose:"Download the earnings as CSV.",actors:["owner","manager"],vis:"web only",chain:[["GET","/reports/earnings/export"]],parity:"WEB-ONLY — the Android hub has no CSV export."}},
+ d:{purpose:"Download the earnings as CSV.",actors:["owner","manager"],vis:"web only",chain:[["GET","/reports/earnings/export"]],parity:"WEB-ONLY, the Android hub has no CSV export."}},
 "bonus-deduct":{label:"Add Bonus / Deduction",status:"ok",route:"POST /payroll/bonuses · /payroll/deductions",fires:"insert ledger row",result:"balance adjusted",caveat:"Android tech cards",
- d:{purpose:"Add a one-off bonus or deduction to a tech's pay.",actors:["owner"],vis:"Android tech cards",chain:[["POST","/payroll/bonuses"],["POST","/payroll/deductions"]],parity:"ANDROID-ONLY — web has no bonus/deduction UI. Bonus {user_id, amount, reason}; deduction {user_id, amount, reason, deduction_type}. Counts toward pending_bonuses/pending_deductions until a period is paid."}},
+ d:{purpose:"Add a one-off bonus or deduction to a tech's pay.",actors:["owner"],vis:"Android tech cards",chain:[["POST","/payroll/bonuses"],["POST","/payroll/deductions"]],parity:"ANDROID-ONLY, web has no bonus/deduction UI. Bonus {user_id, amount, reason}; deduction {user_id, amount, reason, deduction_type}. Counts toward pending_bonuses/pending_deductions until a period is paid."}},
 "pay-settings":{label:"Pay Settings",status:"ok",route:"GET/PUT /payroll/tech-settings/:userId",fires:"edit pay model",result:"settings saved",caveat:"Android gear per tech",
- d:{purpose:"Edit a tech's pay model / rate / commission.",actors:["owner"],vis:"Android tech cards",chain:[["GET","/payroll/tech-settings/:userId"],["PUT","/payroll/tech-settings/:userId"]],parity:"ANDROID-ONLY — opens TechPaySettingsScreen. PUT body UNVERIFIED."}},
+ d:{purpose:"Edit a tech's pay model / rate / commission.",actors:["owner"],vis:"Android tech cards",chain:[["GET","/payroll/tech-settings/:userId"],["PUT","/payroll/tech-settings/:userId"]],parity:"ANDROID-ONLY, opens TechPaySettingsScreen. PUT body UNVERIFIED."}},
 "simulator":{label:"Simulator",status:"ok",route:"POST /payroll/simulate",fires:"model split",result:"simulated split",caveat:"Android quick-access",
- d:{purpose:"Model a job's profit split before committing.",actors:["owner","manager"],vis:"Android quick-access",chain:[["POST","/payroll/simulate"]],parity:"ANDROID-ONLY — compute only, no write. Body UNVERIFIED."}},
+ d:{purpose:"Model a job's profit split before committing.",actors:["owner","manager"],vis:"Android quick-access",chain:[["POST","/payroll/simulate"]],parity:"ANDROID-ONLY, compute only, no write. Body UNVERIFIED."}},
 "reimbursements":{label:"Reimburse",status:"ok",route:"GET /payroll/reimbursements + approve/pay",fires:"approve/pay",result:"reimbursement settled",caveat:"Android quick-access",
- d:{purpose:"Review/approve/pay material reimbursements owed to techs.",actors:["owner","manager"],vis:"Android quick-access",chain:[["GET","/payroll/reimbursements"],["POST","/payroll/reimbursements/:id/approve"],["POST","/payroll/reimbursements/:id/pay"]],parity:"ANDROID-ONLY — web has no reimbursements screen. Rows are created by the profit engine on completion (tech_reimbursed material policy)."}},
+ d:{purpose:"Review/approve/pay material reimbursements owed to techs.",actors:["owner","manager"],vis:"Android quick-access",chain:[["GET","/payroll/reimbursements"],["POST","/payroll/reimbursements/:id/approve"],["POST","/payroll/reimbursements/:id/pay"]],parity:"ANDROID-ONLY, web has no reimbursements screen. Rows are created by the profit engine on completion (tech_reimbursed material policy)."}},
 "job-report":{label:"Job Report tab",status:"ok",route:"GET /payroll/job-report",fires:"read per-job",result:"per-job rows",caveat:"Android tab",
  d:{purpose:"Per-job profit breakdown for the window.",actors:["owner","manager"],vis:"Android Job-Report tab",chain:[["GET","/payroll/job-report"]],parity:"ANDROID-ONLY."}},
 "period-finalize":{label:"Lock / Mark-Paid period",status:"dead",route:"POST /payroll/periods/:id/lock · /mark-paid",fires:"finalize (no caller)",result:"unwired",caveat:"endpoints exist, no audited UI caller",
- d:{purpose:"Finalize a payroll_periods record: lock the window, then mark it paid.",actors:["owner"],vis:"no audited UI caller — the hub 'period' is a date filter, not a payroll_periods record",chain:[["POST","/payroll/periods/:id/lock"],["POST","/payroll/periods/:id/mark-paid"]],parity:"UNKNOWN — neither surface's audited code finalizes a period. LOCK (payroll.js 171-212): total_payout = Σ net_payout + Σ unpaid bonuses − Σ unapplied deductions; links unpaid tech_earnings to the period; status='locked'. MARK-PAID (215-244, txn): status='paid' + flips tech_earnings.paid / bonuses.paid / deductions.applied. Real but unwired. UNVERIFIED whether any unread sub-screen calls them."}},
+ d:{purpose:"Finalize a payroll_periods record: lock the window, then mark it paid.",actors:["owner"],vis:"no audited UI caller, the hub 'period' is a date filter, not a payroll_periods record",chain:[["POST","/payroll/periods/:id/lock"],["POST","/payroll/periods/:id/mark-paid"]],parity:"UNKNOWN, neither surface's audited code finalizes a period. LOCK (payroll.js 171-212): total_payout = Σ net_payout + Σ unpaid bonuses − Σ unapplied deductions; links unpaid tech_earnings to the period; status='locked'. MARK-PAID (215-244, txn): status='paid' + flips tech_earnings.paid / bonuses.paid / deductions.applied. Real but unwired. UNVERIFIED whether any unread sub-screen calls them."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -197,7 +197,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -212,7 +212,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

@@ -132,9 +132,9 @@
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
       <li><b>Partner-split money gap (web): RESOLVED (Phase 1).</b> Web now renders the parts/CC form for partner jobs and sends the same body as Android → web-completed partner jobs produce the same <code>job_completion_details</code> numbers. No more overstated earnings.</li>
-      <li><b>Web "Payment Collected" dropdown: RESOLVED (Phase 1)</b> — the dead <code>payment_method</code> select was removed; web no longer sends it. Who-collected now rides <code>payment_collected_by</code> on partner jobs.</li>
-      <li><b>No web confirm surface</b> — <code>GET /jobs/:id/completion</code> and <code>POST /completion/confirm</code> exist and are used by Android; web calls neither, so a partner sender on web can't confirm a split. (Unchanged.)</li>
-      <li><b>Two completion paths — web side closed (Phase 1):</b> web's Status modal "Completed" now opens the Complete modal instead of <code>POST /status?completed</code>, so web completion always runs <code>/complete</code> (guard + partner split + completion record), mirroring Android. The legacy <code>/status?completed</code> branch still exists but web no longer uses it. Caveat: that branch also runs source-notify + inventory deduction + membership advance that <code>/complete</code> does not — Android skips them too; porting them into <code>/complete</code> is a backend follow-up.</li>
+      <li><b>Web "Payment Collected" dropdown: RESOLVED (Phase 1)</b>, the dead <code>payment_method</code> select was removed; web no longer sends it. Who-collected now rides <code>payment_collected_by</code> on partner jobs.</li>
+      <li><b>No web confirm surface</b>, <code>GET /jobs/:id/completion</code> and <code>POST /completion/confirm</code> exist and are used by Android; web calls neither, so a partner sender on web can't confirm a split. (Unchanged.)</li>
+      <li><b>Two completion paths, web side closed (Phase 1):</b> web's Status modal "Completed" now opens the Complete modal instead of <code>POST /status?completed</code>, so web completion always runs <code>/complete</code> (guard + partner split + completion record), mirroring Android. The legacy <code>/status?completed</code> branch still exists but web no longer uses it. Caveat: that branch also runs source-notify + inventory deduction + membership advance that <code>/complete</code> does not, Android skips them too; porting them into <code>/complete</code> is a backend follow-up.</li>
       <li><b>Earnings = real collected money (Commit A, 2026-06-01).</b> Gross unified to one helper <code>getJobGross</code> = SUM(completed payments, net of refunds) for the job (replaced 3 billed sources: latest-invoice, line-items chain, legacy SUM). <code>/complete</code> now branches: fully paid (<code>SUM(balance_due)=0</code>) → <code>completed</code> + earnings (dated today); balance remaining → <code>holding</code> + <code>actual_end</code> + completion record saved, NO earnings.</li>
       <li><b>Commit B BUILT (2026-06-01, backend 2269f85):</b> <code>reconcileJobEarnings(jobId)</code> is the payment-event trigger, wired into <code>POST /invoices/:id/payment</code>, <code>POST /payments/:id/refund</code>, and the ScanPay webhook. A later payment clearing a work-done holding job's balance auto-completes it + fires earnings on <code>getJobGross</code> dated to the clear-day + recomputes the partner split (kept pending). Refunds claw back (earnings drop, reopened balance flips completed→holding). Deposit-holding (<code>actual_end</code> null) is never auto-completed. Money model complete.</li>
       <li><code>tip_amount</code> column exists but neither surface captures a tip → always 0.</li>
@@ -145,7 +145,7 @@
 
   <footer>
     UltimatePro Screen Atlas · Complete Job · rendered from complete-job.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 <script>
@@ -157,11 +157,11 @@ const A={
 "submit":{label:"Complete Job",status:"ok",route:"POST /jobs/:id/complete",fires:"profit calc + earnings",result:"job completed",
  d:{purpose:"Lock the job, run profit allocation, write earnings (only when fully paid). The money spine's terminal action.",actors:["tech-user","owner"],vis:"always (guard blocks if source%+tech% > 100)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH: same body both surfaces. Commit A (2026-06-01): gross = getJobGross (summed completed payments). /complete branches: SUM(balance_due)=0 → completed + earnings dated today; balance remaining → holding + actual_end + completion record saved (parts/CC persisted), NO earnings until the balance clears (Commit B). Backend-only logic; clients unchanged."}},
 "partner-split":{label:"Parts / CC / split inputs",status:"ok",route:"part of POST /complete",fires:"net = gross − parts − CC",result:"sender/receiver split",
- d:{purpose:"Capture the deductions that drive the sender/receiver split: who supplied parts, parts amount, who collected, CC fee + who absorbs it.",actors:["tech-user","owner"],vis:"both surfaces, only when agreement_id != null (partner job). Web renders the same form (Phase 1).",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1) — web renders parts chips (Company/Technician/No Parts), parts amount, payment-collected chips, a CC-fee toggle + amount + absorbed-by chips (Sender/Receiver/Split 50/50), and a live split calculator off the loaded invoice total. Values sent are sender/receiver/none/split exactly as Android."}},
+ d:{purpose:"Capture the deductions that drive the sender/receiver split: who supplied parts, parts amount, who collected, CC fee + who absorbs it.",actors:["tech-user","owner"],vis:"both surfaces, only when agreement_id != null (partner job). Web renders the same form (Phase 1).",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1), web renders parts chips (Company/Technician/No Parts), parts amount, payment-collected chips, a CC-fee toggle + amount + absorbed-by chips (Sender/Receiver/Split 50/50), and a live split calculator off the loaded invoice total. Values sent are sender/receiver/none/split exactly as Android."}},
 "notes":{label:"Completion Notes",status:"ok",route:"part of POST /complete",fires:"save note",result:"note saved",
- d:{purpose:"Free-text note saved with the completion.",actors:["tech-user","owner"],vis:"always (both surfaces)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH — the only shared input between the two surfaces."}},
+ d:{purpose:"Free-text note saved with the completion.",actors:["tech-user","owner"],vis:"always (both surfaces)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH, the only shared input between the two surfaces."}},
 "confirm":{label:"Confirm Completion",status:"partial",route:"GET /completion · POST /completion/confirm",fires:"confirm split",result:"status → confirmed",caveat:"web has no confirm surface",
- d:{purpose:"The sending company reviews and confirms the partner split a receiver submitted.",actors:["owner"],vis:"Android completion sheet when pending + isSender + partner job. Web: none.",chain:[["GET","/jobs/:id/completion"],["POST","/jobs/:id/completion/confirm"]],parity:"ANDROID-ONLY — only the sender/owning company may confirm (else 403). Web orphans both endpoints; a sender on web can't confirm a partner-completed split."}},
+ d:{purpose:"The sending company reviews and confirms the partner split a receiver submitted.",actors:["owner"],vis:"Android completion sheet when pending + isSender + partner job. Web: none.",chain:[["GET","/jobs/:id/completion"],["POST","/jobs/:id/completion/confirm"]],parity:"ANDROID-ONLY, only the sender/owning company may confirm (else 403). Web orphans both endpoints; a sender on web can't confirm a partner-completed split."}},
 "cancel":{label:"Cancel / Back",status:"ok",route:"navigate",fires:"leave",result:"back to Job Detail",
  d:{purpose:"Leave without completing.",actors:["tech-user","owner"],vis:"always",chain:[],parity:"MATCH"}},
 };
@@ -179,7 +179,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -194,7 +194,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

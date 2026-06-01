@@ -121,8 +121,8 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>New Job<span class="sub">The front door — turn a call, booking, or pasted ticket into a job, then Save.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>TZ complete + <b>all 3 job_assigned SMS</b></div>
+    <h1>New Job<span class="sub">The front door, turn a call, booking, or pasted ticket into a job, then Save.</span></h1>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>TZ complete + <b>all 3 job_assigned SMS</b><br><b>dead Status field removed</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="job-detail-atlas.html">job detail</a> › new job</div>
@@ -145,7 +145,7 @@
   <div id="atlas"></div>
 
   <div class="fieldtbl">
-    <h2>Form fields (reference — these don't each call a route)</h2>
+    <h2>Form fields (reference, these don't each call a route)</h2>
     <table>
       <tr><th>field</th><th>maps to</th><th>note</th></tr>
       <tr><td>Job Source</td><td><code>source_type</code> + <code>job_source_id</code>/<code>ad_channel_id</code></td><td class="note">My Company / Contacts / Ad Channels</td></tr>
@@ -156,7 +156,7 @@
       <tr><td>Extra phones / emails</td><td>customer record</td><td class="note">post-save; persistence path unverified</td></tr>
       <tr><td>Address / City / State / ZIP</td><td><code>address</code> <code>city</code> <code>state</code> <code>zip</code></td><td class="note">Google Places autocomplete both sides</td></tr>
       <tr><td>Job Notes</td><td><code>notes</code> (web also <code>description</code>)</td><td class="note"></td></tr>
-      <tr><td>Date / Time</td><td>part of <code>scheduled_start</code></td><td class="note">see the scheduled-start row above — timezone drift</td></tr>
+      <tr><td>Date / Time</td><td>part of <code>scheduled_start</code></td><td class="note">see the scheduled-start row above, timezone drift</td></tr>
       <tr><td>Status (edit only)</td><td>not sent</td><td class="note">web-only, dead on save</td></tr>
     </table>
   </div>
@@ -165,10 +165,10 @@
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
       <li><b>Schedule timezone: RESOLVED (TZ 1/3+2/3+3/3).</b> Each job carries its address timezone (<code>jobs.job_timezone</code>, resolved from lat/lng via local <code>tz-lookup</code>). Backend is the single converter (Path B): both surfaces send <code>{ scheduled_local, lat, lng }</code>, the backend resolves the zone + converts wall-clock→UTC (luxon) + stores <code>job_timezone</code>; both display the stored instant in <code>effective_timezone</code> with a zone label (web date-fns-tz, Android java.time). 2pm stays 2pm end-to-end and cross-platform. Backfill script populates pre-existing jobs.</li>
-      <li><b>Status auto-flip on edit (Phase 1 F2b):</b> PUT /jobs/:id now promotes <code>unscheduled→scheduled</code> when a date is added on edit. Reverse (date-clear) not reachable through PUT (COALESCE) — deferred.</li>
+      <li><b>Status auto-flip on edit (Phase 1 F2b):</b> PUT /jobs/:id now promotes <code>unscheduled→scheduled</code> when a date is added on edit. Reverse (date-clear) not reachable through PUT (COALESCE), deferred.</li>
       <li><b>Customer required vs auto-create:</b> web blocks save without a customer; Android silently creates one from the typed name.</li>
       <li><b>"Save &amp; Send" RESOLVED (Phase 1 F3):</b> both surfaces now notify the assigned <b>tech</b> via <code>/roster-techs/notify-tech</code>; the premature customer "on the way" dispatch at creation was removed.</li>
-      <li><b>Web Status field is dead on save</b> — collected but never sent. Status only changes from Job Detail.</li>
+      <li><b>Web Status field is dead on save</b>, collected but never sent. Status only changes from Job Detail.</li>
       <li><code>notify_sms/email/push</code> sent by both but ignored by <code>POST /jobs</code> (not columns).</li>
       <li><b>Android-only carried fields:</b> <code>source</code> label + ticket #, <code>linked_job_id</code>, <code>skip_duplicate_check</code>, richer 4-option duplicate sheet.</li>
     </ul>
@@ -177,15 +177,15 @@
     <h2>✓ Needs Stage-2 read (JobViewModel / CrmRepository)</h2>
     <ul>
       <li>Android <code>vm.parseTicket</code> exact request body.</li>
-      <li>Android <code>vm.checkDuplicateByPhone</code> — which endpoint it calls.</li>
-      <li>Extra phones/emails — confirm they actually persist to the customer record.</li>
-      <li>Deep-link <code>jobs/new?ticket=</code> — confirm the VM reads the ticket arg.</li>
+      <li>Android <code>vm.checkDuplicateByPhone</code>, which endpoint it calls.</li>
+      <li>Extra phones/emails, confirm they actually persist to the customer record.</li>
+      <li>Deep-link <code>jobs/new?ticket=</code>, confirm the VM reads the ticket arg.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · New Job · rendered from new-job.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -193,25 +193,23 @@
 const SECTIONS=[
  {idx:"01",title:"Paste Ticket & Customer",items:["paste-ticket","customer-resolution"]},
  {idx:"02",title:"What Save Does",items:["save","scheduled-start","assign","send-via"]},
- {idx:"03",title:"Navigation & Dead",items:["cancel","status-field"]},
+ {idx:"03",title:"Navigation",items:["cancel"]},
 ];
 const A={
 "paste-ticket":{label:"Paste Ticket",status:"partial",route:"POST /jobs/parse-ticket",fires:"AI parses text",result:"form pre-filled",caveat:"web = review modal · Android = instant parse",
- d:{purpose:"Turn raw pasted notes into a pre-filled job in one tap — the platform's signature time-saver.",actors:["office","owner"],vis:"always (top of form)",chain:[["POST","/jobs/parse-ticket"]],parity:"PARTIAL — web opens a modal with editable textarea + 'Parse with AI'; Android reads clipboard and parses immediately. Same endpoint (Anthropic claude-opus-4-5)."}},
+ d:{purpose:"Turn raw pasted notes into a pre-filled job in one tap, the platform's signature time-saver.",actors:["office","owner"],vis:"always (top of form)",chain:[["POST","/jobs/parse-ticket"]],parity:"PARTIAL, web opens a modal with editable textarea + 'Parse with AI'; Android reads clipboard and parses immediately. Same endpoint (Anthropic claude-opus-4-5)."}},
 "customer-resolution":{label:"Customer match/create",status:"partial",route:"GET /customers · POST /customers",fires:"link or create",result:"customer attached",caveat:"web requires a customer · Android auto-creates",
- d:{purpose:"Attach the right customer — link an existing returning customer or create a new record — without manual searching.",actors:["office","owner"],vis:"runs on parse (both) and at save when none linked",chain:[["GET","/customers?search="],["POST","/customers"]],parity:"DIVERGENT — web requires a resolved customer_id before save (3-option duplicate modal, parsed tickets only); Android auto-creates from the typed name and shows a richer 4-option sheet (adds Go-Back & Follow-Up with prior-job linking) for parsed + manual entry. Android save-time also calls vm.checkDuplicateByPhone (endpoint unverified)."}},
+ d:{purpose:"Attach the right customer, link an existing returning customer or create a new record, without manual searching.",actors:["office","owner"],vis:"runs on parse (both) and at save when none linked",chain:[["GET","/customers?search="],["POST","/customers"]],parity:"DIVERGENT, web requires a resolved customer_id before save (3-option duplicate modal, parsed tickets only); Android auto-creates from the typed name and shows a richer 4-option sheet (adds Go-Back & Follow-Up with prior-job linking) for parsed + manual entry. Android save-time also calls vm.checkDuplicateByPhone (endpoint unverified)."}},
 "save":{label:"Save Job",status:"partial",route:"POST /jobs  ·  edit: PUT /jobs/:id",fires:"create job",result:"job created",caveat:"payload differs web vs Android",
- d:{purpose:"Create the job (or save edits). The core action.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"],["PUT","/jobs/:id"]],parity:"PARTIAL — web sends description(=notes), omits source label / linked_job_id / skip_duplicate_check. Android sends source label + linked_job_id + skip_duplicate_check, omits description, sends notify_* always. Both functional. Backend sets status scheduled if assigned else unscheduled; fires job_assigned Joby rule, push, socket, geocode."}},
+ d:{purpose:"Create the job (or save edits). The core action.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"],["PUT","/jobs/:id"]],parity:"PARTIAL, web sends description(=notes), omits source label / linked_job_id / skip_duplicate_check. Android sends source label + linked_job_id + skip_duplicate_check, omits description, sends notify_* always. Both functional. Backend sets status scheduled if assigned else unscheduled; fires job_assigned Joby rule, push, socket, geocode."}},
 "scheduled-start":{label:"Date + Time",status:"ok",route:"part of POST /jobs",fires:"set schedule",result:"scheduled_start saved (UTC)",
- d:{purpose:"Set when the job is scheduled.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"MATCH — TZ feature complete (1/3+2/3+3/3 + display follow-up). Both web and Android send {scheduled_local, lat, lng}; the backend (Path B) resolves the zone, converts wall-clock→UTC (luxon), stores job_timezone. ALL FOUR read surfaces display in effective_timezone with a zone label — list, calendar, detail, edit (the LIST rows were a missed surface in 2/3/3/3, fixed in the device-testing follow-up: web humanizeScheduled was browser-local, Android humanizeScheduled mis-parsed .000Z to device-local). All three Joby job_assigned messages now show job-zone time: tech New Job Alert + customer Booking Confirmation got {{job_time}} added (seed + migration, 14 rows); the 24h Reminder already had {{job_time}} and renders in the job's zone via the shared buildVars change (no migration). 2pm stays 2pm end-to-end AND cross-platform. Backfills: backfill-job-timezones.js (63 jobs), backfill-joby-jobtime.js (templates)."}},
+ d:{purpose:"Set when the job is scheduled.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"MATCH, TZ feature complete (1/3+2/3+3/3 + display follow-up). Both web and Android send {scheduled_local, lat, lng}; the backend (Path B) resolves the zone, converts wall-clock→UTC (luxon), stores job_timezone. ALL FOUR read surfaces display in effective_timezone with a zone label, list, calendar, detail, edit (the LIST rows were a missed surface in 2/3/3/3, fixed in the device-testing follow-up: web humanizeScheduled was browser-local, Android humanizeScheduled mis-parsed .000Z to device-local). All three Joby job_assigned messages now show job-zone time: tech New Job Alert + customer Booking Confirmation got {{job_time}} added (seed + migration, 14 rows); the 24h Reminder already had {{job_time}} and renders in the job's zone via the shared buildVars change (no migration). 2pm stays 2pm end-to-end AND cross-platform. Backfills: backfill-job-timezones.js (63 jobs), backfill-joby-jobtime.js (templates)."}},
 "assign":{label:"Assign",status:"ok",route:"part of POST /jobs",fires:"set assignee",result:"scheduled / unscheduled",caveat:"partner → assign later via Job Detail 'Send To'",
- d:{purpose:"Choose who does the job: self, team member, roster tech, or partner.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL — web inline tabs+dropdown; Android button→dialog. Partner sends no field on either surface; both defer partner-forwarding to Job Detail. Backend sets status scheduled when assigned."}},
+ d:{purpose:"Choose who does the job: self, team member, roster tech, or partner.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL, web inline tabs+dropdown; Android button→dialog. Partner sends no field on either surface; both defer partner-forwarding to Job Detail. Backend sets status scheduled when assigned."}},
 "send-via":{label:"Save & Send",status:"ok",route:"both: /roster-techs/notify-tech",fires:"notify tech",result:"assigned tech notified",
- d:{purpose:"Notify the assigned tech when saving (SMS / Email).",actors:["office","owner"],vis:"only when assignment is not self",chain:[["POST","/roster-techs/notify-tech"]],parity:"MATCH (Phase 1 F3) — both surfaces notify the assigned TECH via /roster-techs/notify-tech. Web no longer fires the premature customer 'on the way' dispatch at creation (that stays at Job Detail dispatch/arrived). Backend notify-tech has no 'both' branch, so web prefers SMS; push-only sends nothing (matches Android). The web notify_method→method body-key bug was fixed."}},
+ d:{purpose:"Notify the assigned tech when saving (SMS / Email).",actors:["office","owner"],vis:"only when assignment is not self",chain:[["POST","/roster-techs/notify-tech"]],parity:"MATCH (Phase 1 F3), both surfaces notify the assigned TECH via /roster-techs/notify-tech. Web no longer fires the premature customer 'on the way' dispatch at creation (that stays at Job Detail dispatch/arrived). Backend notify-tech has no 'both' branch, so web prefers SMS; push-only sends nothing (matches Android). The web notify_method→method body-key bug was fixed."}},
 "cancel":{label:"Cancel / Back",status:"ok",route:"navigate",fires:"leave form",result:"previous screen",
- d:{purpose:"Leave without saving.",actors:["office","owner"],vis:"always",chain:[],parity:"PARTIAL — web has top Back + footer Cancel; Android has top-bar back only (plus an extra top-bar Save)."}},
-"status-field":{label:"Status dropdown",status:"dead",route:"not sent",fires:"—",result:"nothing happens",caveat:"collected but never saved (web edit only)",
- d:{purpose:"Intended to set job status while editing.",actors:["office","owner"],vis:"web edit-mode only; Android has none here",chain:[],parity:"WEB-ONLY dead code — buildPayload never includes status and PUT /jobs/:id doesn't read it. Status only changes via POST /jobs/:id/status from Job Detail."}},
+ d:{purpose:"Leave without saving.",actors:["office","owner"],vis:"always",chain:[],parity:"PARTIAL, web has top Back + footer Cancel; Android has top-bar back only (plus an extra top-bar Save)."}},
 };
 
 const atlas=document.getElementById('atlas');
@@ -228,7 +226,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -243,7 +241,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Company Profile<span class="sub">Edit the tenant's identity — name, tagline, contact, address, logo. One PUT /company; logo to Cloudinary. Web ≈ Android.</span></h1>
+    <h1>Company Profile<span class="sub">Edit the tenant's identity, name, tagline, contact, address, logo. One PUT /company; logo to Cloudinary. Web ≈ Android.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>41d0a83</b></div>
   </header>
 
@@ -139,17 +139,17 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b><code>tagline</code> &amp; <code>website</code> exist in production (no Save-500 risk).</b> <code>PUT /company</code> writes <code>tagline = COALESCE($14, tagline)</code> / <code>website = COALESCE($15, website)</code> and both clients send them. These columns are <b>not</b> in <code>schema.sql</code> companies or any <code>db/migrate_*.sql</code>, but are <b>confirmed present in the production DB via live schema introspection</b> — the committed-SQL absence is a schema-scatter artifact (added out-of-band), not a runtime risk. Save works; the action was never broken on this basis.</li>
-      <li><b>Backend columns with no input on either surface:</b> <code>PUT /company</code> also accepts <code>country</code>, <code>timezone</code>, <code>currency</code>, <code>tax_rate</code>, <code>settings</code> (JSONB) — no field captures them. The hypothesised <code>tax_label</code> / <code>terms</code> / <code>default_tax_rate</code> / <code>profile_mode</code> <b>do not exist</b> as columns (schema has <code>tax_rate</code>, not <code>default_tax_rate</code>).</li>
+      <li><b><code>tagline</code> &amp; <code>website</code> exist in production (no Save-500 risk).</b> <code>PUT /company</code> writes <code>tagline = COALESCE($14, tagline)</code> / <code>website = COALESCE($15, website)</code> and both clients send them. These columns are <b>not</b> in <code>schema.sql</code> companies or any <code>db/migrate_*.sql</code>, but are <b>confirmed present in the production DB via live schema introspection</b>, the committed-SQL absence is a schema-scatter artifact (added out-of-band), not a runtime risk. Save works; the action was never broken on this basis.</li>
+      <li><b>Backend columns with no input on either surface:</b> <code>PUT /company</code> also accepts <code>country</code>, <code>timezone</code>, <code>currency</code>, <code>tax_rate</code>, <code>settings</code> (JSONB), no field captures them. The hypothesised <code>tax_label</code> / <code>terms</code> / <code>default_tax_rate</code> / <code>profile_mode</code> <b>do not exist</b> as columns (schema has <code>tax_rate</code>, not <code>default_tax_rate</code>).</li>
       <li><b>Logo upload &amp; removal persist immediately</b>, independent of the Save button (each is its own server write). Removing a logo clears <code>logo_url</code> but does <b>not</b> delete the Cloudinary asset.</li>
-      <li><b>Gating asymmetry:</b> the page loads for any authenticated user (<code>GET</code> is auth only), but Save + logo upload are <code>ownerOrAdmin</code> — a non-admin edits the form and only hits the 403 on Save.</li>
+      <li><b>Gating asymmetry:</b> the page loads for any authenticated user (<code>GET</code> is auth only), but Save + logo upload are <code>ownerOrAdmin</code>, a non-admin edits the form and only hits the 403 on Save.</li>
       <li><b>Cloudinary credentials hard-coded as fallbacks</b> in company.js:8–12 (cloud_name / api_key / api_secret literals). Security follow-up, flagged.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Company Profile · rendered from company-profile.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,19 +161,19 @@ const SECTIONS=[
 ];
 const A={
 "load":{label:"Load company",status:"ok",route:"GET /company",fires:"SELECT companies row",result:"form populated",
- d:{purpose:"Fetch the company row into the form.",actors:["owner","admin"],vis:"on open",chain:[["GET","/company"]],parity:"MATCH — web companyApi.get(); Android repo.getCompany(). Same fields mapped (name, tagline, phone, email, website, address/city/state/zip, logo_url, ultimatecrm_id). GET is auth-only (any user)."}},
-"ucm-id-copy":{label:"UltimatePro ID (copy)",status:"ok",route:"— display only",fires:"read ultimatecrm_id",result:"copied to clipboard",
- d:{purpose:"Show the network ID and copy it.",actors:["owner","admin"],vis:"only when ultimatecrm_id is set",chain:[],parity:"MATCH — both show the blue card + Copy button; read-only. ultimatecrm_id is added by migrate_network.sql ('UCM-'||UPPER(SUBSTRING(MD5(id)…)))."}},
-"edit-fields":{label:"Edit text fields",status:"ok",route:"— local state",fires:"controlled inputs",result:"held until Save",caveat:"name '*' not enforced",
- d:{purpose:"Edit name*, tagline, phone, email, website, street/city/state/zip locally until Save.",actors:["owner","admin"],vis:"always",chain:[],parity:"MATCH — identical 9-field set on both. Android trims on save; web sends as-typed. No surface edits country/timezone/currency/tax_rate. name's '*' is cosmetic — not enforced, and PUT COALESCE would overwrite a blank name to ''."}},
+ d:{purpose:"Fetch the company row into the form.",actors:["owner","admin"],vis:"on open",chain:[["GET","/company"]],parity:"MATCH, web companyApi.get(); Android repo.getCompany(). Same fields mapped (name, tagline, phone, email, website, address/city/state/zip, logo_url, ultimatecrm_id). GET is auth-only (any user)."}},
+"ucm-id-copy":{label:"UltimatePro ID (copy)",status:"ok",route:", display only",fires:"read ultimatecrm_id",result:"copied to clipboard",
+ d:{purpose:"Show the network ID and copy it.",actors:["owner","admin"],vis:"only when ultimatecrm_id is set",chain:[],parity:"MATCH, both show the blue card + Copy button; read-only. ultimatecrm_id is added by migrate_network.sql ('UCM-'||UPPER(SUBSTRING(MD5(id)…)))."}},
+"edit-fields":{label:"Edit text fields",status:"ok",route:", local state",fires:"controlled inputs",result:"held until Save",caveat:"name '*' not enforced",
+ d:{purpose:"Edit name*, tagline, phone, email, website, street/city/state/zip locally until Save.",actors:["owner","admin"],vis:"always",chain:[],parity:"MATCH, identical 9-field set on both. Android trims on save; web sends as-typed. No surface edits country/timezone/currency/tax_rate. name's '*' is cosmetic, not enforced, and PUT COALESCE would overwrite a blank name to ''."}},
 "logo-upload":{label:"Upload logo",status:"ok",route:"POST /company/logo",fires:"Cloudinary + UPDATE logo_url",result:"logo shown (immediate)",caveat:"ownerOrAdmin · ≤5MB image",
- d:{purpose:"Upload a company logo image.",actors:["owner","admin"],vis:"always",chain:[["POST","/company/logo"]],parity:"MATCH — web file input → companyApi.uploadLogo(FormData); Android photo picker → temp file → repo.uploadCompanyLogo(file). Multipart field 'logo' → Cloudinary (folder ultimatepro/logos/:companyId, 400×400) → UPDATE companies.logo_url → {logo_url}. Persists on its own, separate from Save. Non-image/>5MB/no-file rejected; 403 if not owner/admin."}},
+ d:{purpose:"Upload a company logo image.",actors:["owner","admin"],vis:"always",chain:[["POST","/company/logo"]],parity:"MATCH, web file input → companyApi.uploadLogo(FormData); Android photo picker → temp file → repo.uploadCompanyLogo(file). Multipart field 'logo' → Cloudinary (folder ultimatepro/logos/:companyId, 400×400) → UPDATE companies.logo_url → {logo_url}. Persists on its own, separate from Save. Non-image/>5MB/no-file rejected; 403 if not owner/admin."}},
 "logo-remove":{label:"Remove logo",status:"ok",route:"PUT /company {logo_url:''}",fires:"UPDATE logo_url=''",result:"logo cleared (immediate)",caveat:"asset not deleted",
- d:{purpose:"Clear the company logo.",actors:["owner","admin"],vis:"only when a logo is set",chain:[["PUT","/company"]],parity:"MATCH — web companyApi.update({logo_url:''}); Android repo.updateCompany(mapOf('logo_url' to '')). Sets logo_url='' (empty overwrites; COALESCE keeps '' since not null). Cloudinary asset itself is NOT deleted. 403 if not owner/admin."}},
+ d:{purpose:"Clear the company logo.",actors:["owner","admin"],vis:"only when a logo is set",chain:[["PUT","/company"]],parity:"MATCH, web companyApi.update({logo_url:''}); Android repo.updateCompany(mapOf('logo_url' to '')). Sets logo_url='' (empty overwrites; COALESCE keeps '' since not null). Cloudinary asset itself is NOT deleted. 403 if not owner/admin."}},
 "save":{label:"Save profile",status:"ok",route:"PUT /company",fires:"UPDATE companies (COALESCE)",result:"saved",caveat:"ownerOrAdmin · see drift",
- d:{purpose:"Persist all edited fields.",actors:["owner","admin"],vis:"always (bottom button)",chain:[["PUT","/company"]],parity:"MATCH — same endpoint + body keys on both. Body {name,phone,email,address,city,state,zip,website,tagline,logo_url}. UPDATE … COALESCE(...) WHERE id; updated_at=NOW(). 403 if not owner/admin. tagline/website columns confirmed present in production (live schema introspection) — no Save-500 risk; the wiring is correct."}},
+ d:{purpose:"Persist all edited fields.",actors:["owner","admin"],vis:"always (bottom button)",chain:[["PUT","/company"]],parity:"MATCH, same endpoint + body keys on both. Body {name,phone,email,address,city,state,zip,website,tagline,logo_url}. UPDATE … COALESCE(...) WHERE id; updated_at=NOW(). 403 if not owner/admin. tagline/website columns confirmed present in production (live schema introspection), no Save-500 risk; the wiring is correct."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack. Unsaved edits discarded."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack. Unsaved edits discarded."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -189,7 +189,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -204,7 +204,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

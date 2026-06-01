@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Job Sources<span class="sub">3 tabs — Source Contacts (profit_allocation_pct feeds the profit engine), Ad Channels, Commission Rules. Fully matched web ↔ Android.</span></h1>
+    <h1>Job Sources<span class="sub">3 tabs, Source Contacts (profit_allocation_pct feeds the profit engine), Ad Channels, Commission Rules. Fully matched web ↔ Android.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>41d0a83</b></div>
   </header>
 
@@ -140,16 +140,16 @@
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
       <li><b><code>profit_allocation_pct</code> is wired to the profit engine (confirmed).</b> <code>utils/profit.js</code> reads <code>job_sources.profit_allocation_pct</code> as the #1 source-cut when a job has <code>job_source_id</code> (lines 96–104), falling back to <code>profit_rules.source_pct</code> / default / 0. Editing it here changes profit splits.</li>
-      <li><b>No owner/admin gating on <code>/sources/*</code>.</b> Every route is <code>auth</code> only — any authenticated user (incl. technician/dispatcher) can CRUD sources, channels, and commission rules. Contrast company/users (ownerOrAdmin).</li>
-      <li><b><code>GET /sources/channels</code> writes on read.</b> First load for a company INSERTs the 7 default channels — a side effect on a GET. Harmless but unusual.</li>
-      <li><b>Commission-rule upsert may not dedupe null-id rules.</b> <code>ON CONFLICT (company_id, rule_type, job_source_id, ad_channel_id)</code> relies on a unique index; for <code>default</code>/<code>network</code> rules both id columns are NULL, and under standard Postgres semantics NULLs are distinct → <b>possible duplicate default/network rules</b> unless the index is <code>NULLS NOT DISTINCT</code>. <b>UNVERIFIED</b> — commission_rules DDL isn't in committed db/. The web UI mitigates by editing the existing default.</li>
-      <li><b><code>job_sources</code> table DDL is not in committed SQL</b> (like roster_techs). Columns name, company_name, phone, email, profit_allocation_pct, send_updates, send_closings, notes, is_active, company_id are used consistently; <b>UNVERIFIED</b> column types. Report endpoints (<code>/sources/report[/export]</code>) power the Reports screen, not this one — no dead buttons here.</li>
+      <li><b>No owner/admin gating on <code>/sources/*</code>.</b> Every route is <code>auth</code> only, any authenticated user (incl. technician/dispatcher) can CRUD sources, channels, and commission rules. Contrast company/users (ownerOrAdmin).</li>
+      <li><b><code>GET /sources/channels</code> writes on read.</b> First load for a company INSERTs the 7 default channels, a side effect on a GET. Harmless but unusual.</li>
+      <li><b>Commission-rule upsert may not dedupe null-id rules.</b> <code>ON CONFLICT (company_id, rule_type, job_source_id, ad_channel_id)</code> relies on a unique index; for <code>default</code>/<code>network</code> rules both id columns are NULL, and under standard Postgres semantics NULLs are distinct → <b>possible duplicate default/network rules</b> unless the index is <code>NULLS NOT DISTINCT</code>. <b>UNVERIFIED</b>, commission_rules DDL isn't in committed db/. The web UI mitigates by editing the existing default.</li>
+      <li><b><code>job_sources</code> table DDL is not in committed SQL</b> (like roster_techs). Columns name, company_name, phone, email, profit_allocation_pct, send_updates, send_closings, notes, is_active, company_id are used consistently; <b>UNVERIFIED</b> column types. Report endpoints (<code>/sources/report[/export]</code>) power the Reports screen, not this one, no dead buttons here.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Job Sources · rendered from job-sources.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -162,31 +162,31 @@ const SECTIONS=[
 ];
 const A={
 "contacts-list":{label:"List contacts",status:"ok",route:"GET /sources/contacts",fires:"SELECT job_sources",result:"contact cards",
- d:{purpose:"Show referral/source contacts with profit allocation.",actors:["owner","admin"],vis:"Contacts tab (default)",chain:[["GET","/sources/contacts"]],parity:"MATCH — web sourcesApi.getContacts(); Android repo.getSourceContacts(). Active only (is_active=true ORDER BY name); inactive excluded on both."}},
+ d:{purpose:"Show referral/source contacts with profit allocation.",actors:["owner","admin"],vis:"Contacts tab (default)",chain:[["GET","/sources/contacts"]],parity:"MATCH, web sourcesApi.getContacts(); Android repo.getSourceContacts(). Active only (is_active=true ORDER BY name); inactive excluded on both."}},
 "contact-create":{label:"Add contact",status:"ok",route:"POST /sources/contacts",fires:"INSERT job_sources",result:"new contact",caveat:"name required",
- d:{purpose:"Add a job-source contact.",actors:["owner","admin"],vis:"'+ Add' (web) / FAB (Android)",chain:[["POST","/sources/contacts"]],parity:"MATCH — identical keys {name, company_name, phone, email, profit_allocation_pct, send_updates, send_closings, notes}. send_updates/send_closings default true. 400 if name missing."}},
+ d:{purpose:"Add a job-source contact.",actors:["owner","admin"],vis:"'+ Add' (web) / FAB (Android)",chain:[["POST","/sources/contacts"]],parity:"MATCH, identical keys {name, company_name, phone, email, profit_allocation_pct, send_updates, send_closings, notes}. send_updates/send_closings default true. 400 if name missing."}},
 "contact-edit":{label:"Edit contact",status:"ok",route:"PUT /sources/contacts/:id",fires:"COALESCE update",result:"updated contact",
- d:{purpose:"Update a source contact.",actors:["owner","admin"],vis:"edit per contact",chain:[["PUT","/sources/contacts/:id"]],parity:"MATCH — same endpoint + keys; COALESCE update of all 8 fields + is_active. 404 if not found."}},
+ d:{purpose:"Update a source contact.",actors:["owner","admin"],vis:"edit per contact",chain:[["PUT","/sources/contacts/:id"]],parity:"MATCH, same endpoint + keys; COALESCE update of all 8 fields + is_active. 404 if not found."}},
 "contact-delete":{label:"Remove (archive)",status:"ok",route:"DELETE /sources/contacts/:id",fires:"is_active=false",result:"archived",caveat:"soft delete",
- d:{purpose:"Archive a source contact.",actors:["owner","admin"],vis:"trash per contact, with confirm",chain:[["DELETE","/sources/contacts/:id"]],parity:"MATCH — both soft-archive (UPDATE is_active=false); both say 'archived, won't appear in new job forms'."}},
+ d:{purpose:"Archive a source contact.",actors:["owner","admin"],vis:"trash per contact, with confirm",chain:[["DELETE","/sources/contacts/:id"]],parity:"MATCH, both soft-archive (UPDATE is_active=false); both say 'archived, won't appear in new job forms'."}},
 "contact-toggle":{label:"Toggle active (Android)",status:"ok",route:"PUT /sources/contacts/:id {is_active}",fires:"set is_active",result:"toggled",caveat:"Android-only switch",
- d:{purpose:"Flip a contact's is_active directly from the card.",actors:["owner","admin"],vis:"Android only — a switch on each contact card",chain:[["PUT","/sources/contacts/:id"]],parity:"ANDROID-ONLY — web has no per-contact active switch (web only archives via delete). The list is active-only on both, so toggling off behaves like archiving."}},
+ d:{purpose:"Flip a contact's is_active directly from the card.",actors:["owner","admin"],vis:"Android only, a switch on each contact card",chain:[["PUT","/sources/contacts/:id"]],parity:"ANDROID-ONLY, web has no per-contact active switch (web only archives via delete). The list is active-only on both, so toggling off behaves like archiving."}},
 "channels-list":{label:"List ad channels",status:"ok",route:"GET /sources/channels",fires:"seed defaults + SELECT",result:"channel rows",caveat:"writes on read (seed)",
- d:{purpose:"Show own-company lead channels.",actors:["owner","admin"],vis:"Ad Channels tab",chain:[["GET","/sources/channels"]],parity:"MATCH — web getChannels(); Android getAdChannels(). First load seeds 7 defaults (Google Ads, Yelp, Facebook, Referral, Walk-in, Repeat Customer, Other) then lists by display_order. Custom channels tagged 'Custom'."}},
+ d:{purpose:"Show own-company lead channels.",actors:["owner","admin"],vis:"Ad Channels tab",chain:[["GET","/sources/channels"]],parity:"MATCH, web getChannels(); Android getAdChannels(). First load seeds 7 defaults (Google Ads, Yelp, Facebook, Referral, Walk-in, Repeat Customer, Other) then lists by display_order. Custom channels tagged 'Custom'."}},
 "channel-toggle":{label:"Toggle channel active",status:"ok",route:"PUT /sources/channels/:id {is_active}",fires:"set is_active",result:"toggled",
- d:{purpose:"Enable/disable a channel.",actors:["owner","admin"],vis:"switch per channel",chain:[["PUT","/sources/channels/:id"]],parity:"MATCH — both toggle via PUT /sources/channels/:id. 404 if not found."}},
+ d:{purpose:"Enable/disable a channel.",actors:["owner","admin"],vis:"switch per channel",chain:[["PUT","/sources/channels/:id"]],parity:"MATCH, both toggle via PUT /sources/channels/:id. 404 if not found."}},
 "channel-add":{label:"Add custom channel",status:"ok",route:"POST /sources/channels {name}",fires:"INSERT is_custom=true",result:"new channel",caveat:"name required",
- d:{purpose:"Create a custom ad channel.",actors:["owner","admin"],vis:"'+ Add Custom Channel'",chain:[["POST","/sources/channels"]],parity:"MATCH — web createChannel(name); Android addChannel(name). INSERT is_custom=true, display_order=max+1. 400 if name missing."}},
+ d:{purpose:"Create a custom ad channel.",actors:["owner","admin"],vis:"'+ Add Custom Channel'",chain:[["POST","/sources/channels"]],parity:"MATCH, web createChannel(name); Android addChannel(name). INSERT is_custom=true, display_order=max+1. 400 if name missing."}},
 "channel-rename":{label:"Rename custom channel",status:"ok",route:"PUT /sources/channels/:id {name}",fires:"update name",result:"renamed",caveat:"custom only",
- d:{purpose:"Rename a custom channel.",actors:["owner","admin"],vis:"edit on custom channels only (defaults can't be renamed)",chain:[["PUT","/sources/channels/:id"]],parity:"MATCH — both gate rename to custom channels; no delete for channels on either surface."}},
+ d:{purpose:"Rename a custom channel.",actors:["owner","admin"],vis:"edit on custom channels only (defaults can't be renamed)",chain:[["PUT","/sources/channels/:id"]],parity:"MATCH, both gate rename to custom channels; no delete for channels on either surface."}},
 "rules-list":{label:"List commission rules",status:"ok",route:"GET /sources/commission-rules",fires:"SELECT + join names",result:"default + specific rules",
- d:{purpose:"Show the default + source-specific tech-commission rules.",actors:["owner","admin"],vis:"Commission tab",chain:[["GET","/sources/commission-rules"]],parity:"MATCH — both split rule_type==='default' from the rest; both label by source/channel/network (joined to job_sources.name / ad_channels.name)."}},
+ d:{purpose:"Show the default + source-specific tech-commission rules.",actors:["owner","admin"],vis:"Commission tab",chain:[["GET","/sources/commission-rules"]],parity:"MATCH, both split rule_type==='default' from the rest; both label by source/channel/network (joined to job_sources.name / ad_channels.name)."}},
 "rule-save":{label:"Add / edit rule",status:"ok",route:"POST /sources/commission-rules (upsert)",fires:"INSERT … ON CONFLICT",result:"rule saved",caveat:"pct 0–100",
- d:{purpose:"Set the tech-commission % for default / a source contact / an ad channel / network jobs.",actors:["owner","admin"],vis:"'+ Add Rule' / 'Set Default' / edit",chain:[["POST","/sources/commission-rules"]],parity:"MATCH — same upsert endpoint + keys {rule_type, job_source_id, ad_channel_id, tech_commission_pct, notes}. Web disables the type select on edit; Android uses radios; both pre-select an existing default on 'Set Default'. Feeds /commission-rules/resolve + profit/payroll. 400 if rule_type missing or pct outside 0–100. See drift re: null-id upsert dedupe (UNVERIFIED)."}},
+ d:{purpose:"Set the tech-commission % for default / a source contact / an ad channel / network jobs.",actors:["owner","admin"],vis:"'+ Add Rule' / 'Set Default' / edit",chain:[["POST","/sources/commission-rules"]],parity:"MATCH, same upsert endpoint + keys {rule_type, job_source_id, ad_channel_id, tech_commission_pct, notes}. Web disables the type select on edit; Android uses radios; both pre-select an existing default on 'Set Default'. Feeds /commission-rules/resolve + profit/payroll. 400 if rule_type missing or pct outside 0–100. See drift re: null-id upsert dedupe (UNVERIFIED)."}},
 "rule-delete":{label:"Delete rule",status:"ok",route:"DELETE /sources/commission-rules/:id",fires:"hard DELETE",result:"rule gone",caveat:"hard delete",
- d:{purpose:"Remove a commission rule.",actors:["owner","admin"],vis:"trash per rule (and on the default card)",chain:[["DELETE","/sources/commission-rules/:id"]],parity:"MATCH — both hard-delete (not soft). Web shows a confirm modal ('permanently deleted'); Android deletes immediately on the trash tap. 404 if not found."}},
+ d:{purpose:"Remove a commission rule.",actors:["owner","admin"],vis:"trash per rule (and on the default card)",chain:[["DELETE","/sources/commission-rules/:id"]],parity:"MATCH, both hard-delete (not soft). Web shows a confirm modal ('permanently deleted'); Android deletes immediately on the trash tap. 404 if not found."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
- d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH — web navigate('/settings'); Android onBack."}},
+ d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -202,7 +202,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -217,7 +217,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

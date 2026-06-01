@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Dashboard<span class="sub">The morning briefing — KPIs, 2nd-chance, memberships, the live map, and the Paste-Ticket fast path.</span></h1>
+    <h1>Dashboard<span class="sub">The morning briefing, KPIs, 2nd-chance, memberships, the live map, and the Paste-Ticket fast path.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>9366abe</b></div>
   </header>
 
@@ -139,18 +139,18 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Web "View all" memberships is broken</b> — <code>/memberships</code> is not a registered web route; the <code>*</code> fallback redirects to <code>/dashboard</code>. The membership rows themselves work.</li>
-      <li><b>KPI tiles diverge</b> — different metric sets per surface, and only web makes the Missed-Calls / 2nd-Chance tiles tappable (→ Phone).</li>
-      <li><b>Active Jobs list + Active Techs strip are web-only</b> — Android shows jobs only as map pins and techs as map markers (no on-dashboard list/strip).</li>
-      <li><b>Notifications bell is Android-only on this screen</b> — web's bell lives in the shared Layout shell, not the Dashboard component.</li>
-      <li><b>Refresh cadence differs</b> — web 60s auto-refresh; Android ON_RESUME + a 30s notification-count poll. Clock toggle: Android confirms with a dialog + elapsed time, web toggles directly.</li>
-      <li><b>UNVERIFIED:</b> MapViewModel/DashboardViewModel pin source bodies; <code>second_chance</code> field name differs (<code>total</code> web vs <code>new_count</code> Android) — both from <code>GET /reports/dashboard</code>.</li>
+      <li><b>Web "View all" memberships is broken</b>, <code>/memberships</code> is not a registered web route; the <code>*</code> fallback redirects to <code>/dashboard</code>. The membership rows themselves work.</li>
+      <li><b>KPI tiles diverge</b>, different metric sets per surface, and only web makes the Missed-Calls / 2nd-Chance tiles tappable (→ Phone).</li>
+      <li><b>Active Jobs list + Active Techs strip are web-only</b>, Android shows jobs only as map pins and techs as map markers (no on-dashboard list/strip).</li>
+      <li><b>Notifications bell is Android-only on this screen</b>, web's bell lives in the shared Layout shell, not the Dashboard component.</li>
+      <li><b>Refresh cadence differs</b>, web 60s auto-refresh; Android ON_RESUME + a 30s notification-count poll. Clock toggle: Android confirms with a dialog + elapsed time, web toggles directly.</li>
+      <li><b>UNVERIFIED:</b> MapViewModel/DashboardViewModel pin source bodies; <code>second_chance</code> field name differs (<code>total</code> web vs <code>new_count</code> Android), both from <code>GET /reports/dashboard</code>.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Dashboard · rendered from dashboard.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -162,25 +162,25 @@ const SECTIONS=[
 ];
 const A={
 "refresh":{label:"Refresh",status:"ok",route:"re-issues load GETs",fires:"re-pull data",result:"fresh data",caveat:"web 60s auto · Android ON_RESUME + 30s notif poll",
- d:{purpose:"Re-pull dashboard data on demand.",actors:["office","owner","tech"],vis:"always",chain:[["GET","/reports/dashboard"]],parity:"PARTIAL — web auto-refreshes every 60s + a manual button; Android refreshes on ON_RESUME + manual vm.load() + a 30s notification-count poll."}},
+ d:{purpose:"Re-pull dashboard data on demand.",actors:["office","owner","tech"],vis:"always",chain:[["GET","/reports/dashboard"]],parity:"PARTIAL, web auto-refreshes every 60s + a manual button; Android refreshes on ON_RESUME + manual vm.load() + a 30s notification-count poll."}},
 "clock-toggle":{label:"Clock In / Out",status:"ok",route:"POST /timesheets/clock-in · clock-out",fires:"open/close timesheet",result:"clocked in/out",caveat:"Android confirm dialog + elapsed; web one-tap",
- d:{purpose:"Start/stop the technician's work-hours timesheet.",actors:["tech","owner"],vis:"always (status from GET /timesheets/status)",chain:[["POST","/timesheets/clock-in"],["POST","/timesheets/clock-out"]],parity:"PARTIAL — Android adds confirm dialogs + a live elapsed-minutes counter; web is a one-tap toggle."}},
+ d:{purpose:"Start/stop the technician's work-hours timesheet.",actors:["tech","owner"],vis:"always (status from GET /timesheets/status)",chain:[["POST","/timesheets/clock-in"],["POST","/timesheets/clock-out"]],parity:"PARTIAL, Android adds confirm dialogs + a live elapsed-minutes counter; web is a one-tap toggle."}},
 "notifications":{label:"Notifications bell",status:"ok",route:"GET /notifications/unread-count → notifications",fires:"navigate",result:"notifications screen",caveat:"Android-only on this screen (web bell is in Layout)",
- d:{purpose:"Open notifications; badge shows unread count.",actors:["office","owner","tech"],vis:"Android top bar always; web surfaces the bell via the shared Layout, not the Dashboard page",chain:[["GET","/notifications/unread-count"]],parity:"ANDROID-ONLY (on this screen) — web's notifications live in the Layout shell."}},
+ d:{purpose:"Open notifications; badge shows unread count.",actors:["office","owner","tech"],vis:"Android top bar always; web surfaces the bell via the shared Layout, not the Dashboard page",chain:[["GET","/notifications/unread-count"]],parity:"ANDROID-ONLY (on this screen), web's notifications live in the Layout shell."}},
 "kpi-cards":{label:"KPI tiles",status:"partial",route:"web: 2 tiles → /phone",fires:"navigate (web 2 tiles)",result:"phone (those 2)",caveat:"different metrics; Android tiles static",
- d:{purpose:"At-a-glance business metrics.",actors:["office","owner"],vis:"always",chain:[["GET","/reports/dashboard"]],parity:"DIVERGENT — different metric sets (web: Total Jobs / This Month / Completion Rate / Scheduled Today / Missed Calls / 2nd Chance; Android: Month Revenue / Jobs Today / Completed / In Progress / Missed Calls / 2nd Chance). Only web makes Missed-Calls + 2nd-Chance tappable (→/phone); Android KPI tiles are display-only."}},
+ d:{purpose:"At-a-glance business metrics.",actors:["office","owner"],vis:"always",chain:[["GET","/reports/dashboard"]],parity:"DIVERGENT, different metric sets (web: Total Jobs / This Month / Completion Rate / Scheduled Today / Missed Calls / 2nd Chance; Android: Month Revenue / Jobs Today / Completed / In Progress / Missed Calls / 2nd Chance). Only web makes Missed-Calls + 2nd-Chance tappable (→/phone); Android KPI tiles are display-only."}},
 "second-chance":{label:"2nd-Chance banner",status:"ok",route:"navigate /phone",fires:"navigate",result:"phone screen",caveat:"web second_chance.total · Android new_count",
- d:{purpose:"Nudge to follow up unbooked/missed callers.",actors:["office","owner"],vis:"when second_chance > 0",chain:[],parity:"MATCH — both show the banner and route to Phone. (web reads second_chance.total; Android second_chance.new_count.)"}},
+ d:{purpose:"Nudge to follow up unbooked/missed callers.",actors:["office","owner"],vis:"when second_chance > 0",chain:[],parity:"MATCH, both show the banner and route to Phone. (web reads second_chance.total; Android second_chance.new_count.)"}},
 "membership-row":{label:"Memberships due-soon row",status:"ok",route:"navigate /customers/:id",fires:"navigate",result:"customer detail",caveat:"data from /memberships/due-soon",
- d:{purpose:"Jump to a customer whose membership service is due.",actors:["office","owner"],vis:"when dueSoon.length > 0 (up to 3)",chain:[["GET","/memberships/due-soon"]],parity:"MATCH — both route a due-soon row to the customer."}},
+ d:{purpose:"Jump to a customer whose membership service is due.",actors:["office","owner"],vis:"when dueSoon.length > 0 (up to 3)",chain:[["GET","/memberships/due-soon"]],parity:"MATCH, both route a due-soon row to the customer."}},
 "membership-viewall":{label:"View all (memberships)",status:"broken",route:"navigate /memberships",fires:"redirect → /dashboard",result:"bounces to dashboard",caveat:"no /memberships web route",
- d:{purpose:"(Intended) open the full memberships list.",actors:["office","owner"],vis:"web only, when dueSoon.length > 0",chain:[],parity:"WEB-ONLY (broken) — App.jsx registers /settings/membership-plans, not /memberships, so the * fallback redirects to /dashboard. Android has no 'View all' (shows '+N more' text). The rows work; only this target is missing."}},
+ d:{purpose:"(Intended) open the full memberships list.",actors:["office","owner"],vis:"web only, when dueSoon.length > 0",chain:[],parity:"WEB-ONLY (broken), App.jsx registers /settings/membership-plans, not /memberships, so the * fallback redirects to /dashboard. Android has no 'View all' (shows '+N more' text). The rows work; only this target is missing."}},
 "active-jobs-list":{label:"Active Jobs list",status:"ok",route:"/jobs · /jobs/:id",fires:"navigate",result:"jobs list / job detail",caveat:"web-only; Android shows jobs as map pins",
- d:{purpose:"Scan and open active jobs from the home screen.",actors:["office","owner","tech"],vis:"web always (list + empty-state); Android has no on-dashboard list",chain:[["GET","/jobs?status=…&limit=50"]],parity:"WEB-ONLY — 'View all' → /jobs, job card → /jobs/:id. Android relies on the full-screen map + the bottom-nav Jobs tab. Web also renders an 'Active Techs' strip from GET /gps/live (display-only)."}},
+ d:{purpose:"Scan and open active jobs from the home screen.",actors:["office","owner","tech"],vis:"web always (list + empty-state); Android has no on-dashboard list",chain:[["GET","/jobs?status=…&limit=50"]],parity:"WEB-ONLY, 'View all' → /jobs, job card → /jobs/:id. Android relies on the full-screen map + the bottom-nav Jobs tab. Web also renders an 'Active Techs' strip from GET /gps/live (display-only)."}},
 "job-map":{label:"Job/Tech Map + Full Map",status:"ok",route:"marker → /jobs/:id · Full Map → /live-map",fires:"navigate",result:"job detail / live map",caveat:"web caps 20 markers; geocodes missing coords",
- d:{purpose:"See active jobs and live techs geographically.",actors:["office","owner"],vis:"web when Maps ready + active jobs; Android always (map fills space)",chain:[["GET","/gps/live"]],parity:"MATCH — both plot job + tech markers and link to Job Detail / Live Map. Web geocodes missing coords client-side; Android uses stored pins."}},
+ d:{purpose:"See active jobs and live techs geographically.",actors:["office","owner"],vis:"web when Maps ready + active jobs; Android always (map fills space)",chain:[["GET","/gps/live"]],parity:"MATCH, both plot job + tech markers and link to Job Detail / Live Map. Web geocodes missing coords client-side; Android uses stored pins."}},
 "paste-ticket":{label:"Paste Ticket (FAB)",status:"ok",route:"POST /jobs/parse-ticket → /jobs/new",fires:"AI parse",result:"new job pre-filled",caveat:"web modal · Android instant clipboard parse",
- d:{purpose:"Turn pasted ticket text into a pre-filled new job — the headline fast path.",actors:["office","owner"],vis:"always (FAB)",chain:[["POST","/jobs/parse-ticket"]],parity:"PARTIAL — same endpoint; web review-modal vs Android instant clipboard parse (same divergence as the New Job screen). No DB write here; the job is created later on the New Job form."}},
+ d:{purpose:"Turn pasted ticket text into a pre-filled new job, the headline fast path.",actors:["office","owner"],vis:"always (FAB)",chain:[["POST","/jobs/parse-ticket"]],parity:"PARTIAL, same endpoint; web review-modal vs Android instant clipboard parse (same divergence as the New Job screen). No DB write here; the job is created later on the New Job form."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -196,7 +196,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -211,7 +211,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;

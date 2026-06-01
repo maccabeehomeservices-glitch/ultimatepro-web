@@ -113,7 +113,7 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Inventory<span class="sub">Parts across warehouse + trucks — edit, transfer, restock, and auto-deduct on completion.</span></h1>
+    <h1>Inventory<span class="sub">Parts across warehouse + trucks, edit, transfer, restock, and auto-deduct on completion.</span></h1>
     <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>79940c8</b></div>
   </header>
 
@@ -139,17 +139,17 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Web "Transfer to Truck" is broken (404)</b> — it posts to <code>POST /inventory/transfer</code>, which is not a registered route; the real warehouse→truck move is <code>POST /inventory/trucks/:truckId/send-items</code> (used by Android). Web transfers never happen.</li>
-      <li><b>Restock fulfill is Android-only</b> — web lists requests read-only; only Android's RestockRequestDetailScreen fulfills (<code>PUT /restock-requests/:id/fulfill</code>, which adds to truck stock).</li>
-      <li><b>Enable toggle lives in different places</b> — Android InventoryScreen ("Enable Inventory"); web in the Settings module. Same <code>PUT /inventory/settings</code>.</li>
-      <li><b>On-completion deduction is automatic + server-side</b> — fires inside <code>POST /jobs/:id/status</code> (completed) when enabled, deducting invoice line items (by pricebook_item_id) from the tech's truck; a separate manual <code>/deduct-job</code> endpoint also exists.</li>
+      <li><b>Web "Transfer to Truck" is broken (404)</b>, it posts to <code>POST /inventory/transfer</code>, which is not a registered route; the real warehouse→truck move is <code>POST /inventory/trucks/:truckId/send-items</code> (used by Android). Web transfers never happen.</li>
+      <li><b>Restock fulfill is Android-only</b>, web lists requests read-only; only Android's RestockRequestDetailScreen fulfills (<code>PUT /restock-requests/:id/fulfill</code>, which adds to truck stock).</li>
+      <li><b>Enable toggle lives in different places</b>, Android InventoryScreen ("Enable Inventory"); web in the Settings module. Same <code>PUT /inventory/settings</code>.</li>
+      <li><b>On-completion deduction is automatic + server-side</b>, fires inside <code>POST /jobs/:id/status</code> (completed) when enabled, deducting invoice line items (by pricebook_item_id) from the tech's truck; a separate manual <code>/deduct-job</code> endpoint also exists.</li>
       <li><b>UNVERIFIED:</b> exact web Settings host of the inventory toggle; Android warehouse-edit + my-truck specifics; whether the manual <code>/deduct-job</code> has any UI caller.</li>
     </ul>
   </div>
 
   <footer>
     UltimatePro Screen Atlas · Inventory · rendered from inventory.md (Action-Map Schema v1)<br>
-    Source of truth is the markdown contract. Update both in the commit that changes this screen — reality on disk wins.
+    Source of truth is the markdown contract. Update both in the commit that changes this screen, reality on disk wins.
   </footer>
 </div>
 
@@ -161,21 +161,21 @@ const SECTIONS=[
 ];
 const A={
 "settings-toggle":{label:"Enable Inventory",status:"ok",route:"GET/PUT /inventory/settings",fires:"toggle enabled",result:"feature on/off",caveat:"Android on screen · web in Settings",
- d:{purpose:"Turn the whole inventory feature on/off (gates deduction + the screens).",actors:["owner","manager"],vis:"Android InventoryScreen 'Enable Inventory'; web exposes the toggle in the Settings module",chain:[["GET","/inventory/settings"],["PUT","/inventory/settings"]],parity:"PARTIAL — same endpoint {enabled}; Android hosts the toggle on the Inventory screen, web in Settings. When disabled, the on-completion deduction is skipped."}},
+ d:{purpose:"Turn the whole inventory feature on/off (gates deduction + the screens).",actors:["owner","manager"],vis:"Android InventoryScreen 'Enable Inventory'; web exposes the toggle in the Settings module",chain:[["GET","/inventory/settings"],["PUT","/inventory/settings"]],parity:"PARTIAL, same endpoint {enabled}; Android hosts the toggle on the Inventory screen, web in Settings. When disabled, the on-completion deduction is skipped."}},
 "warehouse-edit":{label:"Warehouse count",status:"ok",route:"PUT /inventory/warehouse/:id",fires:"set qty",result:"count saved",
- d:{purpose:"Set the on-hand count of a warehouse item.",actors:["owner","manager"],vis:"Warehouse tab",chain:[["PUT","/inventory/warehouse/:id"]],parity:"MATCH — body {quantity}; updates warehouse_inventory.qty_on_hand."}},
+ d:{purpose:"Set the on-hand count of a warehouse item.",actors:["owner","manager"],vis:"Warehouse tab",chain:[["PUT","/inventory/warehouse/:id"]],parity:"MATCH, body {quantity}; updates warehouse_inventory.qty_on_hand."}},
 "truck-stock-edit":{label:"Truck count",status:"ok",route:"PUT /inventory/trucks/:truckId/stock/:itemId",fires:"set qty",result:"count saved",
- d:{purpose:"Set the on-hand count of an item on a specific truck.",actors:["owner","manager"],vis:"Trucks tab (web) / TruckStockScreen (Android)",chain:[["PUT","/inventory/trucks/:truckId/stock/:itemId"]],parity:"MATCH — body {qty_on_hand, min_qty}; web inline on the Trucks tab, Android on a dedicated screen."}},
+ d:{purpose:"Set the on-hand count of an item on a specific truck.",actors:["owner","manager"],vis:"Trucks tab (web) / TruckStockScreen (Android)",chain:[["PUT","/inventory/trucks/:truckId/stock/:itemId"]],parity:"MATCH, body {qty_on_hand, min_qty}; web inline on the Trucks tab, Android on a dedicated screen."}},
 "my-truck":{label:"My Truck",status:"ok",route:"GET /inventory/tech-truck/:userId",fires:"read truck",result:"on-hand + low-stock",
- d:{purpose:"A tech sees their own truck's stock and low-stock flags.",actors:["tech"],vis:"My Truck tab",chain:[["GET","/inventory/tech-truck/:userId"]],parity:"MATCH — read-only (truck + item_count + low_stock_count)."}},
+ d:{purpose:"A tech sees their own truck's stock and low-stock flags.",actors:["tech"],vis:"My Truck tab",chain:[["GET","/inventory/tech-truck/:userId"]],parity:"MATCH, read-only (truck + item_count + low_stock_count)."}},
 "transfer-to-truck":{label:"Transfer → truck",status:"broken",route:"POST /inventory/transfer",fires:"nothing (404)",result:"Route not found",caveat:"web hits unregistered /transfer; Android uses send-items",
- d:{purpose:"Move a warehouse item onto a truck.",actors:["owner","manager"],vis:"web Warehouse tab '→ Truck'; Android 'Send items to truck' on TruckStockScreen",chain:[["POST","/inventory/transfer"]],parity:"DIVERGENT — web posts {item_id, truck_id, quantity} to POST /inventory/transfer, which is NOT registered (real endpoints: trucks/:truckId/send-items / return-items) → 404. Android uses send-items and works. Web warehouse→truck transfers never happen."}},
+ d:{purpose:"Move a warehouse item onto a truck.",actors:["owner","manager"],vis:"web Warehouse tab '→ Truck'; Android 'Send items to truck' on TruckStockScreen",chain:[["POST","/inventory/transfer"]],parity:"DIVERGENT, web posts {item_id, truck_id, quantity} to POST /inventory/transfer, which is NOT registered (real endpoints: trucks/:truckId/send-items / return-items) → 404. Android uses send-items and works. Web warehouse→truck transfers never happen."}},
 "request-restock":{label:"Request Restock",status:"ok",route:"POST /inventory/restock-requests",fires:"create request",result:"request pending",
- d:{purpose:"Ask the office to restock selected truck items.",actors:["tech","manager"],vis:"Trucks tab (web) / restock dialog (Android)",chain:[["POST","/inventory/restock-requests"]],parity:"MATCH — body {truck_id, items:[{pricebook_item_id, item_name, qty_requested}], notes}; inserts a restock_requests (pending) + restock_request_items."}},
+ d:{purpose:"Ask the office to restock selected truck items.",actors:["tech","manager"],vis:"Trucks tab (web) / restock dialog (Android)",chain:[["POST","/inventory/restock-requests"]],parity:"MATCH, body {truck_id, items:[{pricebook_item_id, item_name, qty_requested}], notes}; inserts a restock_requests (pending) + restock_request_items."}},
 "restock-fulfill":{label:"Fulfill Request",status:"ok",route:"PUT /inventory/restock-requests/:id/fulfill",fires:"add to truck stock",result:"request fulfilled",caveat:"Android-only (web list is read-only)",
- d:{purpose:"Fulfill a pending restock request (adds fulfilled quantities to the truck).",actors:["owner","manager"],vis:"Android RestockRequestDetailScreen ('Fulfill'). Web's Restock-Requests tab is read-only.",chain:[["PUT","/inventory/restock-requests/:id/fulfill"]],parity:"ANDROID-ONLY — body {items:[{pricebook_item_id, qty_fulfilled}]}; sets qty_fulfilled, adds to truck_inventory.qty_on_hand (+= qty_fulfilled, upsert), status='fulfilled' + fulfilled_at/by. Web can create requests but has no fulfill UI."}},
+ d:{purpose:"Fulfill a pending restock request (adds fulfilled quantities to the truck).",actors:["owner","manager"],vis:"Android RestockRequestDetailScreen ('Fulfill'). Web's Restock-Requests tab is read-only.",chain:[["PUT","/inventory/restock-requests/:id/fulfill"]],parity:"ANDROID-ONLY, body {items:[{pricebook_item_id, qty_fulfilled}]}; sets qty_fulfilled, adds to truck_inventory.qty_on_hand (+= qty_fulfilled, upsert), status='fulfilled' + fulfilled_at/by. Web can create requests but has no fulfill UI."}},
 "completion-deduction":{label:"Auto-deduct on completion",status:"ok",route:"in POST /jobs/:id/status · POST /inventory/deduct-job/:jobId",fires:"subtract truck stock",result:"truck stock reduced",caveat:"automatic + server-side",
- d:{purpose:"Subtract used parts from the assigned tech's truck when a job completes.",actors:["system"],vis:"automatic (no button); requires inventory_settings.enabled + an active truck",chain:[["POST","/jobs/:id/status"],["POST","/inventory/deduct-job/:jobId"]],parity:"MATCH — server-side. Automatic (jobs.js ~898-929): when enabled, finds the tech's truck and runs UPDATE truck_inventory SET qty_on_hand = GREATEST(0, qty_on_hand − used) per invoice line item with a pricebook_item_id. A manual /deduct-job endpoint also exists. Errors are caught/logged, never block completion. Items without a pricebook_item_id aren't deducted."}},
+ d:{purpose:"Subtract used parts from the assigned tech's truck when a job completes.",actors:["system"],vis:"automatic (no button); requires inventory_settings.enabled + an active truck",chain:[["POST","/jobs/:id/status"],["POST","/inventory/deduct-job/:jobId"]],parity:"MATCH, server-side. Automatic (jobs.js ~898-929): when enabled, finds the tech's truck and runs UPDATE truck_inventory SET qty_on_hand = GREATEST(0, qty_on_hand − used) per invoice line item with a pricebook_item_id. A manual /deduct-job endpoint also exists. Errors are caught/logged, never block completion. Items without a pricebook_item_id aren't deducted."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};
@@ -191,7 +191,7 @@ SECTIONS.forEach(sec=>{
 function row(id){
   const a=A[id],s=a.status;
   const caveat=a.caveat?`<div class="caveat">⚠ ${a.caveat}</div>`:'';
-  const fires=a.fires==='—'?'<span style="color:var(--faint)">—</span>':a.fires;
+  const fires=a.fires===', '?'<span style="color:var(--faint)">, </span>':a.fires;
   return `<div class="flowwrap" data-status="${s}">
     <div class="flow" onclick="toggle('${id}')">
       <div class="box ${s}"><div class="bt">${a.label}</div><div class="bs">${s}</div></div>
@@ -206,7 +206,7 @@ function row(id){
       <div class="drow"><div class="dk">purpose</div><div class="dv">${a.d.purpose}</div></div>
       <div class="drow"><div class="dk">actors</div><div class="dv"><div class="actors">${a.d.actors.map(x=>`<span class="actor">${x}</span>`).join('')}</div></div></div>
       <div class="drow"><div class="dk">visibility</div><div class="dv">${a.d.vis}</div></div>
-      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">— none (UI only) —</span>'}</div></div>
+      <div class="drow"><div class="dk">route chain</div><div class="dv">${a.d.chain.length?`<div class="hopline">${a.d.chain.map(h=>`<span class="hop"><span class="m">${h[0]}</span>${h[1]}</span>`).join('')}</div>`:'<span style="color:var(--faint)">, none (UI only), </span>'}</div></div>
       <div class="drow"><div class="dk">parity / note</div><div class="dv">${a.d.parity}</div></div>
     </div>
   </div>`;
