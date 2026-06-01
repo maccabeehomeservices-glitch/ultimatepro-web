@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Plus, X, ClipboardList, UserCheck } from 'lucide-react';
 import { jobsApi, customersApi, sourcesApi, companyApi, rosterTechsApi } from '../lib/api';
+import { formatInJobZone } from '../lib/timezone';
 import { useGet } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
 import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
@@ -238,7 +239,7 @@ export default function JobForm() {
     if (!streetInputRef.current || !window.google?.maps?.places) return;
     const ac = new window.google.maps.places.Autocomplete(
       streetInputRef.current,
-      { types: ['address'], componentRestrictions: { country: 'us' } }
+      { types: ['address'], componentRestrictions: { country: 'us' }, fields: ['address_components', 'geometry', 'formatted_address'] }
     );
     ac.addListener('place_changed', () => {
       const place = ac.getPlace();
@@ -252,7 +253,15 @@ export default function JobForm() {
         if (t.includes('administrative_area_level_1')) state = c.short_name;
         if (t.includes('postal_code'))   zip = c.long_name;
       }
-      setForm(prev => ({ ...prev, address: street.trim() || place.formatted_address, city, state: toStateAbbr(state), zip }));
+      // Capture coords so the backend can resolve the job's timezone immediately (TZ 2/3).
+      const loc = place.geometry?.location;
+      setForm(prev => ({
+        ...prev,
+        address: street.trim() || place.formatted_address,
+        city, state: toStateAbbr(state), zip,
+        lat: loc ? loc.lat() : prev.lat,
+        lng: loc ? loc.lng() : prev.lng,
+      }));
     });
     return () => window.google?.maps?.event?.clearInstanceListeners(ac);
   }, [!!window.google?.maps?.places]); // eslint-disable-line
@@ -261,9 +270,10 @@ export default function JobForm() {
   useEffect(() => {
     if (!isEdit || !jobData) return;
     const j = jobData.job || jobData;
+    // Show the job-zone wall-clock so editing doesn't shift the time (TZ 2/3).
     const sDate = j.scheduled_date ? j.scheduled_date.slice(0,10)
-      : j.scheduled_start ? j.scheduled_start.slice(0,10) : '';
-    const sTime = j.scheduled_time || (j.scheduled_start ? j.scheduled_start.slice(11,16) : '');
+      : j.scheduled_start ? formatInJobZone(j.scheduled_start, j, 'yyyy-MM-dd') : '';
+    const sTime = j.scheduled_time || (j.scheduled_start ? formatInJobZone(j.scheduled_start, j, 'HH:mm') : '');
 
     let assign_cat = 'self', assigned_tech_id = '', assigned_roster_tech_id = '', assigned_partner_company_id = '';
     if (j.assigned_roster_tech_id) { assign_cat = 'roster'; assigned_roster_tech_id = j.assigned_roster_tech_id; }
@@ -485,12 +495,11 @@ export default function JobForm() {
 
   // ── build payload for job create/update ───────────────────────────────────
   function buildPayload(sendToTech = false) {
-    let scheduled_start = null;
-    if (form.scheduled_date) {
-      const timeStr = form.scheduled_time || '12:00';
-      const dt = new Date(`${form.scheduled_date}T${timeStr}:00`);
-      scheduled_start = isNaN(dt.getTime()) ? null : dt.toISOString();
-    }
+    // Path B (TZ 2/3): send the raw wall-clock + coords; the backend resolves the job's
+    // zone and converts to a UTC instant. No client-side UTC conversion.
+    const scheduled_local = form.scheduled_date
+      ? `${form.scheduled_date}T${form.scheduled_time || '12:00'}`
+      : null;
 
     // Resolve assignment
     let assigned_to = null;
@@ -521,7 +530,9 @@ export default function JobForm() {
       city:    form.city?.trim()    || null,
       state:   toStateAbbr(form.state?.trim()) || null,
       zip:     form.zip?.trim()     || null,
-      scheduled_start,
+      scheduled_local,
+      lat: form.lat ?? null,
+      lng: form.lng ?? null,
       assigned_to,
       assigned_roster_tech_id,
       source_type,

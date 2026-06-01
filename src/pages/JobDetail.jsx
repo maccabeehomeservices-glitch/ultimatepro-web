@@ -10,6 +10,7 @@ import api, { formatDate, formatTime, jobsApi } from '../lib/api';
 import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select, Toggle, StepperInput } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import SignaturePad from '../components/SignaturePad';
+import { formatInJobZone } from '../lib/timezone';
 
 const JOB_STATUSES = [
   { value: 'unscheduled', label: 'Unscheduled' },
@@ -790,7 +791,7 @@ export default function JobDetail() {
                   <span className="text-base">📅</span>
                   {jobData.scheduled_start ? (
                     <span className="text-sm text-gray-700 font-medium">
-                      {formatDate(jobData.scheduled_start)} {formatTime(jobData.scheduled_start)}
+                      {formatInJobZone(jobData.scheduled_start, jobData, 'MMM d, yyyy')} {formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a zzz')}
                     </span>
                   ) : (
                     <span className="text-sm text-gray-400">Not scheduled</span>

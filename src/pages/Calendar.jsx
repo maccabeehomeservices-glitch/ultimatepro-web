@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalIcon } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Modal, LoadingSpinner, Badge } from '../components/ui';
 import { statusColor } from '../lib/api';
+import { formatInJobZone } from '../lib/timezone';
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -34,7 +35,7 @@ export default function Calendar() {
 
   function getJobsForDay(day) {
     return schedules.filter((s) => {
-      const d = s.scheduled_start ? s.scheduled_start.slice(0, 10)
+      const d = s.scheduled_start ? formatInJobZone(s.scheduled_start, s, 'yyyy-MM-dd')
         : s.scheduled_date || s.date || s.start_date;
       if (!d) return false;
       try { return isSameDay(parseISO(d), day); } catch { return false; }
