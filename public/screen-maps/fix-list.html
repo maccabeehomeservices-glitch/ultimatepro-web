@@ -128,7 +128,6 @@ const TIERS=[
   ["Job Detail","job-detail","Before/After photos","broken","web binds to columns that don't exist → never display","POST /uploads → /jobs/:id/photos",""],
   ["Job Detail","job-detail","Charge Payment","broken","web reads missing field + wrong keys → always fails","web: POST /estimates/:id/collect-deposit",""],
   ["Job Detail","job-detail","Signature pad","dead","key fixed (signature_url); no trigger on either surface, feature unbuilt on web + Android","POST /jobs/:id/signature",""],
-  ["Job Detail","job-detail","Details/History/Messages","partial","messaging fixed (convId from first message); History tab still not role-gated on web","GET /history · /sms · POST /send",""],
   ["Complete Job","complete-job","Confirm Completion","partial","web has no confirm surface","GET /completion · POST /completion/confirm",""],
   ["Estimate Builder","estimate-builder","Present GBB Options","broken","web mis-wired to signature; Android has PresentTiersScreen","opens signature modal (no route)","SIG"],
   ["Estimate Builder","estimate-builder","Attach Photo","broken","web sends a file; handler wants JSON {url}","POST /estimates/:id/add-photo",""],

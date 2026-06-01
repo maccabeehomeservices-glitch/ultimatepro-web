@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-06-01 · Phase 2 Commit 1: notes/reminder/restore verb+key+route fixes (BROKEN→OK); permissions verb fixed (still BROKEN, UI pending) |
+| `last_verified` | 2026-06-01 · Phase 2 Commit 1 (notes/reminder/restore→OK; permissions verb fixed, UI pending) + Commit 2 (History role-gating: tabs PARTIAL→OK, web mirrors Android) |
 
 ### load_sequence
 
@@ -127,7 +127,7 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **failure_modes:** `permission-403` (technician hitting it — neither UI hides it by role)
 - **parity:** MATCH
 - **status:** PARTIAL
-- **status_note:** Button not role-gated client-side; a technician sees it and gets a 403.
+- **status_note:** Button not role-gated client-side; a technician sees it and gets a 403. **Verified (Phase 2):** this is a *shared* wart, NOT a web↔Android divergence — Android's top-bar Delete (JobScreens.kt:1426) is unconditional too. Mirroring would mean leaving it; hiding it on web only would diverge. Stays PARTIAL (shared UX gap), not touched this commit.
 
 ### `job-detail.status`
 - **label:** Status badge / chip (Android also has a top-bar status icon)
@@ -593,17 +593,17 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **section:** tabs
 - **actors:** owner, office, tech-user (History gated)
 - **purpose:** Switch between job details, customer history, and the SMS thread.
-- **visibility:** History gated `canViewHistory` on Android; not role-gated on web.
+- **visibility:** History gated `canViewHistory` on **both** surfaces (Phase 2: web mirrors Android — tab button + panel hidden for techs without `view_history`).
 - **precondition:** —
 - **confirm:** —
 - **route_chain:** History: `GET /customers/:id/history?exclude_job_id=`. Messages: `GET /sms/job/:jobId/messages`; send `POST /sms/conversations/:id/send`.
 - **request_body:** message send `{message}`
 - **side_effects:** `sms-customer` (on send)
 - **end_state:** Tab content shown; message sent.
-- **failure_modes:** Web Messages send **fixed** (2026-05-31): web now derives `convId` from the first message object (`msgs[0]?.conversation_id`), mirroring Android `jobMessages.firstOrNull()?.conversationId`, so the composer enables and send works once a thread exists. Starting a brand-new conversation (zero prior messages) is disabled on both web AND Android (parity-matched, pre-existing). Remaining divergence: the History tab is not role-gated on web (`canViewHistory` enforced only on Android).
-- **parity:** PARTIAL — messaging now matches Android (convId derived from message objects); History still not role-gated on web.
-- **status:** PARTIAL
-- **status_note:** Phase 0 [SMS-CONV] (2026-05-31): web Messages send fixed (convId from first message object, like Android). Row stays PARTIAL only for the separate History role-gating divergence; the messaging concern is resolved. Empty-thread start disabled on both surfaces (parity-matched).
+- **failure_modes:** none. Web Messages send fixed (2026-05-31, [SMS-CONV]); empty-thread start disabled on both surfaces (parity-matched). History role-gating fixed (Phase 2).
+- **parity:** MATCH — messaging matches Android (convId from message objects), and History is now role-gated on web too.
+- **status:** OK
+- **status_note:** Phase 2 (2026-06-01): web now computes `canViewHistory = !isTech || tech_permissions.view_history !== false` (JobDetail.jsx:~676, mirroring Android JobScreens.kt:1438) and hides both the History tab button and panel for techs without permission. The earlier [SMS-CONV] messaging fix already resolved; this clears the last History divergence.
 
 ---
 

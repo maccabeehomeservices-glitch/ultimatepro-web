@@ -6,6 +6,7 @@ import {
   Plus, ChevronDown, Trash2, Navigation, CheckCircle,
 } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
+import { useAuth } from '../hooks/useAuth';
 import api, { formatDate, formatTime, jobsApi } from '../lib/api';
 import { Card, Badge, Button, Modal, LoadingSpinner, Tabs, Input, Select, Toggle, StepperInput } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -94,6 +95,7 @@ export default function JobDetail() {
   const { showSnack } = useSnackbar();
   const { data: job, loading, refetch } = useGet(`/jobs/${id}`);
   const { mutate, loading: mutating } = useMutation();
+  const { user } = useAuth();
 
   const [activeTab, setActiveTab]           = useState('details');
   const [statusModal, setStatusModal]       = useState(false);
@@ -669,6 +671,12 @@ export default function JobDetail() {
   const priorityLabel = jobData.priority ? (jobData.priority.charAt(0).toUpperCase() + jobData.priority.slice(1)) : null;
   const priorityStyle = PRIORITY_COLORS[jobData.priority] || 'bg-gray-100 text-gray-600';
 
+  // ── History role-gate (mirrors Android JobScreens.kt:1437-1438) ──
+  // isTech = role not in [owner, admin, manager]; default-allow unless view_history is explicitly false.
+  const isTech = !['owner', 'admin', 'manager'].includes(user?.role);
+  const canViewHistory = !isTech || jobData.tech_permissions?.view_history !== false;
+  const visibleTabs = canViewHistory ? tabList : tabList.filter(t => t.id !== 'history');
+
   // ── Complete-Job partner split + live calc (mirrors Android CompleteJobScreen 2999-3010) ──
   const isPartnerJob   = jobData.agreement_id != null;
   const calcGross      = Number(jobInvoice?.total || 0);
@@ -770,7 +778,7 @@ export default function JobDetail() {
       )}
 
       {/* ── Section 2: Tabs ────────────────────────────────────────────────── */}
-      <Tabs tabs={tabList} active={activeTab} onChange={setActiveTab} />
+      <Tabs tabs={visibleTabs} active={activeTab} onChange={setActiveTab} />
 
       <div className="mt-4 space-y-4">
 
@@ -1168,7 +1176,7 @@ export default function JobDetail() {
         )}
 
         {/* ─── HISTORY TAB ──────────────────────────────────────────────────── */}
-        {activeTab === 'history' && (
+        {activeTab === 'history' && canViewHistory && (
           <div className="space-y-2">
             {[
               { key: 'past_jobs', label: '📋 Past Jobs' },

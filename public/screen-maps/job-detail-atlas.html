@@ -119,7 +119,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Job Detail<span class="sub">Read each row left → right: button → route it calls → what fires → result.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb/key/route fixes</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb fixes + History gate</b></div>
   </header>
   <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5e7197;margin-bottom:18px"><a href="index.html" style="color:#5ec8e8;text-decoration:none">all maps</a> · job detail › <a href="new-job-atlas.html" style="color:#5ec8e8;text-decoration:none">new job</a></div>
 
@@ -259,8 +259,8 @@ const A={
 "signature":{label:"Signature pad",status:"dead",route:"POST /jobs/:id/signature",fires:"save signature",result:"signature saved",caveat:"key fixed; no trigger on either surface (unbuilt)",
  d:{purpose:"Capture a signature on the job.",actors:["owner","office","customer"],vis:"web modal exists but is never opened; Android has no job-signature UI either",chain:[["POST","/jobs/:id/signature"]],parity:"Phase 0 [SIG] (2026-05-31): body key now signature_url, matching backend jobs.js:1011 + Android repo (CrmRepository.kt:262). Stays dead-code: no trigger wires the modal on web, and Android has the saveJobSignature repo method but no screen calls it. Unbuilt on both surfaces; wiring is a product decision, not a key bug."}},
 
-"tabs":{label:"Details/History/Messages",status:"partial",route:"GET /history · /sms · POST /send",fires:"load tab / send SMS",result:"tab shown / message sent",caveat:"messaging fixed; History still not role-gated on web",
- d:{purpose:"Switch between job details, customer history, and the SMS thread.",actors:["owner","office","tech-user"],vis:"History gated on Android, not on web",chain:[["GET","/customers/:id/history"],["GET","/sms/job/:jobId/messages"],["POST","/sms/conversations/:id/send"]],parity:"PARTIAL — Phase 0 [SMS-CONV] (2026-05-31): web Messages send fixed — convId now derived from the first message object (msgs[0]?.conversation_id), mirroring Android jobMessages.firstOrNull()?.conversationId; composer enables and send works on existing threads. Empty-thread start disabled on both (parity-matched). Remaining divergence: History tab not role-gated on web (canViewHistory enforced only on Android)."}},
+"tabs":{label:"Details/History/Messages",status:"ok",route:"GET /history · /sms · POST /send",fires:"load tab / send SMS",result:"tab shown / message sent",
+ d:{purpose:"Switch between job details, customer history, and the SMS thread.",actors:["owner","office","tech-user"],vis:"History gated by canViewHistory on both surfaces",chain:[["GET","/customers/:id/history"],["GET","/sms/job/:jobId/messages"],["POST","/sms/conversations/:id/send"]],parity:"MATCH — [SMS-CONV] fixed web Messages send (convId from first message object, like Android); empty-thread start disabled on both. Phase 2 (2026-06-01): web now gates History on canViewHistory = !isTech || tech_permissions.view_history !== false (JobDetail.jsx:~676), hiding the tab button + panel for techs — mirrors Android JobScreens.kt:1438."}},
 };
 
 const atlas=document.getElementById('atlas');
