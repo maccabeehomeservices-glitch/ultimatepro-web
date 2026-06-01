@@ -119,7 +119,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Job Detail<span class="sub">Read each row left → right: button → route it calls → what fires → result.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>Phase 1 · <b>money fix</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb/key/route fixes</b></div>
   </header>
   <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5e7197;margin-bottom:18px"><a href="index.html" style="color:#5ec8e8;text-decoration:none">all maps</a> · job detail › <a href="new-job-atlas.html" style="color:#5ec8e8;text-decoration:none">new job</a></div>
 
@@ -143,7 +143,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Route-404 (web):</b> <code>PATCH /jobs/:id</code> (notes, tech-permissions), <code>POST /jobs/:id/restore</code>. System-wide: <code>POST /payments/scanpay/charge</code> called by both clients — verify in payments.js body.</li>
+      <li><b>Route-404 (web): RESOLVED (Phase 2).</b> Notes + tech-permissions now use <code>PUT /jobs/:id</code> (via <code>jobsApi.update</code>); Restore now posts <code>/jobs/:id/status {unscheduled}</code> (mirrors Android). The non-existent <code>PATCH /jobs/:id</code> and <code>POST /jobs/:id/restore</code> are no longer called. (<code>scanpay/charge</code> resolved earlier.)</li>
       <li><b>Two completion paths — web side closed (Phase 1):</b> <code>/status?completed</code> (simple calc, no &gt;100% guard) vs <code>/complete</code> (three-slice + guard). Web now routes completion only through <code>/complete</code>: the Status modal "Completed" opens the Complete modal, which renders parts/CC for partner jobs. Path A still exists on the backend but no web surface posts <code>completed</code> to it. Caveat: Path A's inventory-deduct/membership-advance/source-sms are not in <code>/complete</code> on either surface (backend follow-up).</li>
       <li><b>payments.method check contradiction:</b> two boot migrations (server.js 558–561 vs 785); the later one drops <code>card</code>/<code>scanpay</code>/<code>paypal</code>.</li>
       <li><b>Schema scatter:</b> live schema = schema.sql + migrate_*.sql + server.js IIFE + jobs.js top-level ALTERs (≥3 places).</li>
@@ -207,8 +207,8 @@ const A={
 "banner-completion":{label:"Completion banner",status:"partial",route:"GET /completion",fires:"open sheet",result:"profit-split detail",caveat:"web has no completion sheet",
  d:{purpose:"Show completion/confirmation state; owner opens the profit-split detail sheet.",actors:["owner","office"],vis:"completion record exists",chain:[["GET","/jobs/:id/completion"],["POST","/jobs/:id/completion/confirm"]],parity:"ANDROID-ONLY — web orphans both completion endpoints"}},
 
-"reminder-method":{label:"Reminder method",status:"broken",route:"PATCH /reminder-method",fires:"save method",result:"reminder set",caveat:"web sends wrong key → silent no-op",
- d:{purpose:"Choose how the customer reminder is sent for a scheduled job.",actors:["owner","office"],vis:"Android: scheduled & not-yet-sent. Web: always.",chain:[["PATCH","/jobs/:id/reminder-method"]],parity:"PARTIAL — web sends {method} (backend wants {reminder_method}) and value '' (wants 'default'); fails silently. Android works."}},
+"reminder-method":{label:"Reminder method",status:"ok",route:"PATCH /reminder-method",fires:"save method",result:"reminder set",
+ d:{purpose:"Choose how the customer reminder is sent for a scheduled job.",actors:["owner","office"],vis:"Android: scheduled & not-yet-sent. Web: always.",chain:[["PATCH","/jobs/:id/reminder-method"]],parity:"MATCH (Phase 2) — web now sends {reminder_method: value || 'default'} (JobDetail.jsx:513), fixing the wrong key + the '' value. Android unchanged."}},
 "scheduled-display":{label:"Scheduled date/time",status:"ok",route:"display",fires:"—",result:"shows schedule",
  d:{purpose:"Show when the job is scheduled.",actors:["owner","office","tech-user"],vis:"always (display only)",chain:[],parity:"MATCH"}},
 
@@ -225,10 +225,10 @@ const A={
 "line-items-card":{label:"Line Items card",status:"partial",route:"display",fires:"show items",result:"items + total",caveat:"different source than web invoice items",
  d:{purpose:"Show line items recorded on the job.",actors:["owner","office","tech-user"],vis:"job.line_items present (Android)",chain:[],parity:"PARTIAL — Android shows job line_items here; web shows invoice line_items in the invoice card"}},
 
-"notes":{label:"Notes editor",status:"broken",route:"PUT /jobs/:id  ·  web: PATCH",fires:"save notes",result:"notes saved",caveat:"web PATCH /jobs/:id → 404",
- d:{purpose:"Free-text job notes; save on focus-lost.",actors:["owner","office","tech-user"],vis:"always",chain:[["PUT","/jobs/:id"],["PATCH","/jobs/:id"]],parity:"PARTIAL — Android PUT works; web PATCH /jobs/:id is not registered → 404 → 'Failed to save notes'"}},
-"permissions":{label:"Tech/Partner perms",status:"broken",route:"PUT /jobs/:id  ·  web: PATCH",fires:"save perms",result:"perms saved",caveat:"web: no UI + wrong verb (404)",
- d:{purpose:"On a shared job, control which actions the receiving tech may perform.",actors:["owner","office","partner"],vis:"Android by sent_by/sent_to; web handler exists with no JSX trigger",chain:[["PUT","/jobs/:id"],["PATCH","/jobs/:id"]],parity:"PARTIAL — Android editor works; web is dead code + 404 verb"}},
+"notes":{label:"Notes editor",status:"ok",route:"PUT /jobs/:id",fires:"save notes",result:"notes saved",
+ d:{purpose:"Free-text job notes; save on focus-lost.",actors:["owner","office","tech-user"],vis:"always",chain:[["PUT","/jobs/:id"]],parity:"MATCH (Phase 2) — web now saves via jobsApi.update PUT /jobs/:id {notes} (JobDetail.jsx:520), mirroring Android. The non-existent PATCH /jobs/:id is gone."}},
+"permissions":{label:"Tech/Partner perms",status:"broken",route:"PUT /jobs/:id",fires:"save perms",result:"perms saved",caveat:"verb fixed; no UI trigger yet",
+ d:{purpose:"On a shared job, control which actions the receiving tech may perform.",actors:["owner","office","partner"],vis:"Android by sent_by/sent_to; web handler exists with no JSX trigger",chain:[["PUT","/jobs/:id"]],parity:"PARTIAL — Android editor works; web handler now posts the correct PUT /jobs/:id (Phase 2, JobDetail.jsx:350) but no JSX renders a toggle to call it. Stays BROKEN until the UI lands (separate commit)."}},
 
 "send-to-tech":{label:"Send To Tech",status:"partial",route:"notify-tech / send-to-partner",fires:"notify recipient",result:"recipient notified",caveat:"web can't pick an unassigned roster tech",
  d:{purpose:"Notify a recipient — roster tech, app-user tech, or network partner.",actors:["owner","office"],vis:"hidden when deleted/cancelled",chain:[["POST","/roster-techs/notify-tech"],["POST","/jobs/:id/send-to-partner"]],parity:"PARTIAL — Android has 3 recipient paths; web treats assigned tech as roster_tech and always hits notify-tech (tech_id ignored)"}},
@@ -252,8 +252,8 @@ const A={
  d:{purpose:"Send the customer a receipt (with optional review request).",actors:["owner","office"],vis:"enabled iff invoice exists",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL — web auto-opens modal via route state; Android just opens the invoice. Modal works (review alias bug fixed in 6a67c97)."}},
 "cancel":{label:"Cancel Job",status:"ok",route:"POST /jobs/:id/status",fires:"status → cancelled",result:"job cancelled",
  d:{purpose:"Cancel the job; remove from tech view, keep editable by office.",actors:["owner","office"],vis:"status not deleted/cancelled",chain:[["POST","/jobs/:id/status"]],parity:"MATCH"}},
-"restore":{label:"Restore",status:"broken",route:"POST /jobs/:id/restore",fires:"restore job",result:"job restored",caveat:"endpoint doesn't exist → 404",
- d:{purpose:"Restore an archived (deleted) job.",actors:["owner","office"],vis:"status == deleted (web)",chain:[["POST","/jobs/:id/restore"]],parity:"WEB-ONLY & broken — route not registered anywhere → 404. Android restore lives in JobListCard (unverified)."}},
+"restore":{label:"Restore",status:"ok",route:"POST /jobs/:id/status {unscheduled}",fires:"restore job",result:"job restored",
+ d:{purpose:"Restore an archived (deleted) job.",actors:["owner","office"],vis:"status == deleted (web)",chain:[["POST","/jobs/:id/status"]],parity:"MATCH (Phase 2) — web jobsApi.restore (api.js:192) now posts /jobs/:id/status {status:'unscheduled'}, mirroring Android restoreJob → updateJobStatus('unscheduled') (JobScreens.kt:212). The non-existent /restore route is no longer called. DRIFT corrected: Android mechanism was verified."}},
 "complete":{label:"Completed",status:"ok",route:"POST /jobs/:id/complete",fires:"profit calc + earnings",result:"completed / holding / review",
  d:{purpose:"Lock in the job outcome and trigger profit allocation. The money spine's terminal action.",actors:["tech-user","owner"],vis:"hidden when deleted/cancelled/completed",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1) — web Complete modal renders the same parts/CC form as Android for partner jobs and sends the identical body; the dead payment_method was removed. >100% guard runs in /complete; web's Status modal 'Completed' now also routes here."}},
 "signature":{label:"Signature pad",status:"dead",route:"POST /jobs/:id/signature",fires:"save signature",result:"signature saved",caveat:"key fixed; no trigger on either surface (unbuilt)",

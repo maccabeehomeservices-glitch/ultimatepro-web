@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-05-31 · Phase 1 Complete Job money fix (status + complete actions flipped to OK) |
+| `last_verified` | 2026-06-01 · Phase 2 Commit 1: notes/reminder/restore verb+key+route fixes (BROKEN→OK); permissions verb fixed (still BROKEN, UI pending) |
 
 ### load_sequence
 
@@ -239,14 +239,14 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **visibility:** Android: `scheduled_start != null && reminder_sent_at == null`. Web: always shown in details.
 - **precondition:** Backend validates value ∈ [default, email, sms, both, none].
 - **confirm:** —
-- **route_chain:** `PATCH /jobs/:id/reminder-method` (jobs.js 1471)
-- **request_body:** expects `{reminder_method}`. Android sends correct key. **Web sends `{method}` and value `''` for Default.**
+- **route_chain:** `PATCH /jobs/:id/reminder-method` (jobs.js 1545)
+- **request_body:** `{reminder_method}` ∈ [default,email,sms,both,none]. Both surfaces now send the correct key; web maps its `''` Default option → `'default'`.
 - **side_effects:** `update-record`
 - **end_state:** Reminder method saved.
-- **failure_modes:** `field-mismatch` + `silent-noop` (web) — wrong key → 400, swallowed by empty catch.
-- **parity:** PARTIAL — Android works; web is a silent no-op.
-- **status:** BROKEN
-- **status_note:** Web key `{method}` ≠ backend `{reminder_method}`; even fixed, web sends `''` which fails the `[default,…]` validator. Web also shows selector with no scheduled date.
+- **failure_modes:** none
+- **parity:** MATCH
+- **status:** OK
+- **status_note:** Phase 2 (2026-06-01): web now sends `{reminder_method: value || 'default'}` (JobDetail.jsx:513), fixing the wrong key + the `''` value. Minor remaining (not a defect): web shows the selector even without a scheduled date.
 
 ### `job-detail.scheduled-display`
 - **label:** Scheduled date/time
@@ -358,14 +358,14 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **visibility:** always
 - **precondition:** —
 - **confirm:** —
-- **route_chain:** Android: `PUT /jobs/:id` (updateJob). **Web: `PATCH /jobs/:id`.**
+- **route_chain:** Both: `PUT /jobs/:id` (Phase 2 — web now uses `jobsApi.update`, mirroring Android `updateJob`).
 - **request_body:** `{notes}`
 - **side_effects:** `update-record`
 - **end_state:** Notes saved.
-- **failure_modes:** `route-404` (web) — `PATCH /jobs/:id` not registered (only `PUT`).
-- **parity:** PARTIAL — Android works; web 404s.
-- **status:** BROKEN
-- **status_note:** Web notes auto-save hits non-existent `PATCH /jobs/:id` → 404 → snack "Failed to save notes."
+- **failure_modes:** none
+- **parity:** MATCH
+- **status:** OK
+- **status_note:** Phase 2 (2026-06-01): web notes auto-save switched from `PATCH /jobs/:id` (404) to `PUT /jobs/:id {notes}` via `jobsApi.update` (JobDetail.jsx:520).
 
 ### `job-detail.permissions`
 - **label:** Tech / Partner permissions (read-only "Your Permissions" or editable "Partner Permissions")
@@ -375,14 +375,14 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **visibility:** Android: read-only card when `sent_by_company_id != null`; editable when `sent_to_company_id != null && sent_by_company_id == null`. Web: handler exists but no JSX renders a toggle.
 - **precondition:** Partner-shared job.
 - **confirm:** —
-- **route_chain:** Android: `PUT /jobs/:id` (updateJob, `{tech_permissions}`). Web: `PATCH /jobs/:id`.
+- **route_chain:** Both: `PUT /jobs/:id` (updateJob, `{tech_permissions}`). (Phase 2 corrected the web verb; Android editable card unchanged.)
 - **request_body:** `{tech_permissions}`
 - **side_effects:** `update-record`, `permission-gate`
 - **end_state:** Permissions saved on the shared job.
-- **failure_modes:** Web: `dead-code` (no UI trigger) + `route-404` (PATCH).
-- **parity:** PARTIAL — Android working editor; web code dead + wrong verb.
+- **failure_modes:** Web: `dead-code` — `handleTechPermToggle` now posts the correct `PUT /jobs/:id` via `jobsApi.update` (verb fixed), but **no JSX renders a toggle** that calls it.
+- **parity:** PARTIAL — Android has a working editor; web handler is correct but has no UI.
 - **status:** BROKEN
-- **status_note:** Web has no visible toggle wired to `handleTechPermToggle`, and the verb is `PATCH /jobs/:id` (404) regardless.
+- **status_note:** Phase 2 (2026-06-01): verb corrected (`handleTechPermToggle` → `jobsApi.update` PUT, JobDetail.jsx:350), so the handler will work once wired. Toggle UI still pending — separate later commit. Stays BROKEN until the UI lands.
 
 ### `job-detail.send-to-tech`
 - **label:** "Send To" / "📤 Send to Tech"
@@ -545,14 +545,14 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **visibility:** `status === deleted` (web)
 - **precondition:** Job is archived.
 - **confirm:** —
-- **route_chain:** **web: `POST /jobs/:id/restore`**
-- **request_body:** —
-- **side_effects:** intended `restore` (status→prior)
-- **end_state:** Job restored to active.
-- **failure_modes:** `route-404` — `POST /jobs/:id/restore` is not registered anywhere.
-- **parity:** WEB-ONLY (and broken); Android's restore lives in JobListCard via an unverified mechanism.
-- **status:** BROKEN
-- **status_note:** `jobsApi.restore` (api.js 186) targets a non-existent endpoint → 404. Android's JobListCard onRestore mechanism not yet read.
+- **route_chain:** `POST /jobs/:id/status {status:'unscheduled'}` (Phase 2 — web now mirrors Android).
+- **request_body:** `{status:'unscheduled'}`
+- **side_effects:** `status-change` (deleted → unscheduled)
+- **end_state:** Job restored to active (unscheduled).
+- **failure_modes:** none
+- **parity:** MATCH — both flip status back to `unscheduled` via `/status`.
+- **status:** OK
+- **status_note:** Phase 2 (2026-06-01): `jobsApi.restore` (api.js:192) now posts `/jobs/:id/status {status:'unscheduled'}` instead of the non-existent `/jobs/:id/restore` (was 404). **DRIFT corrected:** Android's restore is `restoreJob` → `repo.updateJobStatus(id,"unscheduled")` (JobScreens.kt:212), wired via `JobListCard onRestore` — the prior "mechanism not yet read" note was stale.
 
 ### `job-detail.complete`
 - **label:** ✅ Completed
@@ -609,7 +609,7 @@ Each action carries: label · section · actors · purpose · visibility · prec
 
 ## SCREEN-LEVEL DRIFT FLAGS (from Stage-1 audit)
 
-- **Route-404 class (web):** `PATCH /jobs/:id` (notes, tech-permissions), `POST /jobs/:id/restore`. System-wide: `POST /payments/scanpay/charge` (called by both clients; verify in payments.js body).
+- **Route-404 class (web): RESOLVED (Phase 2).** Notes + tech-permissions now use `PUT /jobs/:id` (via `jobsApi.update`), and Restore now posts `/jobs/:id/status {unscheduled}` (mirroring Android) — the non-existent `PATCH /jobs/:id` and `POST /jobs/:id/restore` are no longer called. (Reminder-method was a wrong-key, not a 404, also fixed.) System-wide `POST /payments/scanpay/charge` was resolved earlier ([SCANPAY-404]).
 - **Two earnings paths — web side closed (Phase 1):** `/status?completed` (Path A, simple calc, no >100% guard) vs `/complete` (Path B, three-slice + guard). Web now routes completion consistently to Path B: the Status modal "Completed" opens the Complete modal (no longer posts to Path A), and the Complete modal renders parts/CC for partner jobs. Path A still exists on the backend but no web surface posts `completed` to it. Caveat: Path A's `inventory-deduct`/`membership-advance`/source-`sms` are not in Path B on either surface (backend follow-up).
 - **Two `job_completion_details` models vs `tech_earnings`:** completion details still carries only 2-party `sender_earns`/`receiver_earns`; the three-slice truth lives in `tech_earnings`. Reconciliation happens in the complete handler.
 - **payments.method CHECK contradiction:** two boot migrations (server.js 558–561 vs 785); the later one drops `card`/`scanpay`/`paypal`.

@@ -82,7 +82,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · fix backlog</div>
     <h1>Prioritized Fix List<span class="sub">Every broken / partial / dead action across the 29 maps, ordered by business importance: core job and money loop first.</span></h1>
-    <div class="stamp">ATLAS<br><b>2026-06-01</b><br>TZ 3/3 · <b>complete</b></div>
+    <div class="stamp">ATLAS<br><b>2026-06-01</b><br>Phase 2 · <b>Job Detail verb fixes</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="spine-overview.html">by spine</a> › fix list</div>
@@ -121,15 +121,12 @@ const TIERS=[
   ["Job Detail","job-detail","Delete","partial","tech sees button → gets 403","DELETE /jobs/:id",""],
   ["Job Detail","job-detail","Source badge","partial","web omits commission line","display",""],
   ["Job Detail","job-detail","Completion banner","partial","web has no completion sheet","GET /completion",""],
-  ["Job Detail","job-detail","Reminder method","broken","web sends wrong key → silent no-op","PATCH /reminder-method",""],
   ["Job Detail","job-detail","Linked Job card","partial","web has no linked-job card","navigate",""],
   ["Job Detail","job-detail","Line Items card","partial","different source than web invoice items","display",""],
-  ["Job Detail","job-detail","Notes editor","broken","web PATCH /jobs/:id → 404","PUT /jobs/:id · web: PATCH",""],
-  ["Job Detail","job-detail","Tech/Partner perms","broken","web: no UI + wrong verb (404)","PUT /jobs/:id · web: PATCH",""],
+  ["Job Detail","job-detail","Tech/Partner perms","broken","verb fixed (PUT via jobsApi.update); toggle UI still pending","PUT /jobs/:id",""],
   ["Job Detail","job-detail","Send To Tech","partial","web can't pick an unassigned roster tech","notify-tech / send-to-partner",""],
   ["Job Detail","job-detail","Before/After photos","broken","web binds to columns that don't exist → never display","POST /uploads → /jobs/:id/photos",""],
   ["Job Detail","job-detail","Charge Payment","broken","web reads missing field + wrong keys → always fails","web: POST /estimates/:id/collect-deposit",""],
-  ["Job Detail","job-detail","Restore","broken","endpoint doesn't exist → 404","POST /jobs/:id/restore",""],
   ["Job Detail","job-detail","Signature pad","dead","key fixed (signature_url); no trigger on either surface, feature unbuilt on web + Android","POST /jobs/:id/signature",""],
   ["Job Detail","job-detail","Details/History/Messages","partial","messaging fixed (convId from first message); History tab still not role-gated on web","GET /history · /sms · POST /send",""],
   ["Complete Job","complete-job","Confirm Completion","partial","web has no confirm surface","GET /completion · POST /completion/confirm",""],

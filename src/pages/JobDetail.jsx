@@ -347,7 +347,7 @@ export default function JobDetail() {
     setTechPerms(updated);
     setTechPermSaving(true);
     try {
-      await api.patch(`/jobs/${id}`, { tech_permissions: updated });
+      await jobsApi.update(id, { tech_permissions: updated });
       showSnack('Saved', 'success');
     } catch {
       setTechPerms(prev => ({ ...prev, [key]: !value }));
@@ -510,14 +510,14 @@ export default function JobDetail() {
   async function handleReminderChange(e) {
     const method = e.target.value;
     setReminderMethod(method);
-    try { await api.patch(`/jobs/${id}/reminder-method`, { method }); } catch {}
+    try { await api.patch(`/jobs/${id}/reminder-method`, { reminder_method: method || 'default' }); } catch {}
   }
 
   async function handleNotesBlur() {
     if (!jobData || notes === (jobData.notes || '')) return;
     setNotesSaving(true);
     try {
-      await api.patch(`/jobs/${id}`, { notes });
+      await jobsApi.update(id, { notes });
       showSnack('Notes saved', 'success');
     } catch { showSnack('Failed to save notes', 'error'); }
     finally { setNotesSaving(false); }

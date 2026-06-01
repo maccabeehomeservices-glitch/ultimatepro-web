@@ -189,8 +189,10 @@ export const jobsApi = {
   captureSignature: (id, signature_data) =>
     api.post(`/jobs/${id}/signature`, { signature_url: signature_data }),
 
+  // Mirror Android: restore an archived job by flipping status back to unscheduled
+  // (there is no /jobs/:id/restore route; Android uses updateJobStatus("unscheduled")).
   restore: (id) =>
-    api.post(`/jobs/${id}/restore`),
+    api.post(`/jobs/${id}/status`, { status: 'unscheduled' }),
 
   addPhoto: (id, photo_url) =>
     api.post(`/jobs/${id}/photos`, { photo_url }),
