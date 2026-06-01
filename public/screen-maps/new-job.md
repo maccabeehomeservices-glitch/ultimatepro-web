@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline — it parses raw notes into a pre-filled form and looks up the customer. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: _(fill from build window)_ |
+| `last_verified` | 2026-06-01 · Phase 1 New Job F2 (Android blank-date → null) + F2b (PUT status flip) + F3 (web Save & Send → tech notify). Issue 1 (timezone) still open. |
 
 ### load_sequence
 Form loads local state; pulls dropdown data: users (team), roster techs, job sources, ad channels, network connections. In edit mode (`/jobs/:id/edit`) it first loads the job via `GET /jobs/:id`.
@@ -96,10 +96,10 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **request_body:** `scheduled_start` (ISO string or null)
 - **side_effects:** `update-record`
 - **end_state:** Job carries the chosen start time (or none).
-- **failure_modes:** `divergent-logic` — Web: null-safe; null when no date, UTC ISO when set (`isNaN(dt.getTime()) ? null : dt.toISOString()`). Android: never null; naive local string with no timezone (`${date}T${time}:00`), and **blank date → uses current time (now)**.
-- **parity:** DIVERGENT — same wall-clock time can persist as different instants; Android-created jobs are never left scheduleless.
-- **status:** BROKEN
-- **status_note:** Timezone + null handling differ between surfaces. Highest correctness risk on this screen — a job scheduled on web vs Android can land at different times, and Android silently schedules blank-date jobs for "now."
+- **failure_modes:** `divergent-logic` (timezone only, still open) — both surfaces are now null-safe: blank date → `null` on web AND Android (Phase 1 F2; Android's "now" fabrication removed). Date-only defaults to noon on both (web `scheduled_time || '12:00'`, Android `schedTime.ifBlank { "12:00" }`). **Still divergent on timezone:** web sends UTC ISO (`dt.toISOString()`), Android sends a naive-local string with no offset (`${date}T${time}:00`) — Issue 1, next commit.
+- **parity:** PARTIAL — null/blank handling now matches; the same wall-clock can still persist as a different instant because of the UTC-vs-naive write divergence (Issue 1).
+- **status:** PARTIAL
+- **status_note:** Phase 1 F2 (2026-06-01): Android blank date no longer fabricates "now" — it sends `null` like web, killing the phantom-calendar bug; blank-date jobs are created `unscheduled` (findable via `created_at`). Backend PUT also flips `unscheduled → scheduled` when a date is added on edit (F2b). **Remaining (Issue 1):** the timezone representation still differs (web UTC, Android naive-local) and read-back is split between Date-parse and string-slice, so a web-vs-Android job can still render/land at a different time until that fix.
 
 ### `new-job.assign`
 - **label:** Assign (self / team / roster / partner)
@@ -126,14 +126,14 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **visibility:** only when assignment is not "self" (Push only for team)
 - **precondition:** Job is being assigned to someone other than self.
 - **confirm:** —
-- **route_chain:** Web: `POST /jobs/:id/dispatch`. Android: `POST /roster-techs/notify-tech`.
-- **request_body:** Web dispatch `{tech_lat:0, tech_lng:0}`; Android notify-tech `{job_id, tech_id, method}` (tech_id ignored)
-- **side_effects:** `sms-tech`/`sms-customer`/`push` (see note)
-- **end_state:** Assignee notified.
-- **failure_modes:** `divergent-logic` — "Save & Send" means different things per surface.
-- **parity:** DIVERGENT — Web fires a **customer-facing** dispatch SMS ("on the way"); Android fires a **tech-facing** notify-tech message. Web also requires create-mode (`!isEdit`). Web `notify_email` alone does nothing (only dispatches on sms||push); web builds a `calls` array that's never used.
-- **status:** PARTIAL
-- **status_note:** Same button, two different notifications. Web's email-only path is a no-op.
+- **route_chain:** Both: `POST /roster-techs/notify-tech` (Phase 1 F3 — web now mirrors Android; the endpoint serves both roster techs and app-user techs).
+- **request_body:** `{job_id, tech_id, method}` — `method` is `'sms'` or `'email'` (`tech_id` ignored; backend derives the tech from the job).
+- **side_effects:** `sms-tech`/`email-tech` (the assigned technician is notified). The customer en-route SMS is no longer fired here; it lives at Job Detail's dispatch/arrived actions.
+- **end_state:** Assigned tech notified about the new job.
+- **failure_modes:** none for the common case. Edge: backend `notify-tech` has no `'both'` branch, so selecting both SMS + email sends SMS only (web prefers SMS); a push-only selection sends nothing (matches Android, whose send path also fires only on sms||email).
+- **parity:** MATCH — both surfaces notify the assigned tech via `/roster-techs/notify-tech`; web no longer fires the premature customer dispatch at creation.
+- **status:** OK
+- **status_note:** Phase 1 F3 (2026-06-01): web Save & Send now notifies the TECH (mirroring Android), not the customer. The customer "on the way" dispatch SMS stays available at Job Detail (dispatch/arrived), where it belongs. The web `rosterTechsApi.notifyTech` body key was corrected (`notify_method` → `method`).
 
 ### `new-job.cancel`
 - **label:** Cancel / Back
@@ -193,9 +193,10 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **scheduled_start timezone/null drift** (biggest risk): web UTC + null-safe; Android naive-local + "now" fallback. Same input → possibly different stored instant.
+- **scheduled_start timezone drift** (Issue 1, still open — biggest risk): web sends UTC ISO, Android sends naive-local; same wall-clock → possibly different stored instant. Read-back is also split between Date-parse (converts) and string-slice (does not), so some surfaces render the wrong time. NULL/blank handling is now fixed (Phase 1 F2: both null on blank). Next commit.
+- **Status auto-flip on edit (Phase 1 F2b):** `PUT /jobs/:id` now promotes `unscheduled → scheduled` when a date is added on edit (previously it left a stale `unscheduled` badge on a dated job). The reverse (clearing a date) is not reachable through PUT — it COALESCEs `scheduled_start`, so a null payload means "keep" — deferred follow-up.
 - **Customer-required asymmetry:** web blocks without a customer; Android auto-creates one.
-- **"Save & Send" semantics differ:** web = customer dispatch SMS; Android = tech notify-tech.
+- **"Save & Send" RESOLVED (Phase 1 F3):** both surfaces now notify the assigned tech via `/roster-techs/notify-tech`; the premature customer dispatch at creation was removed.
 - **Web Status field is dead on save.**
 - **notify_sms/email/push** sent by both but ignored by `POST /jobs` (not columns).
 - **Android-only carried fields:** `source` label + ticket #, `linked_job_id`, `skip_duplicate_check`, richer duplicate sheet.

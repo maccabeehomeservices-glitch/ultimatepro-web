@@ -122,7 +122,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>New Job<span class="sub">The front door — turn a call, booking, or pasted ticket into a job, then Save.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>e341e38</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 1 · <b>F2/F2b/F3</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="job-detail-atlas.html">job detail</a> › new job</div>
@@ -164,9 +164,10 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Schedule time drift (biggest risk):</b> web saves UTC and null when no date; Android saves naive local time and uses <b>"now"</b> when the date is blank. Same input → possibly different stored time.</li>
+      <li><b>Schedule timezone drift (Issue 1, still open — biggest risk):</b> web saves UTC ISO, Android saves naive-local; same wall-clock → possibly different stored time, and read-back is split between Date-parse (converts) and string-slice (does not). NULL/blank handling is now fixed (Phase 1 F2: both null on blank). Next commit.</li>
+      <li><b>Status auto-flip on edit (Phase 1 F2b):</b> PUT /jobs/:id now promotes <code>unscheduled→scheduled</code> when a date is added on edit. Reverse (date-clear) not reachable through PUT (COALESCE) — deferred.</li>
       <li><b>Customer required vs auto-create:</b> web blocks save without a customer; Android silently creates one from the typed name.</li>
-      <li><b>"Save &amp; Send" means two things:</b> web texts the <b>customer</b> (dispatch "on the way"); Android notifies the <b>tech</b> (notify-tech). Web email-only path is a no-op.</li>
+      <li><b>"Save &amp; Send" RESOLVED (Phase 1 F3):</b> both surfaces now notify the assigned <b>tech</b> via <code>/roster-techs/notify-tech</code>; the premature customer "on the way" dispatch at creation was removed.</li>
       <li><b>Web Status field is dead on save</b> — collected but never sent. Status only changes from Job Detail.</li>
       <li><code>notify_sms/email/push</code> sent by both but ignored by <code>POST /jobs</code> (not columns).</li>
       <li><b>Android-only carried fields:</b> <code>source</code> label + ticket #, <code>linked_job_id</code>, <code>skip_duplicate_check</code>, richer 4-option duplicate sheet.</li>
@@ -201,12 +202,12 @@ const A={
  d:{purpose:"Attach the right customer — link an existing returning customer or create a new record — without manual searching.",actors:["office","owner"],vis:"runs on parse (both) and at save when none linked",chain:[["GET","/customers?search="],["POST","/customers"]],parity:"DIVERGENT — web requires a resolved customer_id before save (3-option duplicate modal, parsed tickets only); Android auto-creates from the typed name and shows a richer 4-option sheet (adds Go-Back & Follow-Up with prior-job linking) for parsed + manual entry. Android save-time also calls vm.checkDuplicateByPhone (endpoint unverified)."}},
 "save":{label:"Save Job",status:"partial",route:"POST /jobs  ·  edit: PUT /jobs/:id",fires:"create job",result:"job created",caveat:"payload differs web vs Android",
  d:{purpose:"Create the job (or save edits). The core action.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"],["PUT","/jobs/:id"]],parity:"PARTIAL — web sends description(=notes), omits source label / linked_job_id / skip_duplicate_check. Android sends source label + linked_job_id + skip_duplicate_check, omits description, sends notify_* always. Both functional. Backend sets status scheduled if assigned else unscheduled; fires job_assigned Joby rule, push, socket, geocode."}},
-"scheduled-start":{label:"Date + Time",status:"broken",route:"part of POST /jobs",fires:"set schedule",result:"scheduled_start saved",caveat:"web UTC/null-safe · Android local + blank→now",
- d:{purpose:"Set when the job is scheduled.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"DIVERGENT — Web is null-safe: null when no date, UTC ISO when set. Android never null: naive local string with no timezone, and a blank date uses the current time. Same wall-clock time can persist as different instants; Android jobs are never left scheduleless. Highest correctness risk on this screen."}},
+"scheduled-start":{label:"Date + Time",status:"partial",route:"part of POST /jobs",fires:"set schedule",result:"scheduled_start saved",caveat:"timezone still divergent (Issue 1) · blank→null now fixed",
+ d:{purpose:"Set when the job is scheduled.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL (Phase 1 F2) — null/blank handling now matches: blank date → null on BOTH surfaces (Android's 'now' fabrication removed); date-only defaults to noon on both. Backend PUT also flips unscheduled→scheduled when a date is added on edit (F2b). STILL DIVERGENT on timezone: web sends UTC ISO, Android sends naive-local; read-back is split between Date-parse and string-slice — Issue 1, next commit."}},
 "assign":{label:"Assign",status:"ok",route:"part of POST /jobs",fires:"set assignee",result:"scheduled / unscheduled",caveat:"partner → assign later via Job Detail 'Send To'",
  d:{purpose:"Choose who does the job: self, team member, roster tech, or partner.",actors:["office","owner"],vis:"always",chain:[["POST","/jobs"]],parity:"PARTIAL — web inline tabs+dropdown; Android button→dialog. Partner sends no field on either surface; both defer partner-forwarding to Job Detail. Backend sets status scheduled when assigned."}},
-"send-via":{label:"Save & Send",status:"partial",route:"web: /jobs/:id/dispatch · Android: /roster-techs/notify-tech",fires:"notify assignee",result:"assignee notified",caveat:"web texts CUSTOMER · Android texts TECH",
- d:{purpose:"Notify the assignee when saving (SMS / Email / Push).",actors:["office","owner"],vis:"only when assignment is not self",chain:[["POST","/jobs/:id/dispatch"],["POST","/roster-techs/notify-tech"]],parity:"DIVERGENT — web fires a customer-facing dispatch SMS ('on the way'); Android fires a tech-facing notify-tech message. Web requires create-mode; web email-only path does nothing; web builds an unused calls array."}},
+"send-via":{label:"Save & Send",status:"ok",route:"both: /roster-techs/notify-tech",fires:"notify tech",result:"assigned tech notified",
+ d:{purpose:"Notify the assigned tech when saving (SMS / Email).",actors:["office","owner"],vis:"only when assignment is not self",chain:[["POST","/roster-techs/notify-tech"]],parity:"MATCH (Phase 1 F3) — both surfaces notify the assigned TECH via /roster-techs/notify-tech. Web no longer fires the premature customer 'on the way' dispatch at creation (that stays at Job Detail dispatch/arrived). Backend notify-tech has no 'both' branch, so web prefers SMS; push-only sends nothing (matches Android). The web notify_method→method body-key bug was fixed."}},
 "cancel":{label:"Cancel / Back",status:"ok",route:"navigate",fires:"leave form",result:"previous screen",
  d:{purpose:"Leave without saving.",actors:["office","owner"],vis:"always",chain:[],parity:"PARTIAL — web has top Back + footer Cancel; Android has top-bar back only (plus an extra top-bar Save)."}},
 "status-field":{label:"Status dropdown",status:"dead",route:"not sent",fires:"—",result:"nothing happens",caveat:"collected but never saved (web edit only)",

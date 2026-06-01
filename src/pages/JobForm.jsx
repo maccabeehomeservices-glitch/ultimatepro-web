@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Plus, X, ClipboardList, UserCheck } from 'lucide-react';
-import { jobsApi, customersApi, sourcesApi, companyApi } from '../lib/api';
+import { jobsApi, customersApi, sourcesApi, companyApi, rosterTechsApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
 import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
@@ -536,13 +536,16 @@ export default function JobForm() {
   }
 
   // ── notify tech after save ────────────────────────────────────────────────
+  // F3: Save & Send notifies the assigned TECH (mirror Android's notify-tech), not the
+  // customer "on the way" dispatch. The customer en-route SMS stays at Job Detail's
+  // dispatch/arrived actions, where it belongs — not at job creation.
   async function notifyTech(jobId) {
     if (form.assign_cat === 'self') return;
-    const calls = [];
-    if (form.notify_sms || form.notify_push) {
-      // dispatch triggers SMS for roster/team
-      try { await jobsApi.dispatch(jobId, 0, 0); } catch {}
-    }
+    // Backend notify-tech accepts 'sms' or 'email' (no 'both'); prefer SMS when selected.
+    const method = form.notify_sms ? 'sms' : (form.notify_email ? 'email' : null);
+    if (!method) return;
+    const techId = form.assigned_roster_tech_id || form.assigned_tech_id || null;
+    try { await rosterTechsApi.notifyTech(jobId, techId, method); } catch {}
   }
 
   // ── submit ─────────────────────────────────────────────────────────────────

@@ -566,7 +566,7 @@ export const rosterTechsApi = {
     api.delete(`/roster-techs/${id}`),
 
   notifyTech: (job_id, tech_id, method) =>
-    api.post('/roster-techs/notify-tech', { job_id, tech_id, notify_method: method }),
+    api.post('/roster-techs/notify-tech', { job_id, tech_id, method }),
 };
 
 // ─── MEMBERSHIPS ──────────────────────────────────────────────────────────────
