@@ -236,17 +236,17 @@ export default function JobDetail() {
   }, [id]);
 
   // ── load job invoice ───────────────────────────────────────────────────────
-  useEffect(() => {
+  async function loadInvoice() {
     if (!id) return;
     setInvoiceLoading(true);
-    api.get(`/invoices?job_id=${id}&limit=1`)
-      .then(r => {
-        const invList = r.data?.invoices || r.data || [];
-        setJobInvoice(invList[0] || null);
-      })
-      .catch(() => {})
-      .finally(() => setInvoiceLoading(false));
-  }, [id]);
+    try {
+      const r = await api.get(`/invoices?job_id=${id}&limit=1`);
+      const invList = r.data?.invoices || r.data || [];
+      setJobInvoice(invList[0] || null);
+    } catch { /* ignore transient */ }
+    finally { setInvoiceLoading(false); }
+  }
+  useEffect(() => { loadInvoice(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── load estimates for this job (matches Android JobDetail flow) ──────────
   // Backend GET /api/jobs/:id does not return estimates; fetch separately.
@@ -514,18 +514,20 @@ export default function JobDetail() {
     finally { setSendingTo(false); }
   }
 
-  async function handleCollectDeposit() {
-    const estimateId = jobData?.estimate_id;
-    if (!estimateId) { showSnack('No estimate found for this job', 'error'); return; }
+  // Charge payment against the job's invoice (POST /invoices/:id/payment). Distinct from the
+  // estimate collect-deposit feature — this records a real payment, updates balance/status, ledger.
+  async function handleChargePayment() {
+    if (!jobInvoice?.id) { showSnack('No invoice to charge — use Add to Invoice first.', 'error'); return; }
     try {
-      await mutate('post', `/estimates/${estimateId}/collect-deposit`, {
+      await mutate('post', `/invoices/${jobInvoice.id}/payment`, {
         method: depositForm.method,
         amount: Number(depositForm.amount),
       });
       setDepositModal(false);
       refetch();
-      showSnack('Deposit collected', 'success');
-    } catch { showSnack('Failed to collect deposit', 'error'); }
+      await loadInvoice();  // reflect new balance/status
+      showSnack('Payment recorded', 'success');
+    } catch { showSnack('Failed to record payment', 'error'); }
   }
 
   async function handleReminderChange(e) {
@@ -1191,11 +1193,13 @@ export default function JobDetail() {
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
                   🔩 Add Parts
                 </button>
-                <button
-                  onClick={() => setDepositModal(true)}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
-                  💳 Charge Payment
-                </button>
+                {jobInvoice && jobInvoice.status !== 'paid' && (
+                  <button
+                    onClick={() => setDepositModal(true)}
+                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
+                    💳 Charge Payment
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1713,19 +1717,19 @@ export default function JobDetail() {
         footer={
           <>
             <Button variant="outlined" onClick={() => setDepositModal(false)}>Cancel</Button>
-            <Button loading={mutating} onClick={handleCollectDeposit}>Collect</Button>
+            <Button loading={mutating} onClick={handleChargePayment}>Charge</Button>
           </>
         }>
         <div className="space-y-3">
-          {jobData.deposit_amount && (
-            <p className="text-sm text-gray-600">Amount: <strong>{formatCurrency(jobData.deposit_amount)}</strong></p>
+          {jobInvoice?.balance_due != null && (
+            <p className="text-sm text-gray-600">Balance due: <strong>{formatCurrency(jobInvoice.balance_due)}</strong></p>
           )}
           <Select label="Payment Method" value={depositForm.method}
             onChange={e => setDepositForm(p => ({ ...p, method: e.target.value }))}
             options={PAYMENT_METHODS} />
           <Input label="Amount" type="number" value={depositForm.amount}
             onChange={e => setDepositForm(p => ({ ...p, amount: e.target.value }))}
-            placeholder={jobData.deposit_amount?.toString() || '0.00'} />
+            placeholder={jobInvoice?.balance_due?.toString() || '0.00'} />
         </div>
       </Modal>
 

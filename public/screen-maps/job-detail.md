@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-06-01 · Phase 2 Job Detail commits 1-4: notes/reminder/restore→OK, History gate→OK, photos→OK, permissions toggle UI→OK (all web mirrors Android). Remaining BROKEN: charge-payment. |
+| `last_verified` | 2026-06-01 · Phase 2 Job Detail commits 1-5: notes/reminder/restore→OK, History gate→OK, photos→OK, permissions UI→OK, charge-payment→OK. No BROKEN actions remain (signature DEAD = product decision; 8 PARTIAL = cosmetic divergences). |
 
 ### load_sequence
 
@@ -491,17 +491,17 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **section:** parts
 - **actors:** tech-user, owner, office
 - **purpose:** Collect payment on the job's invoice.
-- **visibility:** Android: `invoice != null && invoice.status != paid`. Web: button present.
+- **visibility:** both: `jobInvoice != null && jobInvoice.status != 'paid'` (Phase 2: web now gated like Android — no invoice → button hidden; use the Add-to-Invoice card first).
 - **precondition:** An invoice exists and is unpaid.
 - **confirm:** —
-- **route_chain:** Android: navigate to PaymentScreen (invoice payment flow). **Web: `POST /estimates/{estimate_id}/collect-deposit {method, amount}`.**
-- **request_body:** Web posts `{method, amount}`; endpoint wants `{amount_collected, payment_method}`.
-- **side_effects:** Android: `payment-record`. Web: intended `deposit-collect`.
-- **end_state:** Payment recorded against the invoice.
-- **failure_modes:** Web: `schema-gap` (`jobData.estimate_id` doesn't exist on jobs row → "No estimate found") + `field-mismatch` (wrong body keys → 400 "Invalid deposit amount").
-- **parity:** DIVERGENT — Android opens invoice payment; web opens an estimate deposit modal that always fails.
-- **status:** BROKEN
-- **status_note:** Web "Charge Payment" cannot succeed: reads a non-existent field and posts wrong keys to the wrong (deposit) endpoint.
+- **route_chain:** `POST /invoices/:id/payment` (Android via PaymentScreen; web via the Charge Payment modal — Phase 2).
+- **request_body:** `{method, amount}` (matches the handler; the body was always correct — only the route + id were wrong).
+- **side_effects:** `payment-record` (payments row, `amount_paid`/`balance_due`/`status` update, ledger, `invoice_paid` on full).
+- **end_state:** Payment recorded against the invoice; balance/status reflect.
+- **failure_modes:** none
+- **parity:** MATCH — both record the invoice payment via `POST /invoices/:id/payment`, gated on an unpaid invoice.
+- **status:** OK
+- **status_note:** Phase 2 (2026-06-01): web `handleChargePayment` (JobDetail.jsx:519) posts `{method, amount}` to `/invoices/${jobInvoice.id}/payment` (reuses the same endpoint Android uses), button gated on an unpaid invoice (JobDetail.jsx:1196), success refetches job + reloads `jobInvoice`. The broken estimate `collect-deposit` path was abandoned (that remains a separate, untouched estimate-deposit feature).
 
 ### `job-detail.send-receipt`
 - **label:** Send Receipt / 📧 Send Receipt
@@ -614,6 +614,7 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **Two `job_completion_details` models vs `tech_earnings`:** completion details still carries only 2-party `sender_earns`/`receiver_earns`; the three-slice truth lives in `tech_earnings`. Reconciliation happens in the complete handler.
 - **payments.method CHECK contradiction:** two boot migrations (server.js 558–561 vs 785); the later one drops `card`/`scanpay`/`paypal`.
 - **Schema-gather scatter:** live schema = union of schema.sql + migrate_*.sql + server.js IIFE + jobs.js top-level ALTERs (≥3 places).
+- **Multi-invoice-per-job → "latest invoice wins" at completion (open, not fixed):** Complete Job reads `gross` from `SELECT total FROM invoices WHERE job_id ORDER BY created_at DESC LIMIT 1` (jobs.js:1219-1223). If a job ends up with **two** invoices (e.g. a charge-payment invoice + a later estimate→convert invoice), the three-slice earnings use only the latest, not the sum. Charge-payment itself won't create a duplicate (it charges the existing invoice when one exists), but the broader workflow can. Decision needed: latest-wins (accept), convert-reuses-existing, or sum-all-job-invoices.
 
 ## CORRECTIONS TO PRIOR "KNOWN FACTS" (verified against production)
 

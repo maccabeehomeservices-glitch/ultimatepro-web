@@ -119,7 +119,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Job Detail<span class="sub">Read each row left → right: button → route it calls → what fires → result.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>verb+History+photos+perms</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br>Phase 2 · <b>Job Detail bugs cleared</b></div>
   </header>
   <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5e7197;margin-bottom:18px"><a href="index.html" style="color:#5ec8e8;text-decoration:none">all maps</a> · job detail › <a href="new-job-atlas.html" style="color:#5ec8e8;text-decoration:none">new job</a></div>
 
@@ -245,8 +245,8 @@ const A={
 
 "parts":{label:"Add Part / list",status:"ok",route:"GET/POST/DELETE /jobs/:id/parts",fires:"save/delete part",result:"parts list updated",
  d:{purpose:"Record parts used and who paid (company/tech) — the data the profit math depends on.",actors:["tech-user","owner","office"],vis:"always",chain:[["GET","/jobs/:id/parts"],["POST","/jobs/:id/parts"],["DELETE","/jobs/:id/parts/:partId"]],parity:"MATCH — web appends locally without refetch but correct"}},
-"charge-payment":{label:"Charge Payment",status:"broken",route:"web: POST /estimates/:id/collect-deposit",fires:"collect payment",result:"payment recorded",caveat:"web reads missing field + wrong keys → always fails",
- d:{purpose:"Collect payment on the job's invoice.",actors:["tech-user","owner","office"],vis:"Android: invoice unpaid. Web: present.",chain:[["POST","/estimates/:id/collect-deposit"]],parity:"DIVERGENT — Android opens the invoice payment flow. Web reads jobData.estimate_id (doesn't exist → 'No estimate found') and posts {method, amount} to the deposit endpoint which wants {amount_collected, payment_method} → 400."}},
+"charge-payment":{label:"Charge Payment",status:"ok",route:"POST /invoices/:id/payment",fires:"record payment",result:"payment recorded",
+ d:{purpose:"Collect payment on the job's invoice.",actors:["tech-user","owner","office"],vis:"both: jobInvoice present && status != 'paid' (no invoice → button hidden)",chain:[["POST","/invoices/:id/payment"]],parity:"MATCH (Phase 2) — web handleChargePayment (JobDetail.jsx:519) posts {method, amount} to /invoices/${jobInvoice.id}/payment (same endpoint Android uses), gated on an unpaid invoice, success refetches + reloads the invoice. Records a payments row + updates balance/status/ledger. The broken estimate collect-deposit path was abandoned (that estimate-deposit feature is untouched)."}},
 
 "send-receipt":{label:"Send Receipt",status:"ok",route:"→ invoice → POST /send-receipt",fires:"send receipt",result:"receipt sent",caveat:"web auto-opens receipt modal",
  d:{purpose:"Send the customer a receipt (with optional review request).",actors:["owner","office"],vis:"enabled iff invoice exists",chain:[["POST","/invoices/:id/send-receipt"]],parity:"PARTIAL — web auto-opens modal via route state; Android just opens the invoice. Modal works (review alias bug fixed in 6a67c97)."}},
