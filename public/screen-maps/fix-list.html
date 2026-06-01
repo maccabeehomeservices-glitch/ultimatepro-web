@@ -82,7 +82,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · fix backlog</div>
     <h1>Prioritized Fix List<span class="sub">Every broken / partial / dead action across the 29 maps, ordered by business importance: core job and money loop first.</span></h1>
-    <div class="stamp">ATLAS<br><b>2026-05-31</b><br>commit · <b>e1ef087</b></div>
+    <div class="stamp">ATLAS<br><b>2026-05-31</b><br>Phase 1 · <b>money fix</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="spine-overview.html">by spine</a> › fix list</div>
@@ -91,18 +91,19 @@
 
   <div class="causes">
     <h2>⚡ Recurring root-causes: fix once, clear many</h2>
-    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. All three are now resolved (SIG, SMS-CONV, SCANPAY-404), so no tagged rows remain. Each fix cleared every screen under its tag.</p>
+    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. All three are now resolved (SIG, SMS-CONV, SCANPAY-404), so no tagged rows remain. Each fix cleared every screen under its tag. Phase 1 then closed the Complete-Job money gap: one JobDetail.jsx change (partner-split form + Status-completed reroute) cleared 5 rows across Job Detail and Complete Job.</p>
     <ul>
       <li><span class="tag">SIG</span><span><b>signature_data wrong-key class: fully resolved.</b> Web posted <code>signature_data</code>; handlers want <code>signature</code> (invoice/estimate) or <code>signature_url</code> (job). Phase 0 fixed all three routes (8e01dbd invoice + estimate; this commit job → <code>signature_url</code>). No key-mismatch remains. The 1 row still tagged is Estimate <code>present-gbb</code>, a mis-wire (opens the signature modal instead of presenting tiers), not a key bug. Job Detail signature drops off [SIG]: it's now an unbuilt-feature item (no trigger on web or Android). <span class="hits">remaining tagged: Estimate Builder (present-gbb)</span></span></li>
       <li><span class="tag">SMS-CONV</span><span><b>bare-array, no conversation_id: resolved.</b> Phase 0 [SMS-CONV] made web derive <code>convId</code> from the first message object (<code>msgs[0]?.conversation_id</code>), mirroring Android <code>firstOrNull()?.conversationId</code>, so the composer enables and reply works on existing threads for both Job Detail and Customer Detail. Empty-thread start stays disabled on both surfaces (parity-matched, pre-existing). <span class="hits">no rows remain under this tag</span></span></li>
       <li><span class="tag">SCANPAY-404</span><span><b>POST /payments/scanpay/charge: resolved.</b> That route was never built (it 404'd). Phase 0 [SCANPAY-404] (3e40117) gave web the ScanPay QR + Link UI with status polling that Android already used (POST /scanpay-qr, /scanpay-link, GET /scanpay-status), and removed the dead charge button + its stale backend test. <span class="hits">no rows remain under this tag</span></span></li>
+      <li><span class="tag">SPLIT</span><span><b>Complete-Job partner-split money gap: resolved (Phase 1).</b> Web completed partner jobs with no parts/CC inputs, so the backend defaulted them to 0 → net = gross → both companies' earnings overstated. Web also let users complete via the Status modal's <code>/status?completed</code> legacy path, skipping the guard + split entirely. Phase 1 added the partner parts/CC form + live split calc to the web Complete modal (mirroring Android), dropped the dead <code>payment_method</code>, and rerouted Status "Completed" to the Complete modal so web always runs <code>/complete</code>. <span class="hits">cleared: Job Detail (Status, Completed), Complete Job (Complete Job, Parts/CC inputs, Payment dropdown)</span></span></li>
     </ul>
   </div>
 
   <div id="tiers"></div>
 
   <footer>
-    UltimatePro Screen Atlas · prioritized fix list · 60 actions pulled verbatim from the 29 screen maps<br>
+    UltimatePro Screen Atlas · prioritized fix list · the outstanding broken / partial / dead actions pulled verbatim from the 29 screen maps<br>
     See also: <a href="index.html">all maps (index)</a> · <a href="spine-overview.html">overview by spine</a>. Reasons are quoted from each map's action data; reality on disk wins.
   </footer>
 </div>
@@ -119,7 +120,6 @@ const TIERS=[
   ["Job Detail","job-detail","Dispatch","partial","web sends no location → ETA weak","POST /jobs/:id/dispatch",""],
   ["Job Detail","job-detail","Arrived","partial","web has no confirm step","POST /jobs/:id/arrived",""],
   ["Job Detail","job-detail","Delete","partial","tech sees button → gets 403","DELETE /jobs/:id",""],
-  ["Job Detail","job-detail","Status","partial","web completion skips profit guard","/status or /complete",""],
   ["Job Detail","job-detail","Source badge","partial","web omits commission line","display",""],
   ["Job Detail","job-detail","Completion banner","partial","web has no completion sheet","GET /completion",""],
   ["Job Detail","job-detail","Reminder method","broken","web sends wrong key → silent no-op","PATCH /reminder-method",""],
@@ -131,12 +131,8 @@ const TIERS=[
   ["Job Detail","job-detail","Before/After photos","broken","web binds to columns that don't exist → never display","POST /uploads → /jobs/:id/photos",""],
   ["Job Detail","job-detail","Charge Payment","broken","web reads missing field + wrong keys → always fails","web: POST /estimates/:id/collect-deposit",""],
   ["Job Detail","job-detail","Restore","broken","endpoint doesn't exist → 404","POST /jobs/:id/restore",""],
-  ["Job Detail","job-detail","Completed","partial","web can't enter parts/CC → splits wrong","POST /jobs/:id/complete",""],
   ["Job Detail","job-detail","Signature pad","dead","key fixed (signature_url); no trigger on either surface, feature unbuilt on web + Android","POST /jobs/:id/signature",""],
   ["Job Detail","job-detail","Details/History/Messages","partial","messaging fixed (convId from first message); History tab still not role-gated on web","GET /history · /sms · POST /send",""],
-  ["Complete Job","complete-job","Complete Job","partial","web sends only notes (no parts/CC)","POST /jobs/:id/complete",""],
-  ["Complete Job","complete-job","Parts / CC / split inputs","broken","web never sends these → partner earnings overstated","part of POST /complete",""],
-  ["Complete Job","complete-job","Payment Collected dropdown","dead","backend never reads payment_method","sent as payment_method",""],
   ["Complete Job","complete-job","Confirm Completion","partial","web has no confirm surface","GET /completion · POST /completion/confirm",""],
   ["Estimate Builder","estimate-builder","Present GBB Options","broken","web mis-wired to signature; Android has PresentTiersScreen","opens signature modal (no route)","SIG"],
   ["Estimate Builder","estimate-builder","Attach Photo","broken","web sends a file; handler wants JSON {url}","POST /estimates/:id/add-photo",""],

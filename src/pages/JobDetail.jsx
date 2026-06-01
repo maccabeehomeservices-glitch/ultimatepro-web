@@ -160,8 +160,14 @@ export default function JobDetail() {
   const [savingSig, setSavingSig]           = useState(false);
   const [showComplete, setShowComplete]     = useState(false);
   const [completionNotes, setCompletionNotes] = useState('');
-  const [completionPayment, setCompletionPayment] = useState('');
   const [completing, setCompleting]         = useState(false);
+  // Partner-split form (mirrors Android CompleteJobScreen). Only used when job.agreement_id != null.
+  const [partsPaidBy, setPartsPaidBy]             = useState('none');   // sender|receiver|none
+  const [partsAmount, setPartsAmount]             = useState('');
+  const [paymentCollectedBy, setPaymentCollectedBy] = useState('sender'); // sender|receiver
+  const [hasCcFee, setHasCcFee]                   = useState(false);
+  const [ccFeeAmount, setCcFeeAmount]             = useState('');
+  const [ccFeePaidBy, setCcFeePaidBy]             = useState('split');  // sender|receiver|split
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [arriving, setArriving]             = useState(false);
 
@@ -379,7 +385,20 @@ export default function JobDetail() {
   async function handleCompleteJob() {
     setCompleting(true);
     try {
-      await jobsApi.complete(id, { notes: completionNotes, payment_method: completionPayment || undefined });
+      // Mirror Android: partner jobs send the split form, non-partner jobs send notes only.
+      // payment_method dropped (it was never read by the backend).
+      const isPartner = jobData?.agreement_id != null;
+      const body = isPartner
+        ? {
+            parts_paid_by: partsPaidBy,
+            parts_amount: partsPaidBy === 'none' ? 0 : (Number(partsAmount) || 0),
+            payment_collected_by: paymentCollectedBy,
+            cc_fee_amount: hasCcFee ? (Number(ccFeeAmount) || 0) : 0,
+            cc_fee_paid_by: ccFeePaidBy,
+            ...(completionNotes ? { notes: completionNotes } : {}),
+          }
+        : (completionNotes ? { notes: completionNotes } : {});
+      await jobsApi.complete(id, body);
       setShowComplete(false);
       showSnack('Job completed!', 'success');
       refetch();
@@ -405,6 +424,13 @@ export default function JobDetail() {
   }
 
   async function handleStatusChange(status) {
+    // Mirror Android: "Completed" routes through the Complete flow (/complete), never /status.
+    // This applies the >100% guard + partner split + job_completion_details that /status skips.
+    if (status === 'completed') {
+      setStatusModal(false);
+      setShowComplete(true);
+      return;
+    }
     try {
       await mutate('post', `/jobs/${id}/status`, { status });
       setStatusModal(false);
@@ -641,6 +667,22 @@ export default function JobDetail() {
   const statusColor  = STATUS_COLORS[jobData.status] || 'bg-gray-500';
   const priorityLabel = jobData.priority ? (jobData.priority.charAt(0).toUpperCase() + jobData.priority.slice(1)) : null;
   const priorityStyle = PRIORITY_COLORS[jobData.priority] || 'bg-gray-100 text-gray-600';
+
+  // ── Complete-Job partner split + live calc (mirrors Android CompleteJobScreen 2999-3010) ──
+  const isPartnerJob   = jobData.agreement_id != null;
+  const calcGross      = Number(jobInvoice?.total || 0);
+  const calcParts      = partsPaidBy === 'none' ? 0 : (Number(partsAmount) || 0);
+  const calcCc         = hasCcFee ? (Number(ccFeeAmount) || 0) : 0;
+  const calcNet        = calcGross - calcParts - calcCc;
+  const senderPct      = Number(jobData.sender_keeps_pct || 0);
+  const receiverPct    = Number(jobData.receiver_keeps_pct || 0);
+  let   calcSender     = calcNet * (senderPct / 100);
+  let   calcReceiver   = calcNet * (receiverPct / 100);
+  if (hasCcFee) {
+    if      (ccFeePaidBy === 'split')    { calcSender -= calcCc / 2; calcReceiver -= calcCc / 2; }
+    else if (ccFeePaidBy === 'sender')   { calcSender -= calcCc; }
+    else if (ccFeePaidBy === 'receiver') { calcReceiver -= calcCc; }
+  }
 
   return (
     <div className="p-4 max-w-3xl mx-auto pb-8">
@@ -1459,23 +1501,113 @@ export default function JobDetail() {
           </>
         }>
         <div className="space-y-4">
+          {isPartnerJob && (
+            <>
+              {/* Parts */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Who provided parts?</label>
+                <div className="flex gap-2">
+                  {[['sender','Company'],['receiver','Technician'],['none','No Parts']].map(([v, lbl]) => (
+                    <button key={v} type="button" onClick={() => setPartsPaidBy(v)}
+                      className={`flex-1 px-3 py-2 rounded-xl border text-base min-h-[44px] transition-colors ${
+                        partsPaidBy === v ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300'
+                      }`}>{lbl}</button>
+                  ))}
+                </div>
+                {partsPaidBy !== 'none' && (
+                  <div className="relative mt-2">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <input inputMode="decimal" value={partsAmount}
+                      onChange={e => setPartsAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                      placeholder="Parts Amount"
+                      className="w-full border border-gray-300 rounded-xl pl-7 pr-4 py-3 text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                  </div>
+                )}
+              </div>
+
+              {/* Payment Collection */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Who collected payment?</label>
+                <div className="flex gap-2">
+                  {[['sender','Sender'],['receiver','Receiver']].map(([v, lbl]) => (
+                    <button key={v} type="button" onClick={() => setPaymentCollectedBy(v)}
+                      className={`flex-1 px-3 py-2 rounded-xl border text-base min-h-[44px] transition-colors ${
+                        paymentCollectedBy === v ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300'
+                      }`}>{lbl}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* CC Fee */}
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-900">CC processing fee?</span>
+                  <Toggle checked={hasCcFee} onChange={e => setHasCcFee(e.target.checked)} />
+                </div>
+                {hasCcFee && (
+                  <div className="mt-2 space-y-2">
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <input inputMode="decimal" value={ccFeeAmount}
+                        onChange={e => setCcFeeAmount(e.target.value.replace(/[^0-9.]/g, ''))}
+                        placeholder="CC Fee Amount"
+                        className="w-full border border-gray-300 rounded-xl pl-7 pr-4 py-3 text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                    </div>
+                    <label className="block text-xs font-semibold text-gray-600">Absorbed by:</label>
+                    <div className="flex gap-2">
+                      {[['sender','Sender'],['receiver','Receiver'],['split','Split 50/50']].map(([v, lbl]) => (
+                        <button key={v} type="button" onClick={() => setCcFeePaidBy(v)}
+                          className={`flex-1 px-3 py-2 rounded-xl border text-base min-h-[44px] transition-colors ${
+                            ccFeePaidBy === v ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300'
+                          }`}>{lbl}</button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Live Calculation */}
+              <div className="rounded-xl bg-blue-50 p-4 space-y-1.5">
+                <div className="text-xs font-bold text-[#1A73E8] uppercase tracking-wide">Live Calculation</div>
+                {jobInvoice ? (
+                  <>
+                    <div className="flex justify-between text-sm text-gray-600"><span>Job Total</span><span>{formatCurrency(calcGross)}</span></div>
+                    {calcParts > 0 && (
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>- Parts ({partsPaidBy === 'sender' ? 'Company' : 'Technician'})</span><span>-{formatCurrency(calcParts)}</span>
+                      </div>
+                    )}
+                    {calcCc > 0 && (
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>- CC Fee ({ccFeePaidBy})</span><span>-{formatCurrency(calcCc)}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-blue-200 my-1" />
+                    <div className="flex justify-between text-sm font-semibold text-gray-900"><span>Net</span><span>{formatCurrency(calcNet)}</span></div>
+                    {senderPct > 0 && (
+                      <div className="flex justify-between text-sm font-semibold text-gray-900">
+                        <span>Your share ({Math.trunc(senderPct)}%)</span><span>{formatCurrency(calcSender)}</span>
+                      </div>
+                    )}
+                    {receiverPct > 0 && (
+                      <div className="flex justify-between text-sm font-semibold text-gray-900">
+                        <span>Partner share ({Math.trunc(receiverPct)}%)</span><span>{formatCurrency(calcReceiver)}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs text-gray-500">No invoice found for this job. You can still submit; the office reconciles the split.</div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Completion Notes (always) */}
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Completion Notes</label>
             <textarea className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
               value={completionNotes} onChange={e => setCompletionNotes(e.target.value)}
               placeholder="Describe the work completed..." />
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Payment Collected</label>
-            <select className="w-full border border-gray-300 rounded-xl px-4 py-3 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
-              value={completionPayment} onChange={e => setCompletionPayment(e.target.value)}>
-              <option value="">No payment collected</option>
-              <option value="cash">Cash</option>
-              <option value="check">Check</option>
-              <option value="credit_card">Credit Card</option>
-              <option value="ach">ACH / Bank Transfer</option>
-              <option value="other">Other</option>
-            </select>
           </div>
         </div>
       </Modal>

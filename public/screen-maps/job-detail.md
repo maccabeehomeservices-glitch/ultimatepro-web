@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job — the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-05-31 · Phase 0 [SMS-CONV] messaging fix · commit: 6d11289 |
+| `last_verified` | 2026-05-31 · Phase 1 Complete Job money fix (status + complete actions flipped to OK) |
 
 ### load_sequence
 
@@ -137,14 +137,14 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **visibility:** always (clickable badge)
 - **precondition:** —
 - **confirm:** —
-- **route_chain:** `POST /jobs/:id/status` (jobs.js 796) for non-completed. **Android routes `completed` → `CompleteJobScreen` → `POST /jobs/:id/complete` (Path B).** Web sends `completed` → `POST /jobs/:id/status` (Path A).
-- **request_body:** `{status}`
-- **side_effects:** `status-change`; on completed via Path A: `commission-resolve`, `earnings-write` (simple calc), `inventory-deduct`, `membership-advance`, `joby-trigger`, `sms-customer`/`push`. Via Path B (Android): full `profit-calc`, `earnings-write` (three-slice), `reimbursement-write`.
+- **route_chain:** `POST /jobs/:id/status` (jobs.js 796) for non-completed statuses. **Both surfaces now route `completed` → the Complete flow → `POST /jobs/:id/complete` (Path B):** Android navigates to `CompleteJobScreen`; web (Phase 1) opens the Complete modal. Web no longer posts `completed` to `/status`.
+- **request_body:** `{status}` (non-completed only)
+- **side_effects:** `status-change` for non-completed transitions. Completion always runs Path B (`profit-calc` three-slice + >100% guard, `earnings-write`, `job_completion_details`, `reimbursement-write`). The legacy Path A completion side-effects (`inventory-deduct`, `membership-advance`, source `sms`) only fire if `completed` is posted directly to `/status` — which neither surface now does.
 - **end_state:** New status reflected; side effects per transition fire.
-- **failure_modes:** `divergent-logic` — web completion bypasses the >100% profit guard and the parts/CC inputs.
-- **parity:** DIVERGENT — Android completion = three-slice engine with guard; web completion = simple Path A, no guard, no parts/CC.
-- **status:** PARTIAL
-- **status_note:** Completing from web vs Android produces different profit numbers. Highest-impact money-path divergence on this screen.
+- **failure_modes:** none — web completion no longer bypasses the >100% guard or the parts/CC inputs; it routes through Path B exactly like Android.
+- **parity:** MATCH (Phase 1) — both surfaces route completion through `/complete` (guard + parts/CC); non-completed transitions share `/status`.
+- **status:** OK
+- **status_note:** Phase 1 (2026-05-31): web's Status modal "Completed" opens the Complete modal (Path B) instead of posting to `/status`, so web vs Android now produce the same profit numbers. Caveat: Path A's `inventory-deduct`/`membership-advance`/source-`sms` are not replicated in Path B on either surface (backend follow-up).
 
 ### `job-detail.banner-received`
 - **label:** "Received from {company}" banner
@@ -562,14 +562,14 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **visibility:** hidden when status deleted/cancelled/completed (android)
 - **precondition:** Backend runs profit pre-check; over-allocation blocks.
 - **confirm:** —
-- **route_chain:** Android: navigate `CompleteJobScreen` (collects parts_paid_by, parts_amount, cc fields) → `POST /jobs/:id/complete`. Web: modal (notes + payment_method dropdown) → `POST /jobs/:id/complete {notes, payment_method}`.
-- **request_body:** Android: full parts/CC payload. Web: `{notes, payment_method}` (payment_method ignored by handler; parts/CC default to 0).
+- **route_chain:** Android: navigate `CompleteJobScreen` → `POST /jobs/:id/complete`. Web (Phase 1): Complete modal — for partner jobs renders the same parts/CC form → `POST /jobs/:id/complete` with the full split body; non-partner sends `{notes?}`.
+- **request_body:** both surfaces — partner: `{parts_paid_by, parts_amount, payment_collected_by, cc_fee_amount, cc_fee_paid_by, notes?}`; non-partner: `{notes?}`. The dead `payment_method` was removed from the web body.
 - **side_effects:** `profit-calc` (three-slice), `earnings-write` (`tech_earnings`, user XOR roster), `update-record` (`job_completion_details` upsert), `reimbursement-write` (if tech_reimbursement>0), `status-change` (→completed/holding/pending-review per paid+actor), `joby-trigger`, `push`
 - **end_state:** Status completed (paid+owner) / pending-review (paid+non-owner) / holding (unpaid); profit allocated across source/tech/company.
 - **failure_modes:** `validation-reject` (400 "Profit allocation conflict" when source%+tech%>100 — pre-check guard, jobs.js 1203–1216).
-- **parity:** DIVERGENT — Android captures parts/CC for the three-slice engine; web sends only notes+payment_method, so material/CC deductions and partner splits from web completions are wrong.
-- **status:** PARTIAL
-- **status_note:** Web completion works but cannot enter parts/CC; money math from web is incomplete. The >100% guard runs in `/complete` (Path B) but NOT in `/status` (Path A) — see `job-detail.status`.
+- **parity:** MATCH (Phase 1) — web captures parts/CC for partner jobs and sends the same body as Android; the three-slice engine sees identical inputs.
+- **status:** OK
+- **status_note:** Phase 1 (2026-05-31): web Complete modal now renders the partner parts/CC form + live split calc; money math from web matches Android. The >100% guard runs in `/complete` (Path B); web's Status modal "Completed" now also routes to Path B (see `job-detail.status`).
 
 ### `job-detail.signature`
 - **label:** Signature pad (web)
@@ -610,7 +610,7 @@ Each action carries: label · section · actors · purpose · visibility · prec
 ## SCREEN-LEVEL DRIFT FLAGS (from Stage-1 audit)
 
 - **Route-404 class (web):** `PATCH /jobs/:id` (notes, tech-permissions), `POST /jobs/:id/restore`. System-wide: `POST /payments/scanpay/charge` (called by both clients; verify in payments.js body).
-- **Two earnings paths:** `/status?completed` (Path A, simple calc, no >100% guard) vs `/complete` (Path B, three-slice + guard). Web uses neither consistently — Status modal posts completed to Path A; Complete modal posts to Path B without parts/CC.
+- **Two earnings paths — web side closed (Phase 1):** `/status?completed` (Path A, simple calc, no >100% guard) vs `/complete` (Path B, three-slice + guard). Web now routes completion consistently to Path B: the Status modal "Completed" opens the Complete modal (no longer posts to Path A), and the Complete modal renders parts/CC for partner jobs. Path A still exists on the backend but no web surface posts `completed` to it. Caveat: Path A's `inventory-deduct`/`membership-advance`/source-`sms` are not in Path B on either surface (backend follow-up).
 - **Two `job_completion_details` models vs `tech_earnings`:** completion details still carries only 2-party `sender_earns`/`receiver_earns`; the three-slice truth lives in `tech_earnings`. Reconciliation happens in the complete handler.
 - **payments.method CHECK contradiction:** two boot migrations (server.js 558–561 vs 785); the later one drops `card`/`scanpay`/`paypal`.
 - **Schema-gather scatter:** live schema = union of schema.sql + migrate_*.sql + server.js IIFE + jobs.js top-level ALTERs (≥3 places).

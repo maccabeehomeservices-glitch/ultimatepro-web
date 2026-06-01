@@ -73,7 +73,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · 29 screens mapped</div>
     <h1>Atlas Overview<span class="sub">The 29 mapped screens, grouped by the four spines their actions touch. A screen appears under every spine it acts on.</span></h1>
-    <div class="stamp">ATLAS<br><b>2026-05-31</b><br>commit · <b>7c84e05</b></div>
+    <div class="stamp">ATLAS<br><b>2026-05-31</b><br>Phase 1 · <b>money fix</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="fix-list.html">fix list</a> › overview by spine</div>
@@ -96,7 +96,7 @@ const SPINES=[
   screens:[
    {nm:"New Job",id:"new-job",note:"Creates the job record — schedule, customer, assignment.",status:"broken"},
    {nm:"Job Detail",id:"job-detail",note:"The status engine: dispatch → arrived → complete, plus delete & restore.",status:"broken"},
-   {nm:"Complete Job",id:"complete-job",note:"Flips the job to completed and writes earnings.",status:"broken"},
+   {nm:"Complete Job",id:"complete-job",note:"Flips the job to completed and writes earnings.",status:"partial"},
    {nm:"Calendar",id:"calendar",note:"Date-filtered view of scheduled jobs.",status:"ok"},
    {nm:"Customers",id:"customers",note:"Create, import, and bulk-delete customer records.",status:"ok"},
    {nm:"Customer Detail",id:"customer-detail",note:"Browse a customer's jobs / estimates / invoices.",status:"broken"},
@@ -111,7 +111,7 @@ const SPINES=[
   ]},
  {key:"money",title:"Money",color:"var(--money)",desc:"earnings · profit · payments · deposits · commissions · invoices · payroll",
   screens:[
-   {nm:"Complete Job",id:"complete-job",note:"Writes the three-slice profit split + earnings — web omits parts/CC → splits wrong.",status:"broken"},
+   {nm:"Complete Job",id:"complete-job",note:"Writes the three-slice profit split + earnings; web now captures parts/CC for partner jobs (Phase 1).",status:"partial"},
    {nm:"Job Detail",id:"job-detail",note:"Charge-payment, complete → profit/earnings, line-item totals.",status:"broken"},
    {nm:"Invoice Detail",id:"invoice-detail",note:"Collect on an invoice — send, charge, ScanPay, receipt, deposit.",status:"broken"},
    {nm:"Estimate Builder",id:"estimate-builder",note:"Deposit + convert to invoice — front of the money spine.",status:"broken"},

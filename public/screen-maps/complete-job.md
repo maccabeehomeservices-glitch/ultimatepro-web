@@ -13,17 +13,17 @@
 | `display_name` | Complete Job |
 | `surfaces` | android, web |
 | `route_android` | `jobs/{jobId}/complete` → `CompleteJobScreen` (JobScreens.kt 2974–3192), dedicated screen |
-| `route_web` | inline Complete modal in `JobDetail` (JobDetail.jsx 1450–1478) |
+| `route_web` | inline Complete modal in `JobDetail` (JobDetail.jsx ~1495–1605); partner-split form + live calc render when `agreement_id != null` |
 | `primary_actors` | tech-user (submit), owner (review/confirm) |
 | `purpose` | The money spine's terminal action. Locks the job outcome, runs profit allocation, and writes earnings. For partner jobs it captures the parts/CC inputs that drive the sender/receiver split and routes the result through a confirm step. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: cca244c |
+| `last_verified` | 2026-05-31 · Phase 1 Complete Job money fix (web partner-split form + live calc + Status-completed reroute) |
 
 ### load_sequence
-Android: dedicated screen loads job summary + (partner jobs) builds a live split calculator. Job Detail's completion banner separately calls `GET /jobs/:id/completion`. Web: modal opens with two fields; web never calls `GET /completion`.
+Android: dedicated screen loads job summary + (partner jobs) builds a live split calculator. Job Detail's completion banner separately calls `GET /jobs/:id/completion`. Web: modal opens; for partner jobs it renders the same parts/CC form + a live split calculator using the already-loaded `jobInvoice.total` as gross (mirrors Android's `getInvoices().firstOrNull()`). Web still never calls `GET /completion`.
 
 ### entry_points
-- **Android:** Job Detail status sheet "completed" or the "Completed" final-action → navigates to `CompleteJobScreen`.
-- **Web:** Job Detail "✅ Completed" button → opens the inline modal.
+- **Android:** Job Detail status sheet "completed" → `onComplete()` navigates to `CompleteJobScreen` (never hits `/status?completed`).
+- **Web:** Job Detail "Completed" button → opens the inline modal. Web's Status modal "Completed" now also routes here (opens the Complete modal) instead of `POST /status`, mirroring Android.
 
 ---
 
@@ -40,47 +40,47 @@ Android: dedicated screen loads job summary + (partner jobs) builds a live split
 - **precondition:** Backend runs the >100% profit guard first; over-allocation blocks (HTTP 400).
 - **confirm:** —
 - **route_chain:** `POST /jobs/:id/complete`
-- **request_body:** **Android partner job:** `{parts_paid_by, parts_amount, payment_collected_by, cc_fee_amount, cc_fee_paid_by, notes?}`. **Android non-partner:** `{notes?}` only. **Web (always):** `{notes, payment_method}` — `payment_method` is **ignored** by the backend.
+- **request_body:** **partner job (both surfaces):** `{parts_paid_by, parts_amount, payment_collected_by, cc_fee_amount, cc_fee_paid_by, notes?}` (parts_amount 0 when "none", cc_fee_amount 0 when toggle off). **non-partner (both surfaces):** `{notes?}` only. Web now builds the same body as Android (Phase 1); the dead `payment_method` was removed.
 - **side_effects:** `profit-calc`, `earnings-write` (`tech_earnings`, user XOR roster), `update-record` (`job_completion_details` upsert, status `pending`), `reimbursement-write` (if tech_reimbursement>0), `status-change` (job → `completed`), `commission-resolve`
 - **end_state:** Job `completed`; `job_completion_details` written (status `pending`); `tech_earnings` row(s) written; profit split across source/tech/company (or sender/receiver for partner).
-- **failure_modes:** `validation-reject` (400 "Profit allocation conflict" when source%+tech%>100). `divergent-logic` — web omits all parts/CC inputs.
-- **parity:** PARTIAL — Android captures parts/CC for partner jobs; web sends only notes (+ ignored payment_method).
-- **status:** PARTIAL
-- **status_note:** For normal (non-partner) jobs the surfaces converge — parts/CC don't enter the tech three-slice (that uses `material_cost` from line items). The divergence bites **partner jobs**: see `complete-job.partner-split`.
+- **failure_modes:** `validation-reject` (400 "Profit allocation conflict" when source%+tech%>100).
+- **parity:** MATCH — web now captures parts/CC for partner jobs and sends the identical body; non-partner sends notes only.
+- **status:** OK
+- **status_note:** Phase 1 (2026-05-31): web partner jobs now send parts/CC, so web-completed partner jobs produce the same `job_completion_details` numbers as Android. `divergent-logic` cleared.
 
 ### `complete-job.partner-split`
 - **label:** Parts / CC-fee / payment-collected inputs (partner jobs)
 - **section:** partner-split
 - **actors:** tech-user, owner
 - **purpose:** Capture the deductions that drive the sender/receiver split: who supplied parts, parts amount, who collected payment, CC fee + who absorbs it.
-- **visibility:** Android: only when `job.agreement_id != null` (partner job). Web: never rendered.
+- **visibility:** both surfaces, only when `job.agreement_id != null` (partner job). Web now renders the same form inside the Complete modal (Phase 1).
 - **precondition:** Partner job (`agreement_id` set).
 - **confirm:** —
 - **route_chain:** part of `POST /jobs/:id/complete`
 - **request_body:** `parts_paid_by` (sender/receiver/none), `parts_amount`, `payment_collected_by` (sender/receiver), `cc_fee_amount`, `cc_fee_paid_by` (sender/receiver/split)
 - **side_effects:** `profit-calc` — `net = gross − parts − cc`; `sender_earns = net·senderPct%`, `receiver_earns = net·receiverPct%`; CC absorption subtracted per `cc_fee_paid_by`.
 - **end_state:** `job_completion_details` carries correct net + split.
-- **failure_modes:** `schema-gap`/`divergent-logic` (web) — web never sends these, so on a web-completed partner job `parts_amount`/`cc_fee_amount` default to 0 → `net = gross` → both partners' earnings overstated by the omitted parts + CC; `cc_fee_paid_by` and `payment_collected_by` stored NULL.
-- **parity:** ANDROID-ONLY.
-- **status:** BROKEN
-- **status_note:** Partner job completed from web records inflated earnings for both companies (no parts/CC deduction) and loses who-collected/who-absorbs. Same job completed on Android vs web yields different `job_completion_details` numbers. This is the financially material gap on this screen.
+- **failure_modes:** none — web sends the same inputs as Android; if no invoice is loaded the web live-calc hides (display only) but the form still submits and the backend computes authoritatively.
+- **parity:** MATCH.
+- **status:** OK
+- **status_note:** Phase 1 (2026-05-31): web renders parts FilterChips (Company/Technician/No Parts), parts amount, payment-collected chips, a CC-fee toggle + amount + absorbed-by chips (Sender/Receiver/Split 50/50), and a live split calculator. Values sent are `sender/receiver/none/split` exactly as Android. Web-completed partner jobs now match Android's `job_completion_details`.
 
 ### `complete-job.payment-method`
-- **label:** Payment Collected dropdown (web)
+- **label:** Payment Collected dropdown (web) — REMOVED
 - **section:** web modal
 - **actors:** office, owner
-- **purpose:** (Intended) record how payment was collected.
-- **visibility:** web modal only (No payment / Cash / Check / Credit Card / ACH / Other)
+- **purpose:** (Former) record how payment was collected. The control was dead (backend never read `payment_method`).
+- **visibility:** removed from the web modal (Phase 1). For partner jobs, who-collected is now captured by `payment_collected_by` (see `complete-job.partner-split`).
 - **precondition:** —
 - **confirm:** —
-- **route_chain:** sent as `payment_method` to `POST /jobs/:id/complete`
-- **request_body:** `payment_method`
-- **side_effects:** none — backend never destructures `payment_method`.
-- **end_state:** (intended) payment recorded — but nothing happens.
-- **failure_modes:** `dead-code` — sent but ignored; records no payment and sets no `payment_collected_by`.
-- **parity:** WEB-ONLY (dead).
-- **status:** DEAD-CODE
-- **status_note:** The web modal's only money-ish control does nothing on the backend.
+- **route_chain:** n/a — no longer sent.
+- **request_body:** n/a (web body no longer includes `payment_method`).
+- **side_effects:** none.
+- **end_state:** n/a.
+- **failure_modes:** none — the dead field was removed.
+- **parity:** n/a.
+- **status:** REMOVED
+- **status_note:** Phase 1 (2026-05-31): the dead `payment_method` select was deleted from the web Complete modal; the web body no longer sends it. Real who-collected intent now rides `payment_collected_by` on partner jobs.
 
 ### `complete-job.notes`
 - **label:** Completion Notes
@@ -147,10 +147,10 @@ Android: dedicated screen loads job summary + (partner jobs) builds a live split
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **Partner-split money gap (web):** web completes partner jobs with no parts/CC → overstated earnings for both companies, lost CC-absorption + who-collected. The material correctness bug on this screen.
-- **Web payment_method is dead** — sent, never read.
-- **No web confirm surface** — `GET/POST /completion[/confirm]` orphaned on web.
-- **Two completion paths:** `/complete` (this screen, three-slice + guard) vs `/status?completed` (legacy simple calc, no guard, no `job_completion_details`). Web's *status modal* can hit the legacy path; the *complete modal* hits this one. Different earnings math depending on which the user used.
+- **Partner-split money gap (web): RESOLVED (Phase 1, 2026-05-31).** Web now renders the parts/CC form for partner jobs and sends the same body as Android, so web-completed partner jobs produce the same `job_completion_details` numbers. No more overstated earnings.
+- **Web payment_method: RESOLVED (Phase 1)** — the dead select was removed; web no longer sends `payment_method`.
+- **No web confirm surface** — `GET/POST /completion[/confirm]` orphaned on web. (Unchanged — Phase 1 did not add a confirm UI.)
+- **Two completion paths — web side closed (Phase 1):** web's Status modal "Completed" now opens the Complete modal instead of `POST /status?completed`, so web completion always runs the `/complete` path (guard + partner split + `job_completion_details`), mirroring Android. The legacy backend `/status?completed` branch still EXISTS but web no longer uses it for completion. **Honest caveat:** the `/status?completed` branch also runs three side-effects that `/complete` does NOT — source-contact notify, truck inventory deduction, membership `next_job_date` advance (jobs.js 879-934). Android completes via `/complete` only, so it already skips these; web now matches Android. Porting those three into `/complete` is a recommended **backend follow-up** (out of this web-only scope).
 - **`tip_amount` column** exists on `job_completion_details` but neither surface captures a tip → always 0 (dead column).
 - **`/complete` is not transactional** — a post-hook failure can leave the job `completed` with no `tech_earnings` row (silent partial state).
 - **Gross source differs:** partner split reads gross from the latest invoice; the tech slice derives subtotal from line items (fallback invoice.total → amount_paid). A job where these differ values the two off different numbers.

@@ -101,7 +101,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Complete Job<span class="sub">The money spine's last step — lock the job, run profit, write earnings.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>cca244c</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>Phase 1 · <b>money fix</b></div>
   </header>
   <div class="crumb"><a href="index.html">all maps</a> · <a href="job-detail-atlas.html">job detail</a> · <a href="new-job-atlas.html">new job</a> › complete job</div>
   <div class="stats" id="stats"></div>
@@ -131,10 +131,10 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Partner-split money gap (web):</b> web completes partner jobs with no parts/CC entry → net = gross → both companies' earnings overstated, CC-absorption + who-collected lost. The material correctness bug here.</li>
-      <li><b>Web "Payment Collected" dropdown is dead</b> — sent as <code>payment_method</code>, never read by the backend.</li>
-      <li><b>No web confirm surface</b> — <code>GET /jobs/:id/completion</code> and <code>POST /completion/confirm</code> exist and are used by Android; web calls neither, so a partner sender on web can't confirm a split.</li>
-      <li><b>Two completion paths:</b> <code>/complete</code> (this screen, three-slice + guard) vs <code>/status?completed</code> (legacy simple calc, no guard, no completion record). Web's status modal can hit the legacy path → different earnings math than the complete modal.</li>
+      <li><b>Partner-split money gap (web): RESOLVED (Phase 1).</b> Web now renders the parts/CC form for partner jobs and sends the same body as Android → web-completed partner jobs produce the same <code>job_completion_details</code> numbers. No more overstated earnings.</li>
+      <li><b>Web "Payment Collected" dropdown: RESOLVED (Phase 1)</b> — the dead <code>payment_method</code> select was removed; web no longer sends it. Who-collected now rides <code>payment_collected_by</code> on partner jobs.</li>
+      <li><b>No web confirm surface</b> — <code>GET /jobs/:id/completion</code> and <code>POST /completion/confirm</code> exist and are used by Android; web calls neither, so a partner sender on web can't confirm a split. (Unchanged.)</li>
+      <li><b>Two completion paths — web side closed (Phase 1):</b> web's Status modal "Completed" now opens the Complete modal instead of <code>POST /status?completed</code>, so web completion always runs <code>/complete</code> (guard + partner split + completion record), mirroring Android. The legacy <code>/status?completed</code> branch still exists but web no longer uses it. Caveat: that branch also runs source-notify + inventory deduction + membership advance that <code>/complete</code> does not — Android skips them too; porting them into <code>/complete</code> is a backend follow-up.</li>
       <li><code>tip_amount</code> column exists but neither surface captures a tip → always 0.</li>
       <li><b><code>/complete</code> is not transactional</b> — a post-hook failure can leave the job completed with no <code>tech_earnings</code> row.</li>
     </ul>
@@ -147,16 +147,14 @@
 </div>
 <script>
 const SECTIONS=[
- {idx:"01",title:"Complete & Money",items:["submit","partner-split","payment-method","notes"]},
+ {idx:"01",title:"Complete & Money",items:["submit","partner-split","notes"]},
  {idx:"02",title:"Confirm & Nav",items:["confirm","cancel"]},
 ];
 const A={
-"submit":{label:"Complete Job",status:"partial",route:"POST /jobs/:id/complete",fires:"profit calc + earnings",result:"job completed",caveat:"web sends only notes (no parts/CC)",
- d:{purpose:"Lock the job, run profit allocation, write earnings. The money spine's terminal action.",actors:["tech-user","owner"],vis:"always (guard blocks if source%+tech% > 100)",chain:[["POST","/jobs/:id/complete"]],parity:"PARTIAL — Android captures parts/CC for partner jobs; web sends only {notes, payment_method(ignored)}. Normal jobs converge (parts/CC don't enter the tech slice — that uses material_cost from line items). The gap bites partner jobs (see partner-split)."}},
-"partner-split":{label:"Parts / CC / split inputs",status:"broken",route:"part of POST /complete",fires:"net = gross − parts − CC",result:"sender/receiver split",caveat:"web never sends these → partner earnings overstated",
- d:{purpose:"Capture the deductions that drive the sender/receiver split: who supplied parts, parts amount, who collected, CC fee + who absorbs it.",actors:["tech-user","owner"],vis:"Android: only when agreement_id != null (partner job). Web: never rendered.",chain:[["POST","/jobs/:id/complete"]],parity:"ANDROID-ONLY — on a web-completed partner job, parts_amount/cc_fee_amount default to 0 so net = gross → both partners' earnings overstated by the omitted parts + CC; cc_fee_paid_by and payment_collected_by stored NULL. Same job on Android vs web yields different completion numbers."}},
-"payment-method":{label:"Payment Collected dropdown",status:"dead",route:"sent as payment_method",fires:"nothing",result:"no effect",caveat:"backend never reads payment_method",
- d:{purpose:"(Intended) record how payment was collected.",actors:["office","owner"],vis:"web modal only",chain:[["POST","/jobs/:id/complete"]],parity:"WEB-ONLY dead code — payment_method is never destructured by the handler. Records no payment and sets no payment_collected_by. The web modal's only money-ish control does nothing."}},
+"submit":{label:"Complete Job",status:"ok",route:"POST /jobs/:id/complete",fires:"profit calc + earnings",result:"job completed",
+ d:{purpose:"Lock the job, run profit allocation, write earnings. The money spine's terminal action.",actors:["tech-user","owner"],vis:"always (guard blocks if source%+tech% > 100)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1) — web now builds the same body as Android: partner jobs send {parts_paid_by, parts_amount, payment_collected_by, cc_fee_amount, cc_fee_paid_by, notes?}, non-partner send {notes?}. The dead payment_method was removed. Web-completed partner jobs now produce the same completion numbers as Android."}},
+"partner-split":{label:"Parts / CC / split inputs",status:"ok",route:"part of POST /complete",fires:"net = gross − parts − CC",result:"sender/receiver split",
+ d:{purpose:"Capture the deductions that drive the sender/receiver split: who supplied parts, parts amount, who collected, CC fee + who absorbs it.",actors:["tech-user","owner"],vis:"both surfaces, only when agreement_id != null (partner job). Web renders the same form (Phase 1).",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH (Phase 1) — web renders parts chips (Company/Technician/No Parts), parts amount, payment-collected chips, a CC-fee toggle + amount + absorbed-by chips (Sender/Receiver/Split 50/50), and a live split calculator off the loaded invoice total. Values sent are sender/receiver/none/split exactly as Android."}},
 "notes":{label:"Completion Notes",status:"ok",route:"part of POST /complete",fires:"save note",result:"note saved",
  d:{purpose:"Free-text note saved with the completion.",actors:["tech-user","owner"],vis:"always (both surfaces)",chain:[["POST","/jobs/:id/complete"]],parity:"MATCH — the only shared input between the two surfaces."}},
 "confirm":{label:"Confirm Completion",status:"partial",route:"GET /completion · POST /completion/confirm",fires:"confirm split",result:"status → confirmed",caveat:"web has no confirm surface",
