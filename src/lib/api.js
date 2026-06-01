@@ -396,11 +396,14 @@ export const paymentsApi = {
   summary: (from, to) =>
     api.get('/payments/summary', { params: { from, to } }),
 
+  scanpayQr: (invoice_id, amount) =>
+    api.post('/payments/scanpay-qr', { invoice_id, amount }),
+
   scanpayLink: (invoice_id, amount, customer_phone) =>
     api.post('/payments/scanpay-link', { invoice_id, amount, customer_phone }),
 
-  scanpayCharge: (invoice_id, amount, customer_email) =>
-    api.post('/payments/scanpay/charge', { invoice_id, amount, customer_email }),
+  scanpayStatus: (invoiceId) =>
+    api.get(`/payments/scanpay-status/${invoiceId}`),
 };
 
 // ─── PRICEBOOK ────────────────────────────────────────────────────────────────

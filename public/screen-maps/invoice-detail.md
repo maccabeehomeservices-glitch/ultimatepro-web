@@ -16,7 +16,7 @@
 | `route_web` | `/invoices/:id` → `InvoiceDetail` (InvoiceDetail.jsx, 783 lines) |
 | `primary_actors` | office, owner, tech |
 | `purpose` | The collect-the-money screen for one invoice: review line items + totals, send the invoice (with a payment link + PDF), record a payment, capture a signature, send a receipt, and manage follow-up reminders. Web does every action inline (modals); Android routes the heavy actions (sign / pay / receipt / send) to dedicated screens. |
-| `last_verified` | 2026-05-31 · Phase 0 [SIG] fix · commit: f942dcf |
+| `last_verified` | 2026-05-31 · Phase 0 [SCANPAY-404] fix · commit: 3e40117 |
 
 ### load_sequence
 `GET /invoices/:id` returns `invoice.*` + flattened `cust_first/last/email/phone/address/city/state/zip` (JOIN customers) + `payments[]` (all rows for the invoice). Android `vm.loadInv(id)`; web `useGet('/invoices/:id')`.
@@ -83,21 +83,21 @@
 - **status_note:** Functional both surfaces; the *when* and *how* differ.
 
 ### `invoice-detail.scanpay-charge`
-- **label:** "💳 Charge via ScanPay"
+- **label:** "📲 ScanPay QR / 🔗 ScanPay Link"
 - **section:** actions
 - **actors:** office, owner
-- **purpose:** Charge the remaining balance via the ScanPay processor.
-- **visibility:** web only, when `status != paid`. Android Invoice Detail has no ScanPay-charge button.
-- **precondition:** —
-- **confirm:** —
-- **route_chain:** `POST /payments/scanpay/charge` — **route does not exist** in `payments.js` (registered: `/scanpay-qr`, `/scanpay-link`, `/scanpay-status/:invoiceId`, `/scanpay-webhook`, `/scanpay/webhook`, `/:id/refund`, `/summary`).
-- **request_body:** `paymentsApi.scanpayCharge(id, amt, email)` → `{ invoice_id, amount, customer_email }`
-- **side_effects:** none — request 404s at the catch-all (`{error:'Route not found'}`).
-- **end_state:** error snackbar; nothing charged.
-- **failure_modes:** `route-404` — `/payments/scanpay/charge` is unregistered. (Android `ApiService.scanpayCharge` targets the same missing path.)
-- **parity:** WEB-ONLY
-- **status:** BROKEN
-- **status_note:** The button is reachable on any unpaid invoice and always fails with 404.
+- **purpose:** Collect the balance via ScanPay: show a QR to scan, or text the customer a payment link; poll until paid.
+- **visibility:** web + Android, when `status != paid`. Two buttons on both surfaces.
+- **precondition:** balance > 0.
+- **confirm:** the QR / link dialog itself.
+- **route_chain:** QR `POST /payments/scanpay-qr` → `{ qr_data_url, payment_url, order_id }`; Link `POST /payments/scanpay-link` → `{ payment_url, sms_sent, phone_used }`; both poll `GET /payments/scanpay-status/:invoiceId` (QR 3 s, Link 5 s) until `status === 'paid'`.
+- **request_body:** QR `{ invoice_id, amount }`; Link `{ invoice_id, amount, customer_phone }`
+- **side_effects:** creates a ScanPay order (`createScanPayInvoice` → api.scanpay.tech); Link also SMS-texts the checkout URL; on `paid`, the dialog closes and the invoice refetches.
+- **end_state:** Customer pays via the ScanPay checkout URL; webhook + status polling mark the invoice paid.
+- **failure_modes:** none observed.
+- **parity:** MATCH — web now mirrors Android's QR/link dialogs + status polling (Phase 0 [SCANPAY-404] fix, 2026-05-31). The dead `POST /payments/scanpay/charge` button + `paymentsApi.scanpayCharge` were removed; that route never existed. The leftover `scanpayCharge` ApiService method exists on both clients but is unused.
+- **status:** OK
+- **status_note:** Phase 0 [SCANPAY-404] (2026-05-31): web ScanPay QR/Link UI built mirroring Android (InvoiceScreens.kt:700–766); direct-charge button removed. The working path was always QR/link, never a server-side direct charge.
 
 ### `invoice-detail.capture-signature`
 - **label:** "✍️ Capture Signature"
@@ -171,7 +171,7 @@
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **`scanpay-charge` → `POST /payments/scanpay/charge` is a 404** (route never registered). Web "Charge via ScanPay" always fails; Android's `scanpayCharge` targets the same missing path.
+- **`scanpay-charge` now uses the QR/link flow** (Phase 0 [SCANPAY-404] fix, 2026-05-31). Web has ScanPay QR + Link buttons → `POST /payments/scanpay-qr` / `/scanpay-link` + `GET /scanpay-status/:invoiceId` polling, mirroring Android. The non-existent `POST /payments/scanpay/charge` button was removed. The working path was always QR/link, never a direct charge.
 - **`capture-signature` now sends `{ signature }`** (Phase 0 [SIG] fix, 2026-05-31) matching backend invoices.js:534 and Android. Web invoice signing works. (The Job-Detail signature — separate route reading `signature_url` — remains a follow-up.)
 - **Structural divergence:** web does send / pay / sign / receipt **inline** (modals); Android routes each to a dedicated screen (`InvoiceSendScreen`, `PaymentScreen`, `InvoiceSignScreen`, `ReceiptScreen`).
 - **`charge-payment` visibility differs:** web allows it at any unpaid status; Android only at `signed`.

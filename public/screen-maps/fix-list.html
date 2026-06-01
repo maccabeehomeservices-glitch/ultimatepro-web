@@ -91,11 +91,11 @@
 
   <div class="causes">
     <h2>⚡ Recurring root-causes: fix once, clear many</h2>
-    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. Two are now resolved (SIG, SMS-CONV); one remains (SCANPAY-404). Fixing a class clears every tagged row below.</p>
+    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. All three are now resolved (SIG, SMS-CONV, SCANPAY-404), so no tagged rows remain. Each fix cleared every screen under its tag.</p>
     <ul>
       <li><span class="tag">SIG</span><span><b>signature_data wrong-key class: fully resolved.</b> Web posted <code>signature_data</code>; handlers want <code>signature</code> (invoice/estimate) or <code>signature_url</code> (job). Phase 0 fixed all three routes (8e01dbd invoice + estimate; this commit job → <code>signature_url</code>). No key-mismatch remains. The 1 row still tagged is Estimate <code>present-gbb</code>, a mis-wire (opens the signature modal instead of presenting tiers), not a key bug. Job Detail signature drops off [SIG]: it's now an unbuilt-feature item (no trigger on web or Android). <span class="hits">remaining tagged: Estimate Builder (present-gbb)</span></span></li>
       <li><span class="tag">SMS-CONV</span><span><b>bare-array, no conversation_id: resolved.</b> Phase 0 [SMS-CONV] made web derive <code>convId</code> from the first message object (<code>msgs[0]?.conversation_id</code>), mirroring Android <code>firstOrNull()?.conversationId</code>, so the composer enables and reply works on existing threads for both Job Detail and Customer Detail. Empty-thread start stays disabled on both surfaces (parity-matched, pre-existing). <span class="hits">no rows remain under this tag</span></span></li>
-      <li><span class="tag">SCANPAY-404</span><span><b>POST /payments/scanpay/charge unregistered.</b> The ScanPay charge route was never mounted → "Route not found". <span class="hits">hits: Invoice Detail · Payments</span></span></li>
+      <li><span class="tag">SCANPAY-404</span><span><b>POST /payments/scanpay/charge: resolved.</b> That route was never built (it 404'd). Phase 0 [SCANPAY-404] (3e40117) gave web the ScanPay QR + Link UI with status polling that Android already used (POST /scanpay-qr, /scanpay-link, GET /scanpay-status), and removed the dead charge button + its stale backend test. <span class="hits">no rows remain under this tag</span></span></li>
     </ul>
   </div>
 
@@ -140,8 +140,6 @@ const TIERS=[
   ["Complete Job","complete-job","Confirm Completion","partial","web has no confirm surface","GET /completion · POST /completion/confirm",""],
   ["Estimate Builder","estimate-builder","Present GBB Options","broken","web mis-wired to signature; Android has PresentTiersScreen","opens signature modal (no route)","SIG"],
   ["Estimate Builder","estimate-builder","Attach Photo","broken","web sends a file; handler wants JSON {url}","POST /estimates/:id/add-photo",""],
-  ["Invoice Detail","invoice-detail","Charge via ScanPay","broken","route never registered","POST /payments/scanpay/charge","SCANPAY-404"],
-  ["Payments","payments","Charge via ScanPay","broken","route never registered","POST /payments/scanpay/charge","SCANPAY-404"],
   ["Customer Detail","customer-detail","Jobs/Estimates/Invoices tabs","partial","Android has no estimates/invoices tabs","GET /jobs|estimates|invoices?customer_id",""],
   ["Dashboard","dashboard","KPI tiles","partial","different metrics; Android tiles static","web: 2 tiles → /phone",""],
   ["Dashboard","dashboard","View all (memberships)","broken","no /memberships web route","navigate /memberships",""],

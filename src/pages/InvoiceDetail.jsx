@@ -38,6 +38,8 @@ export default function InvoiceDetail() {
   const [showSignature, setShowSignature] = useState(false);
   const [savingSig, setSavingSig] = useState(false);
   const [scanpayLoading, setScanpayLoading] = useState(false);
+  const [scanpayQr, setScanpayQr] = useState(null);
+  const [scanpayLink, setScanpayLink] = useState(null);
   const [showSendModal, setShowSendModal] = useState(false);
   const [sendEmails, setSendEmails] = useState([]);
   const [sendPhones, setSendPhones] = useState([]);
@@ -68,6 +70,26 @@ export default function InvoiceDetail() {
 
   const location = useLocation();
   const invoice = data?.invoice || data;
+  const scanpayAmount = Number(invoice?.balance_due ?? (Number(invoice?.total || 0) - Number(invoice?.amount_paid || 0)));
+
+  // Poll ScanPay status while a QR/link dialog is open (mirror Android: QR 3s, Link 5s).
+  useEffect(() => {
+    if (!scanpayQr && !scanpayLink) return;
+    const intervalMs = scanpayQr ? 3000 : 5000;
+    const timer = setInterval(async () => {
+      try {
+        const res = await paymentsApi.scanpayStatus(id);
+        if (res.data?.status === 'paid') {
+          clearInterval(timer);
+          setScanpayQr(null);
+          setScanpayLink(null);
+          showSnack('Payment received!', 'success');
+          refetch();
+        }
+      } catch { /* keep polling */ }
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [scanpayQr, scanpayLink, id]); // eslint-disable-line
 
   async function handlePayment() {
     try {
@@ -98,17 +120,36 @@ export default function InvoiceDetail() {
     }
   }
 
-  async function handleScanpayCharge() {
+  async function handleScanpayQr() {
     setScanpayLoading(true);
     try {
-      const amt = Number(invoice.total || 0) - Number(invoice.total_paid || invoice.amount_paid || 0);
-      await paymentsApi.scanpayCharge(id, amt, invoice.customer_email || invoice.cust_email);
-      showSnack('ScanPay charge initiated!', 'success');
-      refetch();
+      const res = await paymentsApi.scanpayQr(id, scanpayAmount);
+      setScanpayQr(res.data); // { qr_data_url, payment_url, order_id }
     } catch (err) {
-      showSnack(err.response?.data?.error || 'Charge failed', 'error');
+      showSnack(err.response?.data?.error || 'Failed to generate QR', 'error');
     } finally {
       setScanpayLoading(false);
+    }
+  }
+
+  async function handleScanpayLink() {
+    setScanpayLoading(true);
+    try {
+      const res = await paymentsApi.scanpayLink(id, scanpayAmount, invoice.cust_phone || invoice.customer_phone);
+      setScanpayLink(res.data); // { payment_url, sms_sent, phone_used, ... }
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to create link', 'error');
+    } finally {
+      setScanpayLoading(false);
+    }
+  }
+
+  function copyLink(url) {
+    try {
+      navigator.clipboard.writeText(url);
+      showSnack('Link copied', 'success');
+    } catch {
+      showSnack('Copy failed', 'error');
     }
   }
 
@@ -524,13 +565,22 @@ export default function InvoiceDetail() {
           <Button onClick={() => setPaymentModal(true)} className="w-full">
             Charge Payment
           </Button>
-          <button
-            onClick={handleScanpayCharge}
-            disabled={scanpayLoading}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 min-h-[44px]"
-          >
-            {scanpayLoading ? 'Processing...' : '💳 Charge via ScanPay'}
-          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={handleScanpayQr}
+              disabled={scanpayLoading}
+              className="py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 min-h-[44px] text-sm"
+            >
+              {scanpayLoading ? '…' : '📲 ScanPay QR'}
+            </button>
+            <button
+              onClick={handleScanpayLink}
+              disabled={scanpayLoading}
+              className="py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm"
+            >
+              {scanpayLoading ? '…' : '🔗 ScanPay Link'}
+            </button>
+          </div>
         </div>
       )}
       {(isPaid || isPartiallyPaid) && (
@@ -594,6 +644,50 @@ export default function InvoiceDetail() {
           onSave={handleCaptureSignature}
           onCancel={() => setShowSignature(false)}
         />
+      </Modal>
+
+      {/* ScanPay QR Modal */}
+      <Modal isOpen={!!scanpayQr} onClose={() => setScanpayQr(null)} title="Scan to Pay">
+        {scanpayQr && (
+          <div className="flex flex-col items-center gap-4 py-2">
+            <p className="text-2xl font-bold text-green-600">{formatCurrency(scanpayAmount)}</p>
+            {scanpayQr.qr_data_url ? (
+              <img src={scanpayQr.qr_data_url} alt="ScanPay QR code" className="w-60 h-60 rounded-lg" />
+            ) : (
+              <div className="w-60 h-60 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">QR unavailable</div>
+            )}
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block" />
+              Waiting for payment…
+            </div>
+            <button onClick={() => copyLink(scanpayQr.payment_url)} className="w-full py-2.5 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium min-h-[44px]">📋 Copy Link</button>
+            <button onClick={() => setScanpayQr(null)} className="w-full py-2.5 text-gray-500 text-sm min-h-[44px]">Cancel</button>
+          </div>
+        )}
+      </Modal>
+
+      {/* ScanPay Link Modal */}
+      <Modal isOpen={!!scanpayLink} onClose={() => setScanpayLink(null)} title="Payment Link Sent">
+        {scanpayLink && (
+          <div className="flex flex-col items-center gap-4 py-2">
+            <p className="text-2xl font-bold text-blue-600">{formatCurrency(scanpayAmount)}</p>
+            {scanpayLink.sms_sent && scanpayLink.phone_used && (
+              <div className="w-full bg-green-50 text-green-700 text-sm rounded-lg px-3 py-2 text-center">SMS sent to {scanpayLink.phone_used}</div>
+            )}
+            <div className="w-full">
+              <label className="block text-xs text-gray-500 mb-1">Payment Link</label>
+              <div className="flex items-center gap-2">
+                <input readOnly value={scanpayLink.payment_url} className="flex-1 border border-gray-300 rounded-xl px-3 py-2.5 text-sm min-h-[44px]" />
+                <button onClick={() => copyLink(scanpayLink.payment_url)} className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm min-h-[44px]">📋</button>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block" />
+              Waiting for payment…
+            </div>
+            <button onClick={() => setScanpayLink(null)} className="w-full py-2.5 text-gray-500 text-sm min-h-[44px]">Cancel</button>
+          </div>
+        )}
       </Modal>
 
       {/* Stop Reminders Modal */}
