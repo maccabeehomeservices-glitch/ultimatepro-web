@@ -571,7 +571,7 @@ export default function EstimateDetail() {
         <Button variant="outlined" onClick={() => navigate(`/estimates/${id}/edit`)} className="w-full">
           Edit Estimate
         </Button>
-        {!isSigned && (
+        {!isSigned && can('estimates_invoices','full') && (
           <Button
             variant="outlined"
             onClick={() => setShowDeleteConfirm(true)}

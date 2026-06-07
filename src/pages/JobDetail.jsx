@@ -777,7 +777,7 @@ export default function JobDetail() {
             <Edit size={20} />
           </button>
           {/* Delete */}
-          {jobData.status !== 'deleted' && (
+          {jobData.status !== 'deleted' && can('jobs','full') && (
             <button onClick={() => setShowDeleteConfirm(true)}
               className="p-2 rounded-xl hover:bg-red-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500">
               <Trash2 size={18} />
