@@ -12,6 +12,9 @@ import {
 
 export const AuthContext = createContext(null);
 
+// Mirror backend RANK (utils/permissions.js). Used by can() for UI gating.
+const RANK = { none: 0, view: 1, edit_self: 2, full: 3 };
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => getStoredUser());
   const [company, setCompany] = useState(() => getStoredCompany());
@@ -47,14 +50,24 @@ export function AuthProvider({ children }) {
 
   async function login(email, password) {
     const res = await api.post('/auth/login', { email, password });
-    const { token, refresh_token, user: u, company: c } = res.data;
+    const { token, refresh_token, user: u, company: c, permissions_resolved } = res.data;
     setToken(token);
     if (refresh_token) localStorage.setItem('up_refresh_token', refresh_token);
-    setStoredUser(u);
+    // Carry the resolved permission levels immediately at login (no reload needed).
+    const up = { ...u, permissions_resolved };
+    setStoredUser(up);
     setStoredCompany(c);
-    setUser(u);
+    setUser(up);
     setCompany(c);
     return res.data;
+  }
+
+  // can(section, level): true if the user's resolved level for `section` meets or
+  // exceeds `level`. Null-safe (returns false if permissions_resolved is missing).
+  // Phase 3a-0: available for UI gating; nothing is hidden yet.
+  function can(section, level) {
+    const lvl = user?.permissions_resolved?.[section];
+    return (RANK[lvl] ?? 0) >= (RANK[level] ?? 0);
   }
 
   async function logout() {
@@ -74,7 +87,7 @@ export function AuthProvider({ children }) {
   const isAuthenticated = !!user && !!getToken();
 
   return (
-    <AuthContext.Provider value={{ user, company, loading, login, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ user, company, loading, login, logout, isAuthenticated, can }}>
       {children}
     </AuthContext.Provider>
   );
