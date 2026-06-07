@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Copy, Share2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { Card, LoadingSpinner, Button, Input, Toggle, Select } from '../../components/ui';
@@ -13,20 +13,37 @@ const METHOD_OPTIONS = [
 
 const ZIP_RE = /^\d{5}$/;
 
+const ALL_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+const DEFAULT_DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+const DEFAULT_WINDOWS = [
+  { id: 'morning', label: 'Morning', time: '8:00 AM - 12:00 PM', enabled: true },
+  { id: 'afternoon', label: 'Afternoon', time: '12:00 PM - 5:00 PM', enabled: true },
+  { id: 'evening', label: 'Evening', time: '5:00 PM - 8:00 PM', enabled: false },
+];
+
+// The public booking page is served by the BACKEND (book.js GET /book), not the web
+// SPA — mirror Android exactly so the link actually works.
+const BOOKING_BASE = 'https://ultimatecrm-backend-production.up.railway.app/book';
+
 export default function OnlineBooking() {
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [ucmId, setUcmId] = useState('');
   // State mirrors the backend booking_settings FLAT schema (same keys as Android),
-  // so save/load round-trip with no nested translation. Fields the UI doesn't have
-  // controls for (working_days, time_windows, services, primary_color, etc.) are
-  // loaded into state and passed back unchanged on save — never nulled.
+  // so save/load round-trip with no translation. Every backend field is represented
+  // here, so an Android-saved config displays in full on web.
   const [settings, setSettings] = useState({
     enabled: false,
     company_display_name: '',
     company_tagline: '',
+    working_days: DEFAULT_DAYS,
+    time_windows: DEFAULT_WINDOWS,
+    max_bookings_per_window: 3,
     service_areas: [],
+    services: [],
+    confirmation_message: 'Thank you! We will confirm your appointment shortly.',
     reminder_enabled: false,
     reminder_hours_before: 24,
     reminder_method: 'both',
@@ -38,27 +55,82 @@ export default function OnlineBooking() {
   });
   const [newZip, setNewZip] = useState('');
   const [newRadius, setNewRadius] = useState(25);
+  const [newLabel, setNewLabel] = useState('');
+  const [newService, setNewService] = useState('');
 
   useEffect(() => {
-    api.get('/settings/booking')
-      .then(res => {
-        const d = res.data?.settings || res.data || {};
-        // Merge only non-null backend values so a never-configured company keeps the
-        // form defaults; existing saved settings (flat keys) display correctly.
-        const clean = Object.fromEntries(Object.entries(d).filter(([, v]) => v !== null));
-        setSettings(prev => ({ ...prev, ...clean }));
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      api.get('/settings/booking').catch(() => null),
+      api.get('/network/my-id').catch(() => null),
+    ]).then(([bookingRes, idRes]) => {
+      const d = bookingRes?.data?.settings || bookingRes?.data || {};
+      // Merge only non-null backend values so a never-configured company keeps the
+      // form defaults; existing saved settings (flat keys) display correctly.
+      const clean = Object.fromEntries(Object.entries(d).filter(([, v]) => v !== null));
+      setSettings(prev => {
+        const merged = { ...prev, ...clean };
+        // Empty arrays from the backend shouldn't blank the day/window controls.
+        if (!Array.isArray(merged.working_days) || merged.working_days.length === 0) merged.working_days = DEFAULT_DAYS;
+        if (!Array.isArray(merged.time_windows) || merged.time_windows.length === 0) merged.time_windows = DEFAULT_WINDOWS;
+        return merged;
+      });
+      const id = idRes?.data?.ultimatecrm_id || idRes?.data?.ucm_id || idRes?.data?.id || '';
+      setUcmId(id);
+    }).finally(() => setLoading(false));
   }, []);
 
   function set(key, value) {
     setSettings(prev => ({ ...prev, [key]: value }));
   }
 
+  const bookingUrl = ucmId ? `${BOOKING_BASE}?company=${ucmId}` : '';
+
+  async function copyLink() {
+    try { await navigator.clipboard.writeText(bookingUrl); showSnack('Link copied', 'success'); }
+    catch { showSnack('Could not copy', 'error'); }
+  }
+  async function shareLink() {
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Book an appointment', text: 'Book an appointment online:', url: bookingUrl }); }
+      catch { /* user cancelled */ }
+    } else {
+      copyLink();
+    }
+  }
+
+  function toggleDay(day) {
+    const on = (settings.working_days || []).includes(day);
+    set('working_days', on ? settings.working_days.filter(d => d !== day) : [...(settings.working_days || []), day]);
+  }
+  function toggleWindow(i, on) {
+    set('time_windows', (settings.time_windows || []).map((w, idx) => idx === i ? { ...w, enabled: on } : w));
+  }
+  function stepMax(delta) {
+    set('max_bookings_per_window', Math.min(10, Math.max(1, (settings.max_bookings_per_window || 1) + delta)));
+  }
+
+  function addService() {
+    const s = newService.trim();
+    if (!s) return;
+    set('services', [...(settings.services || []), s]);
+    setNewService('');
+  }
+  function removeService(i) {
+    set('services', (settings.services || []).filter((_, idx) => idx !== i));
+  }
+
+  function addArea() {
+    const zip = newZip.trim();
+    if (!ZIP_RE.test(zip)) { showSnack('Enter a valid 5-digit ZIP code', 'error'); return; }
+    // Backend schema: { zip_code, radius_miles:Number, label } (mirrors Android).
+    set('service_areas', [...(settings.service_areas || []), { zip_code: zip, radius_miles: Number(newRadius), label: newLabel.trim() || null }]);
+    setNewZip(''); setNewRadius(25); setNewLabel('');
+  }
+  function removeArea(i) {
+    set('service_areas', (settings.service_areas || []).filter((_, idx) => idx !== i));
+  }
+
   async function handleSave() {
-    // Guard service_areas client-side so a bad zip is caught with a clear message
-    // instead of a raw backend 400 (the backend validates the same rules).
     for (const sa of settings.service_areas || []) {
       if (!ZIP_RE.test(String(sa.zip_code || ''))) {
         showSnack(`Invalid ZIP code: ${sa.zip_code || '(empty)'} — must be 5 digits`, 'error');
@@ -80,22 +152,6 @@ export default function OnlineBooking() {
     }
   }
 
-  function addArea() {
-    const zip = newZip.trim();
-    if (!ZIP_RE.test(zip)) {
-      showSnack('Enter a valid 5-digit ZIP code', 'error');
-      return;
-    }
-    // Backend schema: { zip_code, radius_miles:Number, label } (mirrors Android).
-    set('service_areas', [...(settings.service_areas || []), { zip_code: zip, radius_miles: Number(newRadius), label: null }]);
-    setNewZip('');
-    setNewRadius(25);
-  }
-
-  function removeArea(i) {
-    set('service_areas', (settings.service_areas || []).filter((_, idx) => idx !== i));
-  }
-
   if (loading) return <LoadingSpinner fullPage />;
 
   return (
@@ -108,17 +164,145 @@ export default function OnlineBooking() {
       </div>
 
       <div className="space-y-4">
-        {/* General */}
+        {/* Master toggle */}
         <Card>
-          <div className="flex items-center justify-between mb-4">
-            <span className="font-semibold text-gray-900">Enable Online Booking</span>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-semibold text-gray-900">Enable Online Booking</span>
+              <p className="text-xs text-gray-400 mt-0.5">Customers can request appointments online</p>
+            </div>
             <Toggle checked={settings.enabled} onChange={e => set('enabled', e.target.checked)} />
           </div>
-          <div className="space-y-3">
-            <Input label="Business Name" value={settings.company_display_name || ''} onChange={e => set('company_display_name', e.target.value)} placeholder="Your Company Name" />
-            <Input label="Tagline" value={settings.company_tagline || ''} onChange={e => set('company_tagline', e.target.value)} placeholder="Professional service you can trust" />
-          </div>
         </Card>
+
+        {/* Booking link card */}
+        {settings.enabled && ucmId && (
+          <Card>
+            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Your Booking Link</p>
+            <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-700 break-all mb-3 font-mono">{bookingUrl}</div>
+            <div className="flex gap-2">
+              <button onClick={copyLink} className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2 hover:bg-gray-50">
+                <Copy size={16} /> Copy
+              </button>
+              <button onClick={shareLink} className="flex-1 py-2.5 bg-[#1A73E8] text-white rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2">
+                <Share2 size={16} /> Share
+              </button>
+            </div>
+          </Card>
+        )}
+
+        {settings.enabled && (
+          <>
+            {/* Appearance */}
+            <Card>
+              <p className="font-semibold text-gray-900 mb-3">Appearance</p>
+              <div className="space-y-3">
+                <Input label="Display Name" value={settings.company_display_name || ''} onChange={e => set('company_display_name', e.target.value)} placeholder="Shown on your booking page" />
+                <Input label="Tagline (optional)" value={settings.company_tagline || ''} onChange={e => set('company_tagline', e.target.value)} placeholder="e.g. Fast, reliable service" />
+              </div>
+            </Card>
+
+            {/* Availability */}
+            <Card>
+              <p className="font-semibold text-gray-900 mb-3">Availability</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">Working Days</p>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {ALL_DAYS.map(day => {
+                  const on = (settings.working_days || []).includes(day);
+                  return (
+                    <button key={day} onClick={() => toggleDay(day)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border min-h-[36px] capitalize transition-colors ${on ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300'}`}>
+                      {day.slice(0, 3)}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-sm font-medium text-gray-700 mb-2">Time Windows</p>
+              <div className="space-y-1 mb-4">
+                {(settings.time_windows || []).map((w, i) => (
+                  <div key={w.id || i} className="flex items-center justify-between py-1.5">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">{w.label}</p>
+                      <p className="text-xs text-gray-400">{w.time}</p>
+                    </div>
+                    <Toggle checked={!!w.enabled} onChange={e => toggleWindow(i, e.target.checked)} />
+                  </div>
+                ))}
+              </div>
+              <div className="flex items-center justify-between border-t border-gray-100 pt-3">
+                <span className="text-sm text-gray-700">Max bookings per window</span>
+                <div className="flex items-center gap-3">
+                  <button onClick={() => stepMax(-1)} className="w-9 h-9 rounded-lg border border-gray-300 text-gray-600 flex items-center justify-center">−</button>
+                  <span className="font-bold text-gray-900 w-6 text-center">{settings.max_bookings_per_window}</span>
+                  <button onClick={() => stepMax(1)} className="w-9 h-9 rounded-lg border border-gray-300 text-gray-600 flex items-center justify-center">+</button>
+                </div>
+              </div>
+            </Card>
+
+            {/* Service Areas */}
+            <Card>
+              <p className="font-semibold text-gray-900 mb-3">Service Area</p>
+              {(settings.service_areas || []).length === 0 && (
+                <p className="text-sm text-gray-400 mb-2">No service areas added — all locations accepted.</p>
+              )}
+              {(settings.service_areas || []).map((area, i) => (
+                <div key={i} className="flex items-center gap-3 mb-2">
+                  <p className="flex-1 text-sm text-gray-700">
+                    ZIP: {area.zip_code} &nbsp;|&nbsp; {area.radius_miles} mi{area.label ? ` | ${area.label}` : ''}
+                  </p>
+                  <button onClick={() => removeArea(i)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2 mt-3">
+                <Input value={newZip} onChange={e => setNewZip(e.target.value)} placeholder="ZIP code" />
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">Radius: {newRadius} mi</label>
+                  <input type="range" min={1} max={100} value={newRadius} onChange={e => setNewRadius(Number(e.target.value))} className="w-full" />
+                </div>
+                <button onClick={addArea} className="p-2 rounded-xl bg-[#1A73E8] text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <Plus size={18} />
+                </button>
+              </div>
+              <Input value={newLabel} onChange={e => setNewLabel(e.target.value)} placeholder="Label (optional, e.g. Virginia Beach)" className="mt-2" />
+            </Card>
+
+            {/* Services Offered */}
+            <Card>
+              <p className="font-semibold text-gray-900 mb-3">Services Offered</p>
+              {(settings.services || []).length === 0 && (
+                <p className="text-sm text-gray-400 mb-2">No services added yet.</p>
+              )}
+              {(settings.services || []).map((svc, i) => (
+                <div key={i} className="flex items-center gap-2 py-1">
+                  <p className="flex-1 text-sm text-gray-700">{svc}</p>
+                  <button onClick={() => removeService(i)} className="p-1.5 text-gray-400 hover:bg-gray-50 rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center">
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+              <div className="flex gap-2 mt-3">
+                <Input value={newService} onChange={e => setNewService(e.target.value)} placeholder="Add a service type" />
+                <button onClick={addService} className="p-2 rounded-xl bg-[#1A73E8] text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <Plus size={18} />
+                </button>
+              </div>
+            </Card>
+
+            {/* Confirmation */}
+            <Card>
+              <p className="font-semibold text-gray-900 mb-3">Confirmation Message</p>
+              <textarea
+                value={settings.confirmation_message || ''}
+                onChange={e => set('confirmation_message', e.target.value)}
+                rows={3}
+                placeholder="Shown to customers after they book."
+                className="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] text-sm"
+              />
+            </Card>
+          </>
+        )}
 
         {/* Appointment Reminders */}
         <Card>
@@ -148,29 +332,6 @@ export default function OnlineBooking() {
               <Select label="Method" value={settings.followup_method || 'email'} onChange={e => set('followup_method', e.target.value)} options={METHOD_OPTIONS} />
             </div>
           )}
-        </Card>
-
-        {/* Service Areas */}
-        <Card>
-          <p className="font-semibold text-gray-900 mb-3">Service Areas</p>
-          {(settings.service_areas || []).map((area, i) => (
-            <div key={i} className="flex items-center gap-3 mb-2">
-              <p className="flex-1 text-sm text-gray-700">{area.zip_code} — {area.radius_miles} mi radius</p>
-              <button onClick={() => removeArea(i)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center">
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
-          <div className="flex gap-2 mt-3">
-            <Input value={newZip} onChange={e => setNewZip(e.target.value)} placeholder="ZIP code" />
-            <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">Radius: {newRadius} mi</label>
-              <input type="range" min={1} max={100} value={newRadius} onChange={e => setNewRadius(Number(e.target.value))} className="w-full" />
-            </div>
-            <button onClick={addArea} className="p-2 rounded-xl bg-[#1A73E8] text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
-              <Plus size={18} />
-            </button>
-          </div>
         </Card>
 
         <Button onClick={handleSave} loading={saving} className="w-full">Save Settings</Button>

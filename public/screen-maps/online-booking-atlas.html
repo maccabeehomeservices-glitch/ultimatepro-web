@@ -113,8 +113,8 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Online Booking<span class="sub">Configure the public /book page. Web now mirrors the backend flat schema (like Android); save + load round-trip (fixed 2026-06-07).</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>web flat-schema align · <b>save+load round-trip</b></div>
+    <h1>Online Booking<span class="sub">Configure the public /book page. Web is now a full mirror of Android — all sections + the booking-link card (Copy/Share). save + load round-trip.</span></h1>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>web↔Android PARITY · <b>URL card + all sections</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="settings-atlas.html">settings</a> › online booking</div>
@@ -166,22 +166,22 @@ const A={
  d:{purpose:"Master on/off for the public booking page.",actors:["owner","admin"],vis:"top toggle",chain:[["PUT","/settings/booking"]],parity:"MATCH, both send enabled; it persists on both. This is the one key web sends that the backend reads."}},
 "appearance":{label:"Display name + tagline",status:"ok",route:"PUT /settings/booking",fires:"set company_display_name/company_tagline",result:"saved",caveat:"web keys aligned (fixed 2026-06-07)",
  d:{purpose:"Branding shown on the booking page.",actors:["owner","admin"],vis:"text inputs",chain:[["PUT","/settings/booking"]],parity:"MATCH (fixed 2026-06-07). Both send {company_display_name, company_tagline}. Pre-fix: web sent {business_name, tagline} → ignored (COALESCE-null kept old)."}},
-"availability":{label:"Days / windows / max",status:"ok",route:"PUT /settings/booking",fires:"set working_days/time_windows/max",result:"availability saved",caveat:"Android-only UI",
- d:{purpose:"Define when slots are offered and capacity.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY, web has no UI for working_days, time_windows, or max_bookings_per_window (columns exist; web never sends/shows them). Works on Android."}},
+"availability":{label:"Days / windows / max",status:"ok",route:"PUT /settings/booking",fires:"set working_days/time_windows/max",result:"availability saved",caveat:"both (web added 2026-06-07)",
+ d:{purpose:"Define when slots are offered and capacity.",actors:["owner","admin"],vis:"both",chain:[["PUT","/settings/booking"]],parity:"MATCH (web added 2026-06-07). Working-day chips (Mon–Sun), the 3 preset time-window toggles (Morning/Afternoon/Evening), and the max-bookings stepper now exist on web, mirroring Android."}},
 "service-areas":{label:"Service areas",status:"ok",route:"PUT /settings/booking",fires:"validated + geocoded",result:"areas saved",caveat:"zip_code/radius_miles (fixed 2026-06-07)",
  d:{purpose:"Limit booking to ZIPs within a radius.",actors:["owner","admin"],vis:"list + add",chain:[["PUT","/settings/booking"]],parity:"MATCH (fixed 2026-06-07). Web now sends {zip_code, radius_miles:Number, label} and guards a 5-digit ZIP inline before the PUT; backend validates {zip_code (5-digit), radius_miles (1–100)} + geocodes new ZIPs. Pre-fix: web sent {zip, radius} → 'undefined, undefined mi' display AND Save 400 'Invalid zip_code: undefined'."}},
-"services-offered":{label:"Services offered",status:"ok",route:"PUT /settings/booking {services}",fires:"set services",result:"services saved",caveat:"Android-only UI",
- d:{purpose:"List bookable service types.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY, web has no services UI."}},
-"confirmation-message":{label:"Confirmation message",status:"ok",route:"PUT /settings/booking {confirmation_message}",fires:"set confirmation_message",result:"saved",caveat:"Android-only UI",
- d:{purpose:"Message shown after a customer books.",actors:["owner","admin"],vis:"Android only",chain:[["PUT","/settings/booking"]],parity:"ANDROID-ONLY, web has no confirmation-message field."}},
+"services-offered":{label:"Services offered",status:"ok",route:"PUT /settings/booking {services}",fires:"set services",result:"services saved",caveat:"both (web added 2026-06-07)",
+ d:{purpose:"List bookable service types.",actors:["owner","admin"],vis:"both",chain:[["PUT","/settings/booking"]],parity:"MATCH (web added 2026-06-07). Web has a services list with add/remove, mirroring Android."}},
+"confirmation-message":{label:"Confirmation message",status:"ok",route:"PUT /settings/booking {confirmation_message}",fires:"set confirmation_message",result:"saved",caveat:"both (web added 2026-06-07)",
+ d:{purpose:"Message shown after a customer books.",actors:["owner","admin"],vis:"both",chain:[["PUT","/settings/booking"]],parity:"MATCH (web added 2026-06-07). Web has a confirmation-message textarea, mirroring Android."}},
 "appointment-reminders":{label:"Appointment reminders",status:"ok",route:"PUT /settings/booking",fires:"set reminder_*",result:"saved",caveat:"flat reminder_* (fixed 2026-06-07)",
  d:{purpose:"Remind customers N hours before the appointment.",actors:["owner","admin"],vis:"toggle + hours + method",chain:[["PUT","/settings/booking"]],parity:"MATCH (fixed 2026-06-07). Web now sends flat reminder_enabled/reminder_hours_before/reminder_method. Pre-fix: nested appointment_reminders object → all three ignored."}},
 "followup-reminders":{label:"Follow-up reminders",status:"ok",route:"PUT /settings/booking",fires:"set followup_*",result:"saved",caveat:"flat followup_* (fixed 2026-06-07)",
  d:{purpose:"Remind customers about unpaid invoices after service.",actors:["owner","admin"],vis:"toggle + days/repeat/max + method",chain:[["PUT","/settings/booking"]],parity:"MATCH (fixed 2026-06-07). Web now sends flat followup_enabled/followup_days_after/followup_repeat_every/followup_max_reminders/followup_method. Pre-fix: nested followup_reminders object → ignored."}},
 "save":{label:"Save settings",status:"ok",route:"PUT /settings/booking (upsert)",fires:"UPSERT COALESCE",result:"full config persists",caveat:"web payload aligned (fixed 2026-06-07)",
  d:{purpose:"Persist the whole config.",actors:["owner","admin"],vis:"Save button",chain:[["PUT","/settings/booking"]],parity:"MATCH (fixed 2026-06-07). Web's payload now mirrors the backend flat schema (like Android), so the whole config persists; uncontrolled fields (working_days/time_windows/services/…) pass through unchanged. UPSERT on company_id, COALESCE per field. Pre-fix: only enabled persisted + a web-added area 400'd."}},
-"booking-link":{label:"Public booking link",status:"ok",route:"/book?company=<ucm_id>",fires:"display + copy",result:"URL copied",caveat:"Android-only",
- d:{purpose:"Show/copy the public booking URL.",actors:["owner","admin"],vis:"Android only, shown when enabled + UCM ID loaded",chain:[["GET","/book?company=<ultimatecrm_id> (public)"]],parity:"ANDROID-ONLY, web exposes no booking URL on this page. /book is a real public route (server.js:94 → routes/book.js, no auth). Web users can't discover/share the link from this screen."}},
+"booking-link":{label:"Public booking link",status:"ok",route:"/book?company=<ucm_id>",fires:"display + copy/share",result:"URL copied/shared",caveat:"both (web added 2026-06-07)",
+ d:{purpose:"Show/copy/share the public booking URL.",actors:["owner","admin"],vis:"both, shown when enabled + UCM ID loaded",chain:[["GET","/book?company=<ultimatecrm_id> (public)"]],parity:"MATCH (web added 2026-06-07). Both show the booking link when enabled; web adds Copy + Share (Web Share API, falls back to copy). UCM ID from GET /network/my-id (web) / getCompanyRaw (Android); the URL points at the backend /book (book.js, public) — NOT the web SPA. /book is a real public route (server.js:94)."}},
 "back":{label:"Back",status:"ok",route:"web /settings / Android onBack",fires:"navigate",result:"Settings landing",
  d:{purpose:"Return to Settings.",actors:["owner","admin"],vis:"top-left",chain:[],parity:"MATCH, web navigate('/settings'); Android onBack."}},
 };

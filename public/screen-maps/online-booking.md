@@ -16,8 +16,8 @@
 | `route_web` | `/settings/online-booking` → `OnlineBooking` (OnlineBooking.jsx, 158 lines) |
 | `manages_table` | `booking_settings` (one row per company; auto-created on first GET) |
 | `primary_actors` | owner, admin |
-| `purpose` | Configure the public self-booking page (`/book?company=<UCM_ID>`): enable it, set display name/tagline, working days, time windows, service areas, services, confirmation message, and appointment/follow-up reminders. **FIXED 2026-06-07: web OnlineBooking.jsx now mirrors the backend FLAT schema (like Android) — save + load round-trip. The per-action `failure_modes` below describe the PRE-FIX state.** (Android remains the only surface that exposes the public booking link.) |
-| `last_verified` | 2026-06-07 · Web OnlineBooking.jsx refactored to the backend FLAT schema (mirrors Android): `service_areas:[{zip_code, radius_miles:Number, label}]` (fixes the Save 400), `company_display_name`/`company_tagline`, flat `reminder_*`/`followup_*`; GET load + PUT save now round-trip; uncontrolled fields (working_days/time_windows/services/…) passed through unchanged; bad ZIP caught inline. Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
+| `purpose` | Configure the public self-booking page (`/book?company=<UCM_ID>`): enable it, set display name/tagline, working days, time windows, service areas, services, confirmation message, and appointment/follow-up reminders. **FIXED 2026-06-07: web OnlineBooking.jsx now mirrors the backend FLAT schema (like Android) — save + load round-trip. The per-action `failure_modes` below describe the PRE-FIX state.** Web is now a full mirror of Android, incl. the booking-link card (Copy/Share) + every section. |
+| `last_verified` | 2026-06-07 · Web OnlineBooking.jsx brought to FULL Android parity: added the **booking-link card** (link + Copy + Share; UCM ID from `GET /network/my-id`, URL = backend `/book?company=<ucm>`), **Availability** (working_days chips / time_windows toggles / max stepper), **Services Offered**, **Confirmation Message** — plus the earlier flat-schema fix (service_areas `{zip_code,radius_miles,label}`, `company_display_name`/`company_tagline`, flat `reminder_*`/`followup_*`). GET load now displays every saved field (Android-saved config shows on web). `primary_color` has no control on either platform (passed through). Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
 
 ### load_sequence
 Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_id`; if absent it **INSERTs a default row** and returns it. `service_areas` normalised to `[]` when null.
@@ -87,13 +87,13 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **section:** availability
 - **actors:** owner, admin
 - **purpose:** Define when slots are offered and capacity.
-- **visibility:** Android only.
+- **visibility:** both (web added 2026-06-07).
 - **route_chain:** Save → `PUT /settings/booking` `{working_days, time_windows, max_bookings_per_window}`
 - **request_body:** `{working_days:[…], time_windows:[{id,label,time,enabled}], max_bookings_per_window}`
 - **side_effects:** updates those columns.
 - **end_state:** Availability saved.
 - **failure_modes:** none on Android.
-- **parity:** ANDROID-ONLY, **web has no UI for working days, time windows, or max-per-window** (the columns exist; web simply never sends or shows them).
+- **parity:** MATCH _(web added 2026-06-07)_ — working-day chips (Mon–Sun), 3 preset time-window toggles, and a max-per-window stepper, mirroring Android.
 - **status:** OK
 - **status_note:** Works on Android; absent on web.
 
@@ -117,13 +117,13 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **section:** services
 - **actors:** owner, admin
 - **purpose:** List bookable service types.
-- **visibility:** Android only.
+- **visibility:** both (web added 2026-06-07).
 - **route_chain:** Save → `PUT /settings/booking` `{services:[…]}`
 - **request_body:** `{services: ["…"]}`
 - **side_effects:** updates `services`.
 - **end_state:** Services saved.
 - **failure_modes:** none on Android.
-- **parity:** ANDROID-ONLY, web has no services UI.
+- **parity:** MATCH _(web added 2026-06-07)_ — services list with add/remove, mirroring Android.
 - **status:** OK
 - **status_note:** n/a
 ### `online-booking.confirmation-message`
@@ -131,13 +131,13 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **section:** services
 - **actors:** owner, admin
 - **purpose:** Message shown after a customer books.
-- **visibility:** Android only.
+- **visibility:** both (web added 2026-06-07).
 - **route_chain:** Save → `PUT /settings/booking` `{confirmation_message}`
 - **request_body:** `{confirmation_message}`
 - **side_effects:** updates `confirmation_message`.
 - **end_state:** Saved.
 - **failure_modes:** none on Android.
-- **parity:** ANDROID-ONLY, web has no confirmation-message field.
+- **parity:** MATCH _(web added 2026-06-07)_ — confirmation-message textarea, mirroring Android.
 - **status:** OK
 - **status_note:** n/a
 ### `online-booking.appointment-reminders`
@@ -190,13 +190,13 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **section:** link
 - **actors:** owner, admin
 - **purpose:** Show/copy the public booking URL.
-- **visibility:** Android only, shown when enabled + UCM ID loaded.
+- **visibility:** both, shown when enabled + UCM ID loaded (web added 2026-06-07).
 - **route_chain:** displays `https://…/book?company=<ultimatecrm_id>` (served by `routes/book.js`, mounted public at `/book`, no auth) + Copy
 - **request_body:** n/a
 - **side_effects:** clipboard.
 - **end_state:** URL copied.
 - **failure_modes:** none.
-- **parity:** ANDROID-ONLY, **web exposes no booking URL anywhere on this page**. The `/book?company=<UCM_ID>` route is real and public (server.js:94 → book.js).
+- **parity:** MATCH _(web added 2026-06-07)_ — both show the link when enabled; web adds **Copy + Share** (Web Share API, falls back to copy). UCM ID from `GET /network/my-id` (web) / `getCompanyRaw` (Android); the URL points at the backend `/book?company=<UCM_ID>` (book.js, public — server.js:94), NOT the web SPA.
 - **status:** OK
 - **status_note:** Confirmed `/book` route exists (public). Web users can't discover or share the link from this screen.
 
@@ -219,7 +219,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 ## SCREEN-LEVEL DRIFT FLAGS
 
 - **Web's payload keys do not match the backend.** Web sends `business_name`/`tagline` (backend wants `company_display_name`/`company_tagline`), nested `appointment_reminders`/`followup_reminders` objects (backend wants flat `reminder_*`/`followup_*`), and `service_areas[].zip/.radius` (backend wants `zip_code`/`radius_miles`). Net effect: **only the `enabled` toggle persists from web; adding a service area on web 400s the whole Save.** Android uses the correct contract throughout.
-- **Web is missing entire sections** that exist on the backend and Android: working days, time windows, max-per-window, services offered, confirmation message, primary color, and the **public booking link**. These columns simply have no web UI.
+- ~~**Web is missing entire sections**~~ **FIXED 2026-06-07** — web now renders working days, time windows, max-per-window, services offered, confirmation message, and the **booking-link card** (Copy/Share), matching Android. Only `primary_color` has no control on either platform (a backend column, passed through unchanged).
 - **The public booking link is Android-only.** `/book?company=<ultimatecrm_id>` is a real public page (server.js:94 → `routes/book.js`, no auth). Android shows + copies it; web never surfaces it.
 - **`booking_settings` table DDL is not in committed `db/`** (created out-of-band, like roster_techs/job_sources). The authoritative column list is the `PUT /settings/booking` destructure. **UNVERIFIED** column types, but the column names are used consistently by the handler + Android.
 - **No owner/admin gating** on `/settings/booking`. Service-area saves trigger Google geocoding of new ZIPs server-side (`zip_lat_cache`).
