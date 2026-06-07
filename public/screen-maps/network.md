@@ -16,7 +16,7 @@
 | `route_web` | `/network` → `Network` (Network.jsx, 599 lines; detail is an in-page modal) |
 | `primary_actors` | owner, admin |
 | `purpose` | The contractor-network hub: share your UCM ID, find/invite partners, accept/decline invites, negotiate a bilateral revenue-split agreement (`sender_keeps_pct` + `receiver_keeps_pct` = 100), pause partnerships, and run/send a per-partner revenue report. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 79940c8 |
+| `last_verified` | 2026-06-07 · Tier 3 Batch 1: web connection accept/decline wired (Network detail modal, recipient-only) → `networkApi.respond` → `PUT /network/connections/:id/respond`; mirrors Android. Agreement respond was already working. Prior: 2026-05-31 Stage-1 audit, 79940c8. |
 
 ### load_sequence
 `GET /network/my-id` (your UCM id) + `GET /network/connections` (list). Detail: `GET /network/connections/:id` + `GET /network/agreements/:connection_id`.
@@ -67,7 +67,7 @@
 - **section:** connect
 - **actors:** owner, admin (the invitee)
 - **purpose:** Respond to an incoming partnership invite.
-- **visibility:** Android NetworkDetailScreen (Accept/Decline). **Web has no accept/decline-connection UI.**
+- **visibility:** Both — Android NetworkDetailScreen + web Network detail modal (Accept/Decline, shown to the non-inviting recipient). _(2026-06-07: web wired — was Android-only.)_
 - **precondition:** connection `status='pending'` and you are NOT the inviter.
 - **confirm:** n/a
 - **route_chain:** `PUT /network/connections/:id/respond`
@@ -163,7 +163,7 @@
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
-- **Web can't accept/decline a connection invite from Network**, `PUT /network/connections/:id/respond` exists and Android wires Accept/Decline, but the web Network screen only responds to *agreements*. A web-only invitee has no in-screen way to accept a partnership.
+- ~~**Web can't accept/decline a connection invite**~~ **FIXED 2026-06-07** — the web Network detail modal now shows Accept/Decline for an incoming connection request (recipient only, gated `invited_by !== company.id`) → `networkApi.respond` → `PUT /network/connections/:id/respond`. Mirrors Android; agreement respond was already wired.
 - **Partner-report send is split by surface**, Android sends from the Network screen (`PartnerReportScreen`); web sends from the Reports module's Partners tab (same `POST /network/connections/:id/report/send`).
 - **Bilateral split is enforced server-side**, `sender_keeps_pct + receiver_keeps_pct` must equal 100; proposing auto-declines the prior pending agreement; the accepted split is the one Job-Complete applies to partner `net`.
 - **Web detail is a modal; Android uses dedicated screens** (NetworkDetailScreen + PartnerReportScreen).

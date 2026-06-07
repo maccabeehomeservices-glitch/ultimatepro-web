@@ -16,7 +16,7 @@
 | `route_web` | `/inventory` → `Inventory` (Inventory.jsx, 443 lines) |
 | `primary_actors` | owner, manager, tech |
 | `purpose` | Track parts across the warehouse and each truck: edit counts, move warehouse stock onto a truck, request and fulfill restocks, and auto-deduct truck stock when a job completes. Gated by an inventory-enabled setting. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 79940c8 |
+| `last_verified` | 2026-06-07 · Tier 3 Batch 1: transfer-to-truck fixed — web now POSTs the registered `/inventory/trucks/:truckId/send-items` (was `/inventory/transfer`, 404). Both platforms move stock server-side (warehouse −qty / truck +qty). Prior: 2026-05-31 Stage-1 audit, 79940c8. |
 
 ### load_sequence
 `GET /inventory/settings` (enabled gate; auto-creates a row). Web tabs: Warehouse `GET /inventory/warehouse`; Trucks `GET /inventory/trucks` + `GET /inventory/trucks/:id/stock`; My Truck `GET /inventory/tech-truck/:userId`; Requests `GET /inventory/restock-requests?status`. All inventory routes are auth-gated (`router.use(auth)`).
@@ -103,13 +103,13 @@
 - **visibility:** web Warehouse tab "→ Truck"; Android "Send items to truck" on `TruckStockScreen`.
 - **precondition:** a destination truck + quantity.
 - **confirm:** transfer modal.
-- **route_chain:** web `POST /inventory/transfer`, **route does not exist**; Android `POST /inventory/trucks/:truckId/send-items`.
-- **request_body:** web `{ item_id, truck_id, quantity }`; Android send-items `{ items }`.
-- **side_effects:** intended: decrement warehouse, increment truck. On web → 404 catch-all (nothing moves). On Android → `send-items` moves stock.
-- **end_state:** web → error snackbar; Android → stock transferred.
-- **failure_modes:** `route-404` (web), `/inventory/transfer` is unregistered; the real endpoints are `send-items` / `return-items`.
-- **parity:** DIVERGENT, Android uses the registered `send-items`; web posts to a non-existent `/inventory/transfer`.
-- **status:** BROKEN
+- **route_chain:** both `POST /inventory/trucks/:truckId/send-items` (truckId in path). _(2026-06-07: web fixed — was `POST /inventory/transfer`, unregistered → 404.)_
+- **request_body:** `{ items: [{ pricebook_item_id, qty, min_qty, is_permanent }] }` (web sends one item; Android may batch).
+- **side_effects:** decrement warehouse, increment truck — server-side, both platforms. Pre-checks warehouse stock; 400 if insufficient.
+- **end_state:** stock transferred (warehouse −qty, truck +qty).
+- **failure_modes:** `400` insufficient warehouse stock; `404` truck not found.
+- **parity:** MATCH, both call the registered `send-items` endpoint.
+- **status:** OK
 - **status_note:** Web "Transfer to Truck" always 404s; only Android's send-items path works.
 
 ### `inventory.request-restock`

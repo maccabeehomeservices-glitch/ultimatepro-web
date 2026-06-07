@@ -17,7 +17,7 @@
 | `manages_table` | **`membership_plans`** (the reusable plan *templates*), NOT `customer_memberships` (a customer's enrollment) |
 | `primary_actors` | owner, admin |
 | `purpose` | CRUD for membership plan templates (name, description, frequency, price). A plan's `frequency` drives the recurring-job cadence when a customer is enrolled. Android additionally lets you assign a plan to a customer from here (creating a `customer_memberships` row + first job); web does not. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
+| `last_verified` | 2026-06-07 · Tier 3 Batch 1: web frequency vocab aligned to `weekly/monthly/quarterly/semi_annually/annually` (was `semi_annual`/`annual` → violated the DB CHECK → create failed). Backend next-job base now reads `jobs.scheduled_start` (was `scheduled_date`, non-existent → today). Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
 
 ### plans vs enrollments (do not conflate)
 - **`membership_plans`** = templates managed on *this* screen (`/memberships/plans`).
@@ -67,9 +67,9 @@ Both: `GET /memberships/plans` → `SELECT * FROM membership_plans WHERE company
 - **side_effects:** inserts a `membership_plans` row.
 - **end_state:** New plan in list.
 - **failure_modes:** 400 if name/frequency/price missing.
-- **parity:** DIVERGENT (frequency vocab), **web's frequency options are `monthly / quarterly / semi_annual / annual` (no `weekly`); Android's are `weekly / monthly / quarterly / semi_annually / annually`.** The backend scheduler `calculateNextJobDate` only recognises `weekly/monthly/quarterly/semi_annually/annually`, so a **web-created `annual` or `semi_annual` plan falls to the default (monthly)** cadence when a customer is later enrolled. `monthly`/`quarterly` are fine on both.
-- **status:** PARTIAL
-- **status_note:** Creation succeeds, but web's `annual`/`semi_annual` values silently break recurring-job scheduling (treated as monthly).
+- **parity:** MATCH _(2026-06-07: web frequency vocab aligned to `weekly / monthly / quarterly / semi_annually / annually`, matching the DB CHECK + `calculateNextJobDate` + Android)._ Previously web sent `semi_annual`/`annual`, which **violated the `membership_plans.frequency` CHECK constraint → plan creation failed**; now those values pass and schedule the correct cadence. Also fixed: the next-job base date now reads `jobs.scheduled_start` (was `scheduled_date`, a non-existent column → defaulted to today).
+- **status:** OK
+- **status_note:** n/a
 
 ### `membership-plans.edit`
 - **label:** Edit plan
