@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Network<span class="sub">Contractor partners, invite, agree a bilateral split (sums to 100), pause, and report.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>79940c8</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>commit · <b>1d39405</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="payroll-atlas.html">payroll</a> · <a href="inventory-atlas.html">inventory</a> › network</div>
@@ -139,7 +139,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Web can't accept/decline a connection invite from Network</b>, <code>PUT /network/connections/:id/respond</code> exists and Android wires Accept/Decline, but the web screen only responds to <i>agreements</i>. A web-only invitee has no in-screen way to accept a partnership.</li>
+      <li><b>Web connection accept/decline — FIXED 2026-06-07 (web 1d39405).</b> The web Network detail modal now shows Accept/Decline for an incoming connection request (recipient only, gated <code>invited_by !== company.id</code>) → <code>networkApi.respond</code> → <code>PUT /network/connections/:id/respond</code>. Mirrors Android; agreement respond was already wired.</li>
       <li><b>Partner-report send is split by surface</b>, Android sends from the Network screen (PartnerReportScreen); web sends from the Reports module's Partners tab (same <code>POST /network/connections/:id/report/send</code>).</li>
       <li><b>Bilateral split enforced server-side</b>, <code>sender_keeps_pct + receiver_keeps_pct</code> must equal 100; proposing auto-declines the prior pending agreement; the accepted split is what Job-Complete applies to partner net.</li>
       <li><b>Web detail is a modal; Android uses dedicated screens</b> (NetworkDetailScreen + PartnerReportScreen).</li>
@@ -164,8 +164,8 @@ const A={
  d:{purpose:"Share your ultimatecrm_id so partners can find you.",actors:["owner","admin"],vis:"always",chain:[["GET","/network/my-id"]],parity:"MATCH"}},
 "search-connect":{label:"Search + Connect",status:"ok",route:"GET /network/search · POST /connections/invite",fires:"send invite",result:"connection pending",caveat:"phone / email / UCM id",
  d:{purpose:"Find a company by phone/email/UCM ID and send a connection invite.",actors:["owner","admin"],vis:"always",chain:[["GET","/network/search?q&type"],["POST","/network/connections/invite"]],parity:"MATCH, invite {search_value, search_type∈phone|email|ultimatecrm_id}. Inserts a contractor_connections row (pending, canonical a/b UUID ordering); re-invites a declined one. 404 no-company / 400 invite-self / 409 already-exists."}},
-"connection-respond":{label:"Accept / Decline invite",status:"ok",route:"PUT /network/connections/:id/respond",fires:"status active/declined",result:"connection settled",caveat:"Android-only UI (web gap)",
- d:{purpose:"Respond to an incoming partnership invite.",actors:["owner","admin"],vis:"Android NetworkDetailScreen (Accept/Decline). Web has no accept/decline-connection UI.",chain:[["PUT","/network/connections/:id/respond"]],parity:"ANDROID-ONLY, endpoint exists ({action: accept|decline}; only the non-inviter, 403 otherwise) but the web Network screen never calls it (it only responds to agreements). A web-only invitee can't accept here."}},
+"connection-respond":{label:"Accept / Decline invite",status:"ok",route:"PUT /network/connections/:id/respond",fires:"status active/declined",result:"connection settled",caveat:"both platforms (web wired 2026-06-07)",
+ d:{purpose:"Respond to an incoming partnership invite.",actors:["owner","admin"],vis:"Android NetworkDetailScreen + web Network detail modal (Accept/Decline, recipient only).",chain:[["PUT","/network/connections/:id/respond"]],parity:"MATCH (fixed 2026-06-07, web 1d39405). Endpoint takes {action: accept|decline}; only the non-inviter (403 otherwise). Both clients now call it, gated to the recipient (invited_by !== own company)."}},
 "pause":{label:"Pause / Resume",status:"ok",route:"PUT /network/connections/:id/pause",fires:"toggle status",result:"paused/resumed",
  d:{purpose:"Toggle a partnership between active and paused.",actors:["owner","admin"],vis:"detail",chain:[["PUT","/network/connections/:id/pause"]],parity:"MATCH, toggles active↔paused (400 if not active/paused)."}},
 "agreement-propose":{label:"Propose Agreement",status:"ok",route:"POST /network/agreements",fires:"insert agreement (pending)",result:"split proposed",caveat:"sender%+receiver%=100",

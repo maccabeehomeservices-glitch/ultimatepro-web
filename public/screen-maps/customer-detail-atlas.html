@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Customer Detail<span class="sub">The 360° on one customer, stats, contacts, memberships, portal, and their jobs/estimates/invoices/messages.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-06-01</b><br><b>Android entity-tabs</b> · estimates + invoices</div>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>Perms 2b/3a · <b>own-scope · history gate</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="customers-atlas.html">customers</a> · <a href="job-detail-atlas.html">job detail</a> › customer detail</div>
@@ -139,6 +139,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
+      <li><b>Permissions (Phase 2b/3a, 2026-06-07).</b> Own-scope — customer list own-filtered; technician <code>customers=edit_self</code> (adds own customers + own list; PUT/DELETE = <code>full</code>). The History tab is readable when the user reached the customer via their own-filtered list (assigned) OR has <code>full</code> — hidden for view-only/unassigned (dispatcher). Add Customer = <code>customers:edit_self</code>; edit/delete = <code>full</code>.</li>
       <li><b>Web customer Messages can't send</b>, <code>/sms/customer/:id/messages</code> returns a bare array with no <code>conversation_id</code>, so web's <code>convId</code> is always null and the composer is hidden. Android reads <code>conversationId</code> off the messages and opens the thread. (Same bug as Job-Detail messages.)</li>
       <li><b>Tab models RESOLVED (2026-06-01):</b> both platforms now browse jobs / estimates / invoices / messages. Web: Jobs / Estimates / Invoices / Messages tabs; Android: Details (jobs inline) / Messages / Estimates / Invoices, reusing the shared <code>EstimateRow</code>/<code>InvoiceRow</code> composables.</li>
       <li><b>Stats card + editable Notes are web-only</b>, Android doesn't load <code>/customers/:id/stats</code> here and shows notes read-only.</li>

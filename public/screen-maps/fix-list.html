@@ -39,6 +39,7 @@
   .stat.broken::before{background:var(--broken)}.stat.broken .n{color:var(--broken)}
   .stat.partial::before{background:var(--partial)}.stat.partial .n{color:var(--partial)}
   .stat.dead::before{background:var(--dead)}.stat.dead .n{color:var(--dead)}
+  .stat.fixed::before{background:var(--ok)}.stat.fixed .n{color:var(--ok)}
 
   .causes{border:1px solid var(--cyan-dim);background:rgba(94,200,232,.05);margin:8px 0 26px;border-radius:8px}
   .causes h2{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:13px 16px 6px;color:var(--cyan)}
@@ -61,6 +62,7 @@
   .frow.broken{border-left-color:var(--broken)}
   .frow.partial{border-left-color:var(--partial)}
   .frow.dead{border-left-color:var(--dead)}
+  .frow.fixed{border-left-color:var(--ok)}
   .f-screen a{font-size:13.5px;font-weight:700;color:var(--text);text-decoration:none}
   .f-screen a:hover{color:var(--cyan)}
   .f-action{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:2px}
@@ -69,6 +71,7 @@
   .pill.broken{color:var(--broken);background:rgba(255,106,114,.14)}
   .pill.partial{color:var(--partial);background:rgba(242,184,75,.13)}
   .pill.dead{color:var(--dead);background:rgba(124,138,168,.14)}
+  .pill.fixed{color:var(--ok);background:rgba(70,211,154,.14)}
   .f-reason{font-size:13px;color:var(--text);line-height:1.45}
   .f-route{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cyan);background:var(--panel);border:1px solid var(--line2);border-radius:4px;padding:5px 8px;line-height:1.4;word-break:break-word;align-self:start}
   .rowtag{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;border:1px solid var(--cyan-dim);color:var(--cyan);background:rgba(94,200,232,.08);letter-spacing:.03em}
@@ -82,7 +85,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · fix backlog</div>
     <h1>Prioritized Fix List<span class="sub">Every broken / partial / dead action across the 29 maps, ordered by business importance: core job and money loop first.</span></h1>
-    <div class="stamp">ATLAS<br><b>2026-06-01</b><br>Phase 2 · <b>Job Detail bugs cleared</b></div>
+    <div class="stamp">ATLAS<br><b>2026-06-07</b><br>Post permission-system + Tier-3 sync · <b>7 resolved</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="spine-overview.html">by spine</a> › fix list</div>
@@ -91,7 +94,7 @@
 
   <div class="causes">
     <h2>⚡ Recurring root-causes: fix once, clear many</h2>
-    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. All three are now resolved (SIG, SMS-CONV, SCANPAY-404), so no tagged rows remain. Each fix cleared every screen under its tag. Phase 1 then closed the Complete-Job money gap: one JobDetail.jsx change (partner-split form + Status-completed reroute) cleared 5 rows across Job Detail and Complete Job. Phase 1 New Job (F2/F2b/F3) then removed the Save & Send divergence and downgraded the schedule row to the timezone-only issue (TZ, next commit). Money Commit A + B (MONEY) then rebuilt the earnings model around real collected money: one gross source, earnings on the clear-day, refund clawback, and the ScanPay earnings-gap fix.</p>
+    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. All three are now resolved (SIG, SMS-CONV, SCANPAY-404), so no tagged rows remain. Each fix cleared every screen under its tag. Phase 1 then closed the Complete-Job money gap: one JobDetail.jsx change (partner-split form + Status-completed reroute) cleared 5 rows across Job Detail and Complete Job. Phase 1 New Job (F2/F2b/F3) then removed the Save & Send divergence and downgraded the schedule row to the timezone-only issue (TZ, next commit). Money Commit A + B (MONEY) then rebuilt the earnings model around real collected money: one gross source, earnings on the clear-day, refund clawback, and the ScanPay earnings-gap fix. <b>2026-06-07 sync:</b> the granular permission system (Phases 1–3) now enforces 9 sections server-side and hides controls/nav on both platforms (incl. the owner-nav backstop fix); Payroll Option-1 retired the dead period-lock; and Tier-3 cleared Inventory transfer (A), Membership frequency (C), and web Network connection accept/decline (D). Those 7 are in the <b>RESOLVED ✓</b> group below; the booking customer-form stub (route-collision) stays OPEN pending a prod check.</p>
     <ul>
       <li><span class="tag">SIG</span><span><b>signature_data wrong-key class: fully resolved.</b> Web posted <code>signature_data</code>; handlers want <code>signature</code> (invoice/estimate) or <code>signature_url</code> (job). Phase 0 fixed all three routes (8e01dbd invoice + estimate; this commit job → <code>signature_url</code>). No key-mismatch remains. The 1 row still tagged is Estimate <code>present-gbb</code>, a mis-wire (opens the signature modal instead of presenting tiers), not a key bug. Job Detail signature was removed entirely as dead code (2026-06-01): web modal/state/handler + Android repo method deleted, no trigger ever existed. <span class="hits">remaining tagged: Estimate Builder (present-gbb)</span></span></li>
       <li><span class="tag">SMS-CONV</span><span><b>bare-array, no conversation_id: resolved.</b> Phase 0 [SMS-CONV] made web derive <code>convId</code> from the first message object (<code>msgs[0]?.conversation_id</code>), mirroring Android <code>firstOrNull()?.conversationId</code>, so the composer enables and reply works on existing threads for both Job Detail and Customer Detail. Empty-thread start stays disabled on both surfaces (parity-matched, pre-existing). <span class="hits">no rows remain under this tag</span></span></li>
@@ -132,24 +135,22 @@ const TIERS=[
   ["Dashboard","dashboard","View all (memberships)","broken","no /memberships web route","navigate /memberships",""],
  ]},
  {n:"TIER 2",title:"Money reporting & techs",sub:"Payroll · Reports · Roster Technicians · Team Members · Job Sources · Review Platforms",rows:[
-  ["Payroll","payroll","Lock / Mark-Paid period","dead","endpoints exist, no audited UI caller","POST /payroll/periods/:id/lock · /mark-paid",""],
   ["Team Members","team-members","List users","partial","web names blank","GET /users",""],
   ["Team Members","team-members","Add / invite user","broken","name + bad role enum","POST /users",""],
   ["Team Members","team-members","Edit user","partial","web can't edit names","PUT /users/:id",""],
  ]},
  {n:"TIER 3",title:"Partner & ops",sub:"Network · Inventory · Phone/SMS · SMS Thread · Live Map · Membership Plans · Online Booking",rows:[
-  ["Inventory","inventory","Transfer → truck","broken","web hits unregistered /transfer; Android uses send-items","POST /inventory/transfer",""],
   ["SMS Thread","sms-thread","Header name","partial","web always falls back","derived, no fetch",""],
   ["SMS Thread","sms-thread","Open via /phone/sms alias","broken","param-name mismatch","GET /sms/conversations/undefined/messages",""],
   ["Live Map","live-map","Open tech from pin","partial","web info-only","Android: onJob(current_job_id)",""],
-  ["Membership Plans","membership-plans","Add plan","partial","web annual/semi_annual mis-schedule","POST /memberships/plans",""],
-  ["Membership Plans","membership-plans","Edit plan","partial","web resets is_active=true","PUT /memberships/plans/:id",""],
+  ["Membership Plans","membership-plans","Edit plan","partial","web resets is_active=true (frequency vocab now aligned)","PUT /memberships/plans/:id",""],
   ["Online Booking","online-booking","Load settings","partial","web misreads most keys","GET /settings/booking",""],
   ["Online Booking","online-booking","Display name + tagline","broken","business_name vs company_display_name","PUT /settings/booking",""],
   ["Online Booking","online-booking","Service areas","broken","zip vs zip_code","PUT /settings/booking",""],
   ["Online Booking","online-booking","Appointment reminders","broken","nested vs flat reminder_*","PUT /settings/booking",""],
   ["Online Booking","online-booking","Follow-up reminders","broken","nested vs flat followup_*","PUT /settings/booking",""],
   ["Online Booking","online-booking","Save settings","partial","web can 400","PUT /settings/booking (upsert)",""],
+  ["Online Booking","online-booking","Customer booking form submit","broken","React /book is an unwired STUB (console.log only, never POSTs); the backend-served HTML /book form works → route-collision risk in prod (which /book is live?)","POST /book/submit · DECISION PENDING",""],
  ]},
  {n:"TIER 4",title:"Settings / admin / integrations",sub:"Company Profile · Notifications · Custom Fields · Automation · Integrations/QuickBooks · Settings",rows:[
   ["Notifications","notifications","Toggle a preference ×5","partial","no consumer · no server","localStorage write",""],
@@ -159,10 +160,19 @@ const TIERS=[
   ["Automation (Ailot)","automation","Add / edit / delete rule","dead","backend-only","POST/PUT/DELETE /company/joby-rules",""],
   ["Integrations (QuickBooks)","integrations","Stripe (coming soon)","dead","placeholder only","no handler",""],
  ]},
+ {n:"RESOLVED ✓",title:"Resolved this session",sub:"Granular permissions Phases 1–3 · owner-nav fix · Tier 2.2 · Payroll Option-1 · Tier 3 A/C/D",rows:[
+  ["Permissions","team-members","Granular permissions Phases 1–3","fixed","9-section model enforced server-side (requirePermission + own-scope) on every route; 3a UI control/nav hiding on web + Android; the permission grid edits per-actor overrides","utils/permissions.js · /auth/* permissions_resolved",""],
+  ["Permissions","team-members","Owner nav blanked (Android)","fixed","a stale empty perms map fail-closed and blanked the owner's nav; fixed with the canUi owner/admin backstop + a /me perms refresh on session start","AuthViewModel · canUi",""],
+  ["Job Sources","job-sources","JobSources + ReviewPlatforms write gating (Tier 2.2)","fixed","writes gated job_sources_commissions:full / team_settings:full (ownerOrAdmin)","Phase 2.2",""],
+  ["Payroll","payroll","Lock / Mark-Paid period","fixed","Option-1: dead period-lock retired; range-based mark-paid added; paid/paid_at preserved across the earnings recompute","POST /payroll/earnings/mark-paid",""],
+  ["Inventory","inventory","Transfer → truck","fixed","web now POSTs the registered /trucks/:truckId/send-items (was unregistered /transfer → 404); warehouse −qty / truck +qty","POST /inventory/trucks/:truckId/send-items",""],
+  ["Membership Plans","membership-plans","Add plan","fixed","web frequency vocab aligned to the DB CHECK (weekly/…/semi_annually/annually); previously semi_annual/annual failed the CHECK → create failed. next-job base now jobs.scheduled_start","POST /memberships/plans",""],
+  ["Network","network","Web connection Accept/Decline","fixed","web detail modal now wires recipient-only Accept/Decline → PUT /network/connections/:id/respond (mirrors Android)","networkApi.respond",""],
+ ]},
 ];
 
 const tiersEl=document.getElementById('tiers');
-const totals={broken:0,partial:0,dead:0};
+const totals={broken:0,partial:0,dead:0,fixed:0};
 TIERS.forEach(t=>{
   const rows=t.rows.map(r=>{
     const [screen,id,action,status,reason,route,tag]=r;
@@ -186,7 +196,8 @@ document.getElementById('stats').innerHTML=`
  <div class="stat total"><div class="n">${total}</div><div class="l">fix items</div></div>
  <div class="stat broken"><div class="n">${totals.broken}</div><div class="l">broken</div></div>
  <div class="stat partial"><div class="n">${totals.partial}</div><div class="l">partial</div></div>
- <div class="stat dead"><div class="n">${totals.dead}</div><div class="l">dead</div></div>`;
+ <div class="stat dead"><div class="n">${totals.dead}</div><div class="l">dead</div></div>
+ <div class="stat fixed"><div class="n">${totals.fixed}</div><div class="l">fixed ✓ (this session)</div></div>`;
 </script>
 </body>
 </html>

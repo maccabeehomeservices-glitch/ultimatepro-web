@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Review Platforms<span class="sub">CRUD for review links (Google, Yelp, …). The default active platform's URL goes on payment receipts. Well-matched web ↔ Android.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>74e0fc0</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>Phase 2/3a · <b>team_settings:full</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="settings-atlas.html">settings</a> › review platforms</div>
@@ -139,6 +139,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
+      <li><b>Permissions (Phase 2/3a, 2026-06-07).</b> Review-platform writes (add/edit/delete) require <code>team_settings:full</code> (owner/admin). 3a hides the Review Platforms entry + the Add control for non-owner/admin.</li>
       <li><b><code>display_order</code> does not exist.</b> The Batch-F task hypothesised it, but the <code>review_platforms</code> DDL (settings.js:11–20) has only <code>platform_name, url, is_default, is_active, created_at</code>. Ordering is <code>is_default DESC, created_at ASC</code>, no per-row sort field or UI for one.</li>
       <li><b>Column is <code>platform_name</code>, request key is <code>name</code>.</b> POST/PUT map <code>name → platform_name</code>; both clients read <code>platform_name</code> back. Not a bug (web's getPlatformName defends against either), but worth knowing.</li>
       <li><b>Receipt link confirmed.</b> The default active platform's URL is what Send Receipt appends (<code>invoices.js:645</code>, fallback <code>:650</code> = first active); tech-notify uses the same (<code>roster-techs.js:116</code>). Deleting/deactivating the default silently changes which link receipts use.</li>

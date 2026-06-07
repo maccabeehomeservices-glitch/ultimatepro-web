@@ -113,8 +113,8 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Team Members<span class="sub">Manage app users, list, create, edit, deactivate, reactivate. Android is correct; the web page is broken against the current API.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>41d0a83</b></div>
+    <h1>Team Members<span class="sub">Manage app users, list, create, edit, deactivate, reactivate. Home of the granular permission grid (per-actor overrides).</span></h1>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>Permissions Phase 1–3 · <b>enforced + UI-gated</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="settings-atlas.html">settings</a> › team members</div>
@@ -139,6 +139,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
+      <li><b>Granular permissions (Phases 1–3, 2026-06-07).</b> <code>users.permissions</code> JSONB + role templates (<code>backend/utils/permissions.js</code>); the server enforces all 9 sections via <code>requirePermission</code>/own-scope middleware. The permission grid here edits per-actor overrides — <b>Add/Edit Team Member + the grid are <code>team_settings:full</code> (owner/admin only)</b>. Phase 3a hides controls/nav a user can't use on both platforms; the owner/admin UI backstop (<code>canUi</code>) prevents an empty/stale perms map from blanking nav. <code>/auth/login</code>+<code>/me</code> return <code>permissions_resolved</code>. Create error-surfacing confirmed OK (409 "Email already in use" shown via snackbar).</li>
       <li><b>Web uses <code>name</code>; the API uses <code>first_name</code>/<code>last_name</code>.</b> This one mismatch breaks three things on web: list names render blank (avatar "?"), create always 400s ("First name required"), and edit can never change names. Android uses the split fields throughout.</li>
       <li><b>Web role <code>&lt;select&gt;</code> is wrong.</b> Options are <code>tech</code>/<code>admin</code>/<code>owner</code>; the API enum is <code>admin/manager/technician/dispatcher</code>. So <code>tech</code> and <code>owner</code> both 400 ("Invalid role"), and <code>manager</code>/<code>dispatcher</code> are unavailable on web. Android's dropdown is exactly the valid set.</li>
       <li><b><code>commission_pct</code> / <code>hourly_rate</code> have no input on either surface.</b> The API accepts them on create/update but neither screen sends them (stay at the <code>0</code> default).</li>

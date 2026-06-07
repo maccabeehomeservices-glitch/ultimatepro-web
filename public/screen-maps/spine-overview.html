@@ -73,12 +73,12 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · 29 screens mapped</div>
     <h1>Atlas Overview<span class="sub">The 29 mapped screens, grouped by the four spines their actions touch. A screen appears under every spine it acts on.</span></h1>
-    <div class="stamp">ATLAS<br><b>2026-05-31</b><br>Phase 1 · <b>money fix</b></div>
+    <div class="stamp">ATLAS<br><b>2026-06-07</b><br>Post permission-system + Tier-3 sync</div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="fix-list.html">fix list</a> › overview by spine</div>
 
-  <p class="intro">Spine membership is read from each map's <code>side_effects</code> / action data, which of the four cross-cutting concerns a screen's buttons actually move. The badge on each row is that screen's <b>worst</b> action status (ok → partial → broken → dead). Click any screen to open its atlas.</p>
+  <p class="intro">Spine membership is read from each map's <code>side_effects</code> / action data, which of the four cross-cutting concerns a screen's buttons actually move. The badge on each row is that screen's <b>worst</b> action status (ok → partial → broken → dead). Click any screen to open its atlas. <b>2026-06-07:</b> the <b>Identity</b> spine now carries an enforced granular permission system (Phases 1–3) — 9 sections, server-side <code>requirePermission</code>/own-scope on every route + 3a UI control/nav hiding on both platforms, with an owner/admin backstop. Tier-3 also flipped Inventory (transfer) and Payroll (Option-1) to OK on the Money spine.</p>
 
   <div class="stats" id="stats"></div>
 
@@ -102,7 +102,7 @@ const SPINES=[
    {nm:"Customer Detail",id:"customer-detail",note:"Browse a customer's jobs / estimates / invoices.",status:"broken"},
    {nm:"Dashboard",id:"dashboard",note:"Paste-ticket parses pasted text into a new job.",status:"broken"},
    {nm:"Estimate Builder",id:"estimate-builder",note:"Author → send → sign → convert an estimate into a job/invoice.",status:"broken"},
-   {nm:"Inventory",id:"inventory",note:"Part records across warehouse + trucks, transfer, restock, auto-deduct.",status:"broken"},
+   {nm:"Inventory",id:"inventory",note:"Part records across warehouse + trucks, transfer, restock, auto-deduct. Transfer→truck fixed (send-items).",status:"ok"},
    {nm:"Membership Plans",id:"membership-plans",note:"Plan templates; enrolling a customer schedules recurring jobs.",status:"partial"},
    {nm:"Custom Fields",id:"custom-fields",note:"Defines extra fields stored on job/customer/estimate/invoice records.",status:"partial"},
    {nm:"Online Booking",id:"online-booking",note:"Public booking page turns a request into a booking → job.",status:"broken"},
@@ -116,7 +116,7 @@ const SPINES=[
    {nm:"Invoice Detail",id:"invoice-detail",note:"Collect on an invoice, send, charge, ScanPay, receipt, deposit.",status:"broken"},
    {nm:"Estimate Builder",id:"estimate-builder",note:"Deposit + convert to invoice, front of the money spine.",status:"broken"},
    {nm:"Payments",id:"payments",note:"Record / charge a payment, ScanPay, receipt, ledger.",status:"broken"},
-   {nm:"Payroll",id:"payroll",note:"Field-team earnings off the profit engine.",status:"dead"},
+   {nm:"Payroll",id:"payroll",note:"Field-team earnings off the profit engine. Option-1: dead period-lock retired, range mark-paid wired; writes gated accounting_earnings:full.",status:"ok"},
    {nm:"Reports",id:"reports",note:"Business reporting, revenue, profit, by source.",status:"ok"},
    {nm:"Dashboard",id:"dashboard",note:"Revenue / KPI tiles, 2nd-chance, memberships.",status:"broken"},
    {nm:"Membership Plans",id:"membership-plans",note:"Recurring plan price + billing cadence.",status:"partial"},
@@ -138,9 +138,9 @@ const SPINES=[
    {nm:"Online Booking",id:"online-booking",note:"Appointment + follow-up reminders, confirmation message.",status:"broken"},
    {nm:"Notifications",id:"notifications",note:"Which app notifications fire (device-local only; inert).",status:"dead"},
   ]},
- {key:"identity",title:"Identity",color:"var(--identity)",desc:"permissions · partner visibility · roles · ownership",
+ {key:"identity",title:"Identity",color:"var(--identity)",desc:"enforced granular permissions (Phases 1–3) · partner visibility · roles · ownership",
   screens:[
-   {nm:"Team Members",id:"team-members",note:"App users + roles (admin/manager/tech/dispatcher), deactivate/reactivate.",status:"broken"},
+   {nm:"Team Members",id:"team-members",note:"App users + roles + the granular permission grid (per-actor overrides, team_settings:full). Create now uses first_name/last_name + surfaces errors; role-enum select unverified.",status:"partial"},
    {nm:"Roster Technicians",id:"roster-techs",note:"Field techs without app logins.",status:"ok"},
    {nm:"Company Profile",id:"company-profile",note:"The tenant's identity, name, logo, contact, UltimatePro network ID.",status:"ok"},
    {nm:"Network",id:"network",note:"Contractor partners, what a partner can see, invite, pause.",status:"ok"},

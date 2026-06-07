@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Inventory<span class="sub">Parts across warehouse + trucks, edit, transfer, restock, and auto-deduct on completion.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>79940c8</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>commit · <b>1d39405</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="network-atlas.html">network</a> · <a href="reports-atlas.html">reports</a> › inventory</div>
@@ -168,8 +168,8 @@ const A={
  d:{purpose:"Set the on-hand count of an item on a specific truck.",actors:["owner","manager"],vis:"Trucks tab (web) / TruckStockScreen (Android)",chain:[["PUT","/inventory/trucks/:truckId/stock/:itemId"]],parity:"MATCH, body {qty_on_hand, min_qty}; web inline on the Trucks tab, Android on a dedicated screen."}},
 "my-truck":{label:"My Truck",status:"ok",route:"GET /inventory/tech-truck/:userId",fires:"read truck",result:"on-hand + low-stock",
  d:{purpose:"A tech sees their own truck's stock and low-stock flags.",actors:["tech"],vis:"My Truck tab",chain:[["GET","/inventory/tech-truck/:userId"]],parity:"MATCH, read-only (truck + item_count + low_stock_count)."}},
-"transfer-to-truck":{label:"Transfer → truck",status:"broken",route:"POST /inventory/transfer",fires:"nothing (404)",result:"Route not found",caveat:"web hits unregistered /transfer; Android uses send-items",
- d:{purpose:"Move a warehouse item onto a truck.",actors:["owner","manager"],vis:"web Warehouse tab '→ Truck'; Android 'Send items to truck' on TruckStockScreen",chain:[["POST","/inventory/transfer"]],parity:"DIVERGENT, web posts {item_id, truck_id, quantity} to POST /inventory/transfer, which is NOT registered (real endpoints: trucks/:truckId/send-items / return-items) → 404. Android uses send-items and works. Web warehouse→truck transfers never happen."}},
+"transfer-to-truck":{label:"Transfer → truck",status:"ok",route:"POST /inventory/trucks/:truckId/send-items",fires:"warehouse −qty, truck +qty",result:"stock transferred",caveat:"web now matches Android (fixed 2026-06-07)",
+ d:{purpose:"Move a warehouse item onto a truck.",actors:["owner","manager"],vis:"web Warehouse tab '→ Truck'; Android 'Send items to truck' on TruckStockScreen",chain:[["POST","/inventory/trucks/:truckId/send-items"]],parity:"MATCH (fixed 2026-06-07, web 1d39405). Both POST trucks/:truckId/send-items with body {items:[{pricebook_item_id, qty, min_qty, is_permanent}]}; server pre-checks warehouse stock then decrements warehouse / increments truck. Previously web posted {item_id, truck_id, quantity} to the unregistered POST /inventory/transfer → 404."}},
 "request-restock":{label:"Request Restock",status:"ok",route:"POST /inventory/restock-requests",fires:"create request",result:"request pending",
  d:{purpose:"Ask the office to restock selected truck items.",actors:["tech","manager"],vis:"Trucks tab (web) / restock dialog (Android)",chain:[["POST","/inventory/restock-requests"]],parity:"MATCH, body {truck_id, items:[{pricebook_item_id, item_name, qty_requested}], notes}; inserts a restock_requests (pending) + restock_request_items."}},
 "restock-fulfill":{label:"Fulfill Request",status:"ok",route:"PUT /inventory/restock-requests/:id/fulfill",fires:"add to truck stock",result:"request fulfilled",caveat:"Android-only (web list is read-only)",

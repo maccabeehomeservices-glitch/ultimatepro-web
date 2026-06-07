@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Job Sources<span class="sub">3 tabs, Source Contacts (profit_allocation_pct feeds the profit engine), Ad Channels, Commission Rules. Fully matched web ↔ Android.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>41d0a83</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>Phase 2/3a · <b>job_sources_commissions:full</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="settings-atlas.html">settings</a> › job sources</div>
@@ -139,6 +139,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
+      <li><b>Permissions (Phase 2/3a, 2026-06-07).</b> Source + commission-rule writes (add source / add rule / add custom channel / edit / delete) require <code>job_sources_commissions:full</code> (owner/admin); reads stay broad. 3a hides the Job Sources entry for <code>none</code> (dispatcher/technician; manager keeps read) and the Add controls below <code>:full</code>.</li>
       <li><b><code>profit_allocation_pct</code> is wired to the profit engine (confirmed).</b> <code>utils/profit.js</code> reads <code>job_sources.profit_allocation_pct</code> as the #1 source-cut when a job has <code>job_source_id</code> (lines 96–104), falling back to <code>profit_rules.source_pct</code> / default / 0. Editing it here changes profit splits.</li>
       <li><b>No owner/admin gating on <code>/sources/*</code>.</b> Every route is <code>auth</code> only, any authenticated user (incl. technician/dispatcher) can CRUD sources, channels, and commission rules. Contrast company/users (ownerOrAdmin).</li>
       <li><b><code>GET /sources/channels</code> writes on read.</b> First load for a company INSERTs the 7 default channels, a side effect on a GET. Harmless but unusual.</li>

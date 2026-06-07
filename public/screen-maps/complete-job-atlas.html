@@ -131,6 +131,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
+      <li><b>Permissions (Phase 2b, 2026-06-07).</b> Completion is gated <code>jobs:edit_self</code> + ownership (a technician completes their own job via <code>requireJobOwnership('edit_self')</code>). Approve Earnings in the resulting flow = <code>accounting_earnings:full</code> (owner/admin).</li>
       <li><b>Partner-split money gap (web): RESOLVED (Phase 1).</b> Web now renders the parts/CC form for partner jobs and sends the same body as Android → web-completed partner jobs produce the same <code>job_completion_details</code> numbers. No more overstated earnings.</li>
       <li><b>Web "Payment Collected" dropdown: RESOLVED (Phase 1)</b>, the dead <code>payment_method</code> select was removed; web no longer sends it. Who-collected now rides <code>payment_collected_by</code> on partner jobs.</li>
       <li><b>No web confirm surface</b>, <code>GET /jobs/:id/completion</code> and <code>POST /completion/confirm</code> exist and are used by Android; web calls neither, so a partner sender on web can't confirm a split. (Unchanged.)</li>

@@ -151,6 +151,7 @@ Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. 
 
 ## SCREEN-LEVEL DRIFT FLAGS
 
+- **Permissions (Phase 2a, 2026-06-07):** the **Refund** API (`POST /payments/:id/refund`) is HARD-gated `payments_refunds:full` (owner/admin only); collect/charge a payment = `payments_refunds:edit_self`. Neither platform exposes a refund control today (the web Payments page is read-only), so there's no see-then-403, but the route is fully enforced server-side. 3a hides the Payments nav for `payments_refunds:none` (dispatcher).
 - **Web ScanPay now works** (Phase 0 [SCANPAY-404] fix, 2026-05-31), web has ScanPay QR + Link buttons using `POST /payments/scanpay-qr` / `/scanpay-link` + `GET /scanpay-status/:invoiceId` polling (3 s / 5 s), mirroring Android. The non-existent `POST /payments/scanpay/charge` was removed; it was never a real route (a stale backend test for it was also removed).
 - **ScanPay QR/link generate flow is now on both surfaces**, web mirrors Android's QR-image + texted-link dialogs. (`GET /invoices/:id/scanpay-qr` returns only a portal URL, not a ScanPay order, so neither surface uses it for the charge flow.)
 - **`POST /payments` (standalone create) has no audited consumer**, it validates method, applies to the invoice (`applyPaymentToInvoice`), and notifies the owner on payments ≥ $500, but `InvoiceDetail` and the `/payments` page both use `POST /invoices/:id/payment` / read-only `GET /payments` instead. `paymentsApi.create` is **UNVERIFIED** for a live caller.

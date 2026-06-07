@@ -113,8 +113,8 @@
 
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
-    <h1>Membership Plans<span class="sub">CRUD for plan templates (membership_plans, not customer_memberships). Frequency drives recurring jobs, web's annual/semi-annual values mis-schedule.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>74e0fc0</b></div>
+    <h1>Membership Plans<span class="sub">CRUD for plan templates (membership_plans, not customer_memberships). Frequency drives recurring jobs; web vocab aligned to the DB CHECK + Android (2026-06-07).</span></h1>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>commit · <b>1d39405</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="settings-atlas.html">settings</a> › membership plans</div>
@@ -139,7 +139,7 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Frequency vocabulary mismatch (real bug).</b> Web offers <code>monthly / quarterly / semi_annual / annual</code>; Android + the scheduler use <code>weekly / monthly / quarterly / semi_annually / annually</code>. <code>calculateNextJobDate</code> (memberships.js:9) switches on the Android spellings, so a plan saved from web with <code>annual</code> or <code>semi_annual</code> <b>falls to the default monthly cadence</b> when enrolled. Web also can't create <code>weekly</code> plans.</li>
+      <li><b>Frequency vocabulary mismatch — FIXED 2026-06-07 (web 1d39405).</b> Web now offers <code>weekly / monthly / quarterly / semi_annually / annually</code>, matching the DB CHECK + <code>calculateNextJobDate</code> + Android. Previously web sent <code>semi_annual</code>/<code>annual</code>, which <b>violated the <code>membership_plans.frequency</code> CHECK → plan creation failed</b>. Also fixed (jobs.js, backend aa650f2): the next-job base date now reads <code>jobs.scheduled_start</code> (was <code>scheduled_date</code>, non-existent → defaulted to today).</li>
       <li><b>Assign is Android-only here.</b> The plan→customer enrollment (<code>customer_memberships</code> + first job) is reachable from this screen only on Android; web users enroll from Customer Detail.</li>
       <li><b><code>payment_method</code>, <code>services_included</code>, <code>terms_and_conditions</code> are never touched.</b> <code>memberships.js</code> reads/writes only <code>name, description, frequency, price, is_active</code>. The other fields appear nowhere in the handler or either client, <b>UNVERIFIED</b> whether they exist as columns; if they do, no input anywhere.</li>
       <li><b><code>membership_plans</code> DDL is not in committed <code>db/</code></b> (out-of-band). Hard delete leaves dangling <code>customer_memberships</code> (plan_id orphaned; Android warns, web doesn't). <code>is_active</code> can't be toggled from either editor (web edit forces it true; Android preserves).</li>
@@ -161,10 +161,10 @@ const SECTIONS=[
 const A={
 "list":{label:"List plans",status:"ok",route:"GET /memberships/plans",fires:"SELECT membership_plans",result:"plan cards",
  d:{purpose:"Show membership plan templates.",actors:["owner","admin"],vis:"on open",chain:[["GET","/memberships/plans"]],parity:"MATCH, web useGet('/memberships/plans') (data?.plans||data → bare array); Android vm.loadPlans(). Android shows an 'Inactive' tag for is_active=false; web shows no active state. GET returns all plans (no is_active filter) on both."}},
-"add":{label:"Add plan",status:"partial",route:"POST /memberships/plans",fires:"INSERT membership_plans",result:"plan created (freq risk)",caveat:"web annual/semi_annual mis-schedule",
- d:{purpose:"Create a plan template.",actors:["owner","admin"],vis:"'Add' (web) / + (Android)",chain:[["POST","/memberships/plans"]],parity:"DIVERGENT (frequency vocab), web options monthly/quarterly/semi_annual/annual (no weekly); Android weekly/monthly/quarterly/semi_annually/annually. The scheduler calculateNextJobDate only recognises the Android spellings, so a web-created 'annual'/'semi_annual' plan falls to the default (monthly) cadence when enrolled. monthly/quarterly fine on both. 400 if name/frequency/price missing."}},
-"edit":{label:"Edit plan",status:"partial",route:"PUT /memberships/plans/:id",fires:"UPDATE (direct set)",result:"updated (freq + is_active risk)",caveat:"web resets is_active=true",
- d:{purpose:"Update a plan template.",actors:["owner","admin"],vis:"edit per card",chain:[["PUT","/memberships/plans/:id"]],parity:"DIVERGENT, same frequency-vocab issue as add. Backend UPDATE sets fields directly (not COALESCE). Web's select can't represent Android's annually/semi_annually/weekly (preserves unedited value, only offers its own 4 on change), and web edit re-activates the plan (sends no is_active → backend defaults it true); Android preserves plan.isActive. 404 if not found."}},
+"add":{label:"Add plan",status:"ok",route:"POST /memberships/plans",fires:"INSERT membership_plans",result:"plan created",caveat:"frequency vocab aligned (fixed 2026-06-07)",
+ d:{purpose:"Create a plan template.",actors:["owner","admin"],vis:"'Add' (web) / + (Android)",chain:[["POST","/memberships/plans"]],parity:"MATCH (fixed 2026-06-07, web 1d39405). Both use weekly/monthly/quarterly/semi_annually/annually, matching the DB CHECK + calculateNextJobDate. Previously web sent semi_annual/annual → CHECK violation → create failed. 400 if name/frequency/price missing."}},
+"edit":{label:"Edit plan",status:"partial",route:"PUT /memberships/plans/:id",fires:"UPDATE (direct set)",result:"updated (is_active risk)",caveat:"web resets is_active=true",
+ d:{purpose:"Update a plan template.",actors:["owner","admin"],vis:"edit per card",chain:[["PUT","/memberships/plans/:id"]],parity:"PARTIAL. Frequency vocab now aligned (fixed 2026-06-07). Remaining: backend UPDATE sets fields directly (not COALESCE) and web edit re-activates the plan (sends no is_active → backend defaults it true); Android preserves plan.isActive. 404 if not found."}},
 "delete":{label:"Delete plan",status:"ok",route:"DELETE /memberships/plans/:id",fires:"hard DELETE",result:"plan gone",caveat:"dangling enrollments",
  d:{purpose:"Remove a plan template.",actors:["owner","admin"],vis:"trash per card, with confirm",chain:[["DELETE","/memberships/plans/:id"]],parity:"MATCH, both hard-delete. Existing customer_memberships referencing the plan are NOT removed (plan_id orphaned; joins return null plan name). Android's dialog notes this; web just says 'cannot be undone'. Delete has no rows-affected check (idempotent)."}},
 "assign-to-customer":{label:"Assign to customer (Android)",status:"ok",route:"POST /memberships/customer/:customerId",fires:"INSERT customer_memberships + job",result:"customer enrolled",caveat:"Android-only",

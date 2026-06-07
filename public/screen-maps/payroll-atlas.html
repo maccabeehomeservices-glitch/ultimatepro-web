@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>Payroll<span class="sub">Pay the field team, earnings off the profit engine. Web = thin list; Android = the whole hub.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>79940c8</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>Option-1 + Perms · <b>range mark-paid · accounting_earnings:full</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="reports-atlas.html">reports</a> · <a href="network-atlas.html">network</a> › payroll</div>
@@ -139,9 +139,10 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
+      <li><b>Permissions (Phase 2a/3a, 2026-06-07).</b> All payroll writes (Mark-Paid, bonus, deduction, tech pay-settings, reimburse approve/pay) require <code>accounting_earnings:full</code> (owner/admin); the screen reads need <code>:view</code>. 3a hides the Payroll entry for <code>accounting_earnings:none</code> (dispatcher) and the write controls below <code>:full</code>.</li>
       <li><b>Massive surface asymmetry</b>, web Payroll is a read-only earnings list (<code>/reports/earnings</code>) with CSV export + drill-down; the whole hub (company P&amp;L, balance-owed, bonuses, deductions, pay settings, simulator, reimbursements, job report) is <b>Android-only</b> via <code>/payroll/*</code>.</li>
       <li><b>Two earnings endpoints</b>, web <code>/reports/earnings</code> (SUM(amount)); Android <code>/payroll/summary</code> (SUM(tech_profit) + bonuses/deductions → balance_owed). Same tech_earnings table, different math/columns.</li>
-      <li><b>Period finalize appears unwired</b>, <code>payroll_periods</code> lock/mark-paid endpoints exist (lock links unpaid earnings + sets total_payout; mark-paid flips paid flags) but no audited screen calls them; the UI "period" is just a date filter.</li>
+      <li><b>Period finalize — RETIRED (Payroll Option-1, 2026-06-07).</b> The dead <code>payroll_periods</code> lock machinery was removed; mark-paid is now range-based (<code>POST /payroll/earnings/mark-paid</code>) and <code>saveJobEarnings</code> preserves paid/paid_at across its DELETE+INSERT recompute. The web Mark-Paid button is wired (gated <code>accounting_earnings:full</code>).</li>
       <li><b>Web drill-down is name-matched</b>, <code>/reports/earnings</code> rows carry no ids, so web resolves actor ids by name against the directory endpoints; a name miss silently disables the drill-down.</li>
       <li><b>UNVERIFIED:</b> Android tech-settings PUT body, simulate body; whether any unread sub-screen finalizes a payroll_periods record; the By-Tech tab specifics.</li>
     </ul>
