@@ -4,7 +4,8 @@ import { format } from 'date-fns';
 import { CreditCard, ChevronRight } from 'lucide-react';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
-import { reportsApi } from '../lib/api';
+import Modal from '../components/ui/Modal';
+import { reportsApi, payrollApi } from '../lib/api';
 import { useSnackbar } from '../components/ui/Snackbar';
 
 function downloadBlob(blob, filename) {
@@ -29,9 +30,23 @@ export default function Payroll() {
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
   const [to, setTo] = useState(format(today, 'yyyy-MM-dd'));
   const [exporting, setExporting] = useState(false);
+  const [showMarkPaid, setShowMarkPaid] = useState(false);
+  const [marking, setMarking] = useState(false);
 
   const url = `/reports/earnings?from=${from}&to=${to}`;
-  const { data, loading } = useGet(url, [from, to]);
+  const { data, loading, refetch } = useGet(url, [from, to]);
+
+  async function handleMarkPaid() {
+    setMarking(true);
+    try {
+      const res = await payrollApi.markEarningsPaid({ from, to });
+      setShowMarkPaid(false);
+      showSnack(res.data?.message || 'Earnings marked paid', 'success');
+      refetch();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to mark paid', 'error');
+    } finally { setMarking(false); }
+  }
 
   // /reports/earnings groups by id but doesn't expose the underlying ids
   // (u.id / rt.id / js.id). Resolve them by name from each actor's directory
@@ -99,21 +114,29 @@ export default function Payroll() {
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-900">Payroll</h1>
-        <button
-          onClick={async () => {
-            try {
-              setExporting(true);
-              const res = await reportsApi.exportEarnings(from, to);
-              downloadBlob(res.data, `payroll-${from}-to-${to}.csv`);
-              showSnack('Report downloaded!', 'success');
-            } catch { showSnack('Export failed', 'error'); }
-            finally { setExporting(false); }
-          }}
-          disabled={exporting}
-          className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
-        >
-          {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowMarkPaid(true)}
+            className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-green-700 min-h-[44px]"
+          >
+            ✓ Mark Paid
+          </button>
+          <button
+            onClick={async () => {
+              try {
+                setExporting(true);
+                const res = await reportsApi.exportEarnings(from, to);
+                downloadBlob(res.data, `payroll-${from}-to-${to}.csv`);
+                showSnack('Report downloaded!', 'success');
+              } catch { showSnack('Export failed', 'error'); }
+              finally { setExporting(false); }
+            }}
+            disabled={exporting}
+            className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+          >
+            {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
+          </button>
+        </div>
       </div>
 
       {/* Date Range */}
@@ -216,6 +239,23 @@ export default function Payroll() {
           </div>
         </>
       )}
+
+      {/* Mark range paid confirm (money action) */}
+      <Modal isOpen={showMarkPaid} onClose={() => setShowMarkPaid(false)} title="Mark range paid">
+        <p className="text-gray-600 mb-6">
+          Mark all earnings from <strong>{from}</strong> to <strong>{to}</strong> as paid? This records that the team was paid for this range and lowers balance owed. Earnings can still recompute if a payment or refund lands later.
+        </p>
+        <div className="flex gap-3">
+          <button onClick={() => setShowMarkPaid(false)}
+            className="flex-1 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 min-h-[44px]">
+            Cancel
+          </button>
+          <button onClick={handleMarkPaid} disabled={marking}
+            className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]">
+            {marking ? 'Marking…' : 'Mark Paid'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }

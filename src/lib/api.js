@@ -725,6 +725,13 @@ export const reportsApi = {
     api.get('/reports/earnings/export', { params: { from, to, user_id, format: 'csv' }, responseType: 'blob' }),
 };
 
+// ─── PAYROLL ────────────────────────────────────────────────────────────────
+export const payrollApi = {
+  // Option-1 pay run: mark all earnings in a date range paid (no period lock).
+  markEarningsPaid: ({ from, to, user_id }) =>
+    api.post('/payroll/earnings/mark-paid', { from, to, user_id }),
+};
+
 // ─── GPS ──────────────────────────────────────────────────────────────────────
 export const gpsApi = {
   getLive: () =>

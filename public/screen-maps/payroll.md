@@ -16,7 +16,7 @@
 | `route_web` | `/payroll` → `Payroll` (Payroll.jsx, 222 lines) |
 | `primary_actors` | owner, manager |
 | `purpose` | Pay the field team. **Highly asymmetric:** web is a thin read-only earnings list (by actor, drill into a report); Android is the full hub, company P&L overview, per-tech balance-owed with bonuses/deductions, pay settings, profit simulator, reimbursements, and a per-job report. Reads `tech_earnings` (the profit engine's output). |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 79940c8 |
+| `last_verified` | 2026-06-06 · Option-1 payroll: dead period-lock/finalize machinery RETIRED (4 routes + 4 Android bindings removed); range-based mark-paid added (`POST /payroll/earnings/mark-paid`, reuses `tech_earnings.paid/paid_at`, no periods); `saveJobEarnings` now preserves `paid/paid_at` across recompute. `payroll_periods` table + `payroll_period_id` columns retained-but-inert (no migration). Prior: 2026-05-31 Stage-1 audit, commit 79940c8. |
 
 ### load_sequence
 **Web:** `GET /reports/earnings?from=&to=` (+ `/users/technicians`, `/roster-techs`, `/sources/contacts` to resolve drill-down ids by name). **Android:** `vm.loadSummary(period)` → `GET /payroll/summary` (period = today/week/month/custom); Job-Report tab → `GET /payroll/job-report`.
@@ -197,22 +197,22 @@
 - **parity:** ANDROID-ONLY.
 - **status:** OK
 - **status_note:** n/a
-### `payroll.period-finalize`
-- **label:** Lock / Mark-Paid a payroll period
-- **section:** periods
-- **actors:** owner
-- **purpose:** Finalize a `payroll_periods` record: lock the window, then mark it paid.
-- **visibility:** **no audited UI caller**, the hub's "period" is a date filter, not a `payroll_periods` record.
-- **precondition:** lock requires `status='open'`.
-- **confirm:** n/a
-- **route_chain:** `POST /payroll/periods` (create), `POST /payroll/periods/:id/lock`, `POST /payroll/periods/:id/mark-paid` (all ownerOrAdmin)
-- **request_body:** none for lock/mark-paid
-- **side_effects:** **lock** (payroll.js 171–212): computes `total_payout = Σ tech_earnings.net_payout + Σ unpaid bonuses − Σ unapplied deductions`, links unpaid `tech_earnings` to the period (`payroll_period_id`), sets `status='locked'`, `locked_at`, `total_payout`. **mark-paid** (215–244, transaction): sets period `status='paid'`, and flips `tech_earnings.paid=true`, `tech_bonuses.paid=true`, `tech_deductions.applied=true`.
-- **end_state:** Period locked → paid; earnings marked paid.
-- **failure_modes:** `dead-feature`, the endpoints exist and are correct, but no screen read this pass calls them (web Payroll and the Android hub both treat "period" as a date range, not a `payroll_periods` lifecycle).
-- **parity:** UNKNOWN, neither surface's audited code finalizes a period.
-- **status:** DEAD
-- **status_note:** The money-finalization endpoints are real but appear unwired. **UNVERIFIED** whether any sub-screen/VM not read this pass calls them.
+### `payroll.mark-paid`
+- **label:** Mark range paid (pay run)
+- **section:** pay-run
+- **actors:** owner, admin
+- **purpose:** Record that the team was paid for the current date range — sets `tech_earnings.paid` so balance-owed / paid-vs-unpaid reflect reality.
+- **visibility:** web "✓ Mark Paid" button (header, beside Export CSV); Android "Paid" toolbar action (💲 icon). Both use the range/period already on screen.
+- **precondition:** a date range (web From/To) or named period (Android chips: today/week/month/custom) — backend rejects a call with neither.
+- **confirm:** yes (money action) — web Modal, Android `AlertDialog`.
+- **route_chain:** `POST /payroll/earnings/mark-paid` (`ownerOrAdmin`)
+- **request_body:** `{ from, to, user_id? }` (web sends explicit `from`/`to`; Android sends `{ period }` or `{ from, to }`). Backend resolves dates via the same `resolveDates` helper `/summary` uses.
+- **side_effects:** `UPDATE tech_earnings SET paid=true, paid_at=NOW() WHERE company_id AND created_at::date BETWEEN from AND to [AND user_id] AND paid=false`. Returns `{ count, from, to }`. **No `payroll_period_id` involvement.**
+- **end_state:** Earnings in range marked paid; both UIs reload so balance-owed / paid counts update.
+- **failure_modes:** 400 if no range/period; 403 if not owner/admin.
+- **parity:** MATCH — both surfaces, range/period-scoped, confirm-then-reload.
+- **status:** OK
+- **status_note:** 2026-06-06. Replaces the retired `payroll_periods` lock/finalize flow. `paid` survives recompute (saveJobEarnings carries `paid/paid_at` across its DELETE+INSERT), so a later payment/refund/review-approval recompute does not silently un-pay a settled tech.
 
 ---
 
@@ -220,6 +220,8 @@
 
 - **Massive surface asymmetry**, web Payroll is a read-only earnings list (`/reports/earnings`) with CSV export and drill-down to the Reports module; the entire hub (company P&L, balance-owed, bonuses, deductions, pay settings, simulator, reimbursements, job report) is **Android-only** via `/payroll/*`.
 - **Two earnings endpoints**, web reads `/reports/earnings` (`SUM(amount)`); Android reads `/payroll/summary` (`SUM(tech_profit)` + bonuses/deductions → `balance_owed`). Same `tech_earnings` table, different math/columns.
-- **Period finalize appears unwired**, `payroll_periods` lock/mark-paid endpoints exist (and correctly link earnings + flip paid flags) but no audited screen calls them; the UI "period" is just a date filter.
+- **Period-lock machinery RETIRED (Option-1, 2026-06-06).** The dead `payroll_periods` create/lock/mark-paid routes (payroll.js) and the 4 Android `ApiService` period bindings were removed, so they can never be wired to conflict with the live earnings model. The `payroll_periods` table and the `payroll_period_id` columns on `tech_earnings`/`tech_bonuses`/`tech_deductions` are **retained-but-inert** (no destructive migration). Replaced by the range-based `payroll.mark-paid` action.
+- **`paid` survives recompute (Option-1).** `saveJobEarnings` reads the prior row's `paid/paid_at` before its DELETE and carries them into the new row (utils/profit.js), so a recompute (late payment / refund clawback / review approval) keeps a settled earning marked paid — only the amount changes. First compute (no prior row) is `paid=false`.
+- **`tech_earnings.paid` now has a live writer.** Before, `paid` was read everywhere (balance_owed, paid/unpaid splits) but only the dead period route wrote it. The range mark-paid endpoint is now the single writer, so balance-owed actually decreases when you pay the team.
 - **Web drill-down is name-matched**, `/reports/earnings` rows carry no ids, so web resolves actor ids by matching names against the directory endpoints; a name miss silently disables the drill-down.
-- **UNVERIFIED:** Android `tech-settings` PUT body, `simulate` body; whether any unread sub-screen/VM finalizes a `payroll_periods` record; the Android `By Tech` tab specifics.
+- **UNVERIFIED:** Android `tech-settings` PUT body, `simulate` body; the Android `By Tech` tab specifics.
