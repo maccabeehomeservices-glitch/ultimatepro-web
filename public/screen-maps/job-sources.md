@@ -13,17 +13,17 @@
 | `display_name` | Job Sources |
 | `surfaces` | android, web |
 | `route_android` | `JobSourcesScreen` + `JobSourceViewModel` (JobSourcesScreen.kt) |
-| `route_web` | `/settings/job-sources` → `JobSources` (JobSources.jsx, 812 lines) |
+| `route_web` | `/settings/job-sources` → `JobSources` (`pages/settings/JobSources.jsx`) |
 | `manages_table` | `job_sources` (source contacts) + `ad_channels` + `commission_rules`, three tabs, three tables |
 | `primary_actors` | owner, admin |
 | `purpose` | A 3-tab manager for where jobs come from and how they pay out: **Source Contacts** (referral partners / warranty cos, with a `profit_allocation_pct` that the profit engine reads), **Ad Channels** (own-company lead channels), and **Commission Rules** (per-source tech-commission overrides). Well-matched across web and Android. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
+| `last_verified` | 2026-06-06 · Tier 2.2 gating: write routes now `ownerOrAdmin`, reads stay `auth`. Prior: 2026-05-31 Stage-1 audit, commit 6147cd1. |
 
 ### load_sequence
 Both load all three feeds: `GET /sources/contacts` (job_sources, active only, by name), `GET /sources/channels` (ad_channels, **seeds 7 defaults** if none exist), `GET /sources/commission-rules` (joined to source/channel names).
 
 ### gating
-All `/sources/*` routes are `auth` only, **no `ownerOrAdmin` check** on this router (unlike company/users). Any authenticated user can CRUD sources/channels/rules.
+**Writes are `ownerOrAdmin` (Tier 2.2, 2026-06-06):** `POST/PUT/DELETE /sources/contacts`, `POST/PUT /sources/channels`, `POST/DELETE /sources/commission-rules`. **Reads stay `auth`** (the profit engine, job forms, and reports need them): `GET /sources/contacts`, `GET /sources/channels` (seed-on-read), `GET /sources/report[/export]`, `GET /sources/commission-rules`, `GET /sources/commission-rules/resolve`. Closes the prior hole where any authenticated user (incl. technician/dispatcher) could edit `profit_allocation_pct` / commission rules that set their own pay.
 
 ### profit-engine link (confirmed)
 `job_sources.profit_allocation_pct` is **priority #1** for a job's source-cut in `utils/profit.js` (lines 18, 96–104): when `job.job_source_id` is set, `sourcePct = job_sources.profit_allocation_pct`. `commission_rules.tech_commission_pct` is resolved per job via `GET /sources/commission-rules/resolve` (source_contact → ad_channel → network → default).
@@ -245,8 +245,8 @@ All `/sources/*` routes are `auth` only, **no `ownerOrAdmin` check** on this rou
 ## SCREEN-LEVEL DRIFT FLAGS
 
 - **`profit_allocation_pct` is wired to the profit engine (confirmed).** `utils/profit.js` reads `job_sources.profit_allocation_pct` as the #1 source-cut when a job has `job_source_id` (lines 96–104), falling back to `profit_rules.source_pct` / default / 0. So editing it here directly changes profit splits.
-- **No owner/admin gating on `/sources/*`.** Every route is `auth` only, any authenticated user (incl. technician/dispatcher) can create/edit/delete sources, channels, and commission rules. Contrast with company/users (which are `ownerOrAdmin`).
-- **`GET /sources/channels` writes on read.** First load for a company INSERTs the 7 default channels, a side effect on a GET. Harmless but unusual.
+- **RESOLVED (Tier 2.2, 2026-06-06) — owner/admin gating on `/sources/*` writes.** `POST/PUT/DELETE` on contacts, channels, and commission-rules are now `ownerOrAdmin` (sources.js:29,44,70,109,127,361,396). Reads (incl. `resolve`) stay `auth`. Techs/dispatchers can no longer edit the rules that set their own pay.
+- **`GET /sources/channels` writes on read.** First load for a company INSERTs the 7 default channels, a side effect on a GET. Left at `auth` (it is a read-triggered seed, not a privileged write) so first load still seeds for any user. Harmless but unusual.
 - **Commission-rule upsert may not dedupe null-id rules.** `ON CONFLICT (company_id, rule_type, job_source_id, ad_channel_id)` relies on a unique index; for `default`/`network` rules both id columns are NULL, and under standard Postgres semantics NULLs are distinct, so the conflict target may not match → **possible duplicate default/network rules** unless the index uses `NULLS NOT DISTINCT`. **UNVERIFIED**, the `commission_rules` DDL is not in committed `db/` files. The web UI mitigates by editing an existing default instead of adding a second one.
 - **`job_sources` table DDL is not in committed SQL** (like `roster_techs`). Columns `name, company_name, phone, email, profit_allocation_pct, send_updates, send_closings, notes, is_active, company_id` are used consistently by the handler and both clients; **UNVERIFIED** column types.
 - **Report endpoints exist but aren't on this screen.** `sourcesApi.getReport` / `exportReport` (and `GET /sources/report[/export]`) power the Reports screen, not Job Sources, no dead buttons here.

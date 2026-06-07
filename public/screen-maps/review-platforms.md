@@ -13,17 +13,17 @@
 | `display_name` | Review Platforms |
 | `surfaces` | android, web |
 | `route_android` | `ReviewPlatformsScreen` + `ReviewPlatformViewModel` (ReviewPlatformsScreen.kt) |
-| `route_web` | `/settings/review-platforms` → `ReviewPlatforms` (ReviewPlatforms.jsx, 340 lines) |
+| `route_web` | `/settings/review-platforms` → `ReviewPlatforms` (`pages/settings/ReviewPlatforms.jsx`) |
 | `manages_table` | `review_platforms`, columns: `platform_name` (NOT `name`), `url`, `is_default`, `is_active`, `created_at` |
 | `primary_actors` | owner, admin |
 | `purpose` | Manage the review-link platforms (Google, Yelp, Facebook, etc.). The **default active** platform's URL is appended to payment receipts ("Leave a review"). CRUD + toggle-active + set-default, well-matched across web and Android. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
+| `last_verified` | 2026-06-06 · Tier 2.2 gating: write routes now `ownerOrAdmin`, GET stays `auth`. Prior: 2026-05-31 Stage-1 audit, commit 6147cd1. |
 
 ### load_sequence
 Both: `GET /settings/review-platforms` → `SELECT * FROM review_platforms WHERE company_id ORDER BY is_default DESC, created_at ASC`. The `review_platforms` table is created by a **startup migration** at the top of `routes/settings.js` (lines 11–20).
 
 ### gating
-All `/settings/review-platforms` routes are `auth` only, **no `ownerOrAdmin` middleware**. Any authenticated user can CRUD platforms.
+**Writes are `ownerOrAdmin` (Tier 2.2, 2026-06-06):** `POST/PUT/DELETE /settings/review-platforms` (set-default rides the same PUT). **`GET` stays `auth`** so receipts/tech-notify and the list can read. Closes the prior hole where any authenticated user could change the receipt review link.
 
 ### key-mapping note
 The request body key is **`name`** but the DB column is **`platform_name`**, the POST/PUT handlers map `name → platform_name` server-side, and both clients read `platform_name` back. So the `name` key is correct (not a bug). Web's helper `getPlatformName(p) = p.platform_name || p.name` handles either shape.
@@ -168,6 +168,6 @@ The request body key is **`name`** but the DB column is **`platform_name`**, the
 - **`display_order` does not exist.** The Batch-F task hypothesised a `display_order` column, but the `review_platforms` DDL (settings.js:11–20) has only `platform_name, url, is_default, is_active, created_at`. Ordering is `is_default DESC, created_at ASC`, there is no per-row sort field and no UI for one.
 - **Column is `platform_name`, request key is `name`.** Handlers map `name → platform_name`; both clients read `platform_name` back. Not a bug, but the asymmetry is worth knowing (web's `getPlatformName` defends against either).
 - **Receipt link confirmed.** The default active platform's URL is what Send Receipt appends (`invoices.js:645`, fallback `:650` = first active); the tech-notify message uses the same (`roster-techs.js:116`). Deleting/deactivating the default silently changes which link receipts use.
-- **No owner/admin gating.** `/settings/review-platforms` routes are `auth` only, any authenticated user can add/edit/delete platforms (and thereby change the receipt link).
+- **RESOLVED (Tier 2.2, 2026-06-06) — owner/admin gating.** `POST/PUT/DELETE /settings/review-platforms` are now `ownerOrAdmin` (settings.js:40,62,94); `GET` stays `auth`. Non-admins can no longer change the receipt review link.
 - **Table created by startup migration**, not in `schema.sql`. It's an `IF NOT EXISTS` block that runs on boot of `routes/settings.js`; the column set is authoritative there.
 - **Set-default affordance differs** (web per-card button vs Android sheet checkbox), see the `set-default` action.
