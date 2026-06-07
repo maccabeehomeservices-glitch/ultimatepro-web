@@ -13,7 +13,7 @@ export default function UserManagement() {
   const [saving, setSaving] = useState(false)
   const [snack, setSnack] = useState(null)
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', role: 'tech', password: ''
+    first_name: '', last_name: '', email: '', phone: '', role: 'technician', password: ''
   })
 
   async function fetchUsers() {
@@ -28,17 +28,18 @@ export default function UserManagement() {
 
   function openAdd() {
     setEditingUser(null)
-    setForm({ name: '', email: '', phone: '', role: 'tech', password: '' })
+    setForm({ first_name: '', last_name: '', email: '', phone: '', role: 'technician', password: '' })
     setShowForm(true)
   }
 
   function openEdit(user) {
     setEditingUser(user)
     setForm({
-      name: user.name || '',
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
       email: user.email || '',
       phone: user.phone || '',
-      role: user.role || 'tech',
+      role: user.role || 'technician',
       password: '',
     })
     setShowForm(true)
@@ -49,8 +50,9 @@ export default function UserManagement() {
     try {
       if (editingUser) {
         await api.put(`/users/${editingUser.id}`, {
-          name: form.name, email: form.email,
-          phone: form.phone, role: form.role,
+          first_name: form.first_name, last_name: form.last_name,
+          email: form.email, phone: form.phone, role: form.role,
+          ...(form.password ? { password: form.password } : {}),
         })
         setSnack({ msg: 'User updated!', type: 'success' })
       } else {
@@ -60,8 +62,8 @@ export default function UserManagement() {
           return
         }
         await api.post('/users', {
-          name: form.name, email: form.email,
-          phone: form.phone, role: form.role,
+          first_name: form.first_name, last_name: form.last_name,
+          email: form.email, phone: form.phone, role: form.role,
           password: form.password,
         })
         setSnack({ msg: 'User created!', type: 'success' })
@@ -82,20 +84,36 @@ export default function UserManagement() {
     try {
       await api.delete(`/users/${showDelete.id}`)
       setShowDelete(null)
-      setSnack({ msg: 'User removed', type: 'success' })
+      setSnack({ msg: 'User deactivated', type: 'success' })
       fetchUsers()
     } catch (err) {
       setSnack({
-        msg: err.response?.data?.error || 'Failed to delete',
+        msg: err.response?.data?.error || 'Failed to deactivate',
         type: 'error'
       })
     }
   }
 
+  async function handleReactivate(user) {
+    try {
+      await usersApi.reactivate(user.id)
+      setSnack({ msg: 'User reactivated', type: 'success' })
+      fetchUsers()
+    } catch (err) {
+      setSnack({
+        msg: err.response?.data?.error || 'Failed to reactivate',
+        type: 'error'
+      })
+    }
+  }
+
+  // Matches Android's role palette (TeamMembersScreen.kt roleColor).
   const roleColors = {
     owner: 'bg-purple-100 text-purple-700',
     admin: 'bg-blue-100 text-blue-700',
-    tech: 'bg-green-100 text-green-700',
+    manager: 'bg-green-100 text-green-700',
+    technician: 'bg-amber-100 text-amber-700',
+    dispatcher: 'bg-indigo-100 text-indigo-700',
   }
 
   if (loading) return (
@@ -122,28 +140,42 @@ export default function UserManagement() {
 
       <div className="space-y-3">
         {users.map(u => (
-          <div key={u.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-4">
+          <div key={u.id} className={`bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex items-center gap-4 ${u.is_active === false ? 'opacity-60' : ''}`}>
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-              {(u.name?.[0] || '?').toUpperCase()}
+              {(u.first_name?.[0] || '?').toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="font-semibold text-gray-900 truncate">{u.name}</div>
+              <div className="font-semibold text-gray-900 truncate flex items-center gap-2">
+                <span className="truncate">{`${u.first_name || ''} ${u.last_name || ''}`.trim() || '—'}</span>
+                {u.is_active === false && (
+                  <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 flex-shrink-0">Inactive</span>
+                )}
+              </div>
               <div className="text-sm text-gray-500 truncate">
                 {u.email}{u.phone ? ` · ${u.phone}` : ''}
               </div>
             </div>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[u.role] || roleColors.tech}`}>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleColors[u.role] || roleColors.technician}`}>
               {u.role}
             </span>
-            <button onClick={() => openEdit(u)}
-              className="text-gray-400 hover:text-blue-600 px-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
-              ✏️
-            </button>
             {u.role !== 'owner' && (
-              <button onClick={() => setShowDelete(u)}
-                className="text-gray-400 hover:text-red-600 px-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
-                🗑
-              </button>
+              u.is_active === false ? (
+                <button onClick={() => handleReactivate(u)} title="Reactivate"
+                  className="text-gray-400 hover:text-blue-600 px-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  ♻️
+                </button>
+              ) : (
+                <>
+                  <button onClick={() => openEdit(u)}
+                    className="text-gray-400 hover:text-blue-600 px-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    ✏️
+                  </button>
+                  <button onClick={() => setShowDelete(u)}
+                    className="text-gray-400 hover:text-red-600 px-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                    🗑
+                  </button>
+                </>
+              )
             )}
           </div>
         ))}
@@ -159,14 +191,25 @@ export default function UserManagement() {
         title={editingUser ? 'Edit User' : 'Add Team Member'}
       >
         <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Name *</label>
-            <input
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={form.name}
-              onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-              placeholder="Full name"
-            />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">First Name *</label>
+              <input
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.first_name}
+                onChange={e => setForm(p => ({ ...p, first_name: e.target.value }))}
+                placeholder="First"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Last Name *</label>
+              <input
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.last_name}
+                onChange={e => setForm(p => ({ ...p, last_name: e.target.value }))}
+                placeholder="Last"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">Email *</label>
@@ -193,22 +236,23 @@ export default function UserManagement() {
               value={form.role}
               onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
             >
-              <option value="tech">Technician</option>
+              <option value="technician">Technician</option>
+              <option value="dispatcher">Dispatcher</option>
+              <option value="manager">Manager</option>
               <option value="admin">Admin</option>
-              <option value="owner">Owner</option>
             </select>
           </div>
-          {!editingUser && (
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Password *</label>
-              <input type="password"
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-                value={form.password}
-                onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
-                placeholder="Set password"
-              />
-            </div>
-          )}
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">
+              {editingUser ? 'Password' : 'Password *'}
+            </label>
+            <input type="password"
+              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={form.password}
+              onChange={e => setForm(p => ({ ...p, password: e.target.value }))}
+              placeholder={editingUser ? 'Leave blank to keep current' : 'Set password'}
+            />
+          </div>
           <div className="flex gap-3 pt-2">
             <button onClick={() => setShowForm(false)}
               className="flex-1 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 min-h-[44px]">
@@ -226,10 +270,10 @@ export default function UserManagement() {
       <Modal
         isOpen={!!showDelete}
         onClose={() => setShowDelete(null)}
-        title="Remove Team Member"
+        title="Deactivate Team Member"
       >
         <p className="text-gray-600 mb-6">
-          Remove <strong>{showDelete?.name}</strong> from your team? This cannot be undone.
+          Deactivate <strong>{`${showDelete?.first_name || ''} ${showDelete?.last_name || ''}`.trim()}</strong>? They lose app access. You can reactivate them later.
         </p>
         <div className="flex gap-3">
           <button onClick={() => setShowDelete(null)}
@@ -238,7 +282,7 @@ export default function UserManagement() {
           </button>
           <button onClick={handleDelete}
             className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]">
-            Remove
+            Deactivate
           </button>
         </div>
       </Modal>
