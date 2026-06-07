@@ -186,6 +186,10 @@ export const jobsApi = {
   confirmCompletion: (id) =>
     api.post(`/jobs/${id}/completion/confirm`),
 
+  // Release held (pending-review) earnings. Backend guards via canApproveEarnings.
+  approveEarnings: (id) =>
+    api.post(`/jobs/${id}/approve-earnings`),
+
   // Mirror Android: restore an archived job by flipping status back to unscheduled
   // (there is no /jobs/:id/restore route; Android uses updateJobStatus("unscheduled")).
   restore: (id) =>

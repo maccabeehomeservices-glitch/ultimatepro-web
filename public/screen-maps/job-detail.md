@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job, the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-06-01 · Dead-code removal: orphaned job-signature code deleted (web modal/state/handler/import + Android repo method + ApiService binding); SignaturePad component kept (shared with estimate/invoice signing). Prior: Phase 2 commits 1-5 (notes/reminder/restore/History/photos/permissions/charge-payment all OK). No BROKEN actions remain; 8 PARTIAL = cosmetic divergences. |
+| `last_verified` | 2026-06-06 · Added `job-detail.banner-earnings-review`: pending-review earnings gate banner + Approve Earnings button (web + Android, approver-gated via `canApproveEarnings`). Shows when `review_status='pending_review'`. Prior: 2026-06-01 dead-code removal (orphaned job-signature code deleted; SignaturePad kept). Phase 2 commits 1-5 all OK. No BROKEN actions remain. |
 
 ### load_sequence
 
@@ -225,6 +225,23 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **parity:** ANDROID-ONLY, web has no completion banner/sheet and never calls these endpoints.
 - **status:** PARTIAL
 - **status_note:** Web orphans `GET /jobs/:id/completion` and `POST /jobs/:id/completion/confirm`.
+
+### `job-detail.banner-earnings-review`
+- **label:** "Earnings pending review" banner + Approve Earnings button
+- **section:** banners
+- **actors:** owner, admin (Approve button); all roles see the badge
+- **purpose:** Surface that a non-owner's earnings are held by the pending-review gate, and let an approver release them.
+- **visibility:** `job.review_status == 'pending_review'`. The **Approve** button shows only when the approve-earnings capability passes (owner/admin today); non-approvers see the badge as informational.
+- **precondition:** Gate held the earnings at completion (`require_earnings_review` ON + non-owner completer).
+- **confirm:** none (single tap, reloads after).
+- **route_chain:** `POST /jobs/:id/approve-earnings`
+- **request_body:** none
+- **side_effects:** `auth-guard` (`canApproveEarnings`), `update-record` (`review_status='approved'`), `earnings-write` via `reconcileJobEarnings` (dated approval day)
+- **end_state:** Earnings released; banner clears on reload.
+- **failure_modes:** `permission-403` (lacks the capability).
+- **parity:** MATCH (web banner + Android banner, both approver-gated button). See `complete-job.approve-earnings`.
+- **status:** OK
+- **status_note:** 2026-06-06. Authority centralized in `canApproveEarnings(user, job)` (seam for the future per-actor `approve_earnings` permission).
 
 ### `job-detail.reminder-method`
 - **label:** Reminder method selector (dropdown)

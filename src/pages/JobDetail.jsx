@@ -171,6 +171,7 @@ export default function JobDetail() {
   const [showComplete, setShowComplete]     = useState(false);
   const [completionNotes, setCompletionNotes] = useState('');
   const [completing, setCompleting]         = useState(false);
+  const [approvingEarnings, setApprovingEarnings] = useState(false);
   // Partner-split form (mirrors Android CompleteJobScreen). Only used when job.agreement_id != null.
   const [partsPaidBy, setPartsPaidBy]             = useState('none');   // sender|receiver|none
   const [partsAmount, setPartsAmount]             = useState('');
@@ -413,6 +414,16 @@ export default function JobDetail() {
       refetch();
     } catch (err) { showSnack(err.response?.data?.error || 'Failed to complete job', 'error'); }
     finally { setCompleting(false); }
+  }
+
+  async function handleApproveEarnings() {
+    setApprovingEarnings(true);
+    try {
+      await jobsApi.approveEarnings(id);
+      showSnack('Earnings approved', 'success');
+      refetch();
+    } catch (err) { showSnack(err.response?.data?.error || 'Failed to approve earnings', 'error'); }
+    finally { setApprovingEarnings(false); }
   }
 
   async function handleRestoreJob() {
@@ -696,6 +707,13 @@ export default function JobDetail() {
   const canViewHistory = !isTech || jobData.tech_permissions?.view_history !== false;
   const visibleTabs = canViewHistory ? tabList : tabList.filter(t => t.id !== 'history');
 
+  // ── Earnings-approval capability (mirrors backend canApproveEarnings) ──
+  // Frames an "approve earnings" capability that maps to owner/admin today; this is
+  // the web-side seam for the future per-actor permission. Non-approvers still see the
+  // pending badge (informational) but get no button.
+  const earningsPendingReview = jobData.review_status === 'pending_review';
+  const canApproveEarnings = ['owner', 'admin'].includes(user?.role);
+
   // ── Complete-Job partner split + live calc (mirrors Android CompleteJobScreen 2999-3010) ──
   const isPartnerJob   = jobData.agreement_id != null;
   const calcGross      = Number(jobInvoice?.total || 0);
@@ -767,6 +785,25 @@ export default function JobDetail() {
           )}
         </div>
       </div>
+
+      {/* Earnings pending-review banner (gate). Approvers (owner/admin) get the
+          release button; everyone else sees it as informational. */}
+      {earningsPendingReview && (
+        <div className="mb-3 bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-orange-800">Earnings pending review</p>
+            <p className="text-xs text-orange-700 mt-0.5">
+              This job was completed by a team member. Earnings are held until an owner or admin approves them.
+            </p>
+          </div>
+          {canApproveEarnings && (
+            <button onClick={handleApproveEarnings} disabled={approvingEarnings}
+              className="shrink-0 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-4 rounded-xl min-h-[44px] disabled:opacity-50">
+              {approvingEarnings ? 'Approving…' : 'Approve Earnings'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Partner banners */}
       {jobData.sent_to_company_id && (
