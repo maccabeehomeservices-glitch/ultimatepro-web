@@ -22,10 +22,14 @@ export function AuthProvider({ children }) {
     if (token) {
       api.get('/auth/me')
         .then((res) => {
-          const { user: u, company: c } = res.data;
-          setUser(u);
+          const { user: u, company: c, permissions_resolved } = res.data;
+          // Carry the resolved per-section permission levels on the user so the
+          // UI can gate controls (e.g. Option B: hide the source picker when
+          // jobs != full). /auth/me is the source; login fills it on next mount.
+          const up = { ...u, permissions_resolved };
+          setUser(up);
           setCompany(c);
-          setStoredUser(u);
+          setStoredUser(up);
           setStoredCompany(c);
         })
         .catch(() => {

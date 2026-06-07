@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job, the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-06-06 · Added `job-detail.banner-earnings-review`: pending-review earnings gate banner + Approve Earnings button (web + Android, approver-gated via `canApproveEarnings`). Shows when `review_status='pending_review'`. Prior: 2026-06-01 dead-code removal (orphaned job-signature code deleted; SignaturePad kept). Phase 2 commits 1-5 all OK. No BROKEN actions remain. |
+| `last_verified` | 2026-06-07 · Granular permissions Phase 2 Batch 2b: jobs own-scope enforcement. List (`GET /jobs`,`/today`) own-filtered for `jobs=edit_self` (technician sees ONLY assigned jobs); `GET/:id` + all writes/actions/parts gated `requireJobOwnership` (view/edit_self, own-job for non-full); **`POST /jobs` + DELETE + partner ops = `jobs:full`** (technicians can no longer create/delete jobs — flagged for review). `/me` now returns `permissions_resolved` for UI gating; Option B hides the source picker on the web create form when `jobs!=full`. Prior: 2026-06-06 earnings-review banner. |
 
 ### load_sequence
 

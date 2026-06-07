@@ -615,7 +615,8 @@ export default function JobForm() {
 
       <form onSubmit={e => handleSubmit(e, false)} className="space-y-4">
 
-        {/* ── SOURCE ─────────────────────────────────────────────────────── */}
+        {/* ── SOURCE (Option B: hidden for non-full job creators; admin sets it later) ── */}
+        {(user?.permissions_resolved?.jobs ?? 'full') === 'full' && (
         <Card>
           <SectionLabel>Job Source</SectionLabel>
           <select
@@ -640,6 +641,7 @@ export default function JobForm() {
             )}
           </select>
         </Card>
+        )}
 
         {/* ── JOB TYPE ───────────────────────────────────────────────────── */}
         <Card>
