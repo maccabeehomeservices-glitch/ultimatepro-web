@@ -104,7 +104,7 @@ export default function JobDetail() {
   const { showSnack } = useSnackbar();
   const { data: job, loading, refetch } = useGet(`/jobs/${id}`);
   const { mutate, loading: mutating } = useMutation();
-  const { user } = useAuth();
+  const { user, can } = useAuth();
 
   const [activeTab, setActiveTab]           = useState('details');
   const [statusModal, setStatusModal]       = useState(false);
@@ -1217,7 +1217,7 @@ export default function JobDetail() {
                   className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
                   🔩 Add Parts
                 </button>
-                {jobInvoice && jobInvoice.status !== 'paid' && (
+                {jobInvoice && jobInvoice.status !== 'paid' && can('payments_refunds','edit_self') && (
                   <button
                     onClick={() => setDepositModal(true)}
                     className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">

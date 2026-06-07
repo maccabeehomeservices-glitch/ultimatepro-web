@@ -33,10 +33,10 @@ const navItems = [
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/estimates', icon: FileText, label: 'Estimates' },
   { to: '/invoices', icon: Receipt, label: 'Invoices' },
-  { to: '/payments', icon: DollarSign, label: 'Payments' },
+  { to: '/payments', icon: DollarSign, label: 'Payments', section: 'payments_refunds' },
   { to: '/phone', icon: Phone, label: 'Phone / SMS' },
-  { to: '/reports', icon: BarChart2, label: 'Reports' },
-  { to: '/payroll', icon: CreditCard, label: 'Payroll' },
+  { to: '/reports', icon: BarChart2, label: 'Reports', section: 'reports' },
+  { to: '/payroll', icon: CreditCard, label: 'Payroll', section: 'accounting_earnings' },
   { to: '/pricebook', icon: BookOpen, label: 'Pricebook' },
   { to: '/network', icon: Handshake, label: 'Network' },
   { to: '/inventory', icon: Truck, label: 'Inventory' },
@@ -44,7 +44,7 @@ const navItems = [
 ];
 
 export default function Sidebar({ collapsed = false, onToggle }) {
-  const { user, company, logout } = useAuth();
+  const { user, company, logout, can } = useAuth();
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -117,7 +117,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
 
       {/* Nav links */}
       <nav className="flex-1 overflow-y-auto py-3">
-        {navItems.map(({ to, icon: Icon, label }) => (
+        {navItems.filter(item => !item.section || can(item.section, 'view')).map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}

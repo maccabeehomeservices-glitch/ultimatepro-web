@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Modal, Input, Button, Select, Toggle } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { useAuth } from '../hooks/useAuth';
 
 const ITEM_TYPE_OPTIONS = [
   { value: 'service', label: 'Service' },
@@ -24,6 +25,7 @@ const emptyItemForm = () => ({
 export default function Pricebook() {
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
+  const { can } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [categorySearch, setCategorySearch] = useState('');
   const [itemSearch, setItemSearch] = useState('');
@@ -205,12 +207,14 @@ export default function Pricebook() {
               ← All Categories
             </button>
             <h2 className="font-semibold text-gray-900 flex-1">{selectedCategory.name}</h2>
+            {can('pricebook','edit_self') && (
             <button
               onClick={openAddItem}
               className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium min-h-[44px]"
             >
               <Plus size={16} /> Add Item
             </button>
+            )}
           </div>
 
           {/* Item search within category */}
@@ -237,7 +241,7 @@ export default function Pricebook() {
               icon={BookOpen}
               title="No items"
               description="Add items to this category."
-              action={<Button onClick={openAddItem} size="sm">Add Item</Button>}
+              action={can('pricebook','edit_self') ? <Button onClick={openAddItem} size="sm">Add Item</Button> : null}
             />
           ) : (
             <div className="space-y-2">
@@ -262,6 +266,7 @@ export default function Pricebook() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <p className="font-bold text-[#1A73E8]">{formatCurrency(item.unit_price || item.price)}</p>
+                      {can('pricebook','full') && (<>
                       <button
                         onClick={(e) => { e.stopPropagation(); openEditItem(item); }}
                         className="p-2 text-gray-400 hover:text-[#1A73E8] min-h-[44px] min-w-[44px] flex items-center justify-center"
@@ -274,6 +279,7 @@ export default function Pricebook() {
                       >
                         <Trash2 size={16} />
                       </button>
+                      </>)}
                     </div>
                   </div>
                 </Card>

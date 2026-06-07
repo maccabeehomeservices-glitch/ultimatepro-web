@@ -5,6 +5,7 @@ import { useGet, useMutation } from '../hooks/useApi';
 import api, { estimatesApi, customersApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { useAuth } from '../hooks/useAuth';
 import SignaturePad from '../components/SignaturePad';
 
 const PAYMENT_METHODS = [
@@ -64,6 +65,7 @@ export default function EstimateDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
+  const { can } = useAuth();
   const { data, loading, refetch } = useGet(`/estimates/${id}`);
   const { data: tiersData } = useGet(
     data?.estimate?.presentation_mode === 'gbb' || data?.presentation_mode === 'gbb' ||
@@ -561,7 +563,7 @@ export default function EstimateDetail() {
             Convert to Invoice
           </Button>
         )}
-        {showCollectDeposit && (
+        {showCollectDeposit && can('payments_refunds','edit_self') && (
           <Button variant="outlined" onClick={() => setDepositModal(true)} className="w-full">
             Collect Deposit
           </Button>

@@ -4,6 +4,7 @@ import { Plus, Search, Users, Upload, X } from 'lucide-react';
 import { customersApi } from '../lib/api';
 import { Card, LoadingSpinner, EmptyState } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { useAuth } from '../hooks/useAuth';
 
 const LIMIT = 50;
 
@@ -16,6 +17,7 @@ function avatarColor(name) {
 export default function Customers() {
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
+  const { can } = useAuth();
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -123,7 +125,7 @@ export default function Customers() {
       {selectionMode && (
         <div className="flex items-center gap-4 mb-3 p-3 bg-blue-50 rounded-xl">
           <span className="text-sm font-semibold text-blue-600">{selected.size} selected</span>
-          {selected.size > 0 && (
+          {selected.size > 0 && can('customers','full') && (
             <button onClick={handleBulkDelete} className="text-red-600 text-sm font-medium min-h-[36px]">
               🗑 Delete Selected
             </button>
@@ -176,14 +178,14 @@ export default function Customers() {
           icon={Users}
           title="No customers found"
           description="Add your first customer to get started."
-          action={
+          action={can('customers','edit_self') ? (
             <button
               onClick={() => navigate('/customers/new')}
               className="px-4 py-2 bg-[#1A73E8] text-white rounded-xl text-sm font-medium min-h-[44px]"
             >
               Add Customer
             </button>
-          }
+          ) : null}
         />
       ) : (
         <div className="space-y-2">

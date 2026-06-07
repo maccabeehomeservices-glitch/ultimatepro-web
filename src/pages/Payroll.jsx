@@ -7,6 +7,7 @@ import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
 import Modal from '../components/ui/Modal';
 import { reportsApi, payrollApi } from '../lib/api';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { useAuth } from '../hooks/useAuth';
 
 function downloadBlob(blob, filename) {
   const url = window.URL.createObjectURL(blob);
@@ -25,6 +26,7 @@ function formatCurrency(v) {
 
 export default function Payroll() {
   const { showSnack } = useSnackbar();
+  const { can } = useAuth();
   const navigate = useNavigate();
   const today = new Date();
   const [from, setFrom] = useState(format(new Date(today.getFullYear(), today.getMonth(), 1), 'yyyy-MM-dd'));
@@ -115,12 +117,14 @@ export default function Payroll() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-gray-900">Payroll</h1>
         <div className="flex gap-2">
+          {can('accounting_earnings','full') && (
           <button
             onClick={() => setShowMarkPaid(true)}
             className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-green-700 min-h-[44px]"
           >
             ✓ Mark Paid
           </button>
+          )}
           <button
             onClick={async () => {
               try {

@@ -5,6 +5,7 @@ import { useGet, useMutation } from '../hooks/useApi';
 import api, { invoicesApi, paymentsApi, customersApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
+import { useAuth } from '../hooks/useAuth';
 import { format } from 'date-fns';
 import SignaturePad from '../components/SignaturePad';
 
@@ -29,6 +30,7 @@ export default function InvoiceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { showSnack } = useSnackbar();
+  const { can } = useAuth();
   const { data, loading, refetch } = useGet(`/invoices/${id}`);
   const { mutate, loading: acting } = useMutation();
   const [paymentModal, setPaymentModal] = useState(false);
@@ -560,7 +562,7 @@ export default function InvoiceDetail() {
           </Button>
         </div>
       )}
-      {!isPaid && (
+      {!isPaid && can('payments_refunds','edit_self') && (
         <div className="flex flex-col gap-2 mb-4">
           <Button onClick={() => setPaymentModal(true)} className="w-full">
             Charge Payment

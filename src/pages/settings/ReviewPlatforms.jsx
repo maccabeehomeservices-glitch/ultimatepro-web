@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsApi } from '../../lib/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const PLATFORM_TEMPLATES = [
   { name: 'Google',    icon: '🔍', url_prefix: 'https://g.page/r/' },
@@ -22,6 +23,7 @@ function getPlatformIcon(p) {
 export default function ReviewPlatforms() {
   const navigate = useNavigate();
   const [platforms, setPlatforms] = useState([]);
+  const { can } = useAuth();
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingPlatform, setEditingPlatform] = useState(null);
@@ -133,12 +135,14 @@ export default function ReviewPlatforms() {
           ←
         </button>
         <h1 className="text-xl font-bold text-gray-900 flex-1">Review Platforms</h1>
+        {can('team_settings','full') && (
         <button
           onClick={openAdd}
           className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold min-h-[44px]"
         >
           + Add
         </button>
+        )}
       </div>
 
       {/* Quick-add templates */}

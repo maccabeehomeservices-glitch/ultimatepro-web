@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sourcesApi } from '../../lib/api';
+import { useAuth } from '../../hooks/useAuth';
 
 const TABS = ['Contacts', 'Ad Channels', 'Commission'];
 
@@ -20,6 +21,7 @@ export default function JobSources() {
   const [contacts, setContacts] = useState([]);
   const [channels, setChannels] = useState([]);
   const [rules, setRules] = useState([]);
+  const { can } = useAuth();
   const [loading, setLoading] = useState(true);
 
   // Contact state
@@ -274,14 +276,16 @@ export default function JobSources() {
         </button>
         <h1 className="text-xl font-bold text-gray-900 flex-1">Job Sources</h1>
         {activeTab === 0 && (
+          can('job_sources_commissions','full') && (
           <button
             onClick={openAddContact}
             className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold min-h-[44px]"
           >
             + Add
           </button>
+          )
         )}
-        {activeTab === 2 && (
+        {activeTab === 2 && can('job_sources_commissions','full') && (
           <button
             onClick={openAddRule}
             className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold min-h-[44px]"
@@ -384,12 +388,14 @@ export default function JobSources() {
                   </div>
                 ))}
               </div>
+              {can('job_sources_commissions','full') && (
               <button
                 onClick={() => { setEditingChannel(null); setChannelName(''); setShowChannelForm(true); }}
                 className="w-full py-3 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 hover:border-blue-400 hover:text-blue-600 font-medium text-sm min-h-[44px]"
               >
                 + Add Custom Channel
               </button>
+              )}
             </div>
           )}
 

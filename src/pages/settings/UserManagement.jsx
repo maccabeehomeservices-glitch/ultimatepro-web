@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import api, { usersApi } from '../../lib/api'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../../components/ui/Modal'
+import { useAuth } from '../../hooks/useAuth'
 
 // Display labels for the permission grid (model lives in backend/utils/permissions.js,
 // fetched via GET /users/permission-schema — these are just the human strings).
@@ -20,6 +21,7 @@ const LEVEL_LABELS = { none: 'None', view: 'View', edit_self: 'Edit (self)', ful
 
 export default function UserManagement() {
   const navigate = useNavigate()
+  const { can } = useAuth()
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -193,10 +195,12 @@ export default function UserManagement() {
           </button>
           <h1 className="text-xl font-bold text-gray-900">Team Members</h1>
         </div>
+        {can('team_settings','full') && (
         <button onClick={openAdd}
           className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold min-h-[44px]">
           + Add Team Member
         </button>
+        )}
       </div>
 
       <div className="space-y-3">
