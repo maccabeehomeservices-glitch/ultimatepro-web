@@ -144,12 +144,6 @@ const TIERS=[
   ["SMS Thread","sms-thread","Open via /phone/sms alias","broken","param-name mismatch","GET /sms/conversations/undefined/messages",""],
   ["Live Map","live-map","Open tech from pin","partial","web info-only","Android: onJob(current_job_id)",""],
   ["Membership Plans","membership-plans","Edit plan","partial","web resets is_active=true (frequency vocab now aligned)","PUT /memberships/plans/:id",""],
-  ["Online Booking","online-booking","Load settings","partial","web misreads most keys","GET /settings/booking",""],
-  ["Online Booking","online-booking","Display name + tagline","broken","business_name vs company_display_name","PUT /settings/booking",""],
-  ["Online Booking","online-booking","Service areas","broken","zip vs zip_code","PUT /settings/booking",""],
-  ["Online Booking","online-booking","Appointment reminders","broken","nested vs flat reminder_*","PUT /settings/booking",""],
-  ["Online Booking","online-booking","Follow-up reminders","broken","nested vs flat followup_*","PUT /settings/booking",""],
-  ["Online Booking","online-booking","Save settings","partial","web can 400","PUT /settings/booking (upsert)",""],
   ["Online Booking","online-booking","Customer booking form submit","broken","React /book is an unwired STUB (console.log only, never POSTs); the backend-served HTML /book form works → route-collision risk in prod (which /book is live?)","POST /book/submit · DECISION PENDING",""],
  ]},
  {n:"TIER 4",title:"Settings / admin / integrations",sub:"Company Profile · Notifications · Custom Fields · Automation · Integrations/QuickBooks · Settings",rows:[
@@ -168,6 +162,7 @@ const TIERS=[
   ["Inventory","inventory","Transfer → truck","fixed","web now POSTs the registered /trucks/:truckId/send-items (was unregistered /transfer → 404); warehouse −qty / truck +qty","POST /inventory/trucks/:truckId/send-items",""],
   ["Membership Plans","membership-plans","Add plan","fixed","web frequency vocab aligned to the DB CHECK (weekly/…/semi_annually/annually); previously semi_annual/annual failed the CHECK → create failed. next-job base now jobs.scheduled_start","POST /memberships/plans",""],
   ["Network","network","Web connection Accept/Decline","fixed","web detail modal now wires recipient-only Accept/Decline → PUT /network/connections/:id/respond (mirrors Android)","networkApi.respond",""],
+  ["Online Booking","online-booking","Config save/load (display name · reminders · service areas)","fixed","web OnlineBooking.jsx refactored to the backend flat schema (company_display_name/company_tagline, flat reminder_*/followup_*, service_areas[].{zip_code,radius_miles}); save+load round-trip, fixes the service_areas 400. Customer /book form stub stays OPEN above.","PUT /settings/booking",""],
  ]},
 ];
 

@@ -16,8 +16,8 @@
 | `route_web` | `/settings/online-booking` → `OnlineBooking` (OnlineBooking.jsx, 158 lines) |
 | `manages_table` | `booking_settings` (one row per company; auto-created on first GET) |
 | `primary_actors` | owner, admin |
-| `purpose` | Configure the public self-booking page (`/book?company=<UCM_ID>`): enable it, set display name/tagline, working days, time windows, service areas, services, confirmation message, and appointment/follow-up reminders. **The web page is badly mismatched against the backend (wrong field keys + nested-vs-flat shapes); the Android screen is correct and is the only one that exposes the booking link.** |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
+| `purpose` | Configure the public self-booking page (`/book?company=<UCM_ID>`): enable it, set display name/tagline, working days, time windows, service areas, services, confirmation message, and appointment/follow-up reminders. **FIXED 2026-06-07: web OnlineBooking.jsx now mirrors the backend FLAT schema (like Android) — save + load round-trip. The per-action `failure_modes` below describe the PRE-FIX state.** (Android remains the only surface that exposes the public booking link.) |
+| `last_verified` | 2026-06-07 · Web OnlineBooking.jsx refactored to the backend FLAT schema (mirrors Android): `service_areas:[{zip_code, radius_miles:Number, label}]` (fixes the Save 400), `company_display_name`/`company_tagline`, flat `reminder_*`/`followup_*`; GET load + PUT save now round-trip; uncontrolled fields (working_days/time_windows/services/…) passed through unchanged; bad ZIP caught inline. Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
 
 ### load_sequence
 Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_id`; if absent it **INSERTs a default row** and returns it. `service_areas` normalised to `[]` when null.
@@ -50,7 +50,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **end_state:** Form populated.
 - **failure_modes:** **web maps almost nothing**, it reads `business_name`/`tagline`/`appointment_reminders`/`followup_reminders` and `service_areas[].zip/.radius`, but the row has `company_display_name`/`company_tagline`/flat `reminder_*`/`followup_*` and `service_areas[].zip_code/.radius_miles` → web shows blank name/tagline, default-off reminders, and "undefined, undefined mi" for any existing area.
 - **parity:** DIVERGENT, Android reads the correct keys (`companyDisplayName`, `companyTagline`, `serviceAreas[].zipCode/.radiusMiles`, flat reminder/followup) and populates fully.
-- **status:** PARTIAL
+- **status:** OK _(FIXED 2026-06-07: web aligned to backend flat keys)_
 - **status_note:** Only `enabled` round-trips on web; the rest of the loaded config is misread.
 
 ### `online-booking.enable-toggle`
@@ -79,7 +79,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **end_state:** Branding saved (Android); discarded (web).
 - **failure_modes:** **web sends `business_name`/`tagline`, the backend reads `company_display_name`/`company_tagline`** → silently ignored (COALESCE-null keeps old values). Nothing persists from web.
 - **parity:** DIVERGENT, Android uses the correct keys; web uses wrong keys → no-op.
-- **status:** BROKEN
+- **status:** OK _(FIXED 2026-06-07: web aligned to backend flat keys)_
 - **status_note:** Wrong request keys; web edits never save.
 
 ### `online-booking.availability`
@@ -109,7 +109,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **end_state:** Areas saved (Android); save fails (web).
 - **failure_modes:** **web sends `{zip, radius}`; backend requires `zip_code`/`radius_miles`** → on Save with any web-added area, validation throws **400 "Invalid zip_code: undefined"**, failing the entire Save. Web also renders existing areas as "undefined, undefined mi" (reads `.zip`/`.radius`).
 - **parity:** DIVERGENT, Android matches the contract (and a 5-digit/1–100 dialog); web's keys break both display and save.
-- **status:** BROKEN
+- **status:** OK _(FIXED 2026-06-07: web aligned to backend flat keys)_
 - **status_note:** Wrong keys → display broken + Save 400 when a web-added area is present.
 
 ### `online-booking.services-offered`
@@ -152,7 +152,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **end_state:** Reminders saved (Android); discarded (web).
 - **failure_modes:** **web sends a nested `appointment_reminders` object; backend reads flat `reminder_enabled`/`reminder_hours_before`/`reminder_method`** → all three ignored.
 - **parity:** DIVERGENT, Android sends flat keys; web's nested object is a no-op.
-- **status:** BROKEN
+- **status:** OK _(FIXED 2026-06-07: web aligned to backend flat keys)_
 - **status_note:** Nested-vs-flat shape mismatch; web reminder config never saves.
 
 ### `online-booking.followup-reminders`
@@ -167,7 +167,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **end_state:** Saved (Android); discarded (web).
 - **failure_modes:** **web sends a nested `followup_reminders` object; backend reads flat `followup_*`** → ignored.
 - **parity:** DIVERGENT, same nested-vs-flat mismatch as appointment reminders.
-- **status:** BROKEN
+- **status:** OK _(FIXED 2026-06-07: web aligned to backend flat keys)_
 - **status_note:** Web follow-up config never saves.
 
 ### `online-booking.save`
@@ -182,7 +182,7 @@ Both: `GET /settings/booking` → `SELECT * FROM booking_settings WHERE company_
 - **end_state:** "Settings saved".
 - **failure_modes:** **on web, only `enabled` actually persists**; everything else is dropped (wrong keys/shape), and if a web-added service area is present the request **400s** ("Invalid zip_code: undefined").
 - **parity:** DIVERGENT, Android's Save persists every field correctly; web's Save is effectively an enabled-only toggle that can 400.
-- **status:** PARTIAL
+- **status:** OK _(FIXED 2026-06-07: web aligned to backend flat keys)_
 - **status_note:** Mechanism is fine; web's payload keys are the problem.
 
 ### `online-booking.booking-link`
