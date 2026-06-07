@@ -5,11 +5,15 @@ import { useGet, useMutation } from '../../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Button, Modal, Input, Select } from '../../components/ui';
 import { useSnackbar } from '../../components/ui/Snackbar';
 
+// Values MUST match the DB CHECK (membership_plans.frequency) + the interval
+// switch in routes/memberships.js + Android (MembershipPlansScreen.kt). Previously
+// sent 'semi_annual'/'annual' which violated the CHECK → create failed.
 const FREQUENCY_OPTIONS = [
+  { value: 'weekly', label: 'Weekly' },
   { value: 'monthly', label: 'Monthly' },
   { value: 'quarterly', label: 'Quarterly' },
-  { value: 'semi_annual', label: 'Semi-Annual' },
-  { value: 'annual', label: 'Annual' },
+  { value: 'semi_annually', label: 'Semi-Annual' },
+  { value: 'annually', label: 'Annual' },
 ];
 
 function emptyForm() {

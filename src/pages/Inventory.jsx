@@ -159,10 +159,16 @@ export default function Inventory() {
     if (!transferTruckId) { showSnack('Select a truck', 'error'); return; }
     setTransferring(true);
     try {
-      await api.post('/inventory/transfer', {
-        item_id: transferItem.id || transferItem._id,
-        truck_id: transferTruckId,
-        quantity: transferQty,
+      // Warehouse → truck stock move. Uses the registered send-items endpoint
+      // (truckId in the path, items[] body) — mirrors Android. The old
+      // POST /inventory/transfer was never registered (404).
+      await api.post(`/inventory/trucks/${transferTruckId}/send-items`, {
+        items: [{
+          pricebook_item_id: transferItem.id || transferItem._id,
+          qty: transferQty,
+          min_qty: 0,
+          is_permanent: false,
+        }],
       });
       showSnack('Transferred', 'success');
       setTransferItem(null);

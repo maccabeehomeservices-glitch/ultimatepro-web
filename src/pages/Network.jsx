@@ -4,6 +4,7 @@ import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Badge, Button, Input, Modal } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { networkApi } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
 
 const SEARCH_TABS = [
   { id: 'phone', label: '📱 By Phone', type: 'tel', placeholder: '+1 (555) 000-0000' },
@@ -13,6 +14,7 @@ const SEARCH_TABS = [
 
 export default function Network() {
   const { showSnack } = useSnackbar();
+  const { company } = useAuth();
   const [copied, setCopied] = useState(false);
   const [ucmCopied, setUcmCopied] = useState(false);
   const [searchTab, setSearchTab] = useState('phone');
@@ -162,6 +164,23 @@ export default function Network() {
       await networkApi.respondToAgreement(agreementId, action);
       showSnack(action === 'accept' ? 'Agreement accepted!' : 'Agreement declined', 'success');
       await reloadDetail();
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed', 'error');
+    } finally {
+      setResponding(false);
+    }
+  }
+
+  // Accept/decline an incoming connection request (recipient only; the server
+  // also rejects the inviting party). Mirrors Android's respondConnection.
+  async function handleRespondConnection(action) {
+    const connId = detailConn?.id || detailConn?._id;
+    setResponding(true);
+    try {
+      await networkApi.respond(connId, action);
+      showSnack(action === 'accept' ? 'Connection accepted!' : 'Connection declined', 'success');
+      await reloadDetail();
+      refetchConnections();
     } catch (err) {
       showSnack(err.response?.data?.error || 'Failed', 'error');
     } finally {
@@ -348,6 +367,34 @@ export default function Network() {
                 </div>
               </div>
             </div>
+
+            {/* Pending invite — accept/decline (recipient only; server enforces non-inviter) */}
+            {conn?.status === 'pending' && conn?.invited_by && conn?.invited_by !== company?.id && (
+              <div>
+                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Connection Request</p>
+                <div className="bg-amber-50 rounded-xl p-3 space-y-2 border border-amber-200">
+                  <p className="text-sm text-gray-600">
+                    {conn?.partner_name || conn?.company_name || 'This contractor'} invited you to connect.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleRespondConnection('accept')}
+                      disabled={responding}
+                      className="flex-1 py-2.5 bg-[#1A73E8] text-white rounded-xl font-semibold text-sm min-h-[44px] disabled:opacity-50"
+                    >
+                      {responding ? '...' : 'Accept'}
+                    </button>
+                    <button
+                      onClick={() => handleRespondConnection('decline')}
+                      disabled={responding}
+                      className="flex-1 py-2.5 border border-red-300 text-red-600 rounded-xl font-semibold text-sm min-h-[44px] disabled:opacity-50"
+                    >
+                      {responding ? '...' : 'Decline'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Revenue Split */}
             {activeAgreement && (
