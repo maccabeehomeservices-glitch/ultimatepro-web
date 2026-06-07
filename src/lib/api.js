@@ -795,6 +795,10 @@ export const usersApi = {
 
   reactivate: (id) =>
     api.put(`/users/${id}/reactivate`),
+
+  // Permission model (sections, levels, role templates) for the Team Member grid.
+  getPermissionSchema: () =>
+    api.get('/users/permission-schema'),
 };
 
 // ─── TIMESHEETS ───────────────────────────────────────────────────────────────

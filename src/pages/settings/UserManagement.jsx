@@ -3,6 +3,21 @@ import api, { usersApi } from '../../lib/api'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../../components/ui/Modal'
 
+// Display labels for the permission grid (model lives in backend/utils/permissions.js,
+// fetched via GET /users/permission-schema — these are just the human strings).
+const SECTION_LABELS = {
+  jobs: 'Jobs',
+  customers: 'Customers',
+  estimates_invoices: 'Estimates & Invoices',
+  payments_refunds: 'Payments & Refunds',
+  pricebook: 'Pricebook',
+  accounting_earnings: 'Accounting & Earnings',
+  reports: 'Reports',
+  job_sources_commissions: 'Job Sources & Commissions',
+  team_settings: 'Team & Settings',
+}
+const LEVEL_LABELS = { none: 'None', view: 'View', edit_self: 'Edit (self)', full: 'Full' }
+
 export default function UserManagement() {
   const navigate = useNavigate()
   const [users, setUsers] = useState([])
@@ -15,6 +30,10 @@ export default function UserManagement() {
   const [form, setForm] = useState({
     first_name: '', last_name: '', email: '', phone: '', role: 'technician', password: ''
   })
+  // Permission grid (Phase 1: stored + editable, enforced by nothing yet).
+  const [permSchema, setPermSchema] = useState(null)   // { sections, levels, role_templates }
+  const [gridPerms, setGridPerms]   = useState({})     // full per-section levels shown in the grid
+  const [roleNote, setRoleNote]     = useState('')
 
   async function fetchUsers() {
     try {
@@ -25,10 +44,40 @@ export default function UserManagement() {
   }
 
   useEffect(() => { fetchUsers() }, [])
+  useEffect(() => {
+    usersApi.getPermissionSchema().then(r => setPermSchema(r.data)).catch(() => {})
+  }, [])
+
+  function templateFor(role) {
+    return permSchema?.role_templates?.[role] || {}
+  }
+  // Seed the grid = override[section] ?? roleTemplate[section]. Overrides default {}.
+  function seedGrid(role, overrides = {}) {
+    const tpl = templateFor(role)
+    const sections = permSchema?.sections || Object.keys(tpl)
+    const merged = {}
+    sections.forEach(s => { merged[s] = overrides[s] ?? tpl[s] ?? 'none' })
+    setGridPerms(merged)
+  }
+  // Selecting a role re-seeds the grid to that template AND clears overrides.
+  function handleRoleChange(newRole) {
+    setForm(p => ({ ...p, role: newRole }))
+    seedGrid(newRole)
+    setRoleNote(`Reset to ${newRole} defaults`)
+  }
+  // If the schema arrives after the form opened, seed the grid once it's available.
+  useEffect(() => {
+    if (permSchema && showForm && Object.keys(gridPerms).length === 0) {
+      seedGrid(form.role, editingUser?.permissions || {})
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [permSchema, showForm])
 
   function openAdd() {
     setEditingUser(null)
     setForm({ first_name: '', last_name: '', email: '', phone: '', role: 'technician', password: '' })
+    seedGrid('technician')
+    setRoleNote('')
     setShowForm(true)
   }
 
@@ -42,19 +91,30 @@ export default function UserManagement() {
       role: user.role || 'technician',
       password: '',
     })
+    seedGrid(user.role || 'technician', user.permissions || {})
+    setRoleNote('')
     setShowForm(true)
   }
 
   async function handleSave() {
     setSaving(true)
     try {
+      // Delta vs the role template — send ONLY overridden sections (null if none).
+      const tpl = templateFor(form.role)
+      const overrides = {}
+      for (const s of (permSchema?.sections || [])) {
+        if (gridPerms[s] && gridPerms[s] !== tpl[s]) overrides[s] = gridPerms[s]
+      }
+      const permissions = Object.keys(overrides).length ? overrides : null
+
       if (editingUser) {
         await api.put(`/users/${editingUser.id}`, {
           first_name: form.first_name, last_name: form.last_name,
           email: form.email, phone: form.phone, role: form.role,
+          permissions,
           ...(form.password ? { password: form.password } : {}),
         })
-        setSnack({ msg: 'User updated!', type: 'success' })
+        setSnack({ msg: 'Team member updated!', type: 'success' })
       } else {
         if (!form.password) {
           setSnack({ msg: 'Password is required for new users', type: 'error' })
@@ -65,8 +125,9 @@ export default function UserManagement() {
           first_name: form.first_name, last_name: form.last_name,
           email: form.email, phone: form.phone, role: form.role,
           password: form.password,
+          permissions,
         })
-        setSnack({ msg: 'User created!', type: 'success' })
+        setSnack({ msg: 'Team member created!', type: 'success' })
       }
       setShowForm(false)
       fetchUsers()
@@ -134,7 +195,7 @@ export default function UserManagement() {
         </div>
         <button onClick={openAdd}
           className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold min-h-[44px]">
-          + Add User
+          + Add Team Member
         </button>
       </div>
 
@@ -188,7 +249,7 @@ export default function UserManagement() {
       <Modal
         isOpen={showForm}
         onClose={() => setShowForm(false)}
-        title={editingUser ? 'Edit User' : 'Add Team Member'}
+        title={editingUser ? 'Edit Team Member' : 'Add Team Member'}
       >
         <div className="space-y-4">
           <div className="flex gap-3">
@@ -234,7 +295,7 @@ export default function UserManagement() {
             <select
               className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={form.role}
-              onChange={e => setForm(p => ({ ...p, role: e.target.value }))}
+              onChange={e => handleRoleChange(e.target.value)}
             >
               <option value="technician">Technician</option>
               <option value="dispatcher">Dispatcher</option>
@@ -242,6 +303,40 @@ export default function UserManagement() {
               <option value="admin">Admin</option>
             </select>
           </div>
+
+          {/* Permission grid (Phase 1: stored + editable; nothing enforces it yet) */}
+          {form.role === 'owner' ? (
+            <div className="rounded-xl bg-purple-50 border border-purple-200 px-4 py-3 text-sm text-purple-700">
+              Owner has <strong>Full access</strong> to everything.
+            </div>
+          ) : permSchema ? (
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-gray-600">Permissions</label>
+                {roleNote && <span className="text-[11px] text-gray-400">{roleNote}</span>}
+              </div>
+              <div className="rounded-xl border border-gray-200 divide-y divide-gray-100">
+                {permSchema.sections.map(section => (
+                  <div key={section} className="px-3 py-2">
+                    <div className="text-sm font-medium text-gray-800 mb-1.5">{SECTION_LABELS[section] || section}</div>
+                    <div className="grid grid-cols-4 gap-1">
+                      {permSchema.levels.map(level => {
+                        const active = gridPerms[section] === level
+                        return (
+                          <button key={level} type="button"
+                            onClick={() => setGridPerms(p => ({ ...p, [section]: level }))}
+                            className={`text-xs px-1 py-2 rounded-lg border min-h-[44px] ${active ? 'bg-blue-600 text-white border-blue-600 font-semibold' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}>
+                            {LEVEL_LABELS[level] || level}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">
               {editingUser ? 'Password' : 'Password *'}
@@ -260,7 +355,7 @@ export default function UserManagement() {
             </button>
             <button onClick={handleSave} disabled={saving}
               className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]">
-              {saving ? 'Saving...' : editingUser ? 'Save Changes' : 'Create User'}
+              {saving ? 'Saving...' : editingUser ? 'Save Changes' : 'Create Team Member'}
             </button>
           </div>
         </div>
