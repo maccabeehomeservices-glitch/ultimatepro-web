@@ -130,8 +130,6 @@ const TIERS=[
   ["Dashboard","dashboard","KPI tiles","partial","different metrics; Android tiles static","web: 2 tiles → /phone",""],
  ]},
  {n:"TIER 3",title:"Partner & ops",sub:"Network · Inventory · Phone/SMS · SMS Thread · Live Map · Membership Plans · Online Booking",rows:[
-  ["SMS Thread","sms-thread","Header name","partial","web always falls back","derived, no fetch",""],
-  ["SMS Thread","sms-thread","Open via /phone/sms alias","broken","param-name mismatch","GET /sms/conversations/undefined/messages",""],
   ["Live Map","live-map","Open tech from pin","partial","web info-only","Android: onJob(current_job_id)",""],
  ]},
  {n:"TIER 4",title:"Settings / admin / integrations",sub:"Company Profile · Notifications · Custom Fields · Automation · Integrations/QuickBooks · Settings",rows:[
@@ -155,6 +153,8 @@ const TIERS=[
   ["Dashboard","dashboard","View all (memberships)","fixed","'View all' now → /settings/membership-plans (was /memberships → 404). No enrolled-memberships list page exists; lands on plan management — flagged","navigate /settings/membership-plans",""],
   ["Job Detail","job-detail","Dispatch location","fixed","web now sends the dispatcher's real geolocation for a real ETA when available; omits coords (no fake 0,0) when denied — backend skips ETA gracefully. Status still flips to en_route","POST /jobs/:id/dispatch",""],
   ["Membership Plans","membership-plans","Edit plan (is_active)","fixed","web edit now preserves is_active (was omitted → backend re-activated a deactivated plan). Frequency vocab already aligned (Tier 3 C)","PUT /memberships/plans/:id",""],
+  ["SMS Thread","sms-thread","Open via /phone/sms alias","fixed","alias route param renamed /phone/sms/:conversationId → :id to match SmsThread's useParams().id + the canonical /phone/thread/:id (was → undefined 404)","/phone/sms/:id",""],
+  ["SMS Thread","sms-thread","Header name","fixed","GET /sms/conversations/:id/messages now envelopes {conversation:{customer_name, phone_number}, messages} → header shows the contact name. Web forward-compatible (0 change); Android parser unwraps .messages, keeps cached-name fallback. Embedded /sms/job + /sms/customer left as bare arrays (callers handle them)","GET /sms/conversations/:id/messages",""],
   ["Online Booking","online-booking","Customer /book stub","fixed","the SPA /book (dead stub) now redirects to the working backend /book?company= form (preserving the query) → the bare web-domain URL reaches a real booking page. Backend HTML form + shared link unchanged","SPA /book → backend /book",""],
   ["Membership Plans","membership-plans","Add plan","fixed","web frequency vocab aligned to the DB CHECK (weekly/…/semi_annually/annually); previously semi_annual/annual failed the CHECK → create failed. next-job base now jobs.scheduled_start","POST /memberships/plans",""],
   ["Network","network","Web connection Accept/Decline","fixed","web detail modal now wires recipient-only Accept/Decline → PUT /network/connections/:id/respond (mirrors Android)","networkApi.respond",""],

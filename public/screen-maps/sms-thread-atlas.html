@@ -114,7 +114,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · Action-Map Schema v1</div>
     <h1>SMS Thread<span class="sub">One conversation, read history, send via Twilio, clear the unread badge. The one place SMS send is wired correctly.</span></h1>
-    <div class="stamp">VERIFIED<br><b>2026-05-31</b><br>commit · <b>6147cd1</b></div>
+    <div class="stamp">VERIFIED<br><b>2026-06-07</b><br>SMS fixes · <b>alias param + header envelope</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="phone-atlas.html">phone</a> · <a href="live-map-atlas.html">live map</a> › sms thread</div>
@@ -139,8 +139,8 @@
   <div class="drift">
     <h2>⚠ Screen-level drift flags</h2>
     <ul>
-      <li><b>Web header never shows the contact name.</b> <code>SmsThread</code> expects <code>data.conversation</code>, but <code>GET /sms/conversations/:id/messages</code> returns a <b>bare array</b>, so the header always falls back to "Conversation". Android sidesteps this by pulling the conversation from the already-loaded list.</li>
-      <li><b>Broken alias route</b> <code>/phone/sms/:conversationId</code> (App.jsx:111): the param is <code>conversationId</code> but the component reads <code>useParams().id</code> → <code>undefined</code> → <code>GET /sms/conversations/undefined/messages</code> 404. The live path <code>/phone/thread/:id</code> works. Latent, nothing links to the alias.</li>
+      <li><b>Header name — FIXED 2026-06-07.</b> <code>GET /sms/conversations/:id/messages</code> now returns <code>{ conversation:{customer_name, phone_number,…}, messages }</code>. Web reads <code>data.conversation.customer_name</code> (it was already forward-compatible) → the header shows the name; Android unwraps <code>.messages</code> and keeps its cached-name fallback. Was: a bare array → web always fell back to "Conversation".</li>
+      <li><b>Alias route — FIXED 2026-06-07.</b> <code>/phone/sms/:conversationId</code> → <code>/phone/sms/:id</code> (App.jsx:111), matching <code>SmsThread</code>'s <code>useParams().id</code> + the canonical <code>/phone/thread/:id</code>. Was: <code>undefined</code> → 404.</li>
       <li><b>This is the correct SMS-send surface.</b> Unlike the Job-Detail / Customer-Detail message tabs (bare-array endpoints where <code>conversation_id</code> is never populated, breaking inline send), the dedicated thread carries a real <code>conversation_id</code>, so <code>POST /sms/conversations/:id/send</code> succeeds.</li>
       <li><b>UNVERIFIED:</b> Twilio delivery-status callbacks (the insert hard-codes <code>status:'delivered'</code>); whether inbound messages webhook into the same <code>sms_messages</code> table.</li>
     </ul>
@@ -166,12 +166,12 @@ const A={
  d:{purpose:"Clear the unread badge when the thread opens.",actors:["office","owner"],vis:"automatic (server side-effect)",chain:[["GET","/sms/conversations/:id/messages"]],parity:"MATCH, server-side UPDATE sms_conversations SET unread_count=0; both surfaces trigger it by loading the thread."}},
 "autoscroll":{label:"Auto-scroll",status:"ok",route:", UI only",fires:"scroll to last",result:"pinned to newest",
  d:{purpose:"Keep the latest message in view on load and after sending.",actors:["office","owner"],vis:"automatic",chain:[],parity:"MATCH, web bottomRef.scrollIntoView on messages.length; Android animateScrollToItem(lastIndex) on threadMessages.size."}},
-"header-name":{label:"Header name",status:"partial",route:", derived, no fetch",fires:"read conv object",result:"name / fallback",caveat:"web always falls back",
- d:{purpose:"Show the customer name / phone at the top of the thread.",actors:["office","owner"],vis:"top bar",chain:[],parity:"DIVERGENT, Web header NEVER shows the name: it reads data?.conversation, but the messages endpoint returns a bare array (no conversation field), so it always falls back to 'Conversation'. Android reads threadConversation from the already-loaded list (conversations.find{it.id==conversationId}), showing the real name when arrived from Messages; falls back to 'Messages' only on a cold deep-link."}},
+"header-name":{label:"Header name",status:"ok",route:"GET /sms/conversations/:id/messages → {conversation, messages}",fires:"read conversation.customer_name",result:"contact name shown",caveat:"both (fixed 2026-06-07)",
+ d:{purpose:"Show the customer name / phone at the top of the thread.",actors:["office","owner"],vis:"top bar",chain:[],parity:"MATCH (fixed 2026-06-07). The messages endpoint now envelopes {conversation:{customer_name, phone_number,…}, messages}. Web reads data.conversation.customer_name (it was already forward-compatible) → header shows the name. Android unwraps .messages and keeps its cached-name fallback. Pre-fix: bare array → web always fell back to 'Conversation'."}},
 "back":{label:"Back",status:"ok",route:", nav",fires:"pop",result:"Messages list",
  d:{purpose:"Return to the conversation list.",actors:["office","owner"],vis:"top-left arrow",chain:[],parity:"MATCH, web navigate(-1); Android onBack."}},
-"open-via-sms-alias":{label:"Open via /phone/sms alias",status:"broken",route:"GET /sms/conversations/undefined/messages",fires:"404",result:"empty thread",caveat:"param-name mismatch",
- d:{purpose:"Alternate URL also wired to this screen.",actors:["office","owner"],vis:"web only; reachable by direct URL",chain:[["GET","/sms/conversations/undefined/messages"]],parity:"WEB-ONLY (broken), route declares /phone/sms/:conversationId (App.jsx:111) but SmsThread reads useParams().id, which is undefined here → fetches /sms/conversations/undefined/messages (404). The working route is /phone/thread/:id (what Phone.jsx navigates to). Latent: nothing links to the alias. Fix: read id ?? conversationId, or rename the route param to :id."}},
+"open-via-sms-alias":{label:"Open via /phone/sms alias",status:"ok",route:"GET /sms/conversations/:id/messages",fires:"load thread",result:"thread loads",caveat:"param renamed → :id (fixed 2026-06-07)",
+ d:{purpose:"Alternate URL also wired to this screen.",actors:["office","owner"],vis:"web only; reachable by direct URL",chain:[["GET","/sms/conversations/:id/messages"]],parity:"MATCH (fixed 2026-06-07). The alias param was renamed /phone/sms/:conversationId → :id (App.jsx:111) to match SmsThread's useParams().id + the canonical /phone/thread/:id. Pre-fix: undefined id → /conversations/undefined/messages 404."}},
 };
 const atlas=document.getElementById('atlas');
 const counts={ok:0,partial:0,broken:0,dead:0};

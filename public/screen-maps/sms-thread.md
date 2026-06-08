@@ -13,10 +13,10 @@
 | `display_name` | SMS Conversation Thread |
 | `surfaces` | android, web |
 | `route_android` | `SmsThreadScreen(conversationId)` (PhoneScreens.kt:691), reached from the Messages tab |
-| `route_web` | `/phone/thread/:id` → `SmsThread` (SmsThread.jsx, 92 lines). **Also** registered at `/phone/sms/:conversationId` (App.jsx:111), see drift: that alias is broken. |
+| `route_web` | `/phone/thread/:id` → `SmsThread` (SmsThread.jsx, 92 lines). **Also** registered at `/phone/sms/:id` (App.jsx:111) — both work (alias param fixed 2026-06-07). |
 | `primary_actors` | office (CSR), owner |
 | `purpose` | A one-to-one SMS thread with a customer: read the message history, send a reply via Twilio, and clear the unread badge. Reached by tapping a conversation row in the Phone → Messages list. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
+| `last_verified` | 2026-06-07 · SMS thread fixes: **alias param** `/phone/sms/:conversationId` → `:id` (matches the component, was → `undefined` 404); **header name** — `GET /sms/conversations/:id/messages` now envelopes `{ conversation: {customer_name, phone_number}, messages }` so the header shows the contact name (web was forward-compatible; Android parser unwraps `.messages`, keeps its cached-name fallback). Embedded `/sms/job/:id` + `/sms/customer/:id` left as bare arrays (their callers handle it). Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
 
 ### load_sequence
 Both surfaces: `GET /sms/conversations/:id/messages` with the `conversation_id` taken from the route/selection, **not** re-derived, so this screen avoids the bare-array `conversation_id`-is-null bug that breaks send on the Job-Detail and Customer-Detail message tabs. The backend returns a **bare array** of messages (`res.json(messages)`) and, as a side effect, sets `unread_count = 0` on the conversation.
@@ -110,9 +110,9 @@ Both surfaces: `GET /sms/conversations/:id/messages` with the `conversation_id` 
 - **side_effects:** none.
 - **end_state:** Name + phone, or a generic fallback.
 - **failure_modes:** falls back to a placeholder when the conversation object is absent.
-- **parity:** DIVERGENT, **Web header never shows the name.** It reads `conversation = data?.conversation || {}`, but `/sms/conversations/:id/messages` returns a **bare array** (no `conversation` field), so it always falls back to "Conversation". **Android** reads `threadConversation` from the already-loaded conversations list (`conversations.find { it.id == conversationId }`), so it shows the real name when you arrived from the Messages list, and falls back to "Messages" only on a cold deep-link.
-- **status:** PARTIAL
-- **status_note:** Cosmetic but real: web loses the contact name because the messages endpoint doesn't include the conversation header; Android works around it client-side.
+- **parity:** MATCH _(fixed 2026-06-07)_ — `GET /sms/conversations/:id/messages` now returns `{ conversation: {customer_name, phone_number, …}, messages }`. Web reads `data.conversation.customer_name` (it was already forward-compatible) → header shows the name. Android unwraps `.messages` and still shows the name from its cached conversation list. Pre-fix: the endpoint returned a bare array, so web always fell back to "Conversation".
+- **status:** OK _(FIXED 2026-06-07)_
+- **status_note:** Backend now envelopes the conversation with the messages; no client-side workaround needed.
 
 ### `sms-thread.back`
 - **label:** Back
@@ -138,13 +138,13 @@ Both surfaces: `GET /sms/conversations/:id/messages` with the `conversation_id` 
 - **visibility:** web only; reachable by direct URL.
 - **precondition:** n/a
 - **confirm:** n/a
-- **route_chain:** `/phone/sms/:conversationId` → `SmsThread` → `GET /sms/conversations/undefined/messages`
+- **route_chain:** `/phone/sms/:id` → `SmsThread` (reads `useParams().id`) → `GET /sms/conversations/:id/messages`
 - **request_body:** n/a
-- **side_effects:** none (request 404s).
-- **end_state:** Empty thread / "Failed to load".
-- **failure_modes:** **param-name mismatch**, the route declares `:conversationId` (App.jsx:111) but `SmsThread` reads `useParams().id`, which is `undefined` on this route, so it fetches `/sms/conversations/undefined/messages` (404).
-- **parity:** WEB-ONLY (broken). The working web route is `/phone/thread/:id`, which is the one Phone.jsx actually navigates to.
-- **status:** BROKEN
+- **side_effects:** loads the thread.
+- **end_state:** Thread loads.
+- **failure_modes:** none _(fixed 2026-06-07)_ — the alias param was renamed `:conversationId` → `:id` to match the component + the canonical route. Pre-fix it fetched `/conversations/undefined/messages` (404).
+- **parity:** MATCH _(both alias + canonical `/phone/thread/:id` work)_.
+- **status:** OK _(FIXED 2026-06-07)_
 - **status_note:** Dead alias. Fix = read `useParams().id ?? useParams().conversationId`, or change the route to `:id`. Nothing in the app links to this alias today, so it's latent.
 
 ---
