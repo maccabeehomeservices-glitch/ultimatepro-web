@@ -85,7 +85,7 @@
   <header class="mast">
     <div class="eyebrow">UltimatePro · Screen Atlas · fix backlog</div>
     <h1>Prioritized Fix List<span class="sub">Every broken / partial / dead action across the 29 maps, ordered by business importance: core job and money loop first.</span></h1>
-    <div class="stamp">ATLAS<br><b>2026-06-07</b><br>Post permission-system + Tier-3 sync · <b>7 resolved</b></div>
+    <div class="stamp">ATLAS<br><b>2026-06-07</b><br>Re-verified vs live code · <b>statuses corrected</b></div>
   </header>
 
   <div class="crumb"><a href="index.html">all maps</a> · <a href="spine-overview.html">by spine</a> › fix list</div>
@@ -94,7 +94,7 @@
 
   <div class="causes">
     <h2>⚡ Recurring root-causes: fix once, clear many</h2>
-    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. All three are now resolved (SIG, SMS-CONV, SCANPAY-404), so no tagged rows remain. Each fix cleared every screen under its tag. Phase 1 then closed the Complete-Job money gap: one JobDetail.jsx change (partner-split form + Status-completed reroute) cleared 5 rows across Job Detail and Complete Job. Phase 1 New Job (F2/F2b/F3) then removed the Save & Send divergence and downgraded the schedule row to the timezone-only issue (TZ, next commit). Money Commit A + B (MONEY) then rebuilt the earnings model around real collected money: one gross source, earnings on the clear-day, refund clawback, and the ScanPay earnings-gap fix. <b>2026-06-07 sync:</b> the granular permission system (Phases 1–3) now enforces 9 sections server-side and hides controls/nav on both platforms (incl. the owner-nav backstop fix); Payroll Option-1 retired the dead period-lock; and Tier-3 cleared Inventory transfer (A), Membership frequency (C), and web Network connection accept/decline (D). Those 7 are in the <b>RESOLVED ✓</b> group below; the booking customer-form stub (route-collision) stays OPEN pending a prod check.</p>
+    <p class="lead">Three wrong-key / unregistered-route bug classes were each breaking the same flow on multiple screens. All three are now resolved (SIG, SMS-CONV, SCANPAY-404), so no tagged rows remain. Each fix cleared every screen under its tag. Phase 1 then closed the Complete-Job money gap: one JobDetail.jsx change (partner-split form + Status-completed reroute) cleared 5 rows across Job Detail and Complete Job. Phase 1 New Job (F2/F2b/F3) then removed the Save & Send divergence and downgraded the schedule row to the timezone-only issue (TZ, next commit). Money Commit A + B (MONEY) then rebuilt the earnings model around real collected money: one gross source, earnings on the clear-day, refund clawback, and the ScanPay earnings-gap fix. <b>2026-06-07 sync:</b> the granular permission system (Phases 1–3) now enforces 9 sections server-side and hides controls/nav on both platforms (incl. the owner-nav backstop fix); Payroll Option-1 retired the dead period-lock; and Tier-3 cleared Inventory transfer (A), Membership frequency (C), and web Network connection accept/decline (D). Those are in the <b>RESOLVED ✓</b> group below; the booking customer-form stub (route-collision) stays OPEN pending a prod check. <b>2026-06-07 re-verification:</b> every item re-checked against live code. Newly verified-fixed and moved to RESOLVED: <b>Job Detail · Delete</b> (3a-hidden) and <b>Team Members · List/Add/Edit</b> (first/last-name + valid role enum). <b>Two status corrections:</b> <b>Automation (Ailot)</b> was wrongly "dead" — the rule engine is fully wired and firing (immediate + cron); the only gap is no client rule-authoring UI. <b>QuickBooks</b> is built + wired (real OAuth + sync), parked pending QBO app credentials (so Integrations isn't "dead" — only the Stripe card is a placeholder). All other broken/partial rows were re-verified as genuinely still open (accuracy over optimism — nothing flipped without code proof).</p>
     <ul>
       <li><span class="tag">SIG</span><span><b>signature_data wrong-key class: fully resolved.</b> Web posted <code>signature_data</code>; handlers want <code>signature</code> (invoice/estimate) or <code>signature_url</code> (job). Phase 0 fixed all three routes (8e01dbd invoice + estimate; this commit job → <code>signature_url</code>). No key-mismatch remains. The 1 row still tagged is Estimate <code>present-gbb</code>, a mis-wire (opens the signature modal instead of presenting tiers), not a key bug. Job Detail signature was removed entirely as dead code (2026-06-01): web modal/state/handler + Android repo method deleted, no trigger ever existed. <span class="hits">remaining tagged: Estimate Builder (present-gbb)</span></span></li>
       <li><span class="tag">SMS-CONV</span><span><b>bare-array, no conversation_id: resolved.</b> Phase 0 [SMS-CONV] made web derive <code>convId</code> from the first message object (<code>msgs[0]?.conversation_id</code>), mirroring Android <code>firstOrNull()?.conversationId</code>, so the composer enables and reply works on existing threads for both Job Detail and Customer Detail. Empty-thread start stays disabled on both surfaces (parity-matched, pre-existing). <span class="hits">no rows remain under this tag</span></span></li>
@@ -122,7 +122,6 @@ const TIERS=[
   ["New Job","new-job","Status dropdown","dead","collected but never saved (web edit only)","not sent",""],
   ["Job Detail","job-detail","Dispatch","partial","web sends no location → ETA weak","POST /jobs/:id/dispatch",""],
   ["Job Detail","job-detail","Arrived","partial","web has no confirm step","POST /jobs/:id/arrived",""],
-  ["Job Detail","job-detail","Delete","partial","tech sees button → gets 403","DELETE /jobs/:id",""],
   ["Job Detail","job-detail","Source badge","partial","web omits commission line","display",""],
   ["Job Detail","job-detail","Completion banner","partial","web has no completion sheet","GET /completion",""],
   ["Job Detail","job-detail","Linked Job card","partial","web has no linked-job card","navigate",""],
@@ -134,11 +133,6 @@ const TIERS=[
   ["Dashboard","dashboard","KPI tiles","partial","different metrics; Android tiles static","web: 2 tiles → /phone",""],
   ["Dashboard","dashboard","View all (memberships)","broken","no /memberships web route","navigate /memberships",""],
  ]},
- {n:"TIER 2",title:"Money reporting & techs",sub:"Payroll · Reports · Roster Technicians · Team Members · Job Sources · Review Platforms",rows:[
-  ["Team Members","team-members","List users","partial","web names blank","GET /users",""],
-  ["Team Members","team-members","Add / invite user","broken","name + bad role enum","POST /users",""],
-  ["Team Members","team-members","Edit user","partial","web can't edit names","PUT /users/:id",""],
- ]},
  {n:"TIER 3",title:"Partner & ops",sub:"Network · Inventory · Phone/SMS · SMS Thread · Live Map · Membership Plans · Online Booking",rows:[
   ["SMS Thread","sms-thread","Header name","partial","web always falls back","derived, no fetch",""],
   ["SMS Thread","sms-thread","Open via /phone/sms alias","broken","param-name mismatch","GET /sms/conversations/undefined/messages",""],
@@ -149,10 +143,10 @@ const TIERS=[
  {n:"TIER 4",title:"Settings / admin / integrations",sub:"Company Profile · Notifications · Custom Fields · Automation · Integrations/QuickBooks · Settings",rows:[
   ["Notifications","notifications","Toggle a preference ×5","partial","no consumer · no server","localStorage write",""],
   ["Notifications","notifications","Backend notif endpoints","dead","no table, unused by web","GET/PUT /settings/notifications",""],
-  ["Custom Fields","custom-fields","Add field","partial","Android 'dropdown' invalid","POST /company/custom-fields",""],
-  ["Custom Fields","custom-fields","Edit field","partial","Android Type/Entity dropped","PUT /company/custom-fields/:id",""],
-  ["Automation (Ailot)","automation","Add / edit / delete rule","dead","backend-only","POST/PUT/DELETE /company/joby-rules",""],
-  ["Integrations (QuickBooks)","integrations","Stripe (coming soon)","dead","placeholder only","no handler",""],
+  ["Custom Fields","custom-fields","Add field (Android enum bug)","partial","Android sends field_type='dropdown' but the backend CHECK requires 'select' → Android Dropdown create fails (web is correct). Android also missing textarea/phone/email + invoice entity. PARKED","POST /company/custom-fields",""],
+  ["Custom Fields","custom-fields","Render on entity (dead feature)","partial","custom fields are defined+saved (jobs/customers JSONB) but rendered on NO entity detail (web+android) — defined-but-invisible; estimates/invoices have no custom_fields column. PARKED","display layer missing",""],
+  ["Automation (Ailot)","automation","Rule authoring UI","partial","ENGINE IS WIRED + FIRING (fireJobyRules on job/estimate/invoice events; immediate + cron-delayed; real Twilio/SendGrid). Gap = no create/edit/delete UI on either client (view+toggle only; rules seeded at registration). NOT dead.","POST/PUT/DELETE /company/joby-rules",""],
+  ["Integrations (Stripe)","integrations","Stripe (coming soon)","dead","placeholder only (QuickBooks itself is BUILT+WIRED — real OAuth + sync — pending QBO app creds; separate project, parked)","no handler",""],
  ]},
  {n:"RESOLVED ✓",title:"Resolved this session",sub:"Granular permissions Phases 1–3 · owner-nav fix · Tier 2.2 · Payroll Option-1 · Tier 3 A/C/D",rows:[
   ["Permissions","team-members","Granular permissions Phases 1–3","fixed","9-section model enforced server-side (requirePermission + own-scope) on every route; 3a UI control/nav hiding on web + Android; the permission grid edits per-actor overrides","utils/permissions.js · /auth/* permissions_resolved",""],
@@ -160,6 +154,8 @@ const TIERS=[
   ["Job Sources","job-sources","JobSources + ReviewPlatforms write gating (Tier 2.2)","fixed","writes gated job_sources_commissions:full / team_settings:full (ownerOrAdmin)","Phase 2.2",""],
   ["Payroll","payroll","Lock / Mark-Paid period","fixed","Option-1: dead period-lock retired; range-based mark-paid added; paid/paid_at preserved across the earnings recompute","POST /payroll/earnings/mark-paid",""],
   ["Inventory","inventory","Transfer → truck","fixed","web now POSTs the registered /trucks/:truckId/send-items (was unregistered /transfer → 404); warehouse −qty / truck +qty","POST /inventory/trucks/:truckId/send-items",""],
+  ["Job Detail","job-detail","Delete (tech saw button → 403)","fixed","3a hides Delete for non-full on web (JobDetail.jsx:780 can('jobs','full')); Android gated too","DELETE /jobs/:id",""],
+  ["Team Members","team-members","List / Add / Edit users","fixed","web now sends first_name/last_name + the valid 4-role enum (from permSchema.role_templates); names render, create/edit work, 409 surfaced via snackbar","/users (Tier 2)",""],
   ["Membership Plans","membership-plans","Add plan","fixed","web frequency vocab aligned to the DB CHECK (weekly/…/semi_annually/annually); previously semi_annual/annual failed the CHECK → create failed. next-job base now jobs.scheduled_start","POST /memberships/plans",""],
   ["Network","network","Web connection Accept/Decline","fixed","web detail modal now wires recipient-only Accept/Decline → PUT /network/connections/:id/respond (mirrors Android)","networkApi.respond",""],
   ["Online Booking","online-booking","Config save/load (display name · reminders · service areas)","fixed","web OnlineBooking.jsx refactored to the backend flat schema (company_display_name/company_tagline, flat reminder_*/followup_*, service_areas[].{zip_code,radius_miles}); save+load round-trip, fixes the service_areas 400. Customer /book form stub stays OPEN above.","PUT /settings/booking",""],

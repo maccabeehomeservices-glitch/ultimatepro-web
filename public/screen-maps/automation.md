@@ -17,7 +17,7 @@
 | `manages_table` | `joby_rules` (the "Joby"/Ailot automation engine rules) |
 | `primary_actors` | owner, admin |
 | `purpose` | View the automation rules ("Ailot") that fire when workflow events happen (job completed, invoice sent, etc.) and toggle each on/off. **Both surfaces are view + toggle only, neither can create, edit, or delete a rule** (the backend CRUD endpoints exist but no UI wires them; rules are seeded server-side). |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
+| `last_verified` | 2026-06-07 · Re-verified vs live code (Tier-4 audit): the rule **ENGINE is fully wired + firing** — `fireJobyRules` called on real events (jobs.js job_assigned/status-map/holding→completed, estimates.js estimate_approved, invoices.js invoice_sent/invoice_paid), immediate + cron-delayed, real Twilio/SendGrid. **Correction:** the fix-list previously implied "dead" — only the **CRUD/authoring is client-unreachable** (no create/edit/delete UI on either platform; rules seeded server-side). Engine = OK; authoring-UI = the only gap. Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
 
 ### schema (confirmed, schema.sql:359–378)
 `joby_rules(id, company_id, name, type CHECK('auto_dispatch','alert','reminder','cancel_flow'), trigger_event TEXT, delay_minutes, notify_customer, notify_tech, notify_owner, sms_template, email_subject, email_template, dispatch_logic CHECK('nearest','round_robin','manual','least_busy'), active, created_at)`.
