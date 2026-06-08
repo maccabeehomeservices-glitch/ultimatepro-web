@@ -108,7 +108,7 @@ export default function App() {
                   <Route path="/payments" element={<Wrap><Payments /></Wrap>} />
                   <Route path="/phone" element={<Wrap><Phone /></Wrap>} />
                   <Route path="/phone/thread/:id" element={<Wrap><SmsThread /></Wrap>} />
-                  <Route path="/phone/sms/:conversationId" element={<Wrap><SmsThread /></Wrap>} />
+                  <Route path="/phone/sms/:id" element={<Wrap><SmsThread /></Wrap>} />
                   <Route path="/reports" element={<Wrap><Reports /></Wrap>} />
                   <Route path="/reports/team/:userId" element={<Wrap><TeamReport /></Wrap>} />
                   <Route path="/reports/roster/:rosterId" element={<Wrap><RosterReport /></Wrap>} />
