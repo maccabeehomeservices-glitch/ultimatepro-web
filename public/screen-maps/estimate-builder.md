@@ -16,7 +16,7 @@
 | `route_web` | `/estimates/:id` → `EstimateDetail` (EstimateDetail.jsx, 758 lines); builder `/estimates/new` & `/estimates/:id/edit` → `EstimateBuilder` |
 | `primary_actors` | office, owner, tech |
 | `purpose` | Author and close an estimate: review line items (or Good/Better/Best tiers), send it for signature, capture a signature, collect a deposit, then convert it to an invoice. Web does the actions inline (modals + a 10s poll while waiting for a remote signature); Android routes sign / send / present-tiers / deposit to dedicated screens. |
-| `last_verified` | 2026-05-31 · Phase 0 [SIG] fix · commit: f942dcf |
+| `last_verified` | 2026-06-07 · Web estimate fixes (2645a04): **Attach Photo** now uses the 2-step (upload to `/uploads` → POST `{url}` to add-photo) — was a raw multipart file → 400; **Present GBB** now presents selectable tiers → `select-tier {tier_id}` (sets the estimate total) → sign — was mis-wired to the signature modal (signed with an unset total). Both mirror the backend contract + Android. Prior: 2026-05-31 Phase 0 [SIG] fix, f942dcf. |
 
 ### load_sequence
 `GET /estimates/:id` returns the estimate + flattened `cust_*`. For GBB estimates the web detail also pulls `GET /estimates/:id/tiers`. While `status === 'sent'`, web polls `refetch()` every **10 s** to catch a remote signature.
@@ -91,14 +91,14 @@
 - **visibility:** web: GBB estimate, not signed, status != sent.
 - **precondition:** GBB presentation mode.
 - **confirm:** n/a
-- **route_chain:** web button `onClick = setShowSignature(true)` → opens the (broken) signature modal; it does **not** present tiers and calls no present/select-tier endpoint. Android has a dedicated `PresentTiersScreen` → `POST /estimates/:id/select-tier`.
-- **request_body:** web: none (opens signature). Android select-tier: `{ tier_id }`.
-- **side_effects:** web: none (mislabeled, routes to signature). Android: records the selected tier.
-- **end_state:** web: opens a signature modal that then 400s; Android: tier selected.
-- **failure_modes:** `mislabeled` + `wrong-key`, the web button opens the broken signature modal instead of a tier presenter.
-- **parity:** DIVERGENT, Android has a real present-tiers + `select-tier` flow; web's button is mis-wired to the signature modal.
-- **status:** BROKEN
-- **status_note:** `POST /estimates/:id/select-tier` and `GET /estimates/:id/tiers` exist; the web detail reads tiers for display but never calls select-tier.
+- **route_chain:** web button → selectable tier picker → **Confirm Selection & Sign** → `POST /estimates/:id/select-tier {tier_id}` (copies the tier's totals onto the estimate) → opens the signature modal → `POST /estimates/:id/sign`. Mirrors Android's `PresentTiersScreen`.
+- **request_body:** select-tier `{ tier_id }`; then sign `{ signature, signer_name }`.
+- **side_effects:** select-tier sets `selected_tier_id` + the estimate's `line_items`/`subtotal`/`tax_total`/`discount_total`/`total` to the chosen tier; signing then captures against that total.
+- **end_state:** tier chosen, estimate signed at the selected tier's amount.
+- **failure_modes:** signing is blocked until a tier is selected (the money guard).
+- **parity:** MATCH _(web fixed 2026-06-07, 2645a04)_ — present → select-tier → sign, mirroring Android. Pre-fix: web's button opened the signature modal directly, signing with an unset total.
+- **status:** OK _(FIXED 2026-06-07)_
+- **status_note:** Reuses the existing TierCard + signature modal + `estimatesApi.selectTier`. Non-GBB estimates sign unchanged.
 
 ### `estimate-builder.convert-to-invoice`
 - **label:** Convert to Invoice / "→ Invoice"
@@ -191,14 +191,14 @@
 - **visibility:** web: always. Android: attaches via the upload flow (sends a URL).
 - **precondition:** n/a
 - **confirm:** file picker.
-- **route_chain:** `POST /estimates/:id/add-photo`
-- **request_body:** web `estimatesApi.addPhoto(id, file)` → **multipart `file`**. Backend (estimates.js 653–656) reads `req.body.url` (JSON) with **no multer**, and returns **400 "Photo URL required"** when `url` is absent.
-- **side_effects:** intended: append to `before_photos`/`after_photos`. With a multipart file and no `url` → nothing happens.
-- **end_state:** web → 400; no photo attached.
-- **failure_modes:** `body-shape`, web posts a raw multipart file; the handler expects a JSON `{ url }`. Android `addEstimatePhoto` sends `{ url }` (after a separate upload) → works.
-- **parity:** DIVERGENT, Android sends `{url}` JSON (works); web sends a multipart file (400).
-- **status:** BROKEN
-- **status_note:** The estimate add-photo endpoint never parses a file; only Android's URL shape succeeds.
+- **route_chain:** `POST /uploads` (cloudinary) → `POST /estimates/:id/add-photo {url, photo_type}`.
+- **request_body:** web now uploads the file to `/uploads` → gets `{url}` → `estimatesApi.addPhoto(id, {url, photo_type:'before'})` (JSON). Backend appends the url to `before_photos`/`after_photos`.
+- **side_effects:** appends the url to `before_photos[]` (or `after_photos[]`).
+- **end_state:** photo attached.
+- **failure_modes:** none (the 5-step ZIP/contract mismatch is resolved).
+- **parity:** MATCH _(web fixed 2026-06-07, 2645a04)_ — both upload-then-send-url; mirrors the web job-photo flow. Pre-fix: web posted a raw multipart file → 400 "Photo URL required".
+- **status:** OK _(FIXED 2026-06-07)_
+- **status_note:** Reuses the existing `uploadsApi.upload` helper (the same /uploads 2-step web jobs use).
 
 ---
 
