@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
-import api, { estimatesApi, customersApi } from '../lib/api';
+import api, { estimatesApi, customersApi, uploadsApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { useAuth } from '../hooks/useAuth';
@@ -19,7 +19,8 @@ function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function TierCard({ tier }) {
+function TierCard({ tier, selectable = false, selected, onClick }) {
+  const isSel = selected !== undefined ? selected : tier.is_selected;
   const items = tier.line_items || tier.items || [];
   const services = (tier.services || items.filter(i => i.item_type !== 'material' && i.item_type !== 'discount'));
   const materials = tier.materials || items.filter(i => i.item_type === 'material');
@@ -28,12 +29,12 @@ function TierCard({ tier }) {
   const total = tier.total || allItems.reduce((s, i) => s + (Number(i.total || 0) || Number(i.unit_price || 0) * Number(i.qty || 1)), 0);
 
   return (
-    <div className={`rounded-2xl border-2 p-4 transition-colors ${
-      tier.is_selected ? 'border-[#1A73E8] bg-blue-50' : 'border-gray-200 bg-white'
+    <div onClick={onClick} className={`rounded-2xl border-2 p-4 transition-colors ${selectable ? 'cursor-pointer hover:border-[#1A73E8] ' : ''}${
+      isSel ? 'border-[#1A73E8] bg-blue-50' : 'border-gray-200 bg-white'
     }`}>
       <div className="flex items-center justify-between mb-2">
         <p className="font-bold text-gray-900">{tier.name || tier.tier_name}</p>
-        {tier.is_selected && (
+        {isSel && (
           <span className="text-xs bg-[#1A73E8] text-white px-2 py-0.5 rounded-full font-medium">✓ Selected</span>
         )}
       </div>
@@ -83,6 +84,9 @@ export default function EstimateDetail() {
   const [showSignature, setShowSignature] = useState(false);
   const [signerName, setSignerName] = useState('');
   const [savingSig, setSavingSig] = useState(false);
+  const [showTierSelect, setShowTierSelect] = useState(false);
+  const [selectedTierId, setSelectedTierId] = useState(null);
+  const [selectingTier, setSelectingTier] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showAddToInvoiceModal, setShowAddToInvoiceModal] = useState(false);
   const [showKeepReplaceModal, setShowKeepReplaceModal] = useState(false);
@@ -136,16 +140,46 @@ export default function EstimateDetail() {
     }
   }
 
+  // GBB: open the tier picker (present → select → sign). Pre-select whatever
+  // tier was already chosen, if any.
+  function openTierSelect() {
+    setSelectedTierId(estimate?.selected_tier_id || null);
+    setShowTierSelect(true);
+  }
+
+  // Confirm the chosen tier, then sign. select-tier copies the tier's totals
+  // onto the estimate, so the signature is captured against the correct amount.
+  async function handleConfirmTierAndSign() {
+    if (!selectedTierId) { showSnack('Select an option first', 'error'); return; }
+    setSelectingTier(true);
+    try {
+      await estimatesApi.selectTier(id, selectedTierId);
+      await refetch();              // estimate total is now the selected tier's total
+      setShowTierSelect(false);
+      setShowSignature(true);       // proceed to signature with the right total
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to select option', 'error');
+    } finally {
+      setSelectingTier(false);
+    }
+  }
+
   async function handlePhotoUpload(e) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingPhoto(true);
     try {
-      await estimatesApi.addPhoto(id, file);
+      // 2-step (mirrors the web job-photo flow): upload the file to cloudinary
+      // via /uploads → get the url → POST the url to the estimate (the backend
+      // add-photo handler stores a url string, not a file).
+      const up = await uploadsApi.upload(file, 'estimate', id, 'estimate_photo');
+      const url = up.data?.url || up.data?.secure_url;
+      if (!url) throw new Error('Upload returned no url');
+      await estimatesApi.addPhoto(id, { url, photo_type: 'before' });
       showSnack('Photo attached!', 'success');
       refetch();
-    } catch {
-      showSnack('Failed to upload photo', 'error');
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Failed to upload photo', 'error');
     } finally {
       setUploadingPhoto(false);
       e.target.value = '';
@@ -543,7 +577,7 @@ export default function EstimateDetail() {
       {/* Actions */}
       <div className="flex flex-col gap-2 pb-4">
         {showPresent && (
-          <Button onClick={() => setShowSignature(true)} className="w-full">
+          <Button onClick={openTierSelect} className="w-full">
             📊 Present GBB Options
           </Button>
         )}
@@ -553,7 +587,12 @@ export default function EstimateDetail() {
           </Button>
         )}
         <button
-          onClick={() => setShowSignature(true)}
+          onClick={() => {
+            // GBB money guard: a tier must be selected before signing (select-tier
+            // sets the estimate total). Route to the picker if none chosen yet.
+            if (isGbb && !estimate.selected_tier_id) openTierSelect();
+            else setShowSignature(true);
+          }}
           className="w-full py-3 border-2 border-[#1A73E8] text-[#1A73E8] rounded-xl font-semibold min-h-[44px]"
         >
           ✍️ Get Signature
@@ -599,6 +638,38 @@ export default function EstimateDetail() {
             onSave={handleCaptureSignature}
             onCancel={() => setShowSignature(false)}
           />
+        </div>
+      </Modal>
+
+      {/* Present Options (GBB): select a tier, then sign */}
+      <Modal
+        isOpen={showTierSelect}
+        onClose={() => setShowTierSelect(false)}
+        title="Present Options"
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-gray-500">Have the customer choose an option, then capture their signature.</p>
+          {tiers.length === 0 ? (
+            <p className="text-sm text-gray-400 text-center py-4">No options on this estimate.</p>
+          ) : (
+            tiers.map((tier, i) => (
+              <TierCard
+                key={tier.id || tier._id || i}
+                tier={tier}
+                selectable
+                selected={selectedTierId === (tier.id || tier._id)}
+                onClick={() => setSelectedTierId(tier.id || tier._id)}
+              />
+            ))
+          )}
+          <Button
+            onClick={handleConfirmTierAndSign}
+            loading={selectingTier}
+            disabled={!selectedTierId}
+            className="w-full"
+          >
+            Confirm Selection &amp; Sign
+          </Button>
         </div>
       </Modal>
 

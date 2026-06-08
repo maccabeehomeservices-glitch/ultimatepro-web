@@ -326,12 +326,11 @@ export const estimatesApi = {
   captureSignature: (id, signature_data, signer_name) =>
     api.post(`/estimates/${id}/sign`, { signature: signature_data, signer_name }),
 
-  addPhoto: (id, file) => {
-    const form = new FormData();
-    form.append('file', file);
-    return api.post(`/estimates/${id}/add-photo`, form,
-      { headers: { 'Content-Type': 'multipart/form-data' } });
-  },
+  // Backend wants JSON { url, photo_type } (it appends the url to
+  // before_photos/after_photos). Upload the file to /uploads first, then send
+  // the url — mirror the web job-photo 2-step.
+  addPhoto: (id, { url, photo_type = 'before' }) =>
+    api.post(`/estimates/${id}/add-photo`, { url, photo_type }),
 
   delete: (id) =>
     api.delete(`/estimates/${id}`),
