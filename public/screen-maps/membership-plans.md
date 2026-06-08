@@ -17,7 +17,7 @@
 | `manages_table` | **`membership_plans`** (the reusable plan *templates*), NOT `customer_memberships` (a customer's enrollment) |
 | `primary_actors` | owner, admin |
 | `purpose` | CRUD for membership plan templates (name, description, frequency, price). A plan's `frequency` drives the recurring-job cadence when a customer is enrolled. Android additionally lets you assign a plan to a customer from here (creating a `customer_memberships` row + first job); web does not. |
-| `last_verified` | 2026-06-07 · Tier 3 Batch 1: web frequency vocab aligned to `weekly/monthly/quarterly/semi_annually/annually` (was `semi_annual`/`annual` → violated the DB CHECK → create failed). Backend next-job base now reads `jobs.scheduled_start` (was `scheduled_date`, non-existent → today). Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
+| `last_verified` | 2026-06-07 · Tier 3 Batch 1: web frequency vocab aligned to `weekly/monthly/quarterly/semi_annually/annually` (was `semi_annual`/`annual` → violated the DB CHECK → create failed). Backend next-job base now reads `jobs.scheduled_start` (was `scheduled_date`, non-existent → today). **Edit now preserves `is_active`** (was omitted → backend re-activated a deactivated plan). Prior: 2026-05-31 Stage-1 audit, 6147cd1. |
 
 ### plans vs enrollments (do not conflate)
 - **`membership_plans`** = templates managed on *this* screen (`/memberships/plans`).

@@ -16,7 +16,7 @@
 | `route_web` | `/dashboard` → `Dashboard` (Dashboard.jsx, 545 lines) |
 | `primary_actors` | office, owner, tech |
 | `purpose` | The home screen / morning briefing: KPI tiles (revenue, jobs, calls, 2nd-chance), a 2nd-chance follow-up nudge, memberships-due-soon, a live job/tech map, the active-jobs list (web), clock in/out, and the Paste-Ticket fast path to a new job. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 9366abe |
+| `last_verified` | 2026-06-07 · "View all" on the **Memberships Due Soon** card now navigates to `/settings/membership-plans` (was `/memberships` → 404 redirect). NOTE: no dedicated enrolled/due-soon memberships list page exists — it lands on plan management. Prior: 2026-05-31 Stage-1 audit, 9366abe. |
 
 ### load_sequence
 **Web** (Dashboard.jsx 183–194): `GET /reports/dashboard`, `GET /jobs?status=scheduled,en_route,in_progress,unscheduled&page=1&limit=50`, `GET /gps/live`, `GET /memberships/due-soon`, `GET /timesheets/status`. Auto-refresh all every **60 s**. **Android**: `DashboardViewModel.load()` → `GET /reports/dashboard`; `MapViewModel` job/tech pins; `MembershipViewModel.loadDueSoon()` → `GET /memberships/due-soon`; `TimesheetViewModel.loadStatus()` → `GET /timesheets/status`; `getNotificationUnreadCount()` → `GET /notifications/unread-count` (poll **30 s**); map + due-soon + timesheet refresh on `ON_RESUME`.
