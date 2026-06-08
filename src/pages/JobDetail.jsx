@@ -467,8 +467,20 @@ export default function JobDetail() {
   }
 
   async function handleDispatch() {
+    // Send the dispatcher's REAL location for a real ETA when available; if
+    // geolocation is denied/unavailable (e.g. an office desktop), omit it — the
+    // backend skips the ETA gracefully. Don't send fake 0,0 (it's the ocean).
+    const getCoords = () => new Promise((resolve) => {
+      if (!navigator.geolocation) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ tech_lat: pos.coords.latitude, tech_lng: pos.coords.longitude }),
+        () => resolve(null),
+        { timeout: 5000, maximumAge: 60000 }
+      );
+    });
     try {
-      const res = await mutate('post', `/jobs/${id}/dispatch`, { tech_lat: 0, tech_lng: 0 });
+      const coords = await getCoords();
+      const res = await mutate('post', `/jobs/${id}/dispatch`, coords || {});
       setDispatchModal(false);
       refetch();
       const eta = res?.eta || res?.data?.eta;

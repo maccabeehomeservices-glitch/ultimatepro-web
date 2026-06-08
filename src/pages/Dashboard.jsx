@@ -398,7 +398,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-gray-900">Memberships Due Soon</h3>
-            <button onClick={() => navigate('/memberships')} className="text-sm text-[#1A73E8] font-medium">
+            <button onClick={() => navigate('/settings/membership-plans')} className="text-sm text-[#1A73E8] font-medium">
               View all
             </button>
           </div>

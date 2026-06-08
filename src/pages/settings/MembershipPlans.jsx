@@ -51,7 +51,9 @@ export default function MembershipPlans() {
     try {
       const payload = { ...form, price: Number(form.price) || 0 };
       if (editItem) {
-        await mutate('put', `/memberships/plans/${editItem.id || editItem._id}`, payload);
+        // Preserve the plan's active state — the edit form has no is_active control,
+        // and the backend re-activates (defaults true) if it's omitted.
+        await mutate('put', `/memberships/plans/${editItem.id || editItem._id}`, { ...payload, is_active: editItem.is_active !== false });
         showSnack('Plan updated', 'success');
       } else {
         await mutate('post', '/memberships/plans', payload);
