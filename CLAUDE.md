@@ -5,15 +5,25 @@ The universal rules (Six Rules, em-dash ban, no fabrication, formatting,
 verification) live in `C:\Users\dadus\Desktop\CLAUDE-RULES.md` and apply 
 here too. This file adds UltimatePro web-specific rules on top.
 
+## Session workflow + truth sources
+
+- Read `C:\ultimatecrm\backend\MISSION_CONTROL.md` at session start; update it
+  at session end, in the same commit as the work. It supersedes
+  `C:\ultimatecrm\CHANGELOG.md`.
+- Schema truth = live prod introspection only; see
+  `C:\ultimatecrm\PROJECT_REALITY_20260705.md` VERIFIED FACTS. Committed SQL
+  and the boot-time DDL in server.js are NOT reliable.
+
 ## Project context
 
 - React 18 + Vite 5 + Tailwind CSS dashboard.
-- Hosted on Railway, custom domain ultimatepro.pro (SSL active).
+- Hosted on Railway (project: **steadfast-beauty**), custom domain
+  ultimatepro.pro (SSL active).
 - Repo: github.com/maccabeehomeservices-glitch/ultimatepro-web
 - Auto-deploys on push to main.
 - Sister projects:
   - Backend: C:\ultimatecrm\backend (Node.js + Express + PostgreSQL on 
-    Railway, project steadfast-beauty)
+    Railway, project easygoing-generosity, with the Postgres service)
   - Android: C:\ultimatecrm\android\android (Kotlin + Compose, package 
     com.ultimatepro)
 
@@ -62,6 +72,9 @@ viewport), surface the divergence as a question, not a default.
   `.toISOString()`.
 - Calendar fetches: `GET /jobs?from=&to=&limit=200`.
 - Payroll fetches: `GET /reports/earnings`.
+- Estimate convert: `POST /estimates/:id/convert-to-invoice` (the real route;
+  there is no `/convert`).
+- Backend health check is `GET /health` (no `/api` prefix); `/api/health` 404s.
 - Estimate signature on detail page is the in-Modal `SignaturePad` 
   component opened via `setShowSignature(true)`. There is no separate 
   `/sign/:token` URL flow on web; that is the customer-side flow only.
