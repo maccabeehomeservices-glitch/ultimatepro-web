@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/:id` → `JobDetail` (JobDetail.jsx, 1565 lines) |
 | `primary_actors` | owner, office, tech-user (partner for shared jobs) |
 | `purpose` | The operational hub for a single job, the busiest intersection of all four spines (lifecycle, money, communication, identity). Field techs execute the job (dispatch → arrive → photos → parts → charge → complete); office manages it (status, estimates, invoices, receipts, customer); owner reviews completion and profit allocation. |
-| `last_verified` | 2026-06-07 · Granular permissions Phase 2 Batch 2b: jobs own-scope enforcement. List (`GET /jobs`,`/today`) own-filtered for `jobs=edit_self` (technician sees ONLY assigned jobs); `GET/:id` + all writes/actions/parts gated `requireJobOwnership` (view/edit_self, own-job for non-full); **`POST /jobs` = `jobs:edit_self`** (techs create jobs source-less; form sets `assigned_to=self` → they own it); **DELETE + partner ops = `jobs:full`**. `/me` returns `permissions_resolved`; Option B hides the source picker on the create form (web + Android) when `jobs!=full`. **2026-06-07:** Dispatch now sends the dispatcher's real `navigator.geolocation` (real ETA) when available, or omits coords (no fake `0,0`) — backend skips ETA gracefully. Prior: 2026-06-06 earnings-review banner. |
+| `last_verified` | 2026-07-06 · P2.1b (David's P2.1 emulator review): Android Assigned row shows the tech/roster name via flat `roster_tech_name` (was blank for roster techs); removed the duplicate top-bar status icon; Dispatch icon mirrors web visibility (dropped the `cust_phone` gate). Locked by Maestro `regression_job_assign`. Prior: 2026-06-07 · Granular permissions Phase 2 Batch 2b: jobs own-scope enforcement. List (`GET /jobs`,`/today`) own-filtered for `jobs=edit_self` (technician sees ONLY assigned jobs); `GET/:id` + all writes/actions/parts gated `requireJobOwnership` (view/edit_self, own-job for non-full); **`POST /jobs` = `jobs:edit_self`** (techs create jobs source-less; form sets `assigned_to=self` → they own it); **DELETE + partner ops = `jobs:full`**. `/me` returns `permissions_resolved`; Option B hides the source picker on the create form (web + Android) when `jobs!=full`. **2026-06-07:** Dispatch now sends the dispatcher's real `navigator.geolocation` (real ETA) when available, or omits coords (no fake `0,0`) — backend skips ETA gracefully. Prior: 2026-06-06 earnings-review banner. |
 
 ### load_sequence
 
@@ -65,7 +65,7 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **section:** top-bar
 - **actors:** tech-user, owner, office
 - **purpose:** Tell the customer the tech is on the way; move job to en_route. The "I'm leaving now" tap.
-- **visibility:** Android: `status in [unscheduled, scheduled] && cust_phone != null`. Web: `status in [unscheduled, scheduled]` (no phone check).
+- **visibility:** Both: `status in [unscheduled, scheduled]` (P2.1b: Android's extra `cust_phone != null` gate removed to mirror web). Backend still 400s a dispatch if the customer has no phone.
 - **precondition:** Customer has a phone number (enforced backend-side: 400 if missing).
 - **confirm:** Android: "Dispatch to {customer}? This will notify the customer you're on your way and update the job status to En Route." Web: "Dispatch tech to {customer}? They will receive an ETA notification."
 - **route_chain:** `POST /jobs/:id/dispatch` (jobs.js 1512)
@@ -128,7 +128,7 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **status_note:** Button not role-gated client-side; a technician sees it and gets a 403. **Verified (Phase 2):** this is a *shared* wart, NOT a web↔Android divergence, Android's top-bar Delete (JobScreens.kt:1426) is unconditional too. Mirroring would mean leaving it; hiding it on web only would diverge. Stays PARTIAL (shared UX gap), not touched this commit.
 
 ### `job-detail.status`
-- **label:** Status badge / chip (Android also has a top-bar status icon)
+- **label:** Status badge / chip — the single status control (P2.1b removed the duplicate Android top-bar status icon; the inline badge remains the one way to change status)
 - **section:** top-bar / status-chip
 - **actors:** owner, office, tech-user
 - **purpose:** Change job lifecycle state. The spine of the whole screen.
@@ -289,7 +289,7 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **side_effects:** `navigate`
 - **end_state:** Job edit form open.
 - **failure_modes:** none
-- **parity:** MATCH, minor: web falls back to ad_channel_name/"My Company"/"Unassigned"; Android shows ", ".
+- **parity:** MATCH. Assigned shows the assigned user (`tech_first`/`tech_last`) XOR the roster tech (flat `roster_tech_name`), "Unassigned" when both null — both platforms (P2.1b added `roster_tech_name` to the Android `Job` model + an "Unassigned" fallback; roster-tech assignments no longer render blank on the detail).
 - **status:** OK
 - **status_note:** n/a
 ### `job-detail.customer-card`
