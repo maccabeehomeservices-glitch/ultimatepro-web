@@ -12,11 +12,11 @@
 | `screen_id` | `new-job` |
 | `display_name` | New Job (Job Form) |
 | `surfaces` | android, web |
-| `route_android` | `jobs/new?ticket={ticket}` → `JobFormScreen` (JobScreens.kt 3197–3922) |
+| `route_android` | `jobs/new?ticket={ticket}` **and `jobs/:id/edit`** → `JobFormScreen` (JobScreens.kt; edit passes `editJobId` and reuses this redesigned form — unified create+edit like web, P2.1 2026-07-06. The pre-redesign `JobEditScreen` is now retired/dead code) |
 | `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline, it parses raw notes into a pre-filled form and looks up the customer. |
-| `last_verified` | 2026-06-01 · Dead-code removal: edit-mode Status `<select>` + `form.status` seeds deleted from JobForm.jsx (never sent on save). Prior: Phase 1 F2/F2b/F3; TZ feature COMPLETE (1/3 backend, 2/3 web, 3/3 Android) + display follow-up: Jobs LIST rows on both platforms + both Joby job_assigned auto-messages now render job-zone time. |
+| `last_verified` | 2026-07-06 · P2.1: Android edit unified into `JobFormScreen` (`editJobId` → prefill + `PUT /jobs/:id`; create-only Paste/SEND-VIA/Save&Send hidden, customer read-only). Locked by Maestro `regression_job_form_create/edit`. Prior: 2026-06-01 · Dead-code removal: edit-mode Status `<select>` + `form.status` seeds deleted from JobForm.jsx (never sent on save). Prior: Phase 1 F2/F2b/F3; TZ feature COMPLETE (1/3 backend, 2/3 web, 3/3 Android) + display follow-up: Jobs LIST rows on both platforms + both Joby job_assigned auto-messages now render job-zone time. |
 
 ### load_sequence
 Form loads local state; pulls dropdown data: users (team), roster techs, job sources, ad channels, network connections. In edit mode (`/jobs/:id/edit`) it first loads the job via `GET /jobs/:id`.
@@ -156,7 +156,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **section:** schedule (web edit only)
 - **actors:** office, owner
 - **purpose:** (Former) set job status while editing. The control was dead (never sent on save).
-- **visibility:** REMOVED from the web form (2026-06-01). Android never had it on the form (status lives in JobEditScreen).
+- **visibility:** REMOVED from the web form (2026-06-01). Android never had it on the form (status changes via Job Detail `POST /jobs/:id/status`; the edit flow now uses the unified `JobFormScreen`, P2.1).
 - **precondition:** n/a
 - **confirm:** n/a
 - **route_chain:** n/a, the field never reached the API (`buildPayload` omitted it; `PUT /jobs/:id` never read it).
