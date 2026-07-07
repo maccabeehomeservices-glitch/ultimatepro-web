@@ -629,3 +629,5 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - `review_platforms` uses `platform_name` not `name`, rule holds.
 - `jobs.title` is **NOT NULL** at DB level, UI hides it but backend must supply `type || "Job"`.
 - `tech_earnings` has the `(user_id IS NOT NULL) <> (roster_tech_id IS NOT NULL)` CHECK, confirmed.
+
+- **P2.19 — arrival window on the schedule row (2026-07-07).** When `scheduled_end` is present and distinct from `scheduled_start`, the Job Detail schedule row + the jobs list row render the window ("8:00 AM – 10:00 AM zzz") instead of a single time (web `JobDetail.jsx` + `humanizeScheduled(iso,zone,endIso)`; Android `JobDetailScreen`/`JobListScreen` via `formatJobInstant`). Comms: Joby `{{job_time}}` (and the new `{{job_window}}`) render the window for windowed jobs (utils/joby.js buildVars), so tech/customer job_assigned + reminder + en-route messages state it automatically.

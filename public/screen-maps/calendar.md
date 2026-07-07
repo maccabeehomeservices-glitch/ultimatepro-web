@@ -121,3 +121,5 @@
 - **Edit + Create-on-day are web-only**, Android's calendar is open-only (tap a job → Job Detail); it has no inline Edit and no create-from-calendar.
 - **No calendar/event store**, the "calendar" is purely `GET /jobs` filtered by date; there is no schedules/events endpoint behind this screen (the `schedules` table exists but is not what this screen reads).
 - **UNVERIFIED:** none material, both surfaces' behavior is fully visible in the components read.
+
+- **P2.19 — arrival window (2026-07-07).** Each calendar day-agenda job entry now shows its scheduled time, rendering the window ("8:00 AM – 10:00 AM") when `scheduled_end` is present and distinct from `scheduled_start` (Calendar.jsx). Calendar grouping/filtering remains by `scheduled_start` day (unchanged).
