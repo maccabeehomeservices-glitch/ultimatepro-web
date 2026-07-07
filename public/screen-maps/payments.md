@@ -16,7 +16,7 @@
 | `route_web` | `/payments` → `Payments` (Payments.jsx, read-only list) + the payment/receipt **modals inside** `InvoiceDetail` |
 | `primary_actors` | office, owner, tech |
 | `purpose` | Take the money and confirm it: record a manual payment (cash / card / check / etc.), run a ScanPay QR or payment-link charge with live polling, send a receipt, and review the payments ledger. Web collects payment in an Invoice-Detail modal and shows a read-only payments list; Android has a dedicated method-grid PaymentScreen + ScanPay dialogs + ReceiptScreen. |
-| `last_verified` | 2026-06-02 · ScanPay webhook schema-write bug fixed (payments.transaction_id/receipt_url do not exist; aborted every ScanPay payment) · backend 8953689. Prior: Money Commit B earnings trigger (clear-day) + refund clawback · 2269f85. |
+| `last_verified` | 2026-07-06 · P2.1h/F9: web `/payments` list now route-gated by `RequirePermission section=payments_refunds level=view` (mirrors the Sidebar's existing nav gate) — a role with `payments_refunds:none` (dispatcher) gets a clean "Access denied"; technician/office/owner (`edit_self`/`full`) pass. Sidebar + mobile BottomNav hide Payments via `can(payments_refunds,view)`. Prior: 2026-06-02 · ScanPay webhook schema-write bug fixed (payments.transaction_id/receipt_url do not exist; aborted every ScanPay payment) · backend 8953689. Prior: Money Commit B earnings trigger (clear-day) + refund clawback · 2269f85. |
 
 ### load_sequence
 Android PaymentScreen `vm.loadInv(id)`, prefills the amount with `balance_due`. Web payment modal lives on the already-loaded invoice. Web Payments list: `GET /payments?from&to&page&limit` → `{payments, total_collected}`.

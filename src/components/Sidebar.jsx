@@ -40,7 +40,7 @@ const navItems = [
   { to: '/pricebook', icon: BookOpen, label: 'Pricebook' },
   { to: '/network', icon: Handshake, label: 'Network' },
   { to: '/inventory', icon: Truck, label: 'Inventory' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/settings', icon: Settings, label: 'Settings', section: 'team_settings' },
 ];
 
 export default function Sidebar({ collapsed = false, onToggle }) {

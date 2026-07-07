@@ -4,6 +4,7 @@ import { AuthProvider } from './hooks/useAuth';
 import { SnackbarProvider } from './components/ui/Snackbar';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import RequirePermission from './components/RequirePermission';
 import ErrorBoundary from './components/ErrorBoundary';
 
 import Login from './pages/Login';
@@ -105,30 +106,38 @@ export default function App() {
                   <Route path="/invoices" element={<Wrap><Invoices /></Wrap>} />
                   <Route path="/invoices/new" element={<Wrap><InvoiceForm /></Wrap>} />
                   <Route path="/invoices/:id" element={<Wrap><InvoiceDetail /></Wrap>} />
-                  <Route path="/payments" element={<Wrap><Payments /></Wrap>} />
+                  <Route element={<RequirePermission section="payments_refunds" />}>
+                    <Route path="/payments" element={<Wrap><Payments /></Wrap>} />
+                  </Route>
                   <Route path="/phone" element={<Wrap><Phone /></Wrap>} />
                   <Route path="/phone/thread/:id" element={<Wrap><SmsThread /></Wrap>} />
                   <Route path="/phone/sms/:id" element={<Wrap><SmsThread /></Wrap>} />
-                  <Route path="/reports" element={<Wrap><Reports /></Wrap>} />
-                  <Route path="/reports/team/:userId" element={<Wrap><TeamReport /></Wrap>} />
-                  <Route path="/reports/roster/:rosterId" element={<Wrap><RosterReport /></Wrap>} />
-                  <Route path="/reports/source/:sourceId" element={<Wrap><SourceReport /></Wrap>} />
-                  <Route path="/payroll" element={<Wrap><Payroll /></Wrap>} />
+                  <Route element={<RequirePermission section="reports" />}>
+                    <Route path="/reports" element={<Wrap><Reports /></Wrap>} />
+                    <Route path="/reports/team/:userId" element={<Wrap><TeamReport /></Wrap>} />
+                    <Route path="/reports/roster/:rosterId" element={<Wrap><RosterReport /></Wrap>} />
+                    <Route path="/reports/source/:sourceId" element={<Wrap><SourceReport /></Wrap>} />
+                  </Route>
+                  <Route element={<RequirePermission section="accounting_earnings" />}>
+                    <Route path="/payroll" element={<Wrap><Payroll /></Wrap>} />
+                  </Route>
                   <Route path="/pricebook" element={<Wrap><Pricebook /></Wrap>} />
                   <Route path="/network" element={<Wrap><Network /></Wrap>} />
                   <Route path="/inventory" element={<Wrap><Inventory /></Wrap>} />
-                  <Route path="/settings" element={<Wrap><Settings /></Wrap>} />
-                  <Route path="/settings/technicians" element={<Wrap><RosterTechs /></Wrap>} />
-                  <Route path="/settings/membership-plans" element={<Wrap><MembershipPlans /></Wrap>} />
-                  <Route path="/settings/job-sources" element={<Wrap><JobSources /></Wrap>} />
-                  <Route path="/settings/review-platforms" element={<Wrap><ReviewPlatforms /></Wrap>} />
-                  <Route path="/settings/online-booking" element={<Wrap><OnlineBooking /></Wrap>} />
-                  <Route path="/settings/notifications" element={<Wrap><Notifications /></Wrap>} />
-                  <Route path="/settings/company" element={<Wrap><CompanyProfile /></Wrap>} />
-                  <Route path="/settings/team" element={<Wrap><UserManagement /></Wrap>} />
-                  <Route path="/settings/custom-fields" element={<Wrap><CustomFields /></Wrap>} />
-                  <Route path="/settings/automation" element={<Wrap><AutomationRules /></Wrap>} />
-                  <Route path="/settings/integrations" element={<Wrap><Integrations /></Wrap>} />
+                  <Route element={<RequirePermission section="team_settings" />}>
+                    <Route path="/settings" element={<Wrap><Settings /></Wrap>} />
+                    <Route path="/settings/technicians" element={<Wrap><RosterTechs /></Wrap>} />
+                    <Route path="/settings/membership-plans" element={<Wrap><MembershipPlans /></Wrap>} />
+                    <Route path="/settings/job-sources" element={<Wrap><JobSources /></Wrap>} />
+                    <Route path="/settings/review-platforms" element={<Wrap><ReviewPlatforms /></Wrap>} />
+                    <Route path="/settings/online-booking" element={<Wrap><OnlineBooking /></Wrap>} />
+                    <Route path="/settings/notifications" element={<Wrap><Notifications /></Wrap>} />
+                    <Route path="/settings/company" element={<Wrap><CompanyProfile /></Wrap>} />
+                    <Route path="/settings/team" element={<Wrap><UserManagement /></Wrap>} />
+                    <Route path="/settings/custom-fields" element={<Wrap><CustomFields /></Wrap>} />
+                    <Route path="/settings/automation" element={<Wrap><AutomationRules /></Wrap>} />
+                    <Route path="/settings/integrations" element={<Wrap><Integrations /></Wrap>} />
+                  </Route>
                   <Route path="/leads" element={<Wrap><Leads /></Wrap>} />
                   <Route path="/import" element={<Wrap><ImportWizard /></Wrap>} />
                   <Route path="/notifications" element={<Wrap><NotificationsPage /></Wrap>} />

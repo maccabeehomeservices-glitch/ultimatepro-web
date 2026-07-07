@@ -17,7 +17,7 @@
 | `route_web` | `/settings` → `Settings` (Settings.jsx, 114 lines) |
 | `primary_actors` | owner, office |
 | `purpose` | The settings menu: a list of rows that navigate to configuration sub-pages, plus an inline dark-mode toggle and a version stamp. On Android the same screen ("More") doubles as the navigation hub for screens the web app keeps in its bottom nav. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
+| `last_verified` | 2026-07-06 · P2.1h/F9: web `/settings` (landing + all `/settings/*` sub-pages) now route-gated by `RequirePermission section=team_settings level=view` — technician/dispatcher/manager (`team_settings:none` by role template) get a clean "Access denied" instead of the admin menu; owner/admin (`full`) reach it. Sidebar + mobile BottomNav hide the Settings item via `can(team_settings,view)`. JUDGMENT: gated the whole area at `team_settings` (its defining section — every actionable control needs `team_settings:full` or `job_sources_commissions:full`) rather than per-endpoint, so nav+routes align with the permission model; the manager→Job-Sources discoverability consequence is flagged for P2.3. Prior: 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
 
 ### load_sequence
 **Web:** no fetch on load, it's a static list of `NavLink`s plus a dark-mode toggle (reads `localStorage.up_dark_mode`). **Android:** `networkIdVm.load()` → `GET` network id for the "My UltimatePro ID" card; notification toggle states come from local `NotificationPreferences`.

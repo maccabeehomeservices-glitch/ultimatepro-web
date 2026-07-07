@@ -21,6 +21,7 @@ import {
   Bell,
 } from 'lucide-react';
 import { notificationsApi } from '../lib/api';
+import { useAuth } from '../hooks/useAuth';
 
 const mainItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Home' },
@@ -28,23 +29,26 @@ const mainItems = [
   { to: '/customers', icon: Users, label: 'Customers' },
 ];
 
+// section-gated items mirror the Sidebar (P2.1h): hide from users the backend would 403.
 const moreItems = [
   { to: '/phone', icon: Phone, label: 'Phone' },
   { to: '/leads', icon: ClipboardList, label: 'Leads' },
   { to: '/calendar', icon: Calendar, label: 'Calendar' },
   { to: '/estimates', icon: FileText, label: 'Estimates' },
   { to: '/invoices', icon: Receipt, label: 'Invoices' },
-  { to: '/payments', icon: DollarSign, label: 'Payments' },
-  { to: '/reports', icon: BarChart2, label: 'Reports' },
-  { to: '/payroll', icon: CreditCard, label: 'Payroll' },
+  { to: '/payments', icon: DollarSign, label: 'Payments', section: 'payments_refunds' },
+  { to: '/reports', icon: BarChart2, label: 'Reports', section: 'reports' },
+  { to: '/payroll', icon: CreditCard, label: 'Payroll', section: 'accounting_earnings' },
   { to: '/pricebook', icon: BookOpen, label: 'Pricebook' },
   { to: '/network', icon: Handshake, label: 'Network' },
   { to: '/inventory', icon: Truck, label: 'Inventory' },
-  { to: '/settings', icon: Settings, label: 'Settings' },
+  { to: '/settings', icon: Settings, label: 'Settings', section: 'team_settings' },
 ];
 
 export default function BottomNav() {
+  const { can } = useAuth();
   const [showMore, setShowMore] = useState(false);
+  const visibleMoreItems = moreItems.filter(item => !item.section || can(item.section, 'view'));
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -73,7 +77,7 @@ export default function BottomNav() {
               </button>
             </div>
             <div className="grid grid-cols-4 gap-y-4 gap-x-2">
-              {moreItems.map(({ to, icon: Icon, label }) => (
+              {visibleMoreItems.map(({ to, icon: Icon, label }) => (
                 <NavLink
                   key={to}
                   to={to}
