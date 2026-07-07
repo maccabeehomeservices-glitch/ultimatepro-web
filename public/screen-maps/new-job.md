@@ -12,7 +12,7 @@
 | `screen_id` | `new-job` |
 | `display_name` | New Job (Job Form) |
 | `surfaces` | android, web |
-| `route_android` | `jobs/new?ticket={ticket}` **and `jobs/:id/edit`** → `JobFormScreen` (JobScreens.kt; edit passes `editJobId` and reuses this redesigned form — unified create+edit like web, P2.1 2026-07-06. The pre-redesign `JobEditScreen` is now retired/dead code) |
+| `route_android` | `jobs/new?ticket={ticket}` **and `jobs/:id/edit`** → `JobFormScreen` (JobScreens.kt; edit passes `editJobId` and reuses this redesigned form — unified create+edit like web, P2.1 2026-07-06. The pre-redesign `JobEditScreen` + its `AddLineItemDialog`/`LineItemInput` helpers were REMOVED as dead code, P2.15 2026-07-07) |
 | `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline, it parses raw notes into a pre-filled form and looks up the customer. |
