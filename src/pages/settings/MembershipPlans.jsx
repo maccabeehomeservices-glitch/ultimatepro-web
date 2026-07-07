@@ -17,7 +17,7 @@ const FREQUENCY_OPTIONS = [
 ];
 
 function emptyForm() {
-  return { name: '', frequency: 'annual', price: '', description: '' };
+  return { name: '', frequency: 'annually', price: '', description: '' };  // P2.11: 'annual' isn't an option value → nothing selected; 'annually' matches FREQUENCY_OPTIONS
 }
 
 function formatCurrency(v) {
@@ -40,7 +40,7 @@ export default function MembershipPlans() {
   function openAdd() { setEditItem(null); setForm(emptyForm()); setModal(true); }
   function openEdit(p) {
     setEditItem(p);
-    setForm({ name: p.name || '', frequency: p.frequency || 'annual', price: p.price?.toString() || '', description: p.description || '' });
+    setForm({ name: p.name || '', frequency: p.frequency || 'annually', price: p.price?.toString() || '', description: p.description || '' });
     setModal(true);
   }
 
