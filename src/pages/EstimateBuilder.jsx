@@ -389,7 +389,6 @@ export default function EstimateBuilder() {
           tax_rate: Number(item.tax_rate || 0),
           discount_pct: Number(item.discount_pct || 0),
         })),
-        discount_pct: 0,
       };
       if (!isEdit && prefilledJobId) basePayload.job_id = prefilledJobId;
 
@@ -445,6 +444,10 @@ export default function EstimateBuilder() {
 
   function ItemSection({ section, setter, sectionKey, label, type, itemType }) {
     const items = section[sectionKey] || [];
+    // P2.14 GAP 2: base for a %-discount = the section's services + materials subtotal
+    // (mirrors Android DiscountDialog, which converts % → $ against the current subtotal).
+    const discountBase = ['services', 'materials'].reduce(
+      (s, k) => s + (section[k] || []).reduce((a, i) => a + Number(i.unit_price || 0) * Number(i.quantity || 1), 0), 0);
     return (
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
@@ -543,6 +546,58 @@ export default function EstimateBuilder() {
                     }}
                   />
                 </div>
+                {itemType === 'discount' ? (
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400">Amount {item._discountMode === 'percent' ? `($${(Number(item.unit_price) || 0).toFixed(2)})` : ''}</label>
+                    <div className="flex gap-1">
+                      <select
+                        value={item._discountMode || 'amount'}
+                        onChange={e => {
+                          const mode = e.target.value;
+                          setter(prev => {
+                            const next = { ...prev, [sectionKey]: [...prev[sectionKey]] };
+                            const row = { ...next[sectionKey][idx], _discountMode: mode };
+                            if (mode === 'percent') {
+                              // seed the % from the current $ against the base
+                              const pct = discountBase > 0 ? +((Number(row.unit_price || 0) / discountBase) * 100).toFixed(2) : 0;
+                              row._discountPctUi = pct || '';
+                            }
+                            next[sectionKey][idx] = row;
+                            return next;
+                          });
+                        }}
+                        className="rounded-xl border border-gray-200 px-2 text-sm min-h-[44px] bg-white"
+                      >
+                        <option value="amount">$</option>
+                        <option value="percent">%</option>
+                      </select>
+                      <input
+                        type="number"
+                        value={item._discountMode === 'percent' ? (item._discountPctUi ?? '') : item.unit_price}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setter(prev => {
+                            const next = { ...prev, [sectionKey]: [...prev[sectionKey]] };
+                            const row = { ...next[sectionKey][idx] };
+                            if ((row._discountMode || 'amount') === 'percent') {
+                              row._discountPctUi = val;
+                              row.unit_price = +((discountBase * Number(val || 0)) / 100).toFixed(2);  // % → $ (stored/sent as $)
+                            } else {
+                              row.unit_price = val;
+                            }
+                            row.total = Number(row.unit_price || 0) * Number(row.quantity || 1);
+                            next[sectionKey][idx] = row;
+                            return next;
+                          });
+                        }}
+                        placeholder={item._discountMode === 'percent' ? '0' : '0.00'}
+                        min="0"
+                        step={item._discountMode === 'percent' ? '1' : '0.01'}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+                ) : (
                 <div className="flex-1">
                   <label className="text-xs text-gray-400">Unit Price</label>
                   <input
@@ -561,6 +616,7 @@ export default function EstimateBuilder() {
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
                   />
                 </div>
+                )}
                 <div className="flex-1">
                   <label className="text-xs text-gray-400">Total</label>
                   <div className={`rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium min-h-[44px] flex items-center ${itemType === 'discount' ? 'text-red-500' : ''}`}>

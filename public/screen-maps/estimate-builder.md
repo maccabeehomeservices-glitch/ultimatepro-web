@@ -202,6 +202,12 @@
 
 ---
 
+## DISCOUNTS (P2.14 GAP 2 — 2026-07-07)
+
+- **Representation (both platforms):** a discount is a **line item with `item_type='discount'`** carrying a fixed-**dollar** `unit_price`, sent inside `line_items[]`. Backend `calcTotals` (estimates.js/invoices.js) **subtracts** discount lines from `subtotal`; the invoice-level `discount_pct`/`discount_total` mechanism is **unused by both clients** (`discount_total` persists as 0). Convert-to-invoice copies the discounted `subtotal/total` verbatim. This is the parity baseline — no backend change in P2.14.
+- **Web %/$ toggle (new):** the Discounts section rows now have a **$ / %** selector (mirrors Android's `DiscountDialog`). In **%** mode the entered percent is converted to dollars against the section's services+materials subtotal and stored in `unit_price`; the percent lives in a **UI-only** field (`_discountMode`/`_discountPctUi`) that is **never sent** (handleSave maps explicit fields only) — critical, because the backend applies any per-line `discount_pct` on top. Removed the dead top-level `discount_pct: 0` from the save payload.
+- **Contract-proven:** estimates.test.js P2.14 — a `$100` discount on a `$1000` service → stored `subtotal 900 / discount_total 0 / total 900`; convert-to-invoice carries `750` on a `$250` discount.
+
 ## SCREEN-LEVEL DRIFT FLAGS
 
 - **Web estimate signature now works**, Phase 0 [SIG] fix (2026-05-31): `captureSignature` sends `{ signature, signer_name }` matching `/estimates/:id/sign` (estimates.js:597) and Android. (The Job-Detail signature, separate route reading `signature_url`, remains a follow-up.)
