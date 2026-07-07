@@ -174,4 +174,5 @@
 - **Structural divergence:** web does send / pay / sign / receipt **inline** (modals); Android routes each to a dedicated screen (`InvoiceSendScreen`, `PaymentScreen`, `InvoiceSignScreen`, `ReceiptScreen`).
 - **`charge-payment` visibility differs:** web allows it at any unpaid status; Android only at `signed`.
 - **`add-item` is Android-only** on the detail screen.
+- **Notes & Terms now render (P2.17 PART 2, 2026-07-07).** Both surfaces show the invoice's `notes` and `terms` as cards after the totals: web = InvoiceDetail.jsx Notes/Terms cards; Android = InvoiceScreens.kt NOTES/TERMS CRMCards (were previously absent — only estimate detail showed them). `terms` is auto-filled from the company default on create (see company-profile atlas) and overridable per-document.
 - **UNVERIFIED:** `/send` explicit `status='sent'` write (not seen in the read range); the generated payment-link path `/pay/:token` vs the registered `/api/payments/link/:token`; Android `vm.addLineItems` repo body.

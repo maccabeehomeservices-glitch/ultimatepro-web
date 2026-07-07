@@ -497,6 +497,22 @@ export default function InvoiceDetail() {
         </div>
       </Card>
 
+      {/* Notes */}
+      {invoice.notes && (
+        <Card className="mb-4">
+          <p className="text-xs text-gray-400 uppercase font-medium mb-1">Notes</p>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+        </Card>
+      )}
+
+      {/* Terms */}
+      {invoice.terms && (
+        <Card className="mb-4">
+          <p className="text-xs text-gray-400 uppercase font-medium mb-1">Terms</p>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.terms}</p>
+        </Card>
+      )}
+
       {/* Payment History */}
       {payments.length > 0 && (
         <Card className="mb-4">
