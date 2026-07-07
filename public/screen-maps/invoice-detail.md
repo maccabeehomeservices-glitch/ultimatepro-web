@@ -16,7 +16,7 @@
 | `route_web` | `/invoices/:id` → `InvoiceDetail` (InvoiceDetail.jsx, 783 lines) |
 | `primary_actors` | office, owner, tech |
 | `purpose` | The collect-the-money screen for one invoice: review line items + totals, send the invoice (with a payment link + PDF), record a payment, capture a signature, send a receipt, and manage follow-up reminders. Web does every action inline (modals); Android routes the heavy actions (sign / pay / receipt / send) to dedicated screens. |
-| `last_verified` | 2026-05-31 · Phase 0 [SCANPAY-404] fix · commit: 3e40117 |
+| `last_verified` | 2026-07-06 · P2.1e/F5: line-item edits preserve the invoice-level discount (backend re-derives the rate from discount_total/subtotal; was silently zeroed). Prior: 2026-05-31 · Phase 0 [SCANPAY-404] fix · commit: 3e40117 |
 
 ### load_sequence
 `GET /invoices/:id` returns `invoice.*` + flattened `cust_first/last/email/phone/address/city/state/zip` (JOIN customers) + `payments[]` (all rows for the invoice). Android `vm.loadInv(id)`; web `useGet('/invoices/:id')`.
@@ -142,7 +142,7 @@
 - **confirm:** pricebook picker (activity-scoped).
 - **route_chain:** Android `vm.addLineItems(id, picked)` → `PUT /invoices/:id` (line-items update). (Exact repo body **UNVERIFIED**, VM/repo not read.)
 - **request_body:** UNVERIFIED (picked pricebook entries → invoice line_items)
-- **side_effects:** invoice line_items + totals updated.
+- **side_effects:** invoice line_items + totals updated. **Money note (P2.1e/F5):** `PUT /invoices/:id` recomputes totals via `calcTotals`; the invoice-level discount is persisted only as `discount_total` (no `discount_pct` column). When line items change without an explicit `discount_pct` in the body, the backend now RE-DERIVES the prior rate from `discount_total/subtotal` and re-applies it, so adding/editing items no longer silently zeroes the discount (was: 10% on $2340 → $2700; now → $2430). Same fix on `PUT /estimates/:id`.
 - **end_state:** Items added.
 - **failure_modes:** none observed.
 - **parity:** ANDROID-ONLY, web edits invoice items elsewhere (InvoiceForm), not on the detail screen.
