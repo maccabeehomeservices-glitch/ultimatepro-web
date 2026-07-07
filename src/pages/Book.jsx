@@ -5,7 +5,9 @@ import { useEffect } from 'react';
 // console.log'd and never submitted — so a customer hitting the web domain's
 // /book got a fake confirmation. We now forward to the backend form (preserving
 // ?company=...), so the bare-domain URL reaches a real, working booking page.
-const BOOKING_BASE = 'https://ultimatecrm-backend-production.up.railway.app/book';
+// P2.10: use VITE_API_URL (was a hardcoded prod URL that ignored the env — staging/
+// self-host builds forwarded customers to the prod booking form).
+const BOOKING_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/book';
 
 export default function Book() {
   useEffect(() => {
