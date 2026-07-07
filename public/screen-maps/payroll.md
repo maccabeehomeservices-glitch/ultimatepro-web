@@ -16,14 +16,14 @@
 | `route_web` | `/payroll` → `Payroll` (Payroll.jsx, 222 lines) |
 | `primary_actors` | owner, manager |
 | `purpose` | Pay the field team. **Highly asymmetric:** web is a thin read-only earnings list (by actor, drill into a report); Android is the full hub, company P&L overview, per-tech balance-owed with bonuses/deductions, pay settings, profit simulator, reimbursements, and a per-job report. Reads `tech_earnings` (the profit engine's output). |
-| `last_verified` | 2026-06-06 · Option-1 payroll: dead period-lock/finalize machinery RETIRED (4 routes + 4 Android bindings removed); range-based mark-paid added (`POST /payroll/earnings/mark-paid`, reuses `tech_earnings.paid/paid_at`, no periods); `saveJobEarnings` now preserves `paid/paid_at` across recompute. `payroll_periods` table + `payroll_period_id` columns retained-but-inert (no migration). Prior: 2026-05-31 Stage-1 audit, commit 79940c8. |
+| `last_verified` | 2026-07-06 · P2.1f/F7: fixed the Android `/payroll/summary` ROSTER branch job-count fan-out (was a jobs×tech_earnings cross-join inflating roster earnings ~8×) — rewritten to LATERAL like the user branch; contract test asserts roster earnings == Σ per-job tech_profit == /reports/earnings. Prior: 2026-06-06 · Option-1 payroll: dead period-lock/finalize machinery RETIRED (4 routes + 4 Android bindings removed); range-based mark-paid added (`POST /payroll/earnings/mark-paid`, reuses `tech_earnings.paid/paid_at`, no periods); `saveJobEarnings` now preserves `paid/paid_at` across recompute. `payroll_periods` table + `payroll_period_id` columns retained-but-inert (no migration). Prior: 2026-05-31 Stage-1 audit, commit 79940c8. |
 
 ### load_sequence
 **Web:** `GET /reports/earnings?from=&to=` (+ `/users/technicians`, `/roster-techs`, `/sources/contacts` to resolve drill-down ids by name). **Android:** `vm.loadSummary(period)` → `GET /payroll/summary` (period = today/week/month/custom); Job-Report tab → `GET /payroll/job-report`.
 
 **How earnings are read**, both aggregate `tech_earnings` in a three-branch UNION (user / roster / source):
 - `/reports/earnings` (web): `total = SUM(te.amount)` (techs/roster) or `SUM(te.source_cost)` (sources), grouped by actor; returns `{earnings, from, to}`.
-- `/payroll/summary` (Android): LATERAL aggregates `gross_earnings = SUM(tech_profit)`, `total_sales = SUM(gross_job_total)`, `total_material = SUM(material_cost)`, and `balance_owed = SUM(tech_profit WHERE NOT paid) + pending_bonuses − pending_deductions`.
+- `/payroll/summary` (Android): LATERAL aggregates `gross_earnings = SUM(tech_profit)`, `total_sales = SUM(gross_job_total)`, `total_material = SUM(material_cost)`, and `balance_owed = SUM(tech_profit WHERE NOT paid) + pending_bonuses − pending_deductions`. **P2.1f/F7:** all three branches now use LATERAL — the ROSTER branch previously did `jobs × tech_earnings` under `GROUP BY`, multiplying roster earnings by the completed-job count (Tina $7,680 vs correct $960); web's `/reports/earnings` was always correct, so this bug surfaced only on the Android Payroll screen.
 
 ### entry_points
 - Both: More/Settings → Payroll.
