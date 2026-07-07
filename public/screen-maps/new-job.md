@@ -179,7 +179,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 | 3d | Send Via | checkboxes SMS/Email/Push | AppSwitch | `notify_*` (NOT job columns) | shown only when not-self |
 | 4 | Customer | search + dropdown / pill | name text (✓ when matched) | `customer_id` | web required; Android auto-creates |
 | 4a/b | Extra phones / emails | repeatable text | repeatable text | customer record (post-save) | persistence path UNVERIFIED |
-| 5 | Street Address | text + Google Places | PlacesAddressField | `address` | |
+| 5 | Street Address | text + Google Places | PlacesAddressField | `address` | P2.18: see note |
 | 5a | City / State / ZIP | text | text | `city`/`state`(→abbr)/`zip` | |
 | 5b | Address-inaccurate warning | banner (edit + `address_verified===false`) | n/a | n/a | web-only |
 | 6 | Job Notes | textarea | text (3 lines) | `notes` (web also `description`) | |
@@ -200,3 +200,5 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **Android-only carried fields:** `source` label + ticket #, `linked_job_id`, `skip_duplicate_check`, richer duplicate sheet.
 - **Web notify email-only path** is a no-op; unused `calls` array.
 - **UNVERIFIED (needs Stage-2 read of JobViewModel/CrmRepository):** Android `vm.parseTicket` body, `vm.checkDuplicateByPhone` endpoint, extra-phones/emails persistence path, deep-link `ticket` arg consumption.
+
+- **P2.18 — address autocomplete keyboard fix (2026-07-07, Android).** The Android `PlacesAddressField` (JobScreens.kt, both New-Job usages) surfaced Google Places suggestions in a Material `DropdownMenu` — a focusable popup that stole focus and dismissed the keyboard on every keystroke, and it called Places per letter. Fixed: suggestions now render in a **`Popup(focusable=false)` anchored under the field** (keyboard stays up), and the Places request is **debounced ~300ms** (one call after typing settles, not per letter), with a `suppressQuery` guard so selecting/clearing doesn't reopen the dropdown. WEB: no bug — JobForm + CustomerForm use the **native `google.maps.places.Autocomplete` widget** (`.pac-container` dropdown does not blur the input), verified by code. Automated char-by-char Maestro/Playwright assertion deferred (Places-network + IME-state not deterministically assertable without a live Maps key + network) → on-device / nightly, per the device-test pattern.
