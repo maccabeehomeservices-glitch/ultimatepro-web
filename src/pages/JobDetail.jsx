@@ -867,7 +867,11 @@ export default function JobDetail() {
                   <span className="text-base">📅</span>
                   {jobData.scheduled_start ? (
                     <span className="text-sm text-gray-700 font-medium">
-                      {formatInJobZone(jobData.scheduled_start, jobData, 'MMM d, yyyy')} {formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a zzz')}
+                      {formatInJobZone(jobData.scheduled_start, jobData, 'MMM d, yyyy')}{' '}
+                      {/* P2.19: arrival window when a distinct end is present */}
+                      {jobData.scheduled_end && jobData.scheduled_end !== jobData.scheduled_start
+                        ? `${formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a')} – ${formatInJobZone(jobData.scheduled_end, jobData, 'h:mm a zzz')}`
+                        : formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a zzz')}
                     </span>
                   ) : (
                     <span className="text-sm text-gray-400">Not scheduled</span>
