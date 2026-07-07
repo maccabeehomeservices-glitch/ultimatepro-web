@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Trash2, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check, Plus, X } from 'lucide-react';
-import { useGet, useMutation } from '../hooks/useApi';
+import { ArrowLeft, Edit, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check, Plus, X } from 'lucide-react';
+import { useGet } from '../hooks/useApi';
 import api, { customersApi, formatMoney } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Tabs, EmptyState, Modal, Input, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -24,12 +24,11 @@ export default function CustomerDetail() {
   const { showSnack } = useSnackbar();
   const { data, loading, refetch } = useGet(`/customers/${id}`);
   const [activeTab, setActiveTab] = useState('jobs');
-  const [deleteModal, setDeleteModal] = useState(false);
+  // P2.1l Part A: customers are permanent — no delete/archive control here.
   const [addMembershipModal, setAddMembershipModal] = useState(false);
   const [membershipPlanId, setMembershipPlanId] = useState('');
   const [addingMembership, setAddingMembership] = useState(false);
   const [portalCopied, setPortalCopied] = useState(false);
-  const { mutate, loading: deleting } = useMutation();
 
   // Notes
   const [notes, setNotes] = useState('');
@@ -104,15 +103,6 @@ export default function CustomerDetail() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
 
-  async function handleDelete() {
-    try {
-      await mutate('delete', `/customers/${id}`);
-      showSnack('Customer deleted', 'success');
-      navigate('/customers');
-    } catch {
-      showSnack('Failed to delete customer', 'error');
-    }
-  }
 
   async function handleNotesBlur() {
     if (!customer || notes === (customer.notes || '')) return;
@@ -229,9 +219,7 @@ export default function CustomerDetail() {
         <button onClick={() => navigate(`/customers/${id}/edit`)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
           <Edit size={20} />
         </button>
-        <button onClick={() => setDeleteModal(true)} className="p-2 rounded-xl hover:bg-red-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-500">
-          <Trash2 size={20} />
-        </button>
+        {/* P2.1l Part A: no delete/archive — customers are permanent. */}
       </div>
 
       {/* Stats Card */}
@@ -634,22 +622,6 @@ export default function CustomerDetail() {
         />
       </Modal>
 
-      {/* Delete Modal */}
-      <Modal
-        isOpen={deleteModal}
-        onClose={() => setDeleteModal(false)}
-        title="Delete Customer"
-        footer={
-          <>
-            <Button variant="outlined" onClick={() => setDeleteModal(false)}>Cancel</Button>
-            <Button variant="danger" loading={deleting} onClick={handleDelete}>Delete</Button>
-          </>
-        }
-      >
-        <p className="text-gray-600">
-          Are you sure you want to delete <strong>{name}</strong>? This action cannot be undone.
-        </p>
-      </Modal>
     </div>
   );
 }

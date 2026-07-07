@@ -16,7 +16,7 @@
 | `route_web` | `/customers/:id` → `CustomerDetail` (CustomerDetail.jsx, 652 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The 360° view of one customer: stats, contact methods (+ add/delete phones/emails), address/navigate, memberships, notes, the customer portal link, and their jobs / estimates / invoices / messages. Both platforms now browse all four: web in four tabs, Android in Details (jobs inline) + Messages + Estimates + Invoices tabs. |
-| `last_verified` | 2026-06-07 · Granular permissions Phase 2 Batch 2b: customers own-scope. `GET /customers` list + `/:id` + `/:id/stats` + `/:id/contacts` own-filtered (a `customers=edit_self` technician sees ONLY customers of jobs assigned to them, via an EXISTS-assigned-job check; `full` sees all). POST customer + POST contact = `customers:edit_self` (add); PUT/DELETE + contact mods = `customers:full`. **History tab** (`GET /:id/history`) is the one cross-tech read: `full` → any; else `customers>=view` AND an assigned job for that customer, else 403. Template fix: technician `customers` view→edit_self. Prior: 2026-06-01 Android Estimates+Invoices tabs. |
+| `last_verified` | 2026-07-07 · P2.1l Part A: customer delete/archive removed (permanent) — trash icon + confirm modal gone; DELETE /customers/:id → 403. Prior: 2026-06-07 · Granular permissions Phase 2 Batch 2b: customers own-scope. `GET /customers` list + `/:id` + `/:id/stats` + `/:id/contacts` own-filtered (a `customers=edit_self` technician sees ONLY customers of jobs assigned to them, via an EXISTS-assigned-job check; `full` sees all). POST customer + POST contact = `customers:edit_self` (add); PUT/DELETE + contact mods = `customers:full`. **History tab** (`GET /:id/history`) is the one cross-tech read: `full` → any; else `customers>=view` AND an assigned job for that customer, else 403. Template fix: technician `customers` view→edit_self. Prior: 2026-06-01 Android Estimates+Invoices tabs. |
 
 ### load_sequence
 **Web:** `GET /customers/:id`, `GET /customers/:id/stats`, `GET /customers/:id/contacts`, `GET /memberships/customer/:id`, `GET /memberships/plans`; per-tab: `GET /jobs?customer_id=`, `GET /estimates?customer_id=`, `GET /invoices?customer_id=`, `GET /sms/customer/:id/messages`. **Android:** `loadCustomer`, `loadContacts`, `loadCustomerJobs`, `loadCustomerMemberships`, `loadPlans` on RESUME; `loadCustomerMessages` on the Messages tab. **Note:** this screen does **not** call `/customers/:id/history`, it uses `/stats` + per-entity `?customer_id=` queries. (`/history` is the Job-Detail history source.)
@@ -78,18 +78,13 @@
 - **parity:** MATCH, both create a customer-scoped new job.
 - **status:** OK
 - **status_note:** n/a
-### `customer-detail.delete`
-- **label:** Delete Customer
+### `customer-detail.delete` — REMOVED (P2.1l Part A: customers are permanent)
+- **label:** ~~Delete Customer~~ — removed
 - **section:** header
-- **actors:** office, owner
-- **purpose:** Delete the customer.
-- **visibility:** web trash icon; Android overflow menu.
-- **precondition:** n/a
-- **confirm:** modal (web) / overflow → confirm dialog (Android).
-- **route_chain:** `DELETE /customers/:id`
-- **request_body:** n/a
-- **side_effects:** deletes the customer; web → `/customers`, Android → `onDeleted`.
-- **end_state:** Back to customers list.
+- **purpose:** Customers can NEVER be archived or deleted (they anchor jobs/invoices/estimates/payments/history). The web trash icon + confirm modal and the Android overflow "Delete Customer" + confirm are removed; the customer-list bulk-select delete is gone too (see customers.bulk-delete).
+- **visibility:** none — no delete/archive control on either platform.
+- **route_chain:** `DELETE /customers/:id` now returns **403** ("Customers are permanent and cannot be deleted or archived.") as a backstop; nothing in the UI calls it.
+- **status:** OK · **status_note:** contact (sub-record) add/delete is unaffected; only the CUSTOMER entity is permanent.
 - **failure_modes:** none observed.
 - **parity:** MATCH
 - **status:** OK

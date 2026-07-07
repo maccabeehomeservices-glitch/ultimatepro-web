@@ -15,8 +15,8 @@
 | `route_android` | `customers` → `CustomerListScreen` (CustomerScreens.kt 217–365) |
 | `route_web` | `/customers` → `Customers` (Customers.jsx, 259 lines) |
 | `primary_actors` | office, owner |
-| `purpose` | Find a customer and act on them: search, filter, open a customer, add a new one, import a batch, or bulk-delete. The list is the entry point to Customer Detail. |
-| `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 9366abe |
+| `purpose` | Find a customer and act on them: search, filter, open a customer, add a new one, or import a batch. The list is the entry point to Customer Detail. (Bulk delete removed — customers are permanent, P2.1l.) |
+| `last_verified` | 2026-07-07 · P2.1l Part A: customer bulk-delete/selection removed (customers permanent). Prior: 2026-05-31 · Stage-1 read-only audit · commit: 9366abe |
 
 ### load_sequence
 `GET /customers?page&limit=50&search?&type?` → `{customers}`. Web paginates explicitly (page state + "Load more"); Android `vm.load(search)` with pull-to-refresh and an `ON_RESUME` reload.
@@ -143,18 +143,13 @@
 - **parity:** MATCH, both link to the customers import wizard.
 - **status:** OK
 - **status_note:** n/a
-### `customers.bulk-delete`
-- **label:** Select → Delete Selected
+### `customers.bulk-delete` — REMOVED (P2.1l Part A: customers are permanent)
+- **label:** ~~Select → Delete Selected~~ — removed
 - **section:** selection mode
-- **actors:** office, owner
-- **purpose:** Delete several customers at once.
-- **visibility:** web: "Select" button → checkboxes. Android: long-press a row → selection mode.
-- **precondition:** ≥1 selected.
-- **confirm:** web `confirm()`; Android AlertDialog.
-- **route_chain:** `DELETE /customers/:id` (looped per selected id)
-- **request_body:** n/a
-- **side_effects:** deletes each customer row; reloads page 1.
-- **end_state:** Selected customers removed.
+- **purpose:** Bulk delete is gone. Web: the "Select" button + selection toolbar + row checkboxes are removed. Android: long-press multi-select + the selection-mode trash action are removed (long-press no longer enters selection mode). Selection mode existed ONLY to delete, so the whole feature is retired.
+- **visibility:** none. Tapping a customer row opens Customer Detail on both platforms.
+- **route_chain:** `DELETE /customers/:id` → **403** backstop; no UI caller.
+- **status:** OK · **status_note:** customers are permanent (P2.1l).
 - **failure_modes:** none observed (web swallows individual failures in the loop).
 - **parity:** MATCH, both bulk-delete via repeated `DELETE /customers/:id`.
 - **status:** OK

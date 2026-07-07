@@ -25,8 +25,6 @@ export default function Customers() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selected, setSelected] = useState(new Set());
   const searchTimeout = useRef(null);
 
   const fetchCustomers = useCallback(async (pageNum) => {
@@ -71,26 +69,8 @@ export default function Customers() {
     setSearch('');
   }
 
-  function toggleSelect(id) {
-    setSelected(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
 
-  async function handleBulkDelete() {
-    if (!confirm(`Delete ${selected.size} customer${selected.size !== 1 ? 's' : ''}?`)) return;
-    for (const id of selected) {
-      await customersApi.delete(id).catch(() => {});
-    }
-    showSnack(`${selected.size} customer${selected.size !== 1 ? 's' : ''} deleted`, 'success');
-    setSelected(new Set());
-    setSelectionMode(false);
-    setPage(1);
-    fetchCustomers(1);
-  }
+  // P2.1l Part A: customers are permanent — bulk delete removed (no delete/archive path).
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
@@ -104,14 +84,6 @@ export default function Customers() {
           >
             {loading ? '⟳ Loading...' : '⟳ Refresh'}
           </button>
-          {!selectionMode && (
-            <button
-              onClick={() => { setSelectionMode(true); setSelected(new Set()); }}
-              className="text-sm text-gray-600 font-medium px-3 py-2 rounded-xl border border-gray-300 min-h-[44px]"
-            >
-              Select
-            </button>
-          )}
           <button
             onClick={() => navigate('/import?type=customers')}
             className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
@@ -121,23 +93,6 @@ export default function Customers() {
         </div>
       </div>
 
-      {/* Selection toolbar */}
-      {selectionMode && (
-        <div className="flex items-center gap-4 mb-3 p-3 bg-blue-50 rounded-xl">
-          <span className="text-sm font-semibold text-blue-600">{selected.size} selected</span>
-          {selected.size > 0 && can('customers','full') && (
-            <button onClick={handleBulkDelete} className="text-red-600 text-sm font-medium min-h-[36px]">
-              🗑 Delete Selected
-            </button>
-          )}
-          <button
-            onClick={() => { setSelectionMode(false); setSelected(new Set()); }}
-            className="text-gray-500 text-sm ml-auto min-h-[36px]"
-          >
-            Cancel
-          </button>
-        </div>
-      )}
 
       {/* Type filter */}
       <div className="flex gap-2 mb-3">
@@ -198,18 +153,9 @@ export default function Customers() {
             return (
               <Card
                 key={id}
-                onClick={selectionMode ? () => toggleSelect(id) : () => navigate(`/customers/${id}`)}
+                onClick={() => navigate(`/customers/${id}`)}
               >
                 <div className="flex items-center gap-3">
-                  {selectionMode && (
-                    <input
-                      type="checkbox"
-                      checked={selected.has(id)}
-                      onChange={() => toggleSelect(id)}
-                      onClick={e => e.stopPropagation()}
-                      className="w-5 h-5 rounded border-gray-300 text-blue-600 flex-shrink-0"
-                    />
-                  )}
                   <div
                     className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0"
                     style={{ backgroundColor: color }}

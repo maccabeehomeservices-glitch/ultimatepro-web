@@ -16,7 +16,7 @@
 | `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline, it parses raw notes into a pre-filled form and looks up the customer. |
-| `last_verified` | 2026-07-06 · P2.1: Android edit unified into `JobFormScreen` (`editJobId` → prefill + `PUT /jobs/:id`; create-only Paste/SEND-VIA/Save&Send hidden, customer read-only). Locked by Maestro `regression_job_form_create/edit`. Prior: 2026-06-01 · Dead-code removal: edit-mode Status `<select>` + `form.status` seeds deleted from JobForm.jsx (never sent on save). Prior: Phase 1 F2/F2b/F3; TZ feature COMPLETE (1/3 backend, 2/3 web, 3/3 Android) + display follow-up: Jobs LIST rows on both platforms + both Joby job_assigned auto-messages now render job-zone time. |
+| `last_verified` | 2026-07-07 · P2.1l Part B: paste-ticket `match_type` gates auto-attach (phone→auto, name→surface choice default Create New) on both platforms. Prior: 2026-07-06 · P2.1: Android edit unified into `JobFormScreen` (`editJobId` → prefill + `PUT /jobs/:id`; create-only Paste/SEND-VIA/Save&Send hidden, customer read-only). Locked by Maestro `regression_job_form_create/edit`. Prior: 2026-06-01 · Dead-code removal: edit-mode Status `<select>` + `form.status` seeds deleted from JobForm.jsx (never sent on save). Prior: Phase 1 F2/F2b/F3; TZ feature COMPLETE (1/3 backend, 2/3 web, 3/3 Android) + display follow-up: Jobs LIST rows on both platforms + both Joby job_assigned auto-messages now render job-zone time. |
 
 ### load_sequence
 Form loads local state; pulls dropdown data: users (team), roster techs, job sources, ad channels, network connections. In edit mode (`/jobs/:id/edit`) it first loads the job via `GET /jobs/:id`.
@@ -57,15 +57,14 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **purpose:** Attach the right customer, link an existing one (returning customer) or create a new record, without manual searching.
 - **visibility:** runs on parse (both) and at save when no customer is linked yet.
 - **precondition:** A parsed/typed name or phone exists.
-- **confirm:** Duplicate sheet/modal if a likely match is found.
+- **confirm:** Duplicate choice UI on a NAME-only match (never on a phone match). **P2.1l Part B:** `POST /jobs/parse-ticket` returns `match_type` = `phone` | `name` | `null`. `phone` → auto-attach silently (unchanged). `name` (even name+address, no phone) → NEVER silently attach → surface the duplicate-choice UI (web 3-option modal / Android sheet) with the candidate shown, **defaulting to Create New** (web: Create New is the primary button AND the dismiss action; Android: `customerId` is left null so dismissing the sheet creates a new customer from the parsed name/phone). `null` → create new.
 - **route_chain:** `GET /customers?search=` (lookup) → `POST /customers` (create) ; Android save-time also calls `vm.checkDuplicateByPhone` (endpoint UNVERIFIED)
-- **request_body:** create: `{first_name, last_name, phone, email, type:'residential'}`
+- **request_body:** create: `{first_name, last_name, phone, email, type:'residential'}` — web's Create-New-from-duplicate uses the **parsed** ticket phone (not the matched customer's).
 - **side_effects:** `create-record` (customer), sets `linked_job_id` on Go-Back/Follow-Up (Android)
-- **end_state:** Job is linked to a real customer; returning/go-back/follow-up tags applied.
-- **failure_modes:** behavioral asymmetry (see parity), not an error, but a real divergence.
-- **parity:** DIVERGENT, Web requires a resolved `customer_id` before save (blocks with "Customer is required") and shows a 3-option duplicate modal (Returning / Create New / Go Back) only for parsed tickets. Android auto-creates a customer from the typed name (no hard requirement) and shows a richer 4-option sheet (Returning / Go-Back-Warranty / Follow-Up / Cancel) for both parsed and manual-phone entry, with prior-job linking on Go-Back & Follow-Up.
-- **status:** PARTIAL
-- **status_note:** Web blocks without a customer; Android silently creates one. Android captures `linked_job_id`; web never sends it.
+- **end_state:** Job linked to the right customer — auto-attached on a phone match, or explicitly chosen (default Create New) on a name match.
+- **parity:** Both platforms now gate auto-attach on the backend `match_type` (no client-side re-derivation). Web shows a 3-option modal (Create New [default] / Use This Customer) for name matches; Android shows its 4-option sheet (Returning / Go-Back-Warranty / Follow-Up / Cancel) with `customerId` pre-set only on a phone match. JUDGMENT: the Android sheet still auto-opens for phone matches too (preserving Go-Back/Follow-Up for repeat customers) — the difference is only whether `customerId` is pre-attached; a dedicated "Create New" button on the Android sheet is a noted follow-up.
+- **status:** OK (P2.1l)
+- **status_note:** Name-only matches no longer silently attach on either platform. Client paste→duplicate flow verified by backend match_type contract test + code review (full UI E2E blocked by clipboard-on-headless + live-AI, per P2.1d).
 
 ### `new-job.save`
 - **label:** Save Job / Save Changes

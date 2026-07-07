@@ -205,16 +205,14 @@ export default function JobForm() {
       if (phones.length > 0) setExtraPhones(phones.slice(0,3));
       const ec = parsed.existing_customer;
       const parsedPhone = (parsed.phone || parsed.phone_numbers?.[0] || '').replace(/\D/g, '');
-      const phonesMatch = parsedPhone && ec?.phone &&
-        (ec.phone.replace(/\D/g,'').endsWith(parsedPhone) ||
-         parsedPhone.endsWith((ec?.phone||'').replace(/\D/g,'')));
       const parsedName = (parsed.customer_name||'').trim();
-      const hasFullName = parsedName.includes(' ') && parsedName.split(' ').length >= 2;
-      const isHighConf = parsed.existing_customer_id && ec && phonesMatch;
-      const isMedConf  = parsed.existing_customer_id && ec && hasFullName &&
-        ec.first_name && parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
-      if (isHighConf || isMedConf) {
-        selectCustomer(ec);
+      // P2.1l Part B: gate on the backend match_type (never silently attach a name-only match).
+      if (parsed.existing_customer_id && ec) {
+        if (parsed.match_type === 'phone') {
+          selectCustomer(ec);                                   // strong phone match → auto-attach
+        } else {
+          setDuplicateModal({ matched: ec, parsedName, parsedPhone }); // name-only → surface the choice (default Create New)
+        }
       } else if (parsedName || parsedPhone) {
         const parts = parsedName.split(' ');
         customersApi.create({
@@ -369,16 +367,17 @@ export default function JobForm() {
     const firstName   = parts[0] || '';
     const lastName    = parts.slice(1).join(' ') || '';
 
+    // P2.1l Part B: the backend's match_type gates auto-attach — never re-derive it here.
+    //   'phone' → strong match → attach silently.
+    //   'name'  → name-only (even name+address, no phone) → NEVER silently attach; surface
+    //             the duplicate-choice modal (defaults to Create New).
+    // Any candidate with a non-phone/unknown match_type is treated as 'name' (safer).
     if (p.existing_customer_id && p.existing_customer) {
       const ec = p.existing_customer;
-      const phonesMatch = parsedPhone && ec.phone &&
-        (ec.phone.replace(/\D/g,'').endsWith(parsedPhone) ||
-         parsedPhone.endsWith(ec.phone.replace(/\D/g,'')));
-      const hasFullName = parsedName.includes(' ') && parts.length >= 2;
-      const nameMatch = hasFullName && ec.first_name &&
-        parsedName.toLowerCase().startsWith(ec.first_name.toLowerCase());
-      if (phonesMatch || nameMatch)
-        return { customer: ec, action: 'matched', message: `Matched: ${`${ec.first_name} ${ec.last_name||''}`.trim()}` };
+      const ecName = `${ec.first_name} ${ec.last_name||''}`.trim();
+      if (p.match_type === 'phone')
+        return { customer: ec, action: 'attach', message: `Matched by phone: ${ecName}` };
+      return { customer: ec, action: 'matched', message: `Possible match: ${ecName}` };
     }
 
     if (parsedPhone || parsedName) {
@@ -442,7 +441,11 @@ export default function JobForm() {
 
     const result = await resolveCustomer(p);
     if (result.action === 'matched' && result.customer) {
-      setDuplicateModal({ matched: result.customer, parsedName: p.customer_name || '' });
+      setDuplicateModal({
+        matched: result.customer,
+        parsedName: p.customer_name || '',
+        parsedPhone: (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g, ''),
+      });
       return;
     }
     if (result.customer) {
@@ -458,6 +461,28 @@ export default function JobForm() {
     }
     if (result.message) showSnack(result.message, result.action === 'failed' ? 'error' : 'success');
     else showSnack('Ticket parsed!', 'success');
+  }
+
+  // P2.1l Part B: the duplicate-choice modal DEFAULTS to Create New — this runs for the
+  // "Create New" button AND on dismiss (backdrop / close). It creates the new customer from
+  // the PARSED ticket name+phone (never the matched customer's phone), so a name-match with
+  // a different phone produces a correct new record instead of silently reusing the old one.
+  async function createNewFromDuplicate() {
+    const dm = duplicateModal;
+    setDuplicateModal(null);
+    if (!dm) return;
+    showSnack('Creating new customer...', 'info');
+    try {
+      const parts = (dm.parsedName || '').trim().split(' ');
+      const res = await customersApi.create({
+        first_name: parts[0] || fallbackCustomerName(dm.parsedPhone),
+        last_name: parts.slice(1).join(' ') || '',
+        phone: dm.parsedPhone || null,
+        type: 'residential',
+      });
+      selectCustomer(res.data?.customer || res.data);
+      showSnack('New customer created', 'success');
+    } catch { showSnack('Failed to create customer', 'error'); }
   }
 
   async function handleParseTicket() {
@@ -953,12 +978,14 @@ export default function JobForm() {
         </div>
       </Modal>
 
-      {/* Duplicate Customer Modal */}
-      <Modal isOpen={Boolean(duplicateModal)} onClose={() => setDuplicateModal(null)} title="Returning Customer?">
+      {/* Duplicate Customer Modal — P2.1l Part B: a NAME-only match (never phone) surfaces
+          this choice and DEFAULTS to Create New; dismissing it creates the new customer. */}
+      <Modal isOpen={Boolean(duplicateModal)} onClose={createNewFromDuplicate} title="Possible Existing Customer">
         {duplicateModal && (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              We found an existing customer matching <strong>{duplicateModal.parsedName||'this contact'}</strong>:
+              A customer with a similar name to <strong>{duplicateModal.parsedName||'this contact'}</strong> already
+              exists. We'll create a NEW customer unless this is the same person:
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
               <p className="font-semibold text-gray-900">
@@ -968,30 +995,13 @@ export default function JobForm() {
               {duplicateModal.matched.address  && <p className="text-xs text-gray-500">{duplicateModal.matched.address}</p>}
             </div>
             <div className="grid grid-cols-1 gap-2">
-              <Button onClick={() => { selectCustomer(duplicateModal.matched); setDuplicateModal(null); showSnack('Returning customer selected', 'success'); }}
-                className="w-full">
-                Returning Customer
-              </Button>
-              <Button variant="outlined" className="w-full"
-                onClick={async () => {
-                  setDuplicateModal(null);
-                  showSnack('Creating new customer...', 'info');
-                  try {
-                    const parsedName = duplicateModal.parsedName.trim();
-                    const parts = parsedName.split(' ');
-                    const res = await customersApi.create({
-                      first_name: parts[0]||fallbackCustomerName(duplicateModal.matched.phone),
-                      last_name: parts.slice(1).join(' ')||'',
-                      phone: duplicateModal.matched.phone||null,
-                      type: 'residential',
-                    });
-                    selectCustomer(res.data?.customer||res.data);
-                    showSnack('New customer created', 'success');
-                  } catch { showSnack('Failed to create customer', 'error'); }
-                }}>
+              <Button onClick={createNewFromDuplicate} className="w-full">
                 Create New Customer
               </Button>
-              <Button variant="outlined" onClick={() => setDuplicateModal(null)} className="w-full">Go Back</Button>
+              <Button variant="outlined" className="w-full"
+                onClick={() => { selectCustomer(duplicateModal.matched); setDuplicateModal(null); showSnack('Using existing customer', 'success'); }}>
+                Use This Customer
+              </Button>
             </div>
           </div>
         )}

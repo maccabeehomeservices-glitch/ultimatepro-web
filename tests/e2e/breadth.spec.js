@@ -51,6 +51,19 @@ test('customers: list → detail with the four tabs', async ({ page }) => {
   await page.getByText('Estimates', { exact: true }).first().click();  // switch tab, no crash
 });
 
+test('customers are permanent: no delete/archive control on list or detail (P2.1l Part A)', async ({ page }) => {
+  await page.goto('/customers');
+  await page.waitForLoadState('networkidle');
+  await expect(page.getByRole('heading', { name: 'Customers' })).toBeVisible();
+  // The bulk-select entry point (whose only action was delete) is gone.
+  await expect(page.getByRole('button', { name: 'Select' })).toHaveCount(0);
+  await expect(page.getByText(/Delete Selected/i)).toHaveCount(0);
+  // Detail: no delete affordance anywhere (trash icon + confirm modal removed); Edit remains.
+  await page.getByText(/Customer1/).first().click();
+  await page.waitForURL(/\/customers\/[0-9a-f-]{36}/);
+  await expect(page.getByText(/Delete Customer/i)).toHaveCount(0);
+});
+
 test('estimates: list shows current status chips + seeded estimates', async ({ page }) => {
   await page.goto('/estimates');
   await page.waitForLoadState('networkidle');
