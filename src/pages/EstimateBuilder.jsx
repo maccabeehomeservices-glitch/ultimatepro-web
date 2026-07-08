@@ -81,6 +81,7 @@ export default function EstimateBuilder() {
   // pricebookModal: { tierIdx?, type } — tierIdx omitted for standard mode
   const [pricebookModal, setPricebookModal] = useState(null);
   const [pricebookSearch, setPricebookSearch] = useState('');
+  const [pickerShowAll, setPickerShowAll] = useState(false);  // P2.22: "show all" escape hatch
   const searchTimeout = useRef(null);
 
   // GBB mode + tiers array (1-5 entries, default 2 for new estimates)
@@ -92,9 +93,18 @@ export default function EstimateBuilder() {
   const [stdSection, setStdSection] = useState(emptySection());
 
   const { data: existingData, loading: loadingExisting } = useGet(isEdit ? `/estimates/${id}` : null, [id]);
+  // P2.22: type-filtered picker — the Labor picker shows only labor items, Material only
+  // material, unless "show all" is toggled. Backend GET /pricebook/items supports ?type=.
   const { data: pricebookData } = useGet(
-    pricebookModal !== null ? `/pricebook/items${pricebookSearch ? `?search=${encodeURIComponent(pricebookSearch)}` : ''}` : null,
-    [pricebookModal, pricebookSearch]
+    pricebookModal !== null ? (() => {
+      const params = new URLSearchParams();
+      if (pricebookSearch) params.set('search', pricebookSearch);
+      const t = pricebookModal.type;
+      if (!pickerShowAll && (t === 'labor' || t === 'material')) params.set('type', t);
+      const qs = params.toString();
+      return `/pricebook/items${qs ? `?${qs}` : ''}`;
+    })() : null,
+    [pricebookModal, pricebookSearch, pickerShowAll]
   );
 
   // Sync hydration from existing estimate row
@@ -336,7 +346,7 @@ export default function EstimateBuilder() {
     const cleanLineItems = (arr) => (arr || []).filter(it => (it.name || '').trim().length > 0);
 
     const cleanedItems = gbbMode ? [] : [
-      ...cleanLineItems(stdSection.services).map(it => ({ ...it, item_type: 'service' })),
+      ...cleanLineItems(stdSection.services).map(it => ({ ...it, item_type: 'labor' })),
       ...cleanLineItems(stdSection.materials).map(it => ({ ...it, item_type: 'material' })),
       ...cleanLineItems(stdSection.discounts).map(it => ({ ...it, item_type: 'discount' })),
     ];
@@ -365,7 +375,7 @@ export default function EstimateBuilder() {
       // saveTiers call.
       const seedItems = gbbMode
         ? [
-            ...cleanLineItems(activeTier.services).map(it => ({ ...it, item_type: 'service' })),
+            ...cleanLineItems(activeTier.services).map(it => ({ ...it, item_type: 'labor' })),
             ...cleanLineItems(activeTier.materials).map(it => ({ ...it, item_type: 'material' })),
             ...cleanLineItems(activeTier.discounts).map(it => ({ ...it, item_type: 'discount' })),
           ]
@@ -409,7 +419,7 @@ export default function EstimateBuilder() {
           tier_label: (tier.label || '').trim() || 'Option',
           description: tier.description || '',
           line_items: [
-            ...cleanLineItems(tier.services).map(it => ({ ...it, item_type: 'service' })),
+            ...cleanLineItems(tier.services).map(it => ({ ...it, item_type: 'labor' })),
             ...cleanLineItems(tier.materials).map(it => ({ ...it, item_type: 'material' })),
             ...cleanLineItems(tier.discounts).map(it => ({ ...it, item_type: 'discount' })),
           ].map(it => ({
@@ -792,8 +802,8 @@ export default function EstimateBuilder() {
             section={activeSection}
             setter={activeSetter}
             sectionKey="services"
-            label="Services"
-            itemType="service"
+            label="Labor"
+            itemType="labor"
           />
           <ItemSection
             section={activeSection}
@@ -901,8 +911,31 @@ export default function EstimateBuilder() {
       </div>
 
       {/* Pricebook Modal */}
-      <Modal isOpen={pricebookModal !== null} onClose={() => { setPricebookModal(null); setPricebookSearch(''); }} title="Add from Pricebook">
+      <Modal
+        isOpen={pricebookModal !== null}
+        onClose={() => { setPricebookModal(null); setPricebookSearch(''); setPickerShowAll(false); }}
+        title={pricebookModal?.type === 'material' ? 'Add Material' : pricebookModal?.type === 'labor' ? 'Add Labor' : 'Add from Pricebook'}
+      >
         <div className="space-y-3">
+          {/* P2.22: type filter + "show all" escape hatch */}
+          {(pricebookModal?.type === 'labor' || pricebookModal?.type === 'material') && (
+            <div className="flex gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setPickerShowAll(false)}
+                className={`px-3 py-1.5 rounded-full font-medium ${!pickerShowAll ? 'bg-[#1A73E8] text-white' : 'bg-gray-100 text-gray-600'}`}
+              >
+                {pricebookModal.type === 'material' ? 'Materials' : 'Labor'} only
+              </button>
+              <button
+                type="button"
+                onClick={() => setPickerShowAll(true)}
+                className={`px-3 py-1.5 rounded-full font-medium ${pickerShowAll ? 'bg-[#1A73E8] text-white' : 'bg-gray-100 text-gray-600'}`}
+              >
+                Show all
+              </button>
+            </div>
+          )}
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input

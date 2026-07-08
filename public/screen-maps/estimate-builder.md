@@ -217,3 +217,10 @@
 - **Structural divergence:** web inline modals + a 10s remote-signature poll; Android routes sign/send/present/deposit to dedicated screens and guards edit-after-signed with a re-sign warning.
 - **`deposit-settings` is Android-only on the detail screen** (web configures deposits in the builder).
 - **UNVERIFIED:** the `EstimateBuilder`/`EstimateBuildScreen` save payload (`POST /estimates` / `PUT /estimates/:id`), GBB tier authoring, and the `select-tier` request body beyond `{tier_id}`.
+
+## TYPE-FILTERED PICKERS + LABOR SECTION (P2.22 — 2026-07-07)
+
+- **Sections:** the builder's first line-item section is now **"Labor"** (was "Services") on both platforms, tagging its lines `item_type='labor'`; "Materials" unchanged. `splitLineItemsByType` still buckets `service`+`labor` together, so existing estimates render fine. Customer-facing present/detail group labels also read "Labor".
+- **Type-filtered pickers (David field report):** tapping **Add Labor** opens the pricebook picker showing **only labor** items; **Add Material** shows only material. Backend `GET /pricebook/items?type=` does the filtering (types were reduced to labor|material in P2.14, so the filter is clean). Web: the picker fetch appends `&type=` from the section; Android: the type is threaded through the `pricebook/all?type=` route to `PricebookItemListScreen`.
+- **"Show all" escape hatch (David):** each type-filtered picker has a **Labor/Materials only ↔ Show all** toggle (web: pill tabs in the modal; Android: FilterChips above the list) so any item is still reachable.
+- Non-issues: after the P2.14 CHECK tightening there are no null-typed pricebook items; custom one-off lines aren't pricebook items so the filter doesn't affect them.
