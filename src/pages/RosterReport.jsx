@@ -6,6 +6,7 @@ import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import SendReportModal from '../components/SendReportModal';
 import ExportReportMenu from '../components/ExportReportMenu';
+import TechBalanceSheet from '../components/TechBalanceSheet';
 import { buildPeriods, PERIOD_CHIPS } from '../lib/reportPeriods';
 
 // Same layout as TeamReport — different actorType, no bonuses/deductions
@@ -161,71 +162,8 @@ export default function RosterReport() {
         />
       ) : (
         <>
-          <Card className="mb-4 border-l-4 border-[#1A73E8]">
-            <p className="text-xs text-gray-400 uppercase tracking-wide">
-              All-Time Balance Owed
-            </p>
-            <p className="text-3xl font-bold text-[#1A73E8] mt-1">
-              {formatMoney(allTimeBalanceUnpaid)}
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Carries unpaid earnings, regardless of period.
-            </p>
-          </Card>
-
-          {/* Jobs table — 7-col essentials (matches ACTOR_COLUMNS.roster) */}
-          <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
-            <div className="px-4 py-3 border-b border-gray-100 font-semibold text-gray-900">
-              Jobs ({jobs.length})
-            </div>
-            {jobs.length === 0 ? (
-              <div className="px-4 py-6 text-center text-gray-400 text-sm">
-                No jobs in this period.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100">
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Ticket</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Customer</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Address</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Date</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Total</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Comm %</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Tech Profit</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {jobs.map((j, i) => (
-                      <tr key={j.job_id || i} className="border-b border-gray-50 last:border-0">
-                        <td className="px-4 py-2.5 font-mono text-xs text-gray-700">{j.ticket || '—'}</td>
-                        <td className="px-4 py-2.5 text-gray-700">{j.customer_name || '—'}</td>
-                        <td className="px-4 py-2.5 text-gray-500 max-w-[200px] truncate">{j.address || '—'}</td>
-                        <td className="px-4 py-2.5 text-gray-500 whitespace-nowrap">
-                          {j.date ? new Date(j.date).toLocaleDateString() : '—'}
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-gray-700">
-                          {formatMoney(j.total_sale)}
-                        </td>
-                        <td className="px-4 py-2.5 text-right text-gray-700">
-                          {Number(j.commission_pct || 0).toFixed(1)}%
-                        </td>
-                        <td
-                          className="px-4 py-2.5 text-right font-semibold"
-                          style={{ color: actorColor }}
-                        >
-                          {formatMoney(j.tech_profit)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          <CompensationSummary summary={summary} allTime={allTime} />
+          {/* P2.27 Tech Balance Sheet (same shared component as TeamReport + the PDF). */}
+          <TechBalanceSheet jobs={jobs} summary={summary} />
         </>
       )}
 
