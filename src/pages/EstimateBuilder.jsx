@@ -312,17 +312,24 @@ export default function EstimateBuilder() {
       taxable: pbItem.taxable || false,
       tax_rate: Number(pbItem.tax_rate || 0),
     });
+    // P2.24: map the item type to the section STATE key. The state buckets are
+    // services/materials/discounts; after P2.22 the Labor section tags item_type='labor',
+    // so `type + 's'` would be 'labors' (nonexistent) → the add silently failed. Map it.
+    const sectionKeyFor = (t) =>
+      (t === 'material' || t === 'part') ? 'materials' : t === 'discount' ? 'discounts' : 'services';
     if (gbbMode && pricebookModal && pricebookModal.tierIdx !== undefined) {
       const { tierIdx, type } = pricebookModal;
+      const key = sectionKeyFor(type);
       updateTier(tierIdx, t => ({
         ...t,
-        [type + 's']: [...t[type + 's'], buildItem(type)],
+        [key]: [...t[key], buildItem(type)],
       }));
     } else if (pricebookModal) {
-      const type = pricebookModal.type || 'service';
+      const type = pricebookModal.type || 'labor';
+      const key = sectionKeyFor(type);
       setStdSection(prev => ({
         ...prev,
-        [type + 's']: [...prev[type + 's'], buildItem(type)],
+        [key]: [...prev[key], buildItem(type)],
       }));
     }
     setPricebookModal(null);
