@@ -81,6 +81,7 @@ export default function EstimateBuilder() {
   // pricebookModal: { tierIdx?, type } — tierIdx omitted for standard mode
   const [pricebookModal, setPricebookModal] = useState(null);
   const [pricebookSearch, setPricebookSearch] = useState('');
+  const [pickerShowAll, setPickerShowAll] = useState(false);  // P2.22: "show all" escape hatch
   const searchTimeout = useRef(null);
 
   // GBB mode + tiers array (1-5 entries, default 2 for new estimates)
@@ -92,9 +93,18 @@ export default function EstimateBuilder() {
   const [stdSection, setStdSection] = useState(emptySection());
 
   const { data: existingData, loading: loadingExisting } = useGet(isEdit ? `/estimates/${id}` : null, [id]);
+  // P2.22: type-filtered picker — the Labor picker shows only labor items, Material only
+  // material, unless "show all" is toggled. Backend GET /pricebook/items supports ?type=.
   const { data: pricebookData } = useGet(
-    pricebookModal !== null ? `/pricebook/items${pricebookSearch ? `?search=${encodeURIComponent(pricebookSearch)}` : ''}` : null,
-    [pricebookModal, pricebookSearch]
+    pricebookModal !== null ? (() => {
+      const params = new URLSearchParams();
+      if (pricebookSearch) params.set('search', pricebookSearch);
+      const t = pricebookModal.type;
+      if (!pickerShowAll && (t === 'labor' || t === 'material')) params.set('type', t);
+      const qs = params.toString();
+      return `/pricebook/items${qs ? `?${qs}` : ''}`;
+    })() : null,
+    [pricebookModal, pricebookSearch, pickerShowAll]
   );
 
   // Sync hydration from existing estimate row
@@ -302,17 +312,24 @@ export default function EstimateBuilder() {
       taxable: pbItem.taxable || false,
       tax_rate: Number(pbItem.tax_rate || 0),
     });
+    // P2.24: map the item type to the section STATE key. The state buckets are
+    // services/materials/discounts; after P2.22 the Labor section tags item_type='labor',
+    // so `type + 's'` would be 'labors' (nonexistent) → the add silently failed. Map it.
+    const sectionKeyFor = (t) =>
+      (t === 'material' || t === 'part') ? 'materials' : t === 'discount' ? 'discounts' : 'services';
     if (gbbMode && pricebookModal && pricebookModal.tierIdx !== undefined) {
       const { tierIdx, type } = pricebookModal;
+      const key = sectionKeyFor(type);
       updateTier(tierIdx, t => ({
         ...t,
-        [type + 's']: [...t[type + 's'], buildItem(type)],
+        [key]: [...t[key], buildItem(type)],
       }));
     } else if (pricebookModal) {
-      const type = pricebookModal.type || 'service';
+      const type = pricebookModal.type || 'labor';
+      const key = sectionKeyFor(type);
       setStdSection(prev => ({
         ...prev,
-        [type + 's']: [...prev[type + 's'], buildItem(type)],
+        [key]: [...prev[key], buildItem(type)],
       }));
     }
     setPricebookModal(null);
@@ -336,7 +353,7 @@ export default function EstimateBuilder() {
     const cleanLineItems = (arr) => (arr || []).filter(it => (it.name || '').trim().length > 0);
 
     const cleanedItems = gbbMode ? [] : [
-      ...cleanLineItems(stdSection.services).map(it => ({ ...it, item_type: 'service' })),
+      ...cleanLineItems(stdSection.services).map(it => ({ ...it, item_type: 'labor' })),
       ...cleanLineItems(stdSection.materials).map(it => ({ ...it, item_type: 'material' })),
       ...cleanLineItems(stdSection.discounts).map(it => ({ ...it, item_type: 'discount' })),
     ];
@@ -365,7 +382,7 @@ export default function EstimateBuilder() {
       // saveTiers call.
       const seedItems = gbbMode
         ? [
-            ...cleanLineItems(activeTier.services).map(it => ({ ...it, item_type: 'service' })),
+            ...cleanLineItems(activeTier.services).map(it => ({ ...it, item_type: 'labor' })),
             ...cleanLineItems(activeTier.materials).map(it => ({ ...it, item_type: 'material' })),
             ...cleanLineItems(activeTier.discounts).map(it => ({ ...it, item_type: 'discount' })),
           ]
@@ -389,7 +406,6 @@ export default function EstimateBuilder() {
           tax_rate: Number(item.tax_rate || 0),
           discount_pct: Number(item.discount_pct || 0),
         })),
-        discount_pct: 0,
       };
       if (!isEdit && prefilledJobId) basePayload.job_id = prefilledJobId;
 
@@ -410,7 +426,7 @@ export default function EstimateBuilder() {
           tier_label: (tier.label || '').trim() || 'Option',
           description: tier.description || '',
           line_items: [
-            ...cleanLineItems(tier.services).map(it => ({ ...it, item_type: 'service' })),
+            ...cleanLineItems(tier.services).map(it => ({ ...it, item_type: 'labor' })),
             ...cleanLineItems(tier.materials).map(it => ({ ...it, item_type: 'material' })),
             ...cleanLineItems(tier.discounts).map(it => ({ ...it, item_type: 'discount' })),
           ].map(it => ({
@@ -445,6 +461,10 @@ export default function EstimateBuilder() {
 
   function ItemSection({ section, setter, sectionKey, label, type, itemType }) {
     const items = section[sectionKey] || [];
+    // P2.14 GAP 2: base for a %-discount = the section's services + materials subtotal
+    // (mirrors Android DiscountDialog, which converts % → $ against the current subtotal).
+    const discountBase = ['services', 'materials'].reduce(
+      (s, k) => s + (section[k] || []).reduce((a, i) => a + Number(i.unit_price || 0) * Number(i.quantity || 1), 0), 0);
     return (
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
@@ -543,6 +563,58 @@ export default function EstimateBuilder() {
                     }}
                   />
                 </div>
+                {itemType === 'discount' ? (
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-400">Amount {item._discountMode === 'percent' ? `($${(Number(item.unit_price) || 0).toFixed(2)})` : ''}</label>
+                    <div className="flex gap-1">
+                      <select
+                        value={item._discountMode || 'amount'}
+                        onChange={e => {
+                          const mode = e.target.value;
+                          setter(prev => {
+                            const next = { ...prev, [sectionKey]: [...prev[sectionKey]] };
+                            const row = { ...next[sectionKey][idx], _discountMode: mode };
+                            if (mode === 'percent') {
+                              // seed the % from the current $ against the base
+                              const pct = discountBase > 0 ? +((Number(row.unit_price || 0) / discountBase) * 100).toFixed(2) : 0;
+                              row._discountPctUi = pct || '';
+                            }
+                            next[sectionKey][idx] = row;
+                            return next;
+                          });
+                        }}
+                        className="rounded-xl border border-gray-200 px-2 text-sm min-h-[44px] bg-white"
+                      >
+                        <option value="amount">$</option>
+                        <option value="percent">%</option>
+                      </select>
+                      <input
+                        type="number"
+                        value={item._discountMode === 'percent' ? (item._discountPctUi ?? '') : item.unit_price}
+                        onChange={e => {
+                          const val = e.target.value;
+                          setter(prev => {
+                            const next = { ...prev, [sectionKey]: [...prev[sectionKey]] };
+                            const row = { ...next[sectionKey][idx] };
+                            if ((row._discountMode || 'amount') === 'percent') {
+                              row._discountPctUi = val;
+                              row.unit_price = +((discountBase * Number(val || 0)) / 100).toFixed(2);  // % → $ (stored/sent as $)
+                            } else {
+                              row.unit_price = val;
+                            }
+                            row.total = Number(row.unit_price || 0) * Number(row.quantity || 1);
+                            next[sectionKey][idx] = row;
+                            return next;
+                          });
+                        }}
+                        placeholder={item._discountMode === 'percent' ? '0' : '0.00'}
+                        min="0"
+                        step={item._discountMode === 'percent' ? '1' : '0.01'}
+                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+                      />
+                    </div>
+                  </div>
+                ) : (
                 <div className="flex-1">
                   <label className="text-xs text-gray-400">Unit Price</label>
                   <input
@@ -561,6 +633,7 @@ export default function EstimateBuilder() {
                     className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
                   />
                 </div>
+                )}
                 <div className="flex-1">
                   <label className="text-xs text-gray-400">Total</label>
                   <div className={`rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium min-h-[44px] flex items-center ${itemType === 'discount' ? 'text-red-500' : ''}`}>
@@ -736,8 +809,8 @@ export default function EstimateBuilder() {
             section={activeSection}
             setter={activeSetter}
             sectionKey="services"
-            label="Services"
-            itemType="service"
+            label="Labor"
+            itemType="labor"
           />
           <ItemSection
             section={activeSection}
@@ -845,8 +918,31 @@ export default function EstimateBuilder() {
       </div>
 
       {/* Pricebook Modal */}
-      <Modal isOpen={pricebookModal !== null} onClose={() => { setPricebookModal(null); setPricebookSearch(''); }} title="Add from Pricebook">
+      <Modal
+        isOpen={pricebookModal !== null}
+        onClose={() => { setPricebookModal(null); setPricebookSearch(''); setPickerShowAll(false); }}
+        title={pricebookModal?.type === 'material' ? 'Add Material' : pricebookModal?.type === 'labor' ? 'Add Labor' : 'Add from Pricebook'}
+      >
         <div className="space-y-3">
+          {/* P2.22: type filter + "show all" escape hatch */}
+          {(pricebookModal?.type === 'labor' || pricebookModal?.type === 'material') && (
+            <div className="flex gap-2 text-xs">
+              <button
+                type="button"
+                onClick={() => setPickerShowAll(false)}
+                className={`px-3 py-1.5 rounded-full font-medium ${!pickerShowAll ? 'bg-[#1A73E8] text-white' : 'bg-gray-100 text-gray-600'}`}
+              >
+                {pricebookModal.type === 'material' ? 'Materials' : 'Labor'} only
+              </button>
+              <button
+                type="button"
+                onClick={() => setPickerShowAll(true)}
+                className={`px-3 py-1.5 rounded-full font-medium ${pickerShowAll ? 'bg-[#1A73E8] text-white' : 'bg-gray-100 text-gray-600'}`}
+              >
+                Show all
+              </button>
+            </div>
+          )}
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input

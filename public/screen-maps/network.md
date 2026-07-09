@@ -168,3 +168,12 @@
 - **Bilateral split is enforced server-side**, `sender_keeps_pct + receiver_keeps_pct` must equal 100; proposing auto-declines the prior pending agreement; the accepted split is the one Job-Complete applies to partner `net`.
 - **Web detail is a modal; Android uses dedicated screens** (NetworkDetailScreen + PartnerReportScreen).
 - **UNVERIFIED:** Android counter-offer body shape on `agreement-respond`; whether any web notification path lets a web user accept a connection invite outside this screen.
+
+### P2.31a — Update A receiver-side (built 2026-07-09; spec: backend/specs/P2.31a-update-a.md)
+The partner RECEIVER-side flow now functions end-to-end (was largely unbuilt/broken):
+- **SEND FIX:** `POST /jobs/:id/send-to-partner` filtered the agreement by `status='active'` (never a valid agreement status → every send 400'd); now `status='accepted'`. `partner_status` is set NULL at send (was 'pending').
+- **RECEIVER can act on a shared job** — `PUT /jobs/:id` (edit) + `POST /invoices/:id/payment` are reachable by the receiver (`sent_to_company_id`), gated by the sender's `tech_permissions`: `edit_details` OFF → 403, `collect_payments` OFF → 403. Sender is never gated; a third company 404s.
+- **7 per-job tech toggles** (`jobs.tech_permissions`, set at send): add_notes, collect_payments, take_photos, add_parts, edit_details, cancel_job, **view_history** (Job History tab visibility — UI-gated, role-scoped). Backend-enforced today: edit_details + collect_payments.
+- **Confirm/dispute (Job Detail, sender banner):** a receiver's `/complete` lands as `jobs.partner_status` (the proposed status), NOT the real status; the sender's Job Detail shows **Confirm/Dispute** when `partner_status` is non-NULL. `POST /:id/confirm-partner-status {action}` — CONFIRM applies partner_status→real status + clears + confirms the settlement `cd` (so `/reports/partner` surfaces it); DISPUTE clears + appends a note, real status unchanged.
+- **Settlement** (`/reports/partner`) mirrors both companies to the cent (e.g. 60/40 net 870 → sender 507 / receiver 333; balance ∓333). Verified via partner_receiver_p231a.test.js (9) + real-surface E2E.
+- FILED P2.33: `edit_details` currently grants full-field receiver write (incl. money-override fields) — David to rule on field granularity.

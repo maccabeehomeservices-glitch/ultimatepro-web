@@ -74,7 +74,7 @@ export function sortFor(range, customTo) {
 /** Humanize a scheduled timestamp in the job's zone: null → "Unscheduled", today → "Today, 2:00 PM EDT".
  *  `zone` is the job's effective_timezone (falls back to ET). The displayed TIME is rendered in
  *  that zone with a zone label; the Today/Tomorrow day bucket stays viewer-local (separate item). */
-export function humanizeScheduled(iso, zone) {
+export function humanizeScheduled(iso, zone, endIso) {
   if (!iso) return 'Unscheduled';
   const d = new Date(iso);
   if (isNaN(d.getTime())) return 'Unscheduled';
@@ -84,7 +84,14 @@ export function humanizeScheduled(iso, zone) {
   const sched = new Date(d.getFullYear(), d.getMonth(), d.getDate());
   const daysDiff = Math.round((sched - today) / (1000 * 60 * 60 * 24));
 
-  const time = formatInTimeZone(d, tz, 'h:mm a zzz');
+  // P2.19: arrival window — when a distinct end is present, render "8:00 AM – 10:00 AM".
+  let time = formatInTimeZone(d, tz, 'h:mm a zzz');
+  if (endIso) {
+    const e = new Date(endIso);
+    if (!isNaN(e.getTime()) && e.getTime() !== d.getTime()) {
+      time = `${formatInTimeZone(d, tz, 'h:mm a')} – ${formatInTimeZone(e, tz, 'h:mm a zzz')}`;
+    }
+  }
   if (daysDiff === 0) return `Today, ${time}`;
   if (daysDiff === 1) return `Tomorrow, ${time}`;
   if (daysDiff >= -6 && daysDiff <= 6) {

@@ -8,7 +8,7 @@ export default function CompanyProfile() {
   const [form, setForm] = useState({
     name: '', phone: '', email: '', address: '',
     city: '', state: '', zip: '',
-    website: '', tagline: '',
+    website: '', tagline: '', default_terms: '',
   })
   const [logoUrl, setLogoUrl] = useState('')
   const [logoPreview, setLogoPreview] = useState(null)
@@ -37,6 +37,7 @@ export default function CompanyProfile() {
           zip: c.zip || '',
           website: c.website || '',
           tagline: c.tagline || '',
+          default_terms: c.default_terms || '',
         })
         setLogoUrl(c.logo_url || '')
         setUcmId(c.ultimatecrm_id || '')
@@ -246,6 +247,18 @@ export default function CompanyProfile() {
               placeholder="ZIP"
             />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">DEFAULT TERMS &amp; CONDITIONS</label>
+          <textarea
+            rows={5}
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={form.default_terms}
+            onChange={e => setForm(p => ({ ...p, default_terms: e.target.value }))}
+            placeholder="Payment due within 30 days. Auto-filled into new estimates and invoices; you can override it on any individual document."
+          />
+          <p className="text-xs text-gray-500 mt-1">Auto-filled into new estimates &amp; invoices. Editing an individual document's terms only affects that document.</p>
         </div>
 
         <button

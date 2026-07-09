@@ -35,6 +35,7 @@ export default function InvoiceDetail() {
   const { mutate, loading: acting } = useMutation();
   const [paymentModal, setPaymentModal] = useState(false);
   const [paymentForm, setPaymentForm] = useState({ amount: '', method: 'cash', notes: '' });
+  const [overpayWarn, setOverpayWarn] = useState(null);   // P2.27 #3 overpayment confirm
   const [stopModal, setStopModal] = useState(false);
   const [resumeModal, setResumeModal] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
@@ -93,17 +94,24 @@ export default function InvoiceDetail() {
     return () => clearInterval(timer);
   }, [scanpayQr, scanpayLink, id]); // eslint-disable-line
 
-  async function handlePayment() {
+  async function handlePayment(confirmOverpayment = false) {
     try {
       await mutate('post', `/invoices/${id}/payment`, {
         amount: Number(paymentForm.amount),
         method: paymentForm.method,
         notes: paymentForm.notes,
+        ...(confirmOverpayment ? { confirm_overpayment: true } : {}),
       });
       showSnack('Payment recorded', 'success');
       setPaymentModal(false);
+      setOverpayWarn(null);
       refetch();
-    } catch {
+    } catch (err) {
+      // P2.27 #3: backend returns 409 when the payment exceeds the balance — confirm, then resend.
+      if (err?.response?.status === 409 && err.response.data?.error === 'overpayment') {
+        setOverpayWarn(err.response.data.warning || 'This payment exceeds the remaining balance. Record it anyway?');
+        return;
+      }
       showSnack('Failed to record payment', 'error');
     }
   }
@@ -497,6 +505,22 @@ export default function InvoiceDetail() {
         </div>
       </Card>
 
+      {/* Notes */}
+      {invoice.notes && (
+        <Card className="mb-4">
+          <p className="text-xs text-gray-400 uppercase font-medium mb-1">Notes</p>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+        </Card>
+      )}
+
+      {/* Terms */}
+      {invoice.terms && (
+        <Card className="mb-4">
+          <p className="text-xs text-gray-400 uppercase font-medium mb-1">Terms</p>
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.terms}</p>
+        </Card>
+      )}
+
       {/* Payment History */}
       {payments.length > 0 && (
         <Card className="mb-4">
@@ -600,6 +624,21 @@ export default function InvoiceDetail() {
           ✍️ Capture Signature
         </button>
       </div>
+
+      {/* P2.27 #3: overpayment confirm — shown when the payment exceeds the balance */}
+      <Modal
+        isOpen={!!overpayWarn}
+        onClose={() => setOverpayWarn(null)}
+        title="Payment exceeds balance"
+        footer={
+          <>
+            <Button variant="outlined" onClick={() => setOverpayWarn(null)}>Cancel</Button>
+            <Button loading={acting} onClick={() => handlePayment(true)}>Record anyway</Button>
+          </>
+        }
+      >
+        <p className="text-sm text-gray-700">{overpayWarn}</p>
+      </Modal>
 
       {/* Payment Modal */}
       <Modal

@@ -254,7 +254,7 @@ export default function Jobs() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">{(job.type || 'service').replace(/^\w/, c => c.toUpperCase())}</td>
                       <td className="px-4 py-3"><Badge status={job.status} label={job.status?.replace(/_/g, ' ')} /></td>
-                      <td className="px-4 py-3 text-sm text-gray-500">{humanizeScheduled(job.scheduled_start, job.effective_timezone)}</td>
+                      <td className="px-4 py-3 text-sm text-gray-500">{humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end)}</td>
                       <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-[200px]">
                         {[job.address, job.cust_city || job.city].filter(Boolean).join(', ') || '—'}
                       </td>
@@ -460,8 +460,8 @@ function JobCard({ job, onClick }) {
           {/* Row 4: scheduled + status + tech */}
           <div className="flex items-center gap-2 text-xs">
             <CalendarIcon size={12} className="text-gray-400 flex-shrink-0" />
-            <span className={`truncate ${humanizeScheduled(job.scheduled_start, job.effective_timezone) === 'Unscheduled' ? 'text-gray-400' : 'text-gray-700 font-medium'}`}>
-              {humanizeScheduled(job.scheduled_start, job.effective_timezone)}
+            <span className={`truncate ${humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end) === 'Unscheduled' ? 'text-gray-400' : 'text-gray-700 font-medium'}`}>
+              {humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end)}
             </span>
             <span className="flex-1" />
             <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: accentColor }} />

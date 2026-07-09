@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import { Download, ChevronDown } from 'lucide-react';
 import { useSnackbar } from './ui/Snackbar';
 
+// P2.10: fall back to localhost (matches src/lib/api.js), not a hardcoded prod URL,
+// so staging/self-host builds never leak to prod for report-export downloads.
 const BACKEND_URL =
-  import.meta.env.VITE_API_URL ||
-  'https://ultimatecrm-backend-production.up.railway.app';
+  import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 /**
  * PDF / CSV / HTML export menu for actor-report screens.

@@ -12,7 +12,7 @@
 | `screen_id` | `new-job` |
 | `display_name` | New Job (Job Form) |
 | `surfaces` | android, web |
-| `route_android` | `jobs/new?ticket={ticket}` **and `jobs/:id/edit`** → `JobFormScreen` (JobScreens.kt; edit passes `editJobId` and reuses this redesigned form — unified create+edit like web, P2.1 2026-07-06. The pre-redesign `JobEditScreen` is now retired/dead code) |
+| `route_android` | `jobs/new?ticket={ticket}` **and `jobs/:id/edit`** → `JobFormScreen` (JobScreens.kt; edit passes `editJobId` and reuses this redesigned form — unified create+edit like web, P2.1 2026-07-06. The pre-redesign `JobEditScreen` + its `AddLineItemDialog`/`LineItemInput` helpers were REMOVED as dead code, P2.15 2026-07-07) |
 | `route_web` | `/jobs/new` (and `/jobs/:id/edit`) → `JobForm` (JobForm.jsx, 1015 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | The front door of the whole system. Office/owner turn an incoming call, online booking, or pasted ticket into a job: pick or create the customer, set source/type/assignment/schedule, then Save (or Save & Send to notify the assignee). The Paste Ticket AI feature is the headline, it parses raw notes into a pre-filled form and looks up the customer. |
@@ -62,7 +62,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **request_body:** create: `{first_name, last_name, phone, email, type:'residential'}` — web's Create-New-from-duplicate uses the **parsed** ticket phone (not the matched customer's).
 - **side_effects:** `create-record` (customer), sets `linked_job_id` on Go-Back/Follow-Up (Android)
 - **end_state:** Job linked to the right customer — auto-attached on a phone match, or explicitly chosen (default Create New) on a name match.
-- **parity:** Both platforms now gate auto-attach on the backend `match_type` (no client-side re-derivation). Web shows a 3-option modal (Create New [default] / Use This Customer) for name matches; Android shows its 4-option sheet (Returning / Go-Back-Warranty / Follow-Up / Cancel) with `customerId` pre-set only on a phone match. JUDGMENT: the Android sheet still auto-opens for phone matches too (preserving Go-Back/Follow-Up for repeat customers) — the difference is only whether `customerId` is pre-attached; a dedicated "Create New" button on the Android sheet is a noted follow-up.
+- **parity:** Both platforms now gate auto-attach on the backend `match_type` (no client-side re-derivation). Web shows a 3-option modal (Create New [default] / Use This Customer) for name matches; Android shows its 5-option sheet (Returning / Go-Back-Warranty / Follow-Up / **Create New Customer** / Cancel) with `customerId` pre-set only on a phone match. **P2.21:** the Android sheet now has an explicit "Create New Customer" button (green) that creates a brand-new customer from the PARSED name/phone (not the matched duplicate) via `doSaveNow(forceNewCustomer=true)` and saves the job immediately — mirroring web's primary Create-New action; swipe-dismiss still keeps the parsed fields (customerId null → Save creates new), while "Cancel — Clear All Fields" wipes them. JUDGMENT: the sheet still auto-opens for phone matches too (preserving Go-Back/Follow-Up for repeat customers) — the difference is only whether `customerId` is pre-attached.
 - **status:** OK (P2.1l)
 - **status_note:** Name-only matches no longer silently attach on either platform. Client paste→duplicate flow verified by backend match_type contract test + code review (full UI E2E blocked by clipboard-on-headless + live-AI, per P2.1d).
 
@@ -179,7 +179,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 | 3d | Send Via | checkboxes SMS/Email/Push | AppSwitch | `notify_*` (NOT job columns) | shown only when not-self |
 | 4 | Customer | search + dropdown / pill | name text (✓ when matched) | `customer_id` | web required; Android auto-creates |
 | 4a/b | Extra phones / emails | repeatable text | repeatable text | customer record (post-save) | persistence path UNVERIFIED |
-| 5 | Street Address | text + Google Places | PlacesAddressField | `address` | |
+| 5 | Street Address | text + Google Places | PlacesAddressField | `address` | P2.18: see note |
 | 5a | City / State / ZIP | text | text | `city`/`state`(→abbr)/`zip` | |
 | 5b | Address-inaccurate warning | banner (edit + `address_verified===false`) | n/a | n/a | web-only |
 | 6 | Job Notes | textarea | text (3 lines) | `notes` (web also `description`) | |
@@ -200,3 +200,7 @@ The form's **fields** are inventoried at the bottom (they don't each call a rout
 - **Android-only carried fields:** `source` label + ticket #, `linked_job_id`, `skip_duplicate_check`, richer duplicate sheet.
 - **Web notify email-only path** is a no-op; unused `calls` array.
 - **UNVERIFIED (needs Stage-2 read of JobViewModel/CrmRepository):** Android `vm.parseTicket` body, `vm.checkDuplicateByPhone` endpoint, extra-phones/emails persistence path, deep-link `ticket` arg consumption.
+
+- **P2.18 — address autocomplete keyboard fix (2026-07-07, Android).** The Android `PlacesAddressField` (JobScreens.kt, both New-Job usages) surfaced Google Places suggestions in a Material `DropdownMenu` — a focusable popup that stole focus and dismissed the keyboard on every keystroke, and it called Places per letter. Fixed: suggestions now render in a **`Popup(focusable=false)` anchored under the field** (keyboard stays up), and the Places request is **debounced ~300ms** (one call after typing settles, not per letter), with a `suppressQuery` guard so selecting/clearing doesn't reopen the dropdown. WEB: no bug — JobForm + CustomerForm use the **native `google.maps.places.Autocomplete` widget** (`.pac-container` dropdown does not blur the input), verified by code. Automated char-by-char Maestro/Playwright assertion deferred (Places-network + IME-state not deterministically assertable without a live Maps key + network) → on-device / nightly, per the device-test pattern.
+
+- **P2.19 — arrival windows (2026-07-07, both platforms).** Optional "Arrival window end" time next to the scheduled time (web `JobForm.jsx` `scheduled_end_time`; Android `JobFormScreen` `schedEndTime` + its own TimePicker, enabled once a start time is set). On save, both send `scheduled_end_local` (a wall-clock, only when date+start+end all set); the backend tz-converts it with the SAME zone as start (`routes/jobs.js`). `scheduled_start` stays the canonical sort/filter key; end NULL = exact-time job (unchanged). The schedule preview shows "8:00 AM – 10:00 AM".

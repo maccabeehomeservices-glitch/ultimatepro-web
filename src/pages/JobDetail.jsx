@@ -822,12 +822,17 @@ export default function JobDetail() {
         <div className="mb-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3">
           <p className="text-sm font-semibold text-blue-800">Sent to: {jobData.sent_to_company_name || 'Partner Company'}</p>
           <p className="text-xs text-blue-600">This job was forwarded to a network partner</p>
-          {jobData.partner_status === 'pending' && (
-            <div className="flex gap-2 mt-2">
-              <button onClick={() => handlePartnerStatus('confirm')} disabled={partnerActing}
-                className="text-xs px-3 py-1.5 rounded-lg border border-green-500 text-green-700 font-medium min-h-[32px] hover:bg-green-50 disabled:opacity-50">Confirm</button>
-              <button onClick={() => handlePartnerStatus('dispute')} disabled={partnerActing}
-                className="text-xs px-3 py-1.5 rounded-lg border border-red-400 text-red-600 font-medium min-h-[32px] hover:bg-red-50 disabled:opacity-50">Dispute</button>
+          {/* P2.31a: the receiver's proposed status change lands in partner_status; the sender
+              confirms (applies it + confirms the settlement) or disputes (clears + notes). */}
+          {jobData.partner_status && (
+            <div className="mt-2">
+              <p className="text-xs text-blue-700 mb-1">Partner marked this <strong>{jobData.partner_status}</strong> — review:</p>
+              <div className="flex gap-2">
+                <button onClick={() => handlePartnerStatus('confirm')} disabled={partnerActing}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-green-500 text-green-700 font-medium min-h-[32px] hover:bg-green-50 disabled:opacity-50">Confirm</button>
+                <button onClick={() => handlePartnerStatus('dispute')} disabled={partnerActing}
+                  className="text-xs px-3 py-1.5 rounded-lg border border-red-400 text-red-600 font-medium min-h-[32px] hover:bg-red-50 disabled:opacity-50">Dispute</button>
+              </div>
             </div>
           )}
         </div>
@@ -867,7 +872,11 @@ export default function JobDetail() {
                   <span className="text-base">📅</span>
                   {jobData.scheduled_start ? (
                     <span className="text-sm text-gray-700 font-medium">
-                      {formatInJobZone(jobData.scheduled_start, jobData, 'MMM d, yyyy')} {formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a zzz')}
+                      {formatInJobZone(jobData.scheduled_start, jobData, 'MMM d, yyyy')}{' '}
+                      {/* P2.19: arrival window when a distinct end is present */}
+                      {jobData.scheduled_end && jobData.scheduled_end !== jobData.scheduled_start
+                        ? `${formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a')} – ${formatInJobZone(jobData.scheduled_end, jobData, 'h:mm a zzz')}`
+                        : formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a zzz')}
                     </span>
                   ) : (
                     <span className="text-sm text-gray-400">Not scheduled</span>

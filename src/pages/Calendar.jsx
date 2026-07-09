@@ -141,6 +141,14 @@ export default function Calendar() {
                     <div>
                       <p className="font-medium text-gray-900 text-sm">{job.title || job.job_title}</p>
                       <p className="text-xs text-gray-500">{job.customer_name || job.customer?.name}</p>
+                      {/* P2.19: scheduled time / arrival window */}
+                      {job.scheduled_start && (
+                        <p className="text-xs text-[#1A73E8] font-medium">
+                          {job.scheduled_end && job.scheduled_end !== job.scheduled_start
+                            ? `${formatInJobZone(job.scheduled_start, job, 'h:mm a')} – ${formatInJobZone(job.scheduled_end, job, 'h:mm a')}`
+                            : formatInJobZone(job.scheduled_start, job, 'h:mm a')}
+                        </p>
+                      )}
                     </div>
                     <Badge status={job.status} label={job.status?.replace(/_/g, ' ')} />
                   </div>

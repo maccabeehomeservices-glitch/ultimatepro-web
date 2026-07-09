@@ -23,7 +23,8 @@ const DEFAULT_WINDOWS = [
 
 // The public booking page is served by the BACKEND (book.js GET /book), not the web
 // SPA — mirror Android exactly so the link actually works.
-const BOOKING_BASE = 'https://ultimatecrm-backend-production.up.railway.app/book';
+// P2.10: use VITE_API_URL (was a hardcoded prod URL that ignored the env).
+const BOOKING_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:3000') + '/book';
 
 export default function OnlineBooking() {
   const navigate = useNavigate();

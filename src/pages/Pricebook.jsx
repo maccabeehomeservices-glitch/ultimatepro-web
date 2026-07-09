@@ -5,13 +5,20 @@ import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Modal, Input, Button, Select, Toggle } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { useAuth } from '../hooks/useAuth';
+import { uploadsApi } from '../lib/api';
 
+// P2.14 GAP 3: a pricebook item is either LABOR (work you perform) or a MATERIAL
+// (a part/product). Legacy service/part rows are normalized below; the estimate-line
+// 'discount'/'service' handling is separate (not a pricebook item type).
 const ITEM_TYPE_OPTIONS = [
-  { value: 'service', label: 'Service' },
+  { value: 'labor', label: 'Labor' },
   { value: 'material', label: 'Material' },
-  { value: 'part', label: 'Part' },
-  { value: 'discount', label: 'Discount' },
 ];
+
+// Map any legacy item_type to the reduced set so the Select always shows a valid option.
+function normalizeItemType(t) {
+  return (t === 'material' || t === 'part') ? 'material' : 'labor';
+}
 
 function formatCurrency(v) {
   return '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -19,7 +26,7 @@ function formatCurrency(v) {
 
 const emptyItemForm = () => ({
   name: '', sku: '', description: '', unit_price: '', cost_price: '',
-  item_type: 'service', is_active: true, category_id: '', image_url: '',
+  item_type: 'labor', is_active: true, category_id: '', image_url: '',
 });
 
 export default function Pricebook() {
@@ -37,6 +44,7 @@ export default function Pricebook() {
   const [editingItem, setEditingItem] = useState(null); // null = add, item = edit
   const [itemForm, setItemForm] = useState(emptyItemForm());
   const [deleteModal, setDeleteModal] = useState(null); // item to delete
+  const [uploadingImg, setUploadingImg] = useState(false); // P2.14 GAP 1
 
   const { mutate, loading: saving } = useMutation();
 
@@ -87,7 +95,7 @@ export default function Pricebook() {
       description: item.description || '',
       unit_price: item.unit_price?.toString() || item.price?.toString() || '',
       cost_price: item.cost_price?.toString() || '',
-      item_type: item.item_type || 'service',
+      item_type: normalizeItemType(item.item_type),
       is_active: item.is_active !== false,
       category_id: item.category_id || selectedCategory?.id || selectedCategory?._id || '',
       image_url: item.image_url || '',
@@ -136,6 +144,25 @@ export default function Pricebook() {
   function handleItemFormChange(e) {
     const { name, value, type, checked } = e.target;
     setItemForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+  }
+
+  // P2.14 GAP 1: upload an image (mirrors Android's uploadPricebookImage + the estimate
+  // attach-photo 2-step) → POST /uploads multipart → { url } → store in image_url.
+  async function handleImageUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImg(true);
+    try {
+      const res = await uploadsApi.upload(file, 'pricebook_item', '', 'pricebook');
+      const url = res.data?.url || res.data?.secure_url;
+      if (url) setItemForm(prev => ({ ...prev, image_url: url }));
+      else showSnack('Upload failed', 'error');
+    } catch {
+      showSnack('Image upload failed', 'error');
+    } finally {
+      setUploadingImg(false);
+      e.target.value = '';
+    }
   }
 
   return (
@@ -379,16 +406,29 @@ export default function Pricebook() {
             onChange={handleItemFormChange}
             options={ITEM_TYPE_OPTIONS}
           />
+          {/* P2.14 GAP 1: image upload (primary) + URL field (secondary), mirrors Android */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+            <div className="flex items-center gap-3">
+              {itemForm.image_url && (
+                <img src={itemForm.image_url} alt="Preview" className="w-16 h-16 rounded-xl object-cover border border-gray-200 flex-shrink-0" />
+              )}
+              <label className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] cursor-pointer hover:bg-blue-50 transition-colors">
+                <Upload size={14} /> {uploadingImg ? 'Uploading…' : (itemForm.image_url ? 'Replace' : 'Upload')}
+                <input type="file" accept="image/*" className="hidden" disabled={uploadingImg} onChange={handleImageUpload} />
+              </label>
+              {itemForm.image_url && (
+                <button type="button" onClick={() => setItemForm(prev => ({ ...prev, image_url: '' }))} className="text-sm text-gray-400 hover:text-red-500 min-h-[44px]">Remove</button>
+              )}
+            </div>
+          </div>
           <Input
-            label="Image URL"
+            label="Or image URL"
             name="image_url"
             value={itemForm.image_url}
             onChange={handleItemFormChange}
             placeholder="https://..."
           />
-          {itemForm.image_url && (
-            <img src={itemForm.image_url} alt="Preview" className="w-20 h-20 rounded-xl object-cover border border-gray-200" />
-          )}
           <div className="flex items-center justify-between py-1">
             <span className="text-sm font-medium text-gray-700">Active</span>
             <Toggle

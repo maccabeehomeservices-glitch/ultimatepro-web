@@ -16,7 +16,7 @@
 | `route_web` | `/customers` → `Customers` (Customers.jsx, 259 lines) |
 | `primary_actors` | office, owner |
 | `purpose` | Find a customer and act on them: search, filter, open a customer, add a new one, or import a batch. The list is the entry point to Customer Detail. (Bulk delete removed — customers are permanent, P2.1l.) |
-| `last_verified` | 2026-07-07 · P2.1l Part A: customer bulk-delete/selection removed (customers permanent). Prior: 2026-05-31 · Stage-1 read-only audit · commit: 9366abe |
+| `last_verified` | 2026-07-07 · P2.21: Android selection-mode + delete plumbing excised at the source (VM/UI/repo/ApiService) — customers are permanent; plain tap-to-open. Prior: P2.1l Part A: customer bulk-delete/selection removed (customers permanent). Prior: 2026-05-31 · Stage-1 read-only audit · commit: 9366abe |
 
 ### load_sequence
 `GET /customers?page&limit=50&search?&type?` → `{customers}`. Web paginates explicitly (page state + "Load more"); Android `vm.load(search)` with pull-to-refresh and an `ON_RESUME` reload.
@@ -99,7 +99,7 @@
 - **section:** list
 - **actors:** office, owner
 - **purpose:** Open a customer's detail.
-- **visibility:** when not in selection mode.
+- **visibility:** always (P2.21: no selection mode anymore).
 - **precondition:** n/a
 - **confirm:** n/a
 - **route_chain:** navigate `/customers/:id`
@@ -107,7 +107,7 @@
 - **side_effects:** `navigate`
 - **end_state:** Customer Detail.
 - **failure_modes:** none.
-- **parity:** MATCH, both open Customer Detail (Android long-press enters selection mode instead).
+- **parity:** MATCH, both platforms open Customer Detail on a plain tap. (P2.21: Android long-press multi-select removed at the source — VM selection state, checkbox, and `deleteCustomer`/`deleteSelectedCustomers` plumbing all excised; `repo.deleteCustomer` + `ApiService` DELETE gone.)
 - **status:** OK
 - **status_note:** Rows show Member / Returning badges (web) and a type/Member badge (Android).
 

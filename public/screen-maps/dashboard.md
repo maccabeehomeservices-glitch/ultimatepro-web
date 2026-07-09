@@ -132,16 +132,17 @@
 - **label:** "View all" (memberships)
 - **section:** widgets
 - **actors:** office, owner
-- **purpose:** (Intended) open the full memberships list.
+- **purpose:** Open the membership-plans management page.
 - **visibility:** web only, when `dueSoon.length > 0`.
 - **precondition:** n/a
 - **confirm:** n/a
-- **route_chain:** `navigate('/memberships')`, **no such route in App.jsx**; the `*` fallback redirects to `/dashboard`.
+- **route_chain:** `navigate('/settings/membership-plans')` (Dashboard.jsx:401) — a real registered route. (P2.12: was `/memberships` → `*` fallback → `/dashboard`; fixed.)
 - **request_body:** n/a
-- **side_effects:** `navigate` → redirect to `/dashboard`.
-- **end_state:** Bounces back to the dashboard (goes nowhere useful).
-- **failure_modes:** `route-missing`, App.jsx registers `/settings/membership-plans`, not `/memberships`.
-- **parity:** WEB-ONLY (broken), Android has no "View all" (it shows "+N more" text, not a nav).
+- **side_effects:** `navigate` → `/settings/membership-plans`.
+- **end_state:** Membership-plans management page (no dedicated enrolled/due-soon list exists; lands on plan management).
+- **failure_modes:** none.
+- **parity:** WEB-ONLY, Android has no "View all" (it shows "+N more" text, not a nav).
+- **status:** OK (P2.12 reconciled 2026-07-07)
 - **status:** BROKEN
 - **status_note:** The membership *rows* work; only the "View all" target is missing.
 

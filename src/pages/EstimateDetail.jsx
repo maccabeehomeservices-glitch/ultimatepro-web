@@ -42,12 +42,18 @@ function TierCard({ tier, selectable = false, selected, onClick }) {
       {allItems.length > 0 && (
         <div className="space-y-1 mb-3">
           {allItems.map((item, i) => (
-            <div key={i} className="flex items-center gap-2 text-sm">
+            <div key={i} className="flex items-start gap-2 text-sm">
               {item.image_url && (
                 <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
               )}
-              <span className="flex-1 text-gray-700 min-w-0 truncate">{item.name || item.description}</span>
-              <span className={item.item_type === 'discount' ? 'text-red-500' : 'text-gray-500'}>
+              <div className="flex-1 min-w-0">
+                <p className="text-gray-700 truncate">{item.name || item.description}</p>
+                {item.description && item.description !== item.name && (
+                  <p className="text-xs text-gray-500 whitespace-pre-wrap">{item.description}</p>
+                )}
+                {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
+              </div>
+              <span className={`flex-shrink-0 ${item.item_type === 'discount' ? 'text-red-500' : 'text-gray-500'}`}>
                 {item.item_type === 'discount' ? '-' : ''}{formatCurrency(item.total || Number(item.unit_price || 0) * Number(item.qty || 1))}
               </span>
             </div>

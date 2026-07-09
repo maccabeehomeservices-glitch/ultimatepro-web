@@ -109,7 +109,7 @@ export default function JobForm() {
     notes: '',
     customer_id: '', customer_name: '',
     address: '', city: '', state: '', zip: '',
-    scheduled_date: '', scheduled_time: '',
+    scheduled_date: '', scheduled_time: '', scheduled_end_time: '',
     // assignment
     assign_cat: 'self',        // 'self' | 'team' | 'roster' | 'partner'
     assigned_tech_id: '',      // team member (app user)
@@ -270,6 +270,9 @@ export default function JobForm() {
     const sDate = j.scheduled_date ? j.scheduled_date.slice(0,10)
       : j.scheduled_start ? formatInJobZone(j.scheduled_start, j, 'yyyy-MM-dd') : '';
     const sTime = j.scheduled_time || (j.scheduled_start ? formatInJobZone(j.scheduled_start, j, 'HH:mm') : '');
+    // P2.19: prefill the arrival-window "to" time (job-zone) only if it differs from start.
+    const sEndTime = (j.scheduled_end && j.scheduled_end !== j.scheduled_start)
+      ? formatInJobZone(j.scheduled_end, j, 'HH:mm') : '';
 
     let assign_cat = 'self', assigned_tech_id = '', assigned_roster_tech_id = '', assigned_partner_company_id = '';
     if (j.assigned_roster_tech_id) { assign_cat = 'roster'; assigned_roster_tech_id = j.assigned_roster_tech_id; }
@@ -286,7 +289,7 @@ export default function JobForm() {
       customer_name: j.customer_name || j.customer?.name || '',
       address: j.address || '',
       city: j.city || '', state: j.state || '', zip: j.zip || '',
-      scheduled_date: sDate, scheduled_time: sTime,
+      scheduled_date: sDate, scheduled_time: sTime, scheduled_end_time: sEndTime,
       assign_cat, assigned_tech_id, assigned_roster_tech_id, assigned_partner_company_id,
       notify_sms: true, notify_email: false, notify_push: true,
       source_option,
@@ -522,6 +525,10 @@ export default function JobForm() {
     const scheduled_local = form.scheduled_date
       ? `${form.scheduled_date}T${form.scheduled_time || '12:00'}`
       : null;
+    // P2.19: arrival-window end — only when both a start time and a "to" time are set.
+    const scheduled_end_local = (form.scheduled_date && form.scheduled_time && form.scheduled_end_time)
+      ? `${form.scheduled_date}T${form.scheduled_end_time}`
+      : null;
 
     // Resolve assignment
     let assigned_to = null;
@@ -553,6 +560,7 @@ export default function JobForm() {
       state:   toStateAbbr(form.state?.trim()) || null,
       zip:     form.zip?.trim()     || null,
       scheduled_local,
+      scheduled_end_local,
       lat: form.lat ?? null,
       lng: form.lng ?? null,
       assigned_to,
@@ -617,7 +625,7 @@ export default function JobForm() {
 
   const isNonSelf = form.assign_cat !== 'self';
   const schedulePreview = form.scheduled_date
-    ? `${formatDisplayDate(form.scheduled_date)}${form.scheduled_time ? ' at ' + formatDisplayTime(form.scheduled_time) : ''}`
+    ? `${formatDisplayDate(form.scheduled_date)}${form.scheduled_time ? ' at ' + formatDisplayTime(form.scheduled_time) + (form.scheduled_end_time ? ' – ' + formatDisplayTime(form.scheduled_end_time) : '') : ''}`
     : '';
 
   if (isEdit && jobLoading) return <LoadingSpinner fullPage />;
@@ -931,6 +939,22 @@ export default function JobForm() {
                   </button>
                 )}
               </div>
+            </div>
+            {/* P2.19: optional arrival-window "to" time */}
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Arrival window end <span className="text-gray-400 font-normal">(optional)</span></label>
+              <div className="relative max-w-[calc(50%-0.375rem)]">
+                <input type="time" value={form.scheduled_end_time} disabled={!form.scheduled_time}
+                  onChange={e => setForm(prev => ({ ...prev, scheduled_end_time: e.target.value }))}
+                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] disabled:bg-gray-50 disabled:text-gray-400" />
+                {form.scheduled_end_time && (
+                  <button type="button" onClick={() => setForm(p => ({ ...p, scheduled_end_time: '' }))}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center">
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Gives the customer an arrival window (e.g. 8:00 AM – 10:00 AM) instead of an exact time.</p>
             </div>
           </div>
           {schedulePreview && (

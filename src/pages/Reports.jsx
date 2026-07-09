@@ -97,34 +97,27 @@ export default function Reports() {
       return;
     }
     const partnerName = selectedConnection.company_name || selectedConnection.partner_name || 'partner';
-    const jobs = partnerReport.jobs || [];
+    // P2.34: build from the /reports/partner settlement shape (we_sent/they_sent + net_balance).
     const summary = partnerReport.summary || {};
-    const headers = ['Job Number', 'Customer', 'Address', 'Date', 'Total', 'Parts', 'CC Fee', 'Net', 'Our Earnings', 'Their Earnings'];
+    const rows = [
+      ...(partnerReport.we_sent || []).map((j) => ['We Sent', j]),
+      ...(partnerReport.they_sent || []).map((j) => ['They Sent', j]),
+    ];
+    const headers = ['Direction', 'Ticket', 'Customer', 'Total', 'Their %', 'Their Profit', 'Our Profit', 'Balance'];
     const lines = [headers.join(',')];
-    jobs.forEach((j) => {
-      const date = j.completed_at ? String(j.completed_at).slice(0, 10) : '';
+    rows.forEach(([dir, j]) => {
       lines.push([
-        csvCell(j.job_number),
-        csvCell(j.customer_name),
-        csvCell(j.address),
-        csvCell(date),
-        csvCell(j.job_total),
-        csvCell(j.parts_amount),
-        csvCell(j.cc_fee_amount),
-        csvCell(j.net_amount),
-        csvCell(j.our_earnings),
-        csvCell(j.their_earnings),
+        csvCell(dir),
+        csvCell(j.job_number || j.ticket),
+        csvCell(j.customer_name || j.customer),
+        csvCell(j.total),
+        csvCell(j.their_share_pct),
+        csvCell(j.their_profit),
+        csvCell(j.our_profit),
+        csvCell(j.balance),
       ].join(','));
     });
-    lines.push([
-      'TOTAL', '', '', '',
-      csvCell(summary.total_gross),
-      csvCell(summary.total_parts),
-      csvCell(summary.total_cc_fees),
-      csvCell(summary.total_net),
-      csvCell(summary.our_total_earnings),
-      csvCell(summary.their_total_earnings),
-    ].join(','));
+    lines.push(['NET BALANCE', '', '', '', '', '', '', csvCell(summary.net_balance)].join(','));
     const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
     const safeName = partnerName.replace(/[^a-zA-Z0-9]+/g, '-');
     downloadBlob(blob, `partner-report-${safeName}-${from}-to-${to}.csv`);
@@ -158,8 +151,11 @@ export default function Reports() {
     setPartnerReport(null);
     setPartnerReportLoading(true);
     try {
-      const res = await networkApi.getConnectionReport(conn.id || conn._id, from, to);
-      setPartnerReport(res.data);
+      // P2.34: the /reports/partner bidirectional SETTLEMENT (we_sent/they_sent/net_balance) —
+      // NOT the old /network report, which showed $0 because it never reflected confirmed
+      // partner-job settlements. Parity with the settlement PDF (507/333 → net ∓333).
+      const data = await reportsApi.getPartnerReport(conn.id || conn._id, { from, to });
+      setPartnerReport(data);
     } catch {
       setPartnerReport(null);
     } finally {
@@ -397,36 +393,43 @@ export default function Reports() {
 
               {partnerReportLoading && <LoadingSpinner />}
 
-              {partnerReport && selectedConnection && (
-                <Card>
-                  <p className="text-xs text-gray-400 uppercase font-medium mb-3">
-                    {selectedConnection.company_name || selectedConnection.partner_name} — {from} to {to}
-                  </p>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <p className="text-xs text-gray-400">Total Jobs</p>
-                      <p className="font-bold text-gray-900">{partnerReport.summary?.total_jobs || 0}</p>
+              {partnerReport && selectedConnection && (() => {
+                // P2.34: /reports/partner bidirectional settlement. Net balance mirrors the PDF:
+                // negative = we owe them, positive = they owe us.
+                const net = Number(partnerReport.summary?.net_balance || 0);
+                const weSent = partnerReport.we_sent || [];
+                const theySent = partnerReport.they_sent || [];
+                const totalJobs = weSent.length + theySent.length;
+                const jobRow = (j, i) => (
+                  <div key={j.job_id || i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-gray-700 truncate">{j.job_number || j.ticket || `Job ${i + 1}`}</p>
+                      {(j.customer_name || j.customer) && <p className="text-xs text-gray-400 truncate">{j.customer_name || j.customer}</p>}
                     </div>
-                    <div>
-                      <p className="text-xs text-gray-400">You Earn</p>
-                      <p className="font-bold text-[#1A73E8]">{formatCurrency(partnerReport.summary?.our_total_earnings || 0)}</p>
+                    <div className="text-right ml-3 flex-shrink-0">
+                      <p className="text-sm font-medium text-gray-900">{formatCurrency(j.our_profit || 0)}</p>
+                      <p className={`text-xs ${Number(j.balance) < 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(j.balance || 0)}</p>
                     </div>
                   </div>
-                  {(partnerReport.jobs || []).length > 0 && (
-                    <div className="space-y-1 mb-3">
-                      {(partnerReport.jobs || []).map((j, i) => (
-                        <div key={j.job_id || j.id || i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm text-gray-700 truncate">{j.job_number || `Job ${i + 1}`}</p>
-                            {j.customer_name && (
-                              <p className="text-xs text-gray-400 truncate">{j.customer_name}</p>
-                            )}
-                          </div>
-                          <p className="text-sm font-medium text-gray-900 ml-3 flex-shrink-0">{formatCurrency(j.our_earnings || 0)}</p>
-                        </div>
-                      ))}
-                    </div>
+                );
+                return (
+                <Card>
+                  <p className="text-xs text-gray-400 uppercase font-medium mb-2">
+                    {selectedConnection.company_name || selectedConnection.partner_name} — {from} to {to}
+                  </p>
+                  {/* Net balance headline — mirrors the settlement PDF */}
+                  <div className={`rounded-xl px-4 py-3 mb-3 ${net < 0 ? 'bg-red-50 border border-red-200' : net > 0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
+                    <p className="text-xs uppercase font-medium text-gray-500">{net < 0 ? 'You Owe Them' : net > 0 ? 'They Owe You' : 'Settled'}</p>
+                    <p className={`text-2xl font-bold ${net < 0 ? 'text-red-600' : net > 0 ? 'text-green-700' : 'text-gray-700'}`}>{formatCurrency(Math.abs(net))}</p>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">{totalJobs} settled job{totalJobs === 1 ? '' : 's'}</p>
+                  {weSent.length > 0 && (
+                    <div className="mb-3"><p className="text-xs font-semibold text-gray-600 mb-1">Jobs We Sent</p>{weSent.map(jobRow)}</div>
                   )}
+                  {theySent.length > 0 && (
+                    <div className="mb-3"><p className="text-xs font-semibold text-gray-600 mb-1">Jobs They Sent</p>{theySent.map(jobRow)}</div>
+                  )}
+                  {totalJobs === 0 && <p className="text-sm text-gray-400 mb-3">No confirmed partner jobs in this range.</p>}
                   <div className="flex gap-2 pt-2 border-t border-gray-100">
                     <button
                       onClick={() => { setSendRecipient(''); setShowSendModal(true); }}
@@ -442,7 +445,8 @@ export default function Reports() {
                     </button>
                   </div>
                 </Card>
-              )}
+                );
+              })()}
             </div>
           )
         )}
