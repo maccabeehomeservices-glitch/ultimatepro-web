@@ -940,6 +940,15 @@ export default function JobDetail() {
                       <a href={`tel:${jobData.cust_phone}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📞</a>
                     </div>
                   )}
+                  {jobData.cust_phone2 && (
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">📱</span>
+                        <span className="text-sm text-gray-900">{jobData.cust_phone2}</span>
+                      </div>
+                      <a href={`tel:${jobData.cust_phone2}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📞</a>
+                    </div>
+                  )}
                   {jobData.cust_email && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
