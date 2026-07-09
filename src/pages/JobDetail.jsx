@@ -277,32 +277,32 @@ export default function JobDetail() {
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [jobMessages.length]);
 
-  // ── send-to recipients ────────────────────────────────────────────────────
+  // ── send-to recipients (P2.36: ALL assignable — self, team, roster, partners) ──
   useEffect(() => {
     if (!sendToModal || !jobData) return;
     setSendToLoading(true);
     const recipients = [];
-    if (jobData.assigned_to) {
-      const techName = `${jobData.tech_first || ''} ${jobData.tech_last || ''}`.trim() || 'Assigned Tech';
-      recipients.push({
-        id: jobData.assigned_to,
-        name: techName,
-        type: 'roster_tech',
-        phone: jobData.tech_phone || null,
-        email: null,
-      });
-    }
-    api.get('/network/connections/active-simple')
-      .then(res => {
-        (res.data || []).forEach(c => recipients.push({
-          id: c.partner_id,
-          name: c.partner_name,
-          type: 'partner',
-          connection_id: c.connection_id,
-        }));
-        setSendToRecipients(recipients);
-      })
-      .catch(() => setSendToRecipients(recipients))
+    // Self first — an owner/dispatcher can send the job to their own phone/email.
+    if (user?.id) recipients.push({
+      id: user.id, name: `${`${user.first_name || ''} ${user.last_name || ''}`.trim() || 'You'} (You)`,
+      type: 'app_user', phone: user.phone || null, email: user.email || null,
+    });
+    Promise.allSettled([
+      api.get('/users'),
+      api.get('/roster-techs'),
+      api.get('/network/connections/active-simple'),
+    ]).then(([usersR, rosterR, partnersR]) => {
+      const users = usersR.status === 'fulfilled' ? (usersR.value.data?.users || usersR.value.data || []) : [];
+      users.filter(u => u.id !== user?.id).forEach(u => recipients.push({
+        id: u.id, name: `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Team member',
+        type: 'app_user', phone: u.phone || null, email: u.email || null,
+      }));
+      const roster = rosterR.status === 'fulfilled' ? (rosterR.value.data?.roster_techs || rosterR.value.data || []) : [];
+      roster.forEach(t => recipients.push({ id: t.id, name: t.name, type: 'roster_tech', phone: t.phone || null, email: t.email || null }));
+      const partners = partnersR.status === 'fulfilled' ? (partnersR.value.data || []) : [];
+      partners.forEach(c => recipients.push({ id: c.partner_id, name: c.partner_name, type: 'partner', connection_id: c.connection_id }));
+      setSendToRecipients(recipients);
+    }).catch(() => setSendToRecipients(recipients))
       .finally(() => setSendToLoading(false));
   }, [sendToModal]);
 
@@ -515,7 +515,7 @@ export default function JobDetail() {
         showSnack(`Job sent to ${selectedRecipient.name}`, 'success');
         refetch();
       } else {
-        await api.post('/roster-techs/notify-tech', { job_id: id, tech_id: selectedRecipient.id, method: sendMethod });
+        await api.post('/roster-techs/notify-tech', { job_id: id, tech_id: selectedRecipient.id, tech_type: selectedRecipient.type, method: sendMethod });
         showSnack(`Sent to ${selectedRecipient.name}`, 'success');
       }
       setSendToModal(false);
@@ -1567,7 +1567,7 @@ export default function JobDetail() {
                     </div>
                   </button>
                 ))}
-                {selectedRecipient?.type === 'roster_tech' && (
+                {(selectedRecipient?.type === 'roster_tech' || selectedRecipient?.type === 'app_user') && (
                   <div className="flex gap-2 mt-2">
                     {['sms','email','both'].map(m => (
                       <button key={m} onClick={() => setSendMethod(m)}
