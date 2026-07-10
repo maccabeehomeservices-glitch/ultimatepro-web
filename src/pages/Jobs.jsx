@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Search, X, Filter, MapPin, Calendar as CalendarIcon, Inbox } from 'lucide-react';
-import { jobsApi, usersApi, statusColor } from '../lib/api';
+import { jobsApi, usersApi, companyApi, statusColor } from '../lib/api';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { dateBoundsFor, sortFor, humanizeScheduled, DATE_CHIPS, STATUS_OPTIONS } from '../lib/dateRanges';
@@ -23,6 +23,7 @@ export default function Jobs() {
     new Set(['scheduled', 'en_route', 'in_progress', 'unscheduled', 'holding'])
   );
   const [selectedTechIds, setSelectedTechIds] = useState(new Set());
+  const [selectedTypes, setSelectedTypes] = useState(new Set()); // P3.8: job-type filter
   const [partnerView, setPartnerView] = useState(false);
   const [showFilterDialog, setShowFilterDialog] = useState(false);
   const [page, setPage] = useState(1);
@@ -30,9 +31,10 @@ export default function Jobs() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [techs, setTechs] = useState([]);
+  const [jobTypes, setJobTypes] = useState([]); // P3.8: company's job-type set (filter options)
   const searchTimeout = useRef(null);
 
-  const activeFilterCount = selectedStatuses.size + selectedTechIds.size + (partnerView ? 1 : 0);
+  const activeFilterCount = selectedStatuses.size + selectedTechIds.size + selectedTypes.size + (partnerView ? 1 : 0);
 
   const fetchJobs = useCallback(async (pageNum) => {
     setLoading(true);
@@ -46,6 +48,7 @@ export default function Jobs() {
         if (selectedStatuses.has('deleted')) params.include_all_statuses = true;
       }
       if (selectedTechIds.size > 0) params.assigned_to = [...selectedTechIds].join(',');
+      if (selectedTypes.size > 0) params.type = [...selectedTypes].join(',');
       // All date chips use activity_from / activity_to.
       // Backend's activity_date CASE pivots per status:
       //   - forward statuses (scheduled, en_route, in_progress, holding) → scheduled_start
@@ -68,11 +71,15 @@ export default function Jobs() {
     } finally {
       setLoading(false);
     }
-  }, [dateRange, customFrom, customTo, selectedStatuses, selectedTechIds, partnerView, search, showSnack]);
+  }, [dateRange, customFrom, customTo, selectedStatuses, selectedTechIds, selectedTypes, partnerView, search, showSnack]);
 
   useEffect(() => {
     usersApi.getTechnicians()
       .then(r => setTechs(r.data?.technicians || r.data || []))
+      .catch(() => {});
+    // P3.8: job-type filter options from the company's set.
+    companyApi.getJobTypes()
+      .then(r => setJobTypes(Array.isArray(r.data) ? r.data : []))
       .catch(() => {});
   }, []);
 
@@ -113,9 +120,17 @@ export default function Jobs() {
       return next;
     });
   }
+  function toggleType(key) {
+    setSelectedTypes(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
   function clearAllFilters() {
     setSelectedStatuses(new Set());
     setSelectedTechIds(new Set());
+    setSelectedTypes(new Set());
     setPartnerView(false);
     setShowFilterDialog(false);
   }
@@ -378,6 +393,25 @@ export default function Jobs() {
                 })
               )}
             </div>
+
+            {jobTypes.length > 0 && (
+              <>
+                <p className="text-xs font-bold uppercase tracking-wider text-[#1A73E8] mb-2">Job Type</p>
+                <div className="space-y-1 mb-4">
+                  {jobTypes.map(t => (
+                    <label key={t.key} className="flex items-center gap-3 cursor-pointer min-h-[36px]">
+                      <input
+                        type="checkbox"
+                        checked={selectedTypes.has(t.key)}
+                        onChange={() => toggleType(t.key)}
+                        className="w-4 h-4"
+                      />
+                      <span className="text-sm text-gray-700">{t.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </>
+            )}
 
             <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
               <button onClick={clearAllFilters} className="px-4 py-2 text-sm text-gray-600 min-h-[44px]">Clear All</button>
