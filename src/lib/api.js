@@ -839,6 +839,19 @@ export const companyApi = {
     api.get('/company'),
   update: (data) =>
     api.put('/company', data),
+  // P3.8 per-trade job types
+  getJobTypes: () =>
+    api.get('/company/job-types'),
+  addJobType: (label) =>
+    api.post('/company/job-types', { label }),
+  updateJobType: (id, data) =>
+    api.put(`/company/job-types/${id}`, data),
+  deleteJobType: (id) =>
+    api.delete(`/company/job-types/${id}`),
+  getTrades: () =>
+    api.get('/company/trades'),
+  setTrades: (trades) =>
+    api.put('/company/trades', { trades }),
   getCustomFields: () =>
     api.get('/company/custom-fields'),
   createCustomField: (data) =>
