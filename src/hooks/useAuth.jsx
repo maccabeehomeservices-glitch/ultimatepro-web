@@ -21,31 +21,42 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = getToken();
-    if (token) {
-      api.get('/auth/me')
-        .then((res) => {
-          const { user: u, company: c, permissions_resolved } = res.data;
-          // Carry the resolved per-section permission levels on the user so the
-          // UI can gate controls (e.g. Option B: hide the source picker when
-          // jobs != full). /auth/me is the source; login fills it on next mount.
-          const up = { ...u, permissions_resolved };
-          setUser(up);
-          setCompany(c);
-          setStoredUser(up);
-          setStoredCompany(c);
-        })
-        .catch(() => {
-          clearToken();
-          localStorage.removeItem('up_user');
-          localStorage.removeItem('up_company');
-          setUser(null);
-          setCompany(null);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    if (!getToken()) { setLoading(false); return; }
+
+    // Re-fetch /auth/me → refresh the resolved per-section permission levels on the
+    // user so the UI can gate controls (e.g. Option B: hide the source picker when
+    // jobs != full). /auth/me is the source; login fills it immediately.
+    const refreshMe = async () => {
+      try {
+        const res = await api.get('/auth/me');
+        const { user: u, company: c, permissions_resolved } = res.data;
+        const up = { ...u, permissions_resolved };
+        setUser(up);
+        setCompany(c);
+        setStoredUser(up);
+        setStoredCompany(c);
+      } catch {
+        clearToken();
+        localStorage.removeItem('up_user');
+        localStorage.removeItem('up_company');
+        setUser(null);
+        setCompany(null);
+      }
+    };
+
+    refreshMe().finally(() => setLoading(false));
+
+    // P3.7: refresh permissions when the tab/window regains focus, so an owner's
+    // permission change reaches a logged-in user on next foreground — no re-login.
+    const onForeground = () => {
+      if (document.visibilityState === 'visible' && getToken()) refreshMe();
+    };
+    document.addEventListener('visibilitychange', onForeground);
+    window.addEventListener('focus', onForeground);
+    return () => {
+      document.removeEventListener('visibilitychange', onForeground);
+      window.removeEventListener('focus', onForeground);
+    };
   }, []);
 
   async function login(email, password) {
