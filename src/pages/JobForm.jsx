@@ -219,6 +219,7 @@ export default function JobForm() {
           first_name: parts[0] || fallbackCustomerName(parsedPhone),
           last_name: parts.slice(1).join(' ') || '',
           phone: parsedPhone || '',
+          phone2: (parsed.phone_numbers?.[1] || '').replace(/\D/g,'') || null,  // P2.35: 2nd phone → phone2, not notes
           type: 'residential',
         }).then(r => selectCustomer(r.data?.customer || r.data)).catch(() => setCustomerSearch(parsed.customer_name||''));
       }
@@ -365,6 +366,9 @@ export default function JobForm() {
   // ── resolve customer from parsed ticket ────────────────────────────────────
   async function resolveCustomer(p) {
     const parsedPhone = (p.phone || p.phone_numbers?.[0] || '').replace(/\D/g,'');
+    // P2.35: carry the 2nd parsed phone into the new customer's phone2 so it lands
+    // in the phone section (not notes) and shows on the job detail.
+    const secondPhone = (p.phone_numbers?.[1] || '').replace(/\D/g,'') || null;
     const parsedName  = (p.customer_name || '').trim();
     const parts       = parsedName.split(' ');
     const firstName   = parts[0] || '';
@@ -405,6 +409,7 @@ export default function JobForm() {
           first_name: firstName || fallbackName,
           last_name: lastName || '',
           phone: parsedPhone || null,
+          phone2: secondPhone,
           email: p.email || null,
           type: 'residential',
         });
@@ -417,7 +422,7 @@ export default function JobForm() {
     try {
       const walkinRes = await customersApi.create({
         first_name: parsedName || 'Walk-in', last_name: '',
-        phone: parsedPhone || null, type: 'residential',
+        phone: parsedPhone || null, phone2: secondPhone, type: 'residential',
       });
       const walkin = walkinRes.data?.customer || walkinRes.data;
       return { customer: walkin, action: 'created', message: parsedName ? `Customer: ${parsedName}` : 'Walk-in customer created' };
