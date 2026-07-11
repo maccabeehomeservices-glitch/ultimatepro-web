@@ -45,6 +45,12 @@ export default function InvoiceDetail() {
   const [scanpayLoading, setScanpayLoading] = useState(false);
   const [scanpayQr, setScanpayQr] = useState(null);
   const [scanpayLink, setScanpayLink] = useState(null);
+  // P2.41 #4: pre-send picker for "Send Payment Link" (recipient + channel), like the send flow.
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkEmail, setLinkEmail] = useState('');
+  const [linkPhone, setLinkPhone] = useState('');
+  const [linkSendEmail, setLinkSendEmail] = useState(false);
+  const [linkSendSms, setLinkSendSms] = useState(true);
   const [showSendModal, setShowSendModal] = useState(false);
   const [sendEmails, setSendEmails] = useState([]);
   const [sendPhones, setSendPhones] = useState([]);
@@ -196,11 +202,31 @@ export default function InvoiceDetail() {
     }
   }
 
+  // P2.41 #4: open the pre-send picker instead of firing the send immediately.
+  function openLinkModal() {
+    const email = invoice.cust_email || invoice.customer_email || '';
+    const phone = invoice.cust_phone || invoice.customer_phone || '';
+    setLinkEmail(email);
+    setLinkPhone(phone);
+    setLinkSendEmail(!!email);
+    setLinkSendSms(!!phone);
+    setShowLinkModal(true);
+  }
+
   async function handleScanpayLink() {
+    if (!linkSendEmail && !linkSendSms) { showSnack('Choose email or SMS to send the link', 'error'); return; }
+    if (linkSendEmail && !linkEmail.trim()) { showSnack('Enter an email address', 'error'); return; }
+    if (linkSendSms && !linkPhone.trim()) { showSnack('Enter a phone number', 'error'); return; }
+    const method = linkSendEmail && linkSendSms ? 'both' : linkSendEmail ? 'email' : 'sms';
     setScanpayLoading(true);
     try {
-      const res = await paymentsApi.scanpayLink(id, scanpayAmount, invoice.cust_phone || invoice.customer_phone);
-      setScanpayLink(res.data); // { payment_url, sms_sent, phone_used, ... }
+      const res = await paymentsApi.scanpayLink(id, scanpayAmount, {
+        method,
+        customer_phone: linkSendSms ? linkPhone.trim() : undefined,
+        customer_email: linkSendEmail ? linkEmail.trim() : undefined,
+      });
+      setShowLinkModal(false);
+      setScanpayLink(res.data); // { payment_url, sms_sent, email_sent, ... }
     } catch (err) {
       showSnack(err.response?.data?.error || 'Failed to create link', 'error');
     } finally {
@@ -732,11 +758,11 @@ export default function InvoiceDetail() {
               {scanpayLoading ? '…' : '📲 ScanPay QR'}
             </button>
             <button
-              onClick={handleScanpayLink}
+              onClick={openLinkModal}
               disabled={scanpayLoading}
               className="py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm"
             >
-              {scanpayLoading ? '…' : '🔗 ScanPay Link'}
+              {scanpayLoading ? '…' : '🔗 Send Payment Link'}
             </button>
           </div>
         </div>
@@ -891,6 +917,39 @@ export default function InvoiceDetail() {
         }
       >
         <p className="text-gray-600">Resume automatic follow-up reminders for this invoice?</p>
+      </Modal>
+
+      {/* P2.41 #4: Send Payment Link picker (recipient + channel) */}
+      <Modal
+        isOpen={showLinkModal}
+        onClose={() => !scanpayLoading && setShowLinkModal(false)}
+        title="Send Payment Link"
+        footer={
+          <>
+            <Button variant="outlined" disabled={scanpayLoading} onClick={() => setShowLinkModal(false)}>Cancel</Button>
+            <Button loading={scanpayLoading} onClick={handleScanpayLink}>Send Link</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Send a secure payment link for <span className="font-semibold">{formatCurrency(scanpayAmount)}</span>.</p>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={linkSendEmail} onChange={e => setLinkSendEmail(e.target.checked)} />
+            <span className="text-sm text-gray-700">Email</span>
+          </label>
+          {linkSendEmail && (
+            <input type="email" value={linkEmail} onChange={e => setLinkEmail(e.target.value)} placeholder="customer@email.com"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+          )}
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={linkSendSms} onChange={e => setLinkSendSms(e.target.checked)} />
+            <span className="text-sm text-gray-700">SMS</span>
+          </label>
+          {linkSendSms && (
+            <input type="tel" value={linkPhone} onChange={e => setLinkPhone(e.target.value)} placeholder="(555) 123-4567"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+          )}
+        </div>
       </Modal>
 
       {/* Send Invoice Modal */}

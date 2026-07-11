@@ -415,8 +415,13 @@ export const paymentsApi = {
   scanpayQr: (invoice_id, amount) =>
     api.post('/payments/scanpay-qr', { invoice_id, amount }),
 
-  scanpayLink: (invoice_id, amount, customer_phone) =>
-    api.post('/payments/scanpay-link', { invoice_id, amount, customer_phone }),
+  // P2.41 #4: accepts { method: 'email'|'sms'|'both', customer_phone, customer_email } (or a bare
+  // phone string for backward-compat) so the send goes to the chosen recipient(s) + channel.
+  scanpayLink: (invoice_id, amount, opts = {}) =>
+    api.post('/payments/scanpay-link', {
+      invoice_id, amount,
+      ...(typeof opts === 'string' ? { customer_phone: opts } : opts),
+    }),
 
   scanpayStatus: (invoiceId) =>
     api.get(`/payments/scanpay-status/${invoiceId}`),
