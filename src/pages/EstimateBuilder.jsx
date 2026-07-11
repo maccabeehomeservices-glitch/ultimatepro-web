@@ -120,7 +120,7 @@ export default function EstimateBuilder() {
       setTaxRate(e.tax_rate?.toString() || '8.5');
       setDepositRequired(Boolean(e.deposit_required));
       setDepositAmount(e.deposit_amount?.toString() || '');
-      setDepositType(e.deposit_type || 'flat');
+      setDepositType(e.deposit_type === 'percentage' ? 'percent' : 'flat'); // backend fixed/percentage → UI flat/percent
       if (e.presentation_mode === 'gbb') {
         setGbbMode(true);
         // Tier rows fetched separately below
@@ -417,6 +417,20 @@ export default function EstimateBuilder() {
         const res = await estimatesApi.create(basePayload);
         estimateId = res.data?.estimate?.id || res.data?.id;
         showSnack('Estimate created', 'success');
+      }
+
+      // P2.38: persist deposit settings (they were previously dropped on save, so the
+      // deposit path was dead on web). deposit-settings is draft/sent-only, so a signed
+      // estimate rejecting it must NOT fail the save. UI 'flat'/'percent' → backend 'fixed'/'percentage'.
+      if (estimateId) {
+        try {
+          await estimatesApi.updateDepositSettings(
+            estimateId,
+            depositRequired,
+            Number(depositAmount || 0),
+            depositType === 'percent' ? 'percentage' : 'fixed'
+          );
+        } catch { /* draft/sent-only — non-critical */ }
       }
 
       // Save GBB tiers separately. Backend POST /:id/tiers replaces all

@@ -314,6 +314,14 @@ export const estimatesApi = {
   collectDeposit: (id, amount_collected, payment_method) =>
     api.post(`/estimates/${id}/collect-deposit`, { amount_collected, payment_method }),
 
+  // P2.38: estimate deposit via ScanPay (QR + link + status poll).
+  depositScanpayQr: (id) =>
+    api.post(`/estimates/${id}/deposit-scanpay-qr`),
+  depositScanpayLink: (id, method = 'both') =>
+    api.post(`/estimates/${id}/deposit-scanpay-link`, { method }),
+  depositStatus: (id) =>
+    api.get(`/estimates/${id}/deposit-status`),
+
   saveTiers: (id, tiers) =>
     api.post(`/estimates/${id}/tiers`, { tiers }),
 
@@ -407,8 +415,13 @@ export const paymentsApi = {
   scanpayQr: (invoice_id, amount) =>
     api.post('/payments/scanpay-qr', { invoice_id, amount }),
 
-  scanpayLink: (invoice_id, amount, customer_phone) =>
-    api.post('/payments/scanpay-link', { invoice_id, amount, customer_phone }),
+  // P2.41 #4: accepts { method: 'email'|'sms'|'both', customer_phone, customer_email } (or a bare
+  // phone string for backward-compat) so the send goes to the chosen recipient(s) + channel.
+  scanpayLink: (invoice_id, amount, opts = {}) =>
+    api.post('/payments/scanpay-link', {
+      invoice_id, amount,
+      ...(typeof opts === 'string' ? { customer_phone: opts } : opts),
+    }),
 
   scanpayStatus: (invoiceId) =>
     api.get(`/payments/scanpay-status/${invoiceId}`),
@@ -839,6 +852,19 @@ export const companyApi = {
     api.get('/company'),
   update: (data) =>
     api.put('/company', data),
+  // P3.8 per-trade job types
+  getJobTypes: () =>
+    api.get('/company/job-types'),
+  addJobType: (label) =>
+    api.post('/company/job-types', { label }),
+  updateJobType: (id, data) =>
+    api.put(`/company/job-types/${id}`, data),
+  deleteJobType: (id) =>
+    api.delete(`/company/job-types/${id}`),
+  getTrades: () =>
+    api.get('/company/trades'),
+  setTrades: (trades) =>
+    api.put('/company/trades', { trades }),
   getCustomFields: () =>
     api.get('/company/custom-fields'),
   createCustomField: (data) =>

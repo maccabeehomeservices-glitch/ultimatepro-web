@@ -39,6 +39,7 @@ import ImportWizard from './pages/ImportWizard';
 
 import RosterTechs from './pages/settings/RosterTechs';
 import MembershipPlans from './pages/settings/MembershipPlans';
+import JobTypes from './pages/settings/JobTypes';
 import JobSources from './pages/settings/JobSources';
 import ReviewPlatforms from './pages/settings/ReviewPlatforms';
 import OnlineBooking from './pages/settings/OnlineBooking';
@@ -128,6 +129,7 @@ export default function App() {
                     <Route path="/settings" element={<Wrap><Settings /></Wrap>} />
                     <Route path="/settings/technicians" element={<Wrap><RosterTechs /></Wrap>} />
                     <Route path="/settings/membership-plans" element={<Wrap><MembershipPlans /></Wrap>} />
+                    <Route path="/settings/job-types" element={<Wrap><JobTypes /></Wrap>} />
                     <Route path="/settings/job-sources" element={<Wrap><JobSources /></Wrap>} />
                     <Route path="/settings/review-platforms" element={<Wrap><ReviewPlatforms /></Wrap>} />
                     <Route path="/settings/online-booking" element={<Wrap><OnlineBooking /></Wrap>} />

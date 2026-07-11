@@ -16,7 +16,7 @@
 | `route_web` | `/invoices/:id` → `InvoiceDetail` (InvoiceDetail.jsx, 783 lines) |
 | `primary_actors` | office, owner, tech |
 | `purpose` | The collect-the-money screen for one invoice: review line items + totals, send the invoice (with a payment link + PDF), record a payment, capture a signature, send a receipt, and manage follow-up reminders. Web does every action inline (modals); Android routes the heavy actions (sign / pay / receipt / send) to dedicated screens. |
-| `last_verified` | 2026-07-06 · P2.1e/F5: line-item edits preserve the invoice-level discount (backend re-derives the rate from discount_total/subtotal; was silently zeroed). Prior: 2026-05-31 · Phase 0 [SCANPAY-404] fix · commit: 3e40117 |
+| `last_verified` | 2026-07-11 · P2.40: inline Edit-items on the invoice detail (both platforms) — per-row remove + price edit + money guard (no total below collected) + re-sign on signed edit; real-surface proven (web browser + Android emulator). Prior: 2026-07-06 · P2.1e/F5 line-item discount preservation · commit: 3e40117 |
 
 ### load_sequence
 `GET /invoices/:id` returns `invoice.*` + flattened `cust_first/last/email/phone/address/city/state/zip` (JOIN customers) + `payments[]` (all rows for the invoice). Android `vm.loadInv(id)`; web `useGet('/invoices/:id')`.
@@ -149,6 +149,23 @@
 - **status:** OK
 - **status_note:** Android can build up the invoice directly from the detail screen.
 
+### `invoice-detail.edit-items` (P2.40)
+- **label:** Edit items (pencil)
+- **section:** line-items
+- **actors:** office, owner, tech (gated `estimates_invoices:edit_self`)
+- **purpose:** Inline-edit the invoice line items — per-row REMOVE + per-item name/qty/PRICE edit + add — with a live recomputed total, then persist. Restores the April-13 "Edit Invoice" plan (was: add-item only).
+- **visibility:** BOTH platforms, when `status not in (paid, void)`. Web: `InvoiceDetail.jsx` swaps the Line Items card to an inline editor; Android: `InvoiceScreens.kt` `EditableInvoiceItemsCard` replaces the grouped item cards.
+- **precondition:** invoice not paid/void.
+- **confirm:** Save changes / Cancel (inline, no modal).
+- **route_chain:** web `invoicesApi.update(id, { line_items })` / Android `vm.saveLineItems(id, …)` → `PUT /invoices/:id`.
+- **request_body:** `{ line_items: [{ name, quantity, unit_price, item_type, total, … }] }` (full array).
+- **side_effects:** recomputes subtotal/tax/discount/total + `balance_due = total - amount_paid`. **MONEY GUARD:** the new total can NEVER drop below `amount_paid` (recorded payments + applied deposit) — a 400 `{ requires_refund: true }` with a "already collected — refund/void first" message blocks it (both surfaces show it: web toast, Android snackbar; an amber floor hint shows while editing). **RE-SIGN:** editing the line items of a SIGNED invoice clears `customer_signature`, flips `status` `signed→sent`, and returns `{ requires_resign: true }` on the 200 body → web re-opens the signature pad, Android navigates to the sign screen.
+- **end_state:** Items saved + totals/balance updated (or blocked with the refund message; or re-sign prompted).
+- **failure_modes:** 400 `requires_refund` (total below collected); 400 paid/void invoice not editable.
+- **parity:** MATCH (P2.40) — same PUT + same guard handling on both surfaces.
+- **status:** OK
+- **status_note:** P2.40 (2026-07-11): real-surface proven — web browser (recompute+persist + money-guard block + re-sign modal) + Android emulator (recompute+persist + money-guard snackbar).
+
 ### `invoice-detail.followup-stop-resume`
 - **label:** Stop Reminders / Resume Reminders
 - **section:** follow-up card
@@ -173,6 +190,6 @@
 - **`capture-signature` now sends `{ signature }`** (Phase 0 [SIG] fix, 2026-05-31) matching backend invoices.js:534 and Android. Web invoice signing works. (The Job-Detail signature, separate route reading `signature_url`, remains a follow-up.)
 - **Structural divergence:** web does send / pay / sign / receipt **inline** (modals); Android routes each to a dedicated screen (`InvoiceSendScreen`, `PaymentScreen`, `InvoiceSignScreen`, `ReceiptScreen`).
 - **`charge-payment` visibility differs:** web allows it at any unpaid status; Android only at `signed`.
-- **`add-item` is Android-only** on the detail screen.
+- **`add-item` is Android-only** on the detail screen; **`edit-items` (P2.40) is on BOTH** — inline remove + price edit with the money guard + re-sign, so web now edits invoice items on the detail screen (not just in InvoiceForm).
 - **Notes & Terms now render (P2.17 PART 2, 2026-07-07).** Both surfaces show the invoice's `notes` and `terms` as cards after the totals: web = InvoiceDetail.jsx Notes/Terms cards; Android = InvoiceScreens.kt NOTES/TERMS CRMCards (were previously absent — only estimate detail showed them). `terms` is auto-filled from the company default on create (see company-profile atlas) and overridable per-document.
 - **UNVERIFIED:** `/send` explicit `status='sent'` write (not seen in the read range); the generated payment-link path `/pay/:token` vs the registered `/api/payments/link/:token`; Android `vm.addLineItems` repo body.

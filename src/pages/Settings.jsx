@@ -6,6 +6,7 @@ import {
   Star,
   Globe,
   Tag,
+  Wrench,
   CreditCard,
   UserCheck,
   Bell,
@@ -19,6 +20,7 @@ const settingsItems = [
   { to: '/settings/review-platforms', icon: Star, label: 'Review Platforms' },
   { to: '/settings/online-booking', icon: Globe, label: 'Online Booking' },
   { to: '/settings/job-sources', icon: Tag, label: 'Job Sources' },
+  { to: '/settings/job-types', icon: Wrench, label: 'Job Types' },
   { to: '/settings/membership-plans', icon: CreditCard, label: 'Membership Plans' },
   { to: '/settings/notifications', icon: Bell, label: 'Notifications' },
 ];

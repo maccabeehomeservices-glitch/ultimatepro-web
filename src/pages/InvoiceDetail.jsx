@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil, Trash2, Plus } from 'lucide-react';
 import { useGet, useMutation } from '../hooks/useApi';
 import api, { invoicesApi, paymentsApi, customersApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
@@ -40,9 +40,17 @@ export default function InvoiceDetail() {
   const [resumeModal, setResumeModal] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
   const [savingSig, setSavingSig] = useState(false);
+  const [editItems, setEditItems] = useState(null); // P2.40: null = view; array = inline-editing line items
+  const [savingItems, setSavingItems] = useState(false);
   const [scanpayLoading, setScanpayLoading] = useState(false);
   const [scanpayQr, setScanpayQr] = useState(null);
   const [scanpayLink, setScanpayLink] = useState(null);
+  // P2.41 #4: pre-send picker for "Send Payment Link" (recipient + channel), like the send flow.
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkEmail, setLinkEmail] = useState('');
+  const [linkPhone, setLinkPhone] = useState('');
+  const [linkSendEmail, setLinkSendEmail] = useState(false);
+  const [linkSendSms, setLinkSendSms] = useState(true);
   const [showSendModal, setShowSendModal] = useState(false);
   const [sendEmails, setSendEmails] = useState([]);
   const [sendPhones, setSendPhones] = useState([]);
@@ -130,6 +138,58 @@ export default function InvoiceDetail() {
     }
   }
 
+  // ── P2.40: inline line-item editing (remove + price edit), mirrors the estimate builder ──
+  function startEditItems() {
+    setEditItems((invoice.line_items || invoice.items || []).map((it) => ({
+      name: it.name || '',
+      description: it.description || '',
+      quantity: it.qty ?? it.quantity ?? 1,
+      unit_price: it.unit_price ?? it.price ?? 0,
+      item_type: it.item_type || 'service',
+    })));
+  }
+  const updateEditItem = (idx, field, val) =>
+    setEditItems((prev) => prev.map((it, i) => (i === idx ? { ...it, [field]: val } : it)));
+  const removeEditItem = (idx) => setEditItems((prev) => prev.filter((_, i) => i !== idx));
+  const addEditItem = () =>
+    setEditItems((prev) => [...prev, { name: '', description: '', quantity: 1, unit_price: '', item_type: 'service' }]);
+
+  async function saveEditItems() {
+    const cleaned = (editItems || [])
+      .filter((it) => (it.name || '').trim())
+      .map((it) => ({
+        name: it.name.trim(),
+        description: it.description || null,
+        quantity: Number(it.quantity) || 1,
+        unit_price: Number(it.unit_price) || 0,
+        item_type: it.item_type || 'service',
+        total: (Number(it.quantity) || 1) * (Number(it.unit_price) || 0),
+      }));
+    if (!cleaned.length) { showSnack('An invoice needs at least one line item', 'error'); return; }
+    setSavingItems(true);
+    try {
+      const res = await invoicesApi.update(id, { line_items: cleaned });
+      setEditItems(null);
+      if (res.data?.requires_resign) {
+        // Editing a signed invoice invalidated the signature — prompt to re-capture (per the record).
+        showSnack('Items changed — the prior signature was cleared. Please re-capture the signature.', 'info');
+        setShowSignature(true);
+      } else {
+        showSnack('Invoice updated', 'success');
+      }
+      refetch();
+    } catch (err) {
+      // P2.40 money guard: backend 400 requires_refund when lowering the total below money collected.
+      if (err?.response?.status === 400 && err.response.data?.requires_refund) {
+        showSnack(err.response.data.error, 'error');
+      } else {
+        showSnack(err?.response?.data?.error || 'Failed to update invoice', 'error');
+      }
+    } finally {
+      setSavingItems(false);
+    }
+  }
+
   async function handleScanpayQr() {
     setScanpayLoading(true);
     try {
@@ -142,11 +202,31 @@ export default function InvoiceDetail() {
     }
   }
 
+  // P2.41 #4: open the pre-send picker instead of firing the send immediately.
+  function openLinkModal() {
+    const email = invoice.cust_email || invoice.customer_email || '';
+    const phone = invoice.cust_phone || invoice.customer_phone || '';
+    setLinkEmail(email);
+    setLinkPhone(phone);
+    setLinkSendEmail(!!email);
+    setLinkSendSms(!!phone);
+    setShowLinkModal(true);
+  }
+
   async function handleScanpayLink() {
+    if (!linkSendEmail && !linkSendSms) { showSnack('Choose email or SMS to send the link', 'error'); return; }
+    if (linkSendEmail && !linkEmail.trim()) { showSnack('Enter an email address', 'error'); return; }
+    if (linkSendSms && !linkPhone.trim()) { showSnack('Enter a phone number', 'error'); return; }
+    const method = linkSendEmail && linkSendSms ? 'both' : linkSendEmail ? 'email' : 'sms';
     setScanpayLoading(true);
     try {
-      const res = await paymentsApi.scanpayLink(id, scanpayAmount, invoice.cust_phone || invoice.customer_phone);
-      setScanpayLink(res.data); // { payment_url, sms_sent, phone_used, ... }
+      const res = await paymentsApi.scanpayLink(id, scanpayAmount, {
+        method,
+        customer_phone: linkSendSms ? linkPhone.trim() : undefined,
+        customer_email: linkSendEmail ? linkEmail.trim() : undefined,
+      });
+      setShowLinkModal(false);
+      setScanpayLink(res.data); // { payment_url, sms_sent, email_sent, ... }
     } catch (err) {
       showSnack(err.response?.data?.error || 'Failed to create link', 'error');
     } finally {
@@ -467,42 +547,120 @@ export default function InvoiceDetail() {
 
       {/* Line Items */}
       <Card className="mb-4">
-        <p className="text-xs text-gray-400 uppercase font-medium mb-3">Line Items</p>
-        {lineItems.map((item, i) => {
-          const qty = Number(item.qty || item.quantity || 1);
-          const price = Number(item.unit_price || item.price || 0);
-          const itemTotal = Number(item.total || qty * price);
-          const isDiscount = item.item_type === 'discount';
-          return (
-            <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-gray-50 last:border-0">
-              {item.image_url && (
-                <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900">
-                  {item.name}
-                  {isDiscount && (
-                    <span className="ml-2 text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">DISCOUNT</span>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-xs text-gray-400 uppercase font-medium">Line Items</p>
+          {editItems === null && !isPaid && invoice.status !== 'void' && can('estimates_invoices', 'edit_self') && (
+            <button
+              onClick={startEditItems}
+              className="flex items-center gap-1 text-xs font-semibold text-[#1A73E8] hover:bg-blue-50 px-2 py-1.5 rounded-lg min-h-[36px]"
+            >
+              <Pencil size={14} /> Edit items
+            </button>
+          )}
+        </div>
+
+        {editItems === null ? (
+          <>
+            {lineItems.map((item, i) => {
+              const qty = Number(item.qty || item.quantity || 1);
+              const price = Number(item.unit_price || item.price || 0);
+              const itemTotal = Number(item.total || qty * price);
+              const isDiscount = item.item_type === 'discount';
+              return (
+                <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-gray-50 last:border-0">
+                  {item.image_url && (
+                    <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
                   )}
-                </p>
-                {item.description && (
-                  <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
-                )}
-                <p className="text-xs text-gray-400 mt-0.5">
-                  {item.sku && <span className="mr-2">SKU: {item.sku}</span>}
-                  {qty} × {formatCurrency(price)}
-                </p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {item.name}
+                      {isDiscount && (
+                        <span className="ml-2 text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">DISCOUNT</span>
+                      )}
+                    </p>
+                    {item.description && (
+                      <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                    )}
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {item.sku && <span className="mr-2">SKU: {item.sku}</span>}
+                      {qty} × {formatCurrency(price)}
+                    </p>
+                  </div>
+                  <p className={`font-semibold text-sm ${isDiscount ? 'text-red-500' : 'text-gray-900'}`}>
+                    {isDiscount ? '-' : ''}{formatCurrency(itemTotal)}
+                  </p>
+                </div>
+              );
+            })}
+            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between">
+              <p className="font-bold">Total</p>
+              <p className="font-bold text-xl text-[#1A73E8]">{formatCurrency(invoice.total)}</p>
+            </div>
+          </>
+        ) : (
+          <>
+            {editItems.map((it, idx) => (
+              <div key={idx} className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
+                <div className="flex-1 min-w-0 space-y-1">
+                  <input
+                    value={it.name}
+                    onChange={(e) => updateEditItem(idx, 'name', e.target.value)}
+                    placeholder="Item name"
+                    className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm min-h-[44px]"
+                  />
+                  <div className="flex items-center gap-2">
+                    <label className="text-[10px] text-gray-400 uppercase">Qty</label>
+                    <input
+                      type="number" min="0" step="1" value={it.quantity}
+                      onChange={(e) => updateEditItem(idx, 'quantity', e.target.value)}
+                      className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm"
+                    />
+                    <label className="text-[10px] text-gray-400 uppercase ml-1">Price</label>
+                    <input
+                      type="number" min="0" step="0.01" placeholder="0.00" value={it.unit_price}
+                      onChange={(e) => updateEditItem(idx, 'unit_price', e.target.value)}
+                      className="w-24 px-2 py-1.5 border border-gray-200 rounded-lg text-sm"
+                    />
+                    <span className="ml-auto text-sm font-semibold text-gray-700">
+                      {formatCurrency((Number(it.quantity) || 1) * (Number(it.unit_price) || 0))}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => removeEditItem(idx)}
+                  className="p-2 text-red-400 hover:bg-red-50 rounded-lg min-h-[44px] flex-shrink-0"
+                  aria-label="Remove item"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
-              <p className={`font-semibold text-sm ${isDiscount ? 'text-red-500' : 'text-gray-900'}`}>
-                {isDiscount ? '-' : ''}{formatCurrency(itemTotal)}
+            ))}
+            <button
+              onClick={addEditItem}
+              className="flex items-center gap-1 text-xs font-semibold text-[#1A73E8] hover:bg-blue-50 px-2 py-2 rounded-lg mt-2 min-h-[40px]"
+            >
+              <Plus size={14} /> Add item
+            </button>
+            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+              <p className="font-bold">Total</p>
+              <p className="font-bold text-xl text-[#1A73E8]">
+                {formatCurrency((editItems || []).reduce((s, it) => {
+                  const lt = (Number(it.quantity) || 1) * (Number(it.unit_price) || 0);
+                  return it.item_type === 'discount' ? s - lt : s + lt;
+                }, 0))}
               </p>
             </div>
-          );
-        })}
-        <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between">
-          <p className="font-bold">Total</p>
-          <p className="font-bold text-xl text-[#1A73E8]">{formatCurrency(invoice.total)}</p>
-        </div>
+            {Number(invoice.amount_paid) > 0 && (
+              <p className="text-xs text-amber-600 mt-2">
+                {formatCurrency(invoice.amount_paid)} already collected — the new total can't go below that (refund or void first).
+              </p>
+            )}
+            <div className="flex gap-2 mt-3">
+              <Button variant="secondary" onClick={() => setEditItems(null)} disabled={savingItems} className="flex-1">Cancel</Button>
+              <Button onClick={saveEditItems} loading={savingItems} className="flex-1">Save changes</Button>
+            </div>
+          </>
+        )}
       </Card>
 
       {/* Notes */}
@@ -600,11 +758,11 @@ export default function InvoiceDetail() {
               {scanpayLoading ? '…' : '📲 ScanPay QR'}
             </button>
             <button
-              onClick={handleScanpayLink}
+              onClick={openLinkModal}
               disabled={scanpayLoading}
               className="py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm"
             >
-              {scanpayLoading ? '…' : '🔗 ScanPay Link'}
+              {scanpayLoading ? '…' : '🔗 Send Payment Link'}
             </button>
           </div>
         </div>
@@ -759,6 +917,39 @@ export default function InvoiceDetail() {
         }
       >
         <p className="text-gray-600">Resume automatic follow-up reminders for this invoice?</p>
+      </Modal>
+
+      {/* P2.41 #4: Send Payment Link picker (recipient + channel) */}
+      <Modal
+        isOpen={showLinkModal}
+        onClose={() => !scanpayLoading && setShowLinkModal(false)}
+        title="Send Payment Link"
+        footer={
+          <>
+            <Button variant="outlined" disabled={scanpayLoading} onClick={() => setShowLinkModal(false)}>Cancel</Button>
+            <Button loading={scanpayLoading} onClick={handleScanpayLink}>Send Link</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-gray-600">Send a secure payment link for <span className="font-semibold">{formatCurrency(scanpayAmount)}</span>.</p>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={linkSendEmail} onChange={e => setLinkSendEmail(e.target.checked)} />
+            <span className="text-sm text-gray-700">Email</span>
+          </label>
+          {linkSendEmail && (
+            <input type="email" value={linkEmail} onChange={e => setLinkEmail(e.target.value)} placeholder="customer@email.com"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+          )}
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={linkSendSms} onChange={e => setLinkSendSms(e.target.checked)} />
+            <span className="text-sm text-gray-700">SMS</span>
+          </label>
+          {linkSendSms && (
+            <input type="tel" value={linkPhone} onChange={e => setLinkPhone(e.target.value)} placeholder="(555) 123-4567"
+              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+          )}
+        </div>
       </Modal>
 
       {/* Send Invoice Modal */}

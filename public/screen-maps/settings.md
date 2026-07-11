@@ -106,6 +106,18 @@
 - **parity:** MATCH, Android Business → "Job Sources" (`onJobSources`).
 - **status:** OK
 
+### `settings.job-types`
+- **label:** Job Types
+- **section:** business
+- **actors:** owner
+- **purpose:** Pick the company's trades and curate the job-type options shown when creating a job (new-job chips + jobs-list filter + booking services all derive from this set). [P3.8]
+- **visibility:** always.
+- **route_chain:** `NavLink → /settings/job-types` (→ `JobTypes`)
+- **side_effects:** PUT /company/trades (set trades); POST /company/job-types (add type); DELETE /company/job-types/:id (soft-deactivate). Reads GET /company/trades + GET /company/job-types.
+- **end_state:** Job Types sub-page.
+- **parity:** MATCH, Android Business → "Job Types" (`onJobTypes` → `JobTypesScreen`).
+- **status:** OK
+
 ### `settings.membership-plans`
 - **label:** Membership Plans
 - **section:** business

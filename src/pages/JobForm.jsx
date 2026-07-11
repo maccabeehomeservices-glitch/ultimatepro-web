@@ -9,20 +9,14 @@ import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import QuickCreateCustomerModal from '../components/QuickCreateCustomerModal';
 
-const JOB_TYPES = ['Service','Installation','Maintenance','Inspection','Repair','New Installation','Spring Replacement','Tune-Up','Other'];
-
-const JOB_TYPE_TO_BACKEND = {
-  'Service':            'service',
-  'Installation':       'installation',
-  'Maintenance':        'maintenance',
-  'Inspection':         'inspection',
-  'Repair':             'repair',
-  'New Installation':   'installation',
-  'Spring Replacement': 'repair',
-  'Tune-Up':            'maintenance',
-  'Other':              'service',
-  'Estimate':           'estimate',
-};
+// P3.8: job-type chips come from GET /company/job-types (the company's editable set,
+// tracked by `key` = the stored jobs.type value). This fallback is used only if that
+// fetch fails (offline / first paint).
+const FALLBACK_JOB_TYPES = [
+  { key: 'service', label: 'Service' }, { key: 'installation', label: 'Installation' },
+  { key: 'maintenance', label: 'Maintenance' }, { key: 'inspection', label: 'Inspection' },
+  { key: 'repair', label: 'Repair' }, { key: 'emergency', label: 'Emergency' },
+];
 
 const STATE_ABBR = {
   'alabama':'AL','alaska':'AK','arizona':'AZ','arkansas':'AR',
@@ -122,7 +116,7 @@ export default function JobForm() {
     // source (unified)
     source_option: 'company',  // 'company' | contact id | channel id
     // type
-    job_type: 'Service',
+    job_type: 'service',
   });
 
   // ── customer search ────────────────────────────────────────────────────────
@@ -134,6 +128,7 @@ export default function JobForm() {
   const [quickCreatePrefill, setQuickCreatePrefill] = useState({});
   const [extraPhones, setExtraPhones]             = useState([]);
   const [extraEmails, setExtraEmails]             = useState([]);
+  const [jobTypes, setJobTypes]                   = useState(FALLBACK_JOB_TYPES); // P3.8: company's job-type set
 
   // ── modals / state ─────────────────────────────────────────────────────────
   const [saving, setSaving]                       = useState(false);
@@ -170,6 +165,11 @@ export default function JobForm() {
     companyApi.get().then(r => {
       const name = r.data?.company?.name || r.data?.name || 'My Company';
       setCompanyName(name);
+    }).catch(() => {});
+    // P3.8: job-type chips from the company's editable set.
+    companyApi.getJobTypes().then(r => {
+      const list = Array.isArray(r.data) ? r.data : [];
+      if (list.length) setJobTypes(list);
     }).catch(() => {});
     sourcesApi.getContacts().then(r => setSourceContacts(r.data?.contacts || r.data || [])).catch(() => {});
     sourcesApi.getChannels().then(r => setAdChannels(r.data?.channels || r.data || [])).catch(() => {});
@@ -294,7 +294,7 @@ export default function JobForm() {
       assign_cat, assigned_tech_id, assigned_roster_tech_id, assigned_partner_company_id,
       notify_sms: true, notify_email: false, notify_push: true,
       source_option,
-      job_type: j.type ? (j.type.charAt(0).toUpperCase() + j.type.slice(1)) : 'Service',
+      job_type: j.type || 'service',  // P3.8: the stored key highlights the matching chip
     });
     setCustomerSearch(j.customer_name || j.customer?.name || '');
   }, [isEdit, jobData]);
@@ -553,7 +553,7 @@ export default function JobForm() {
       else if (channel) { source_type = 'own_company';      ad_channel_id = form.source_option; }
     }
 
-    const type = JOB_TYPE_TO_BACKEND[form.job_type] || form.job_type?.toLowerCase() || null;
+    const type = (form.job_type || '').trim().toLowerCase() || null;  // P3.8: form.job_type is the key
 
     return {
       customer_id: form.customer_id || null,
@@ -685,14 +685,14 @@ export default function JobForm() {
         <Card>
           <SectionLabel>Job Type</SectionLabel>
           <div className="flex flex-wrap gap-2">
-            {JOB_TYPES.map(t => (
-              <button key={t} type="button"
-                onClick={() => setForm(prev => ({ ...prev, job_type: t }))}
+            {jobTypes.map(t => (
+              <button key={t.key} type="button"
+                onClick={() => setForm(prev => ({ ...prev, job_type: t.key }))}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors min-h-[36px] ${
-                  form.job_type === t
+                  form.job_type === t.key
                     ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
                     : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                }`}>{t}</button>
+                }`}>{t.label}</button>
             ))}
           </div>
         </Card>

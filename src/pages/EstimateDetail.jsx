@@ -87,6 +87,10 @@ export default function EstimateDetail() {
   const [depositModal, setDepositModal] = useState(false);
   const [depositForm, setDepositForm] = useState({ method: 'cash', amount: '' });
   const [collectingDeposit, setCollectingDeposit] = useState(false);
+  // P2.38: deposit via ScanPay (QR + link + status poll)
+  const [depQr, setDepQr] = useState(null);
+  const [depLink, setDepLink] = useState(null);
+  const [depScanpayBusy, setDepScanpayBusy] = useState(false);
   const [showSignature, setShowSignature] = useState(false);
   const [signerName, setSignerName] = useState('');
   const [savingSig, setSavingSig] = useState(false);
@@ -372,6 +376,38 @@ export default function EstimateDetail() {
       setCollectingDeposit(false);
     }
   }
+
+  // P2.38: generate a ScanPay deposit QR (customer present) or send a payment link.
+  async function handleDepositScanpayQr() {
+    setDepScanpayBusy(true);
+    try { const r = await estimatesApi.depositScanpayQr(id); setDepLink(null); setDepQr(r.data); }
+    catch { showSnack('Failed to create deposit QR', 'error'); }
+    finally { setDepScanpayBusy(false); }
+  }
+  async function handleDepositScanpayLink() {
+    setDepScanpayBusy(true);
+    try { const r = await estimatesApi.depositScanpayLink(id, 'both'); setDepQr(null); setDepLink(r.data); }
+    catch { showSnack('Failed to send deposit link', 'error'); }
+    finally { setDepScanpayBusy(false); }
+  }
+  function closeDepositModal() { setDepositModal(false); setDepQr(null); setDepLink(null); }
+
+  // Poll deposit-status while a ScanPay QR/link is showing; auto-close on payment.
+  useEffect(() => {
+    if (!depositModal || (!depQr && !depLink)) return;
+    const iv = setInterval(async () => {
+      try {
+        const r = await estimatesApi.depositStatus(id);
+        if (r.data?.deposit_collected) {
+          clearInterval(iv);
+          closeDepositModal();
+          showSnack('Deposit paid ✓', 'success');
+          refetch();
+        }
+      } catch { /* keep polling */ }
+    }, 3000);
+    return () => clearInterval(iv);
+  }, [depositModal, depQr, depLink, id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <LoadingSpinner fullPage />;
   if (!estimate) return <div className="p-4 text-gray-500">Estimate not found.</div>;
@@ -712,12 +748,14 @@ export default function EstimateDetail() {
       {/* Collect Deposit Modal */}
       <Modal
         isOpen={depositModal}
-        onClose={() => setDepositModal(false)}
+        onClose={closeDepositModal}
         title="Collect Deposit"
         footer={
           <>
-            <Button variant="outlined" onClick={() => setDepositModal(false)}>Cancel</Button>
-            <Button loading={collectingDeposit} onClick={handleCollectDeposit}>Collect</Button>
+            <Button variant="outlined" onClick={closeDepositModal}>Cancel</Button>
+            {!depQr && !depLink && (
+              <Button loading={collectingDeposit} onClick={handleCollectDeposit}>Record Manually</Button>
+            )}
           </>
         }
       >
@@ -727,19 +765,52 @@ export default function EstimateDetail() {
               Deposit amount: <strong>{formatCurrency(estimate.deposit_amount)}</strong>
             </p>
           )}
-          <Select
-            label="Payment Method"
-            value={depositForm.method}
-            onChange={e => setDepositForm(p => ({ ...p, method: e.target.value }))}
-            options={PAYMENT_METHODS}
-          />
-          <Input
-            label="Amount"
-            type="number"
-            value={depositForm.amount}
-            onChange={e => setDepositForm(p => ({ ...p, amount: e.target.value }))}
-            placeholder={estimate.deposit_amount?.toString() || '0.00'}
-          />
+
+          {/* P2.38: ScanPay — QR on-screen (customer present) or send a payment link */}
+          {depQr ? (
+            <div className="flex flex-col items-center gap-3 py-2">
+              <img src={depQr.qr_data_url} alt="Deposit QR" className="w-56 h-56 rounded-xl border border-gray-200" />
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span className="inline-block w-3 h-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                Waiting for payment…
+              </div>
+              <button type="button" className="text-xs text-blue-600 underline" onClick={() => navigator.clipboard?.writeText(depQr.payment_url)}>Copy payment link</button>
+            </div>
+          ) : depLink ? (
+            <div className="flex flex-col items-center gap-3 py-2 text-center">
+              <div className="text-green-600 text-sm font-medium">Deposit link sent{depLink.phone_used ? ` to ${depLink.phone_used}` : ''}.</div>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <span className="inline-block w-3 h-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+                Waiting for payment…
+              </div>
+              <button type="button" className="text-xs text-blue-600 underline" onClick={() => navigator.clipboard?.writeText(depLink.payment_url)}>Copy payment link</button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outlined" loading={depScanpayBusy} onClick={handleDepositScanpayQr}>📲 Show QR (ScanPay)</Button>
+                <Button variant="outlined" loading={depScanpayBusy} onClick={handleDepositScanpayLink}>🔗 Send Link</Button>
+              </div>
+              <div className="flex items-center gap-2 py-1">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400">or record manually</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+              <Select
+                label="Payment Method"
+                value={depositForm.method}
+                onChange={e => setDepositForm(p => ({ ...p, method: e.target.value }))}
+                options={PAYMENT_METHODS}
+              />
+              <Input
+                label="Amount"
+                type="number"
+                value={depositForm.amount}
+                onChange={e => setDepositForm(p => ({ ...p, amount: e.target.value }))}
+                placeholder={estimate.deposit_amount?.toString() || '0.00'}
+              />
+            </>
+          )}
         </div>
       </Modal>
 
