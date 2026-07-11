@@ -314,6 +314,14 @@ export const estimatesApi = {
   collectDeposit: (id, amount_collected, payment_method) =>
     api.post(`/estimates/${id}/collect-deposit`, { amount_collected, payment_method }),
 
+  // P2.38: estimate deposit via ScanPay (QR + link + status poll).
+  depositScanpayQr: (id) =>
+    api.post(`/estimates/${id}/deposit-scanpay-qr`),
+  depositScanpayLink: (id, method = 'both') =>
+    api.post(`/estimates/${id}/deposit-scanpay-link`, { method }),
+  depositStatus: (id) =>
+    api.get(`/estimates/${id}/deposit-status`),
+
   saveTiers: (id, tiers) =>
     api.post(`/estimates/${id}/tiers`, { tiers }),
 

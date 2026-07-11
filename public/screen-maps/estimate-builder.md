@@ -125,12 +125,12 @@
 - **visibility:** web: `isSigned && deposit_required && !deposit_collected`. Android: signed + deposit-required + not collected.
 - **precondition:** Deposit required and not yet collected.
 - **confirm:** web modal (method + amount).
-- **route_chain:** `POST /estimates/:id/collect-deposit`
-- **request_body:** web `estimatesApi.collectDeposit(id, Number(amount), method)` → `{ amount_collected, payment_method }`, **correct keys** (matches the handler, estimates.js 700–702).
-- **side_effects:** inserts a `payments` row (`completed`), sets `deposit_collected`/`deposit_collected_at`/`deposit_payment_id`, and **moves the linked job to status `holding`**; returns `remaining_balance`.
-- **end_state:** Deposit recorded; job → holding.
-- **failure_modes:** none, unlike the Job-Detail "Charge Payment" deposit path, this screen sends the correct keys.
-- **parity:** PARTIAL, same endpoint; web inline modal vs Android dedicated `DepositCollectionScreen`.
+- **route_chain:** manual: `POST /estimates/:id/collect-deposit`. **P2.38 ScanPay:** `POST /estimates/:id/deposit-scanpay-qr` (on-screen QR) | `POST /estimates/:id/deposit-scanpay-link {method}` (SMS+email) | `GET /estimates/:id/deposit-status` (poll).
+- **request_body:** manual — web `estimatesApi.collectDeposit(id, Number(amount), method)` → `{ amount_collected, payment_method }`, **correct keys**. ScanPay — `depositScanpayQr(id)` / `depositScanpayLink(id,'both')`; amount computed server-side (fixed → deposit_amount; percentage → total×pct/100).
+- **side_effects:** manual inserts a `completed` `payments` row + sets `deposit_collected/_at/_payment_id` + job→`holding`. ScanPay inserts a `pending` estimate-scoped row (invoice_id NULL, estimate_id set); the ScanPay **webhook** then marks the deposit collected (same columns + job holding + owner notify). convert-to-invoice re-parents the row (P2.29) and credits the ACTUAL collected dollars (percentage handled).
+- **end_state:** Deposit recorded (manually or via ScanPay); job → holding.
+- **failure_modes:** ScanPay/SMS/email failures are isolated (never fail signing). Known limitation: multiple live links let a customer pay twice (mirrors invoice ScanPay); CRM records one deposit, no auto-void of the extra ScanPay charge.
+- **parity:** MATCH — both platforms now offer ScanPay QR (customer-present) + Send Link + manual; web inline modal vs Android `DepositCollectionScreen`. [P2.38]
 - **status:** OK
 - **status_note:** This is the *correct* deposit path; contrast the Job-Detail deposit (wrong keys + non-existent estimate_id).
 
@@ -147,7 +147,8 @@
 - **side_effects:** updates the estimate's deposit columns.
 - **end_state:** Deposit config saved.
 - **failure_modes:** none observed.
-- **parity:** ANDROID-ONLY (on the detail screen), web configures deposits inside the builder.
+- **P2.38 fix:** web's builder now ACTUALLY persists deposit settings on save (`handleSave` calls `updateDepositSettings`; it previously dropped the fields, so the web deposit path was dead). UI `flat`/`percent` ↔ backend `fixed`/`percentage`.
+- **parity:** MATCH — Android sets deposits via `DepositSettingsDialog`; web configures + now persists them inside the builder.
 - **status:** OK
 - **status_note:** n/a
 ### `estimate-builder.edit`
