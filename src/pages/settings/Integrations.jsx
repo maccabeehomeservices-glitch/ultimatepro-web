@@ -8,7 +8,7 @@ import { useSnackbar } from '../../components/ui/Snackbar';
 function SyncResult({ label, result }) {
   if (!result) return null;
   return (
-    <div className="text-xs text-gray-500 mt-1">
+    <div className="text-xs text-muted mt-1">
       {label}: <span className="text-green-600 font-medium">{result.synced} synced</span>
       {result.errors > 0 && <span className="text-red-500 font-medium ml-1">{result.errors} errors</span>}
       {result.total != null && <span className="ml-1">/ {result.total} total</span>}
@@ -92,11 +92,11 @@ export default function Integrations() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate(-1)}
-          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600"
+          className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">Integrations</h1>
+        <h1 className="text-xl font-bold text-ink">Integrations</h1>
       </div>
 
       {loading ? (
@@ -111,23 +111,23 @@ export default function Integrations() {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-semibold text-gray-900">QuickBooks Online</p>
+                  <p className="font-semibold text-ink">QuickBooks Online</p>
                   {status?.connected ? (
                     <span className="flex items-center gap-1 text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">
                       <CheckCircle size={12} /> Connected
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs text-gray-500 font-medium bg-gray-100 px-2 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-xs text-muted font-medium bg-background px-2 py-0.5 rounded-full">
                       <XCircle size={12} /> Not connected
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm text-muted mt-0.5">
                   Sync customers, invoices, and payments to QuickBooks Online
                 </p>
                 {status?.connected && status?.company_name && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Connected to: <span className="font-medium text-gray-600">{status.company_name}</span>
+                  <p className="text-xs text-muted mt-1">
+                    Connected to: <span className="font-medium text-ink">{status.company_name}</span>
                   </p>
                 )}
               </div>
@@ -139,15 +139,15 @@ export default function Integrations() {
                 <button
                   onClick={handleSyncAll}
                   disabled={syncing}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[#1A73E8] text-white font-medium min-h-[44px] hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue text-white font-medium min-h-[44px] hover:bg-blue-ink transition-colors disabled:opacity-50"
                 >
                   <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
                   {syncing ? 'Syncing...' : 'Sync All to QuickBooks'}
                 </button>
 
                 {syncResults && (
-                  <div className="bg-gray-50 rounded-xl p-3 space-y-1">
-                    <p className="text-xs font-semibold text-gray-600 mb-2">Last Sync Results</p>
+                  <div className="bg-background rounded-xl p-3 space-y-1">
+                    <p className="text-xs font-semibold text-ink mb-2">Last Sync Results</p>
                     <SyncResult label="Customers" result={syncResults.customers} />
                     <SyncResult label="Invoices"  result={syncResults.invoices} />
                     <SyncResult label="Payments"  result={syncResults.payments} />
@@ -175,7 +175,7 @@ export default function Integrations() {
                           setSyncing(false);
                         }
                       }}
-                      className="py-2 px-3 rounded-xl border border-gray-200 text-sm text-gray-700 font-medium min-h-[44px] hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      className="py-2 px-3 rounded-xl border border-hairline text-sm text-ink font-medium min-h-[44px] hover:bg-background transition-colors disabled:opacity-50"
                     >
                       {label}
                     </button>
@@ -208,11 +208,11 @@ export default function Integrations() {
           <Card>
             <div className="flex items-center gap-4 opacity-50">
               <div className="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center flex-shrink-0">
-                <span className="text-gray-500 font-bold text-sm">Str</span>
+                <span className="text-muted font-bold text-sm">Str</span>
               </div>
               <div>
-                <p className="font-semibold text-gray-900">Stripe</p>
-                <p className="text-xs text-gray-500">Coming soon — online payment processing</p>
+                <p className="font-semibold text-ink">Stripe</p>
+                <p className="text-xs text-muted">Coming soon — online payment processing</p>
               </div>
             </div>
           </Card>

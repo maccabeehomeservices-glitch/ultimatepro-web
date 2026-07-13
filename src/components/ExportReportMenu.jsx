@@ -97,7 +97,7 @@ export default function ExportReportMenu({ actorType, actorId, period }) {
         type="button"
         onClick={() => setOpen((o) => !o)}
         disabled={downloading}
-        className="px-3 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+        className="px-3 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
       >
         <Download size={16} />
         {downloading ? 'Exporting…' : 'Export'}
@@ -105,25 +105,25 @@ export default function ExportReportMenu({ actorType, actorId, period }) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-20 min-w-[160px] overflow-hidden">
+        <div className="absolute right-0 top-full mt-1 bg-card border border-hairline rounded-xl shadow-lg z-20 min-w-[160px] overflow-hidden">
           <button
             type="button"
             onClick={() => download('pdf')}
-            className="w-full px-4 py-3 text-left hover:bg-gray-50 text-sm min-h-[44px]"
+            className="w-full px-4 py-3 text-left hover:bg-background text-sm min-h-[44px]"
           >
             Download PDF
           </button>
           <button
             type="button"
             onClick={() => download('csv')}
-            className="w-full px-4 py-3 text-left hover:bg-gray-50 text-sm min-h-[44px] border-t border-gray-100"
+            className="w-full px-4 py-3 text-left hover:bg-background text-sm min-h-[44px] border-t border-hairline"
           >
             Download CSV
           </button>
           <button
             type="button"
             onClick={() => download('html')}
-            className="w-full px-4 py-3 text-left hover:bg-gray-50 text-sm min-h-[44px] border-t border-gray-100"
+            className="w-full px-4 py-3 text-left hover:bg-background text-sm min-h-[44px] border-t border-hairline"
           >
             View HTML
           </button>

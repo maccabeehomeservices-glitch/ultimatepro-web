@@ -65,10 +65,10 @@ export default function RosterTechs() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">Roster Technicians</h1>
+        <h1 className="text-xl font-bold text-ink flex-1">Roster Technicians</h1>
         <Button onClick={openAdd}><Plus size={16} /> Add</Button>
       </div>
 
@@ -80,11 +80,11 @@ export default function RosterTechs() {
             <Card key={t.id || t._id}>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{t.name}</p>
-                  <p className="text-sm text-gray-500">{[t.phone, t.email].filter(Boolean).join(' · ')}</p>
-                  <p className="text-xs text-gray-400">Commission: {t.commission_pct || 0}% · CC Fee: {t.cc_fee_pct || 0}%</p>
+                  <p className="font-semibold text-ink">{t.name}</p>
+                  <p className="text-sm text-muted">{[t.phone, t.email].filter(Boolean).join(' · ')}</p>
+                  <p className="text-xs text-muted">Commission: {t.commission_pct || 0}% · CC Fee: {t.cc_fee_pct || 0}%</p>
                 </div>
-                <button onClick={() => openEdit(t)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500">
+                <button onClick={() => openEdit(t)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-muted">
                   <Edit size={16} />
                 </button>
                 <button onClick={() => { setDeleteTarget(t); setDeleteModal(true); }} className="p-2 rounded-xl hover:bg-red-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-400">
@@ -111,7 +111,7 @@ export default function RosterTechs() {
       <Modal isOpen={deleteModal} onClose={() => setDeleteModal(false)} title="Delete Technician"
         footer={<><Button variant="outlined" onClick={() => setDeleteModal(false)}>Cancel</Button><Button variant="danger" loading={saving} onClick={handleDelete}>Delete</Button></>}
       >
-        <p className="text-gray-600">Delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.</p>
+        <p className="text-ink">Delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.</p>
       </Modal>
     </div>
   );

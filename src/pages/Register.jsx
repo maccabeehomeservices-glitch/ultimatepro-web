@@ -44,11 +44,11 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-dvh bg-background flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#0D1B2A]">UltimatePro</h1>
-          <p className="text-gray-500 mt-2">Create your account</p>
+          <h1 className="text-3xl font-bold text-ink">UltimatePro</h1>
+          <p className="text-muted mt-2">Create your account</p>
         </div>
 
         <Card>
@@ -122,7 +122,7 @@ export default function Register() {
                 autoComplete="off"
                 required
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Contact the administrator for an invite code
               </p>
             </div>
@@ -137,9 +137,9 @@ export default function Register() {
           </form>
         </Card>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-muted mt-6">
           Already have an account?{' '}
-          <Link to="/login" className="text-[#1A73E8] font-medium hover:underline">
+          <Link to="/login" className="text-blue font-medium hover:underline">
             Sign in
           </Link>
         </p>

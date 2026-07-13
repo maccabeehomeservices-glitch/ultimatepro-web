@@ -117,10 +117,10 @@ export default function ImportWizard() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(backTo)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(backTo)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">
+        <h1 className="text-xl font-bold text-ink">
           Import {type === 'pricebook' ? 'Pricebook' : 'Customers'}
         </h1>
       </div>
@@ -128,7 +128,7 @@ export default function ImportWizard() {
       {/* Step indicators */}
       <div className="flex items-center gap-1 mb-6">
         {[1, 2, 3, 4].map(s => (
-          <div key={s} className={`flex-1 h-1.5 rounded-full transition-colors ${step >= s ? 'bg-[#1A73E8]' : 'bg-gray-200'}`} />
+          <div key={s} className={`flex-1 h-1.5 rounded-full transition-colors ${step >= s ? 'bg-blue' : 'bg-gray-200'}`} />
         ))}
       </div>
 
@@ -140,16 +140,16 @@ export default function ImportWizard() {
               ref={dropRef}
               onDrop={handleFileDrop}
               onDragOver={e => e.preventDefault()}
-              className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer hover:border-[#1A73E8] transition-colors"
+              className="border-2 border-dashed border-hairline rounded-xl p-8 text-center cursor-pointer hover:border-blue transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
-              <Upload size={36} className="mx-auto text-gray-400 mb-3" />
+              <Upload size={36} className="mx-auto text-muted mb-3" />
               {file ? (
-                <p className="font-medium text-gray-900">{file.name}</p>
+                <p className="font-medium text-ink">{file.name}</p>
               ) : (
                 <>
-                  <p className="font-medium text-gray-700">Drop your file here or click to browse</p>
-                  <p className="text-sm text-gray-400 mt-1">Supports .csv, .xlsx, .xls, .tsv</p>
+                  <p className="font-medium text-ink">Drop your file here or click to browse</p>
+                  <p className="text-sm text-muted mt-1">Supports .csv, .xlsx, .xls, .tsv</p>
                 </>
               )}
               <input
@@ -171,15 +171,15 @@ export default function ImportWizard() {
       {step === 2 && preview && (
         <div className="space-y-4">
           <Card>
-            <p className="font-semibold text-gray-900 mb-1">Map Your Columns</p>
+            <p className="font-semibold text-ink mb-1">Map Your Columns</p>
             {preview.claude_notes && (
-              <div className="bg-blue-50 rounded-xl p-3 mb-4 text-sm text-blue-800">{preview.claude_notes}</div>
+              <div className="bg-blue-50 rounded-xl p-3 mb-4 text-sm text-blue">{preview.claude_notes}</div>
             )}
             <div className="space-y-2">
               {(preview.columns || []).map(col => (
                 <div key={col} className="flex items-center gap-3">
-                  <p className="flex-1 text-sm font-medium text-gray-700 truncate">{col}</p>
-                  <span className="text-gray-400">→</span>
+                  <p className="flex-1 text-sm font-medium text-ink truncate">{col}</p>
+                  <span className="text-muted">→</span>
                   <div className="flex-1">
                     <Select
                       value={mappings[col] || 'skip'}
@@ -208,16 +208,16 @@ export default function ImportWizard() {
       {step === 3 && type === 'pricebook' && (
         <div className="space-y-4">
           <Card>
-            <p className="font-semibold text-gray-900 mb-3">Assign Categories</p>
+            <p className="font-semibold text-ink mb-3">Assign Categories</p>
             <div className="space-y-2 max-h-[50vh] overflow-y-auto">
               {Object.keys(categories).slice(0, 50).map(name => (
                 <div key={name} className="flex items-center gap-3">
-                  <p className="flex-1 text-sm text-gray-700 truncate">{name}</p>
+                  <p className="flex-1 text-sm text-ink truncate">{name}</p>
                   <input
                     value={categories[name]}
                     onChange={e => setCategories(p => ({ ...p, [name]: e.target.value }))}
                     placeholder="Category"
-                    className="w-36 rounded-xl border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[36px]"
+                    className="w-36 rounded-xl border border-hairline px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[36px]"
                   />
                 </div>
               ))}
@@ -236,8 +236,8 @@ export default function ImportWizard() {
       {/* Duplicate handling */}
       {step === 'dup' && (
         <Card>
-          <p className="font-semibold text-gray-900 mb-2">Duplicate Items Found</p>
-          <p className="text-gray-600 mb-4">{preview?.duplicate_count} items may already exist. How should we handle them?</p>
+          <p className="font-semibold text-ink mb-2">Duplicate Items Found</p>
+          <p className="text-ink mb-4">{preview?.duplicate_count} items may already exist. How should we handle them?</p>
           <div className="flex gap-3">
             <Button variant="outlined" onClick={() => handleImport('skip')} loading={loading} className="flex-1">Skip Duplicates</Button>
             <Button onClick={() => handleImport('update')} loading={loading} className="flex-1">Update Existing</Button>
@@ -251,18 +251,18 @@ export default function ImportWizard() {
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
             <Check size={40} className="text-green-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">Import Complete!</h2>
+          <h2 className="text-xl font-bold text-ink">Import Complete!</h2>
           <div className="grid grid-cols-2 gap-3">
-            <Card><p className="text-2xl font-bold text-gray-900">{result.imported || 0}</p><p className="text-sm text-gray-500">Imported</p></Card>
-            <Card><p className="text-2xl font-bold text-gray-900">{result.updated || 0}</p><p className="text-sm text-gray-500">Updated</p></Card>
-            <Card><p className="text-2xl font-bold text-gray-900">{result.skipped || 0}</p><p className="text-sm text-gray-500">Skipped</p></Card>
-            <Card><p className="text-2xl font-bold text-gray-900">{result.errors || 0}</p><p className="text-sm text-gray-500">Errors</p></Card>
+            <Card><p className="text-2xl font-bold text-ink">{result.imported || 0}</p><p className="text-sm text-muted">Imported</p></Card>
+            <Card><p className="text-2xl font-bold text-ink">{result.updated || 0}</p><p className="text-sm text-muted">Updated</p></Card>
+            <Card><p className="text-2xl font-bold text-ink">{result.skipped || 0}</p><p className="text-sm text-muted">Skipped</p></Card>
+            <Card><p className="text-2xl font-bold text-ink">{result.errors || 0}</p><p className="text-sm text-muted">Errors</p></Card>
           </div>
           {result.error_list?.length > 0 && (
             <Card>
               <p className="text-sm font-medium text-red-600 mb-2">Errors:</p>
               {result.error_list.slice(0, 10).map((e, i) => (
-                <p key={i} className="text-xs text-gray-500">{e}</p>
+                <p key={i} className="text-xs text-muted">{e}</p>
               ))}
             </Card>
           )}
@@ -272,9 +272,9 @@ export default function ImportWizard() {
 
       {loading && step !== 1 && (
         <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-2xl p-8 flex flex-col items-center gap-4">
+          <div className="bg-card rounded-2xl p-8 flex flex-col items-center gap-4">
             <LoadingSpinner />
-            <p className="text-gray-700 font-medium">Processing...</p>
+            <p className="text-ink font-medium">Processing...</p>
           </div>
         </div>
       )}

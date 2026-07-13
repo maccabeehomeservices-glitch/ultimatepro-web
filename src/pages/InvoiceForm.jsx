@@ -171,41 +171,41 @@ export default function InvoiceForm() {
   return (
     <div className="p-4 max-w-3xl mx-auto pb-32">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">New Invoice</h1>
+        <h1 className="text-xl font-bold text-ink">New Invoice</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Customer */}
         <Card>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+          <label className="block text-sm font-medium text-ink mb-1">Customer *</label>
           {selectedCustomer ? (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue rounded-xl">
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900">{customerSearch}</p>
-                {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
+                <p className="font-semibold text-ink">{customerSearch}</p>
+                {selectedCustomer.phone && <p className="text-xs text-muted">{selectedCustomer.phone}</p>}
               </div>
               <button type="button" onClick={() => { setSelectedCustomer(null); setCustomerId(''); setCustomerSearch(''); }}
-                className="text-gray-400 hover:text-red-500 p-1 rounded-lg text-xs">✕</button>
+                className="text-muted hover:text-red-500 p-1 rounded-lg text-xs">✕</button>
             </div>
           ) : (
             <div className="relative" ref={customerDropdownRef}>
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
               <input
                 value={customerSearch}
                 onChange={handleCustomerInput}
                 placeholder="Search customer by name or phone..."
-                className="w-full rounded-xl border border-gray-300 pl-9 pr-3 py-2.5 min-h-[44px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="w-full rounded-xl border border-hairline pl-9 pr-3 py-2.5 min-h-[44px] text-sm focus:outline-none focus:ring-2 focus:ring-blue"
               />
               {showCustomerDropdown && customerResults.length > 0 && (
-                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-card border border-hairline rounded-xl shadow-lg overflow-hidden">
                   {customerResults.map(c => (
                     <button key={c.id} type="button" onClick={() => selectCustomer(c)}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
+                      className="w-full text-left px-4 py-3 hover:bg-background text-sm border-b last:border-0 flex items-center justify-between">
                       <span className="font-medium">{`${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name}</span>
-                      {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
+                      {c.phone && <span className="text-muted text-xs">{c.phone}</span>}
                     </button>
                   ))}
                 </div>
@@ -217,25 +217,25 @@ export default function InvoiceForm() {
         {/* Line Items */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-semibold text-gray-800">Line Items</p>
+            <p className="text-sm font-semibold text-ink">Line Items</p>
             <div className="flex gap-2">
               <button type="button" onClick={() => { setPbModal(true); setPbSearch(''); setPbResults([]); }}
-                className="text-xs text-[#1A73E8] font-medium min-h-[36px]">Pricebook</button>
+                className="text-xs text-blue font-medium min-h-[36px]">Pricebook</button>
               <button type="button" onClick={addItem}
-                className="flex items-center gap-1 text-xs text-[#1A73E8] font-medium min-h-[36px]">
+                className="flex items-center gap-1 text-xs text-blue font-medium min-h-[36px]">
                 <Plus size={12} /> Add
               </button>
             </div>
           </div>
           <div className="space-y-3">
             {lineItems.map((item, idx) => (
-              <div key={idx} className="border border-gray-100 rounded-xl p-3 space-y-2">
+              <div key={idx} className="border border-hairline rounded-xl p-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <input
                     value={item.name}
                     onChange={e => handleItemChange(idx, 'name', e.target.value)}
                     placeholder="Item name"
-                    className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+                    className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
                   />
                   <button type="button" onClick={() => removeItem(idx)}
                     className="p-2 text-red-400 hover:bg-red-50 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -244,21 +244,21 @@ export default function InvoiceForm() {
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
-                    <label className="text-xs text-gray-400">Qty</label>
+                    <label className="text-xs text-muted">Qty</label>
                     <input type="number" min="1" value={item.quantity}
                       onChange={e => handleItemChange(idx, 'quantity', e.target.value)}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+                      className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">Unit Price</label>
+                    <label className="text-xs text-muted">Unit Price</label>
                     <input type="number" min="0" step="0.01" value={item.unit_price}
                       onChange={e => handleItemChange(idx, 'unit_price', e.target.value)}
                       placeholder="0.00"
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+                      className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]" />
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">Total</label>
-                    <div className="rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium min-h-[44px] flex items-center">
+                    <label className="text-xs text-muted">Total</label>
+                    <div className="rounded-xl border border-hairline bg-background px-3 py-2 text-sm font-medium min-h-[44px] flex items-center">
                       {formatCurrency(item.total)}
                     </div>
                   </div>
@@ -266,9 +266,9 @@ export default function InvoiceForm() {
               </div>
             ))}
           </div>
-          <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between">
-            <p className="font-semibold text-gray-700">Subtotal</p>
-            <p className="font-bold text-[#1A73E8]">{formatCurrency(subtotal)}</p>
+          <div className="mt-3 pt-3 border-t border-hairline flex justify-between">
+            <p className="font-semibold text-ink">Subtotal</p>
+            <p className="font-bold text-blue">{formatCurrency(subtotal)}</p>
           </div>
         </Card>
 
@@ -277,15 +277,15 @@ export default function InvoiceForm() {
           <div className="space-y-3">
             <Input label="Terms" value={terms} onChange={e => setTerms(e.target.value)} placeholder="Net 30" />
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+              <label className="block text-sm font-medium text-ink mb-1">Due Date</label>
               <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue" />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <label className="block text-sm font-medium text-ink mb-1">Notes</label>
               <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
                 placeholder="Optional notes..."
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none" />
+                className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue resize-none" />
             </div>
           </div>
         </Card>
@@ -300,23 +300,23 @@ export default function InvoiceForm() {
       <Modal isOpen={pbModal} onClose={() => { setPbModal(false); setPbSearch(''); setPbResults([]); }} title="Add from Pricebook">
         <div className="space-y-3">
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input value={pbSearch} onChange={e => handlePbSearch(e.target.value)}
               placeholder="Search pricebook..."
-              className="w-full rounded-xl border border-gray-300 pl-9 pr-3 py-2.5 min-h-[44px] text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              className="w-full rounded-xl border border-hairline pl-9 pr-3 py-2.5 min-h-[44px] text-sm focus:outline-none focus:ring-2 focus:ring-blue"
               autoFocus />
           </div>
           {pbLoading && <LoadingSpinner />}
           <div className="space-y-1 max-h-64 overflow-y-auto">
             {pbResults.map(item => (
               <button key={item.id} type="button" onClick={() => addFromPricebook(item)}
-                className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-gray-50 border border-gray-100 flex items-center justify-between min-h-[44px]">
-                <span className="text-sm font-medium text-gray-900">{item.name}</span>
-                <span className="text-sm font-bold text-[#1A73E8]">{formatCurrency(item.unit_price || item.price)}</span>
+                className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-background border border-hairline flex items-center justify-between min-h-[44px]">
+                <span className="text-sm font-medium text-ink">{item.name}</span>
+                <span className="text-sm font-bold text-blue">{formatCurrency(item.unit_price || item.price)}</span>
               </button>
             ))}
             {pbSearch && !pbLoading && pbResults.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-4">No items found</p>
+              <p className="text-sm text-muted text-center py-4">No items found</p>
             )}
           </div>
         </div>

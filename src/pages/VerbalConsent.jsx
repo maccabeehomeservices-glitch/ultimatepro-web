@@ -2,24 +2,24 @@ import { Link } from 'react-router-dom';
 
 export default function VerbalConsent() {
   return (
-    <div className="min-h-screen bg-white">
-      <header className="border-b border-gray-200 bg-white sticky top-0 z-10">
+    <div className="min-h-screen bg-card">
+      <header className="border-b border-hairline bg-card sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900">UltimatePro Solutions LLC</h1>
+          <h1 className="text-lg font-bold text-ink">UltimatePro Solutions LLC</h1>
           <nav className="flex gap-4 text-sm">
-            <Link to="/privacy" className="text-blue-600 hover:underline">Privacy</Link>
-            <Link to="/terms" className="text-blue-600 hover:underline">Terms</Link>
+            <Link to="/privacy" className="text-blue hover:underline">Privacy</Link>
+            <Link to="/terms" className="text-blue hover:underline">Terms</Link>
           </nav>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Verbal SMS Opt-In Process</h1>
-        <p className="text-sm text-gray-500 mb-8">Last updated: May 1, 2026</p>
+        <h1 className="text-2xl font-bold text-ink mb-2">Verbal SMS Opt-In Process</h1>
+        <p className="text-sm text-muted mb-8">Last updated: May 1, 2026</p>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">When verbal consent is collected</h2>
-          <p className="text-gray-700 leading-relaxed">
+          <h2 className="text-lg font-semibold text-ink mb-3">When verbal consent is collected</h2>
+          <p className="text-ink leading-relaxed">
             UltimatePro Solutions LLC and service businesses using the
             UltimatePro platform may collect verbal SMS consent during
             the following customer interactions: inbound phone calls
@@ -31,14 +31,14 @@ export default function VerbalConsent() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Verbal consent script</h2>
-          <p className="text-gray-700 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">Verbal consent script</h2>
+          <p className="text-ink mb-3">
             The technician or office staff reads the following
             disclosure to the customer before adding the customer's
             phone number to the SMS opt-in list:
           </p>
-          <blockquote className="border-l-4 border-blue-600 bg-blue-50 px-4 py-4 my-4 rounded-r-lg">
-            <p className="text-gray-900 leading-relaxed italic">
+          <blockquote className="border-l-4 border-blue bg-blue-50 px-4 py-4 my-4 rounded-r-lg">
+            <p className="text-ink leading-relaxed italic">
               "Before we end the call, can I confirm: it's okay if we
               text you appointment confirmations, your estimate,
               invoice, and updates from your technician at this
@@ -48,7 +48,7 @@ export default function VerbalConsent() {
               data rates may apply."
             </p>
           </blockquote>
-          <p className="text-gray-700 leading-relaxed">
+          <p className="text-ink leading-relaxed">
             The customer must respond affirmatively (e.g., "yes,"
             "okay," "that's fine") for the consent to be recorded. If
             the customer declines, refuses, or does not give a clear
@@ -58,19 +58,19 @@ export default function VerbalConsent() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">How verbal consent is recorded</h2>
-          <p className="text-gray-700 leading-relaxed">
+          <h2 className="text-lg font-semibold text-ink mb-3">How verbal consent is recorded</h2>
+          <p className="text-ink leading-relaxed">
             Once a customer gives verbal consent, the staff member
             records it in the customer's account record on the
             UltimatePro platform with the following information:
           </p>
-          <ul className="list-disc pl-6 mt-3 space-y-2 text-gray-700">
+          <ul className="list-disc pl-6 mt-3 space-y-2 text-ink">
             <li>Date and timestamp of the verbal consent</li>
             <li>Name of the staff member who collected the consent</li>
             <li>Method of collection (inbound call, in-person, follow-up call)</li>
             <li>Customer phone number that was opted in</li>
           </ul>
-          <p className="text-gray-700 leading-relaxed mt-3">
+          <p className="text-ink leading-relaxed mt-3">
             The customer's record is then flagged as opted-in for
             transactional SMS messages. The customer can opt out at
             any time by replying STOP to any message, which
@@ -80,8 +80,8 @@ export default function VerbalConsent() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Disclosures included in the verbal script</h2>
-          <ul className="list-disc pl-6 space-y-2 text-gray-700">
+          <h2 className="text-lg font-semibold text-ink mb-3">Disclosures included in the verbal script</h2>
+          <ul className="list-disc pl-6 space-y-2 text-ink">
             <li>Message purpose: appointment confirmations, estimates, invoices, technician updates</li>
             <li>Message frequency: typically 1-5 messages per service engagement</li>
             <li>Cost disclosure: "Message and data rates may apply"</li>
@@ -90,14 +90,14 @@ export default function VerbalConsent() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Other opt-in paths</h2>
-          <p className="text-gray-700 leading-relaxed">
+          <h2 className="text-lg font-semibold text-ink mb-3">Other opt-in paths</h2>
+          <p className="text-ink leading-relaxed">
             Customers can also opt in by signing a service agreement
             that includes an SMS authorization block. A sample of the
             service agreement is available at{' '}
             <a
               href="/sample-service-agreement.pdf"
-              className="text-blue-600 hover:underline"
+              className="text-blue hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -107,13 +107,13 @@ export default function VerbalConsent() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Privacy and Terms</h2>
-          <p className="text-gray-700 leading-relaxed">
+          <h2 className="text-lg font-semibold text-ink mb-3">Privacy and Terms</h2>
+          <p className="text-ink leading-relaxed">
             For the full SMS Communications and Mobile Messaging
             Consent disclosure, see our{' '}
-            <Link to="/privacy" className="text-blue-600 hover:underline">Privacy Policy</Link>{' '}
+            <Link to="/privacy" className="text-blue hover:underline">Privacy Policy</Link>{' '}
             and{' '}
-            <Link to="/terms" className="text-blue-600 hover:underline">Terms of Service</Link>.
+            <Link to="/terms" className="text-blue hover:underline">Terms of Service</Link>.
             Mobile phone numbers and SMS opt-in consent are not
             shared with third parties or affiliates for marketing or
             promotional purposes.
@@ -121,11 +121,11 @@ export default function VerbalConsent() {
         </section>
       </main>
 
-      <footer className="border-t border-gray-200 mt-12 py-6">
-        <div className="max-w-3xl mx-auto px-4 text-center text-sm text-gray-500">
+      <footer className="border-t border-hairline mt-12 py-6">
+        <div className="max-w-3xl mx-auto px-4 text-center text-sm text-muted">
           © 2026 UltimatePro Solutions LLC, Virginia Beach VA · {' '}
-          <Link to="/privacy" className="text-blue-600 hover:underline">Privacy</Link> ·{' '}
-          <Link to="/terms" className="text-blue-600 hover:underline">Terms</Link>
+          <Link to="/privacy" className="text-blue hover:underline">Privacy</Link> ·{' '}
+          <Link to="/terms" className="text-blue hover:underline">Terms</Link>
         </div>
       </footer>
     </div>

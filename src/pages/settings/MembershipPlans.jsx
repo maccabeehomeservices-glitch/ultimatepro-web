@@ -80,10 +80,10 @@ export default function MembershipPlans() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">Membership Plans</h1>
+        <h1 className="text-xl font-bold text-ink flex-1">Membership Plans</h1>
         <Button onClick={openAdd}><Plus size={16} /> Add</Button>
       </div>
 
@@ -95,11 +95,11 @@ export default function MembershipPlans() {
             <Card key={p.id || p._id}>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <p className="font-semibold text-gray-900">{p.name}</p>
-                  <p className="text-sm text-gray-500">{formatCurrency(p.price)} · {p.frequency}</p>
-                  {p.description && <p className="text-xs text-gray-400">{p.description}</p>}
+                  <p className="font-semibold text-ink">{p.name}</p>
+                  <p className="text-sm text-muted">{formatCurrency(p.price)} · {p.frequency}</p>
+                  {p.description && <p className="text-xs text-muted">{p.description}</p>}
                 </div>
-                <button onClick={() => openEdit(p)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500">
+                <button onClick={() => openEdit(p)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-muted">
                   <Edit size={16} />
                 </button>
                 <button onClick={() => { setDeleteTarget(p); setDeleteModal(true); }} className="p-2 rounded-xl hover:bg-red-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-red-400">
@@ -125,7 +125,7 @@ export default function MembershipPlans() {
       <Modal isOpen={deleteModal} onClose={() => setDeleteModal(false)} title="Delete Plan"
         footer={<><Button variant="outlined" onClick={() => setDeleteModal(false)}>Cancel</Button><Button variant="danger" loading={saving} onClick={handleDelete}>Delete</Button></>}
       >
-        <p className="text-gray-600">Delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.</p>
+        <p className="text-ink">Delete <strong>{deleteTarget?.name}</strong>? This cannot be undone.</p>
       </Modal>
     </div>
   );

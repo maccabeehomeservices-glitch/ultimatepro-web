@@ -64,18 +64,18 @@ export default function Layout() {
   const isDesktop = vw >= 768;
 
   return (
-    <div className="min-h-dvh bg-gray-50">
+    <div className="min-h-dvh bg-background">
       {/* Desktop sidebar (auto-hidden below md via internal class) */}
       <Sidebar collapsed={collapsed} onToggle={toggle} />
 
       {/* Mobile top bar — unchanged */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-12 bg-white border-b border-gray-200 flex items-center px-4 z-20">
+      <div className="md:hidden fixed top-0 left-0 right-0 h-12 bg-card border-b border-hairline flex items-center px-4 z-20">
         <div className="flex-1 flex items-center justify-center">
-          <span className="font-semibold text-[#0D1B2A] text-base">
+          <span className="font-semibold text-ink text-base">
             {company?.name || 'UltimatePro'}
           </span>
         </div>
-        <Link to="/notifications" className="relative p-2 text-gray-500 hover:text-[#1A73E8] transition-colors">
+        <Link to="/notifications" className="relative p-2 text-muted hover:text-blue transition-colors">
           <Bell size={20} />
           {unreadCount > 0 && (
             <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">

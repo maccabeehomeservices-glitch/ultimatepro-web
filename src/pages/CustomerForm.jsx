@@ -132,16 +132,16 @@ export default function CustomerForm() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">{isEdit ? 'Edit Customer' : 'New Customer'}</h1>
+        <h1 className="text-xl font-bold text-ink">{isEdit ? 'Edit Customer' : 'New Customer'}</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Customer Type chips */}
         <Card>
-          <p className="text-xs text-gray-400 font-medium uppercase mb-2">Customer Type</p>
+          <p className="text-xs text-muted font-medium uppercase mb-2">Customer Type</p>
           <div className="flex gap-2 flex-wrap">
             {CUSTOMER_TYPES.map(type => (
               <button
@@ -150,8 +150,8 @@ export default function CustomerForm() {
                 onClick={() => setForm(p => ({ ...p, customer_type: type }))}
                 className={`px-4 py-2 rounded-full text-sm font-medium border transition-colors min-h-[44px] ${
                   form.customer_type === type
-                    ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
-                    : 'bg-white text-gray-600 border-gray-300 hover:border-[#1A73E8]'
+                    ? 'bg-blue text-white border-blue'
+                    : 'bg-card text-ink border-hairline hover:border-blue'
                 }`}
               >
                 {type}
@@ -186,7 +186,7 @@ export default function CustomerForm() {
                 <button
                   type="button"
                   onClick={() => setExtraPhones(prev => prev.filter((_, j) => j !== i))}
-                  className="mt-5 p-2 text-gray-400 hover:text-red-500 min-h-[44px]"
+                  className="mt-5 p-2 text-muted hover:text-red-500 min-h-[44px]"
                 >
                   <X size={16} />
                 </button>
@@ -195,7 +195,7 @@ export default function CustomerForm() {
             <button
               type="button"
               onClick={() => setExtraPhones(p => [...p, ''])}
-              className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium min-h-[44px]"
+              className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px]"
             >
               <Plus size={14} /> Add Phone
             </button>
@@ -218,7 +218,7 @@ export default function CustomerForm() {
                 <button
                   type="button"
                   onClick={() => setExtraEmails(prev => prev.filter((_, j) => j !== i))}
-                  className="mt-5 p-2 text-gray-400 hover:text-red-500 min-h-[44px]"
+                  className="mt-5 p-2 text-muted hover:text-red-500 min-h-[44px]"
                 >
                   <X size={16} />
                 </button>
@@ -227,7 +227,7 @@ export default function CustomerForm() {
             <button
               type="button"
               onClick={() => setExtraEmails(p => [...p, ''])}
-              className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium min-h-[44px]"
+              className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px]"
             >
               <Plus size={14} /> Add Email
             </button>
@@ -238,10 +238,10 @@ export default function CustomerForm() {
         <Card>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="block text-sm font-medium text-ink mb-1">Address</label>
               <input
                 ref={streetInputRef}
-                className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-blue"
                 placeholder="Start typing address..."
                 value={form.address}
                 onChange={e => setForm(prev => ({ ...prev, address: e.target.value }))}
@@ -257,14 +257,14 @@ export default function CustomerForm() {
 
         {/* Notes */}
         <Card>
-          <p className="text-xs text-gray-400 font-medium uppercase mb-2">Notes</p>
+          <p className="text-xs text-muted font-medium uppercase mb-2">Notes</p>
           <textarea
             name="notes"
             value={form.notes}
             onChange={handleChange}
             rows={4}
             placeholder="Customer notes..."
-            className="w-full text-sm text-gray-800 resize-none focus:outline-none bg-transparent placeholder-gray-400"
+            className="w-full text-sm text-ink resize-none focus:outline-none bg-transparent placeholder-muted"
           />
         </Card>
 

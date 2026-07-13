@@ -103,16 +103,16 @@ export default function SendReportModal({
     >
       <div className="space-y-4">
         <div>
-          <p className="text-xs text-gray-400 uppercase font-medium mb-1">Recipient</p>
-          <p className="font-medium text-gray-900">{actorName || '—'}</p>
-          <p className="text-sm text-gray-500">
+          <p className="text-xs text-muted uppercase font-medium mb-1">Recipient</p>
+          <p className="font-medium text-ink">{actorName || '—'}</p>
+          <p className="text-sm text-muted">
             {period?.from} to {period?.to}
           </p>
         </div>
 
         {/* Format selector */}
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Format</p>
+          <p className="text-sm font-medium text-ink mb-2">Format</p>
           <div className="flex gap-2">
             {formatOptions.map((f) => {
               const active = format === f;
@@ -123,8 +123,8 @@ export default function SendReportModal({
                   onClick={() => setFormat(f)}
                   className={`flex-1 px-3 rounded-xl border text-sm font-medium min-h-[44px] ${
                     active
-                      ? 'border-[#1A73E8] bg-blue-50 text-[#1A73E8]'
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                      ? 'border-blue bg-blue-50 text-blue'
+                      : 'border-hairline text-ink hover:bg-background'
                   }`}
                 >
                   {f.toUpperCase()}
@@ -136,7 +136,7 @@ export default function SendReportModal({
 
         {/* Send via selector */}
         <div>
-          <p className="text-sm font-medium text-gray-700 mb-2">Send Via</p>
+          <p className="text-sm font-medium text-ink mb-2">Send Via</p>
           <div className="flex gap-2">
             {viaOptions.map(({ id, label, icon: Icon }) => {
               const active = via === id;
@@ -147,8 +147,8 @@ export default function SendReportModal({
                   onClick={() => setVia(id)}
                   className={`flex-1 px-3 rounded-xl border text-sm font-medium min-h-[44px] flex items-center justify-center gap-1 ${
                     active
-                      ? 'border-[#1A73E8] bg-blue-50 text-[#1A73E8]'
-                      : 'border-gray-200 text-gray-700 hover:bg-gray-50'
+                      ? 'border-blue bg-blue-50 text-blue'
+                      : 'border-hairline text-ink hover:bg-background'
                   }`}
                 >
                   {Icon && <Icon size={16} />}
@@ -162,7 +162,7 @@ export default function SendReportModal({
         {/* Email input — shown when relevant */}
         {(via === 'email' || via === 'both') && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-muted mb-1">
               Recipient Email
             </label>
             <input
@@ -170,7 +170,7 @@ export default function SendReportModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="recipient@example.com"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
             />
           </div>
         )}
@@ -178,7 +178,7 @@ export default function SendReportModal({
         {/* Phone input — shown when relevant */}
         {(via === 'sms' || via === 'both') && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">
+            <label className="block text-xs font-medium text-muted mb-1">
               Recipient Phone
             </label>
             <input
@@ -186,9 +186,9 @@ export default function SendReportModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+15555551234"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted mt-1">
               SMS sends a short link to a hosted HTML view (PDFs can't ship reliably over SMS).
             </p>
           </div>

@@ -127,12 +127,12 @@ export default function Sidebar({ collapsed = false, onToggle }) {
                 collapsed
                   ? `justify-center px-2 py-3 ${
                       isActive
-                        ? 'text-white bg-white/10 border-l-4 border-[#1A73E8]'
+                        ? 'text-white bg-white/10 border-l-4 border-[#2D6FC2]'
                         : 'text-white/60 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
                     }`
                   : `gap-3 px-4 py-2.5 ${
                       isActive
-                        ? 'text-white bg-white/10 border-l-4 border-[#1A73E8]'
+                        ? 'text-white bg-white/10 border-l-4 border-[#2D6FC2]'
                         : 'text-white/60 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
                     }`
               }`
@@ -148,7 +148,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
       {collapsed ? (
         <div className="p-3 border-t border-white/10 flex flex-col items-center gap-2">
           <div title={userName}>
-            <Avatar name={userName} size="sm" color="#1A73E8" />
+            <Avatar name={userName} size="sm" color="#2D6FC2" />
           </div>
           <button
             onClick={logout}
@@ -162,7 +162,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
       ) : (
         <div className="p-4 border-t border-white/10">
           <div className="flex items-center gap-3 mb-3">
-            <Avatar name={userName} size="sm" color="#1A73E8" />
+            <Avatar name={userName} size="sm" color="#2D6FC2" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
                 {user?.first_name} {user?.last_name}

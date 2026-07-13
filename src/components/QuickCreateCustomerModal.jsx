@@ -59,10 +59,10 @@ export default function QuickCreateCustomerModal({ isOpen, onClose, onCreated, p
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
+      <div className="relative bg-card rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <h2 className="text-lg font-bold text-gray-900">New Customer</h2>
-          <button onClick={onClose} className="p-2 rounded-xl hover:bg-gray-100 text-gray-500 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <h2 className="text-lg font-bold text-ink">New Customer</h2>
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-background text-muted min-h-[44px] min-w-[44px] flex items-center justify-center">
             <X size={20} />
           </button>
         </div>

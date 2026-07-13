@@ -224,37 +224,37 @@ export default function Network() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Network</h1>
+      <h1 className="text-xl font-bold text-ink mb-4">Network</h1>
 
       {/* My UCM ID */}
       <Card className="mb-4">
-        <p className="text-xs text-gray-400 uppercase font-medium mb-2">Your UCM ID</p>
+        <p className="text-xs text-muted uppercase font-medium mb-2">Your UCM ID</p>
         <div className="flex items-center gap-3">
-          <p className="font-mono font-bold text-lg text-gray-900 flex-1">{ucmId || 'Loading...'}</p>
+          <p className="font-mono font-bold text-lg text-ink flex-1">{ucmId || 'Loading...'}</p>
           <button
             onClick={handleCopy}
             disabled={!ucmId}
-            className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium min-h-[44px] px-3 rounded-lg hover:bg-blue-50 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px] px-3 rounded-lg hover:bg-blue-50 transition-colors"
           >
             {copied ? <Check size={16} /> : <Copy size={16} />}
             {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-1">Share your UCM ID to receive work from network partners.</p>
+        <p className="text-xs text-muted mt-1">Share your UCM ID to receive work from network partners.</p>
       </Card>
 
       {/* Find Contractor */}
       <Card className="mb-4">
-        <p className="text-sm font-semibold text-gray-900 mb-3">Find a Contractor</p>
+        <p className="text-sm font-semibold text-ink mb-3">Find a Contractor</p>
 
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-3">
+        <div className="flex gap-1 bg-background rounded-xl p-1 mb-3">
           {SEARCH_TABS.map(tab => (
             <button
               key={tab.id}
               type="button"
               onClick={() => handleTabChange(tab.id)}
               className={`flex-1 py-2 px-1 rounded-lg text-xs font-semibold transition-colors min-h-[36px] ${
-                searchTab === tab.id ? 'bg-white text-[#1A73E8] shadow-sm' : 'text-gray-500'
+                searchTab === tab.id ? 'bg-card text-blue shadow-sm' : 'text-muted'
               }`}
             >
               {tab.label}
@@ -269,7 +269,7 @@ export default function Network() {
             onChange={e => setSearchInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSearch()}
             placeholder={activeTabConfig?.placeholder}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+            className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue"
           />
           <Button onClick={handleSearch} loading={searching} className="w-full">
             <Search size={16} /> Search
@@ -279,14 +279,14 @@ export default function Network() {
         {searchResults !== null && (
           <div className="mt-3">
             {searchResults.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-2">No contractors found.</p>
+              <p className="text-sm text-muted text-center py-2">No contractors found.</p>
             ) : (
               <div className="space-y-2">
                 {searchResults.map((r) => (
-                  <div key={r.id || r._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                  <div key={r.id || r._id} className="flex items-center justify-between p-3 bg-background rounded-xl">
                     <div>
-                      <p className="font-medium text-gray-900">{r.company_name || r.name}</p>
-                      <p className="text-xs text-gray-400">{r.ucm_id}</p>
+                      <p className="font-medium text-ink">{r.company_name || r.name}</p>
+                      <p className="text-xs text-muted">{r.ucm_id}</p>
                     </div>
                     <Button size="sm" onClick={() => handleConnect(r)}>Connect</Button>
                   </div>
@@ -299,7 +299,7 @@ export default function Network() {
 
       {/* Connections */}
       <div>
-        <h2 className="font-semibold text-gray-900 mb-3">My Connections</h2>
+        <h2 className="font-semibold text-ink mb-3">My Connections</h2>
         {loading ? (
           <LoadingSpinner />
         ) : connections.length === 0 ? (
@@ -310,10 +310,10 @@ export default function Network() {
               <Card key={c.id || c._id} onClick={() => openDetail(c)}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900">{c.company_name || c.partner_name || c.name}</p>
-                    <p className="text-xs text-gray-400">{c.ucm_id || c.ultimatecrm_id || ''}</p>
+                    <p className="font-semibold text-ink">{c.company_name || c.partner_name || c.name}</p>
+                    <p className="text-xs text-muted">{c.ucm_id || c.ultimatecrm_id || ''}</p>
                     {c.latest_agreement_status && (
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-muted mt-0.5">
                         Agreement: {c.latest_agreement_status}
                         {c.latest_sender_keeps_pct != null && ` · ${c.latest_sender_keeps_pct}% / ${c.latest_receiver_keeps_pct}%`}
                       </p>
@@ -321,7 +321,7 @@ export default function Network() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge status={c.status} label={c.status || 'active'} />
-                    <span className="text-gray-300 text-lg">›</span>
+                    <span className="text-muted text-lg">›</span>
                   </div>
                 </div>
               </Card>
@@ -338,21 +338,21 @@ export default function Network() {
       >
         {detailLoading ? (
           <div className="flex justify-center py-10">
-            <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+            <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
           </div>
         ) : detailView === 'main' ? (
           <div className="space-y-4">
             {/* Partner Info */}
             <div>
-              <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Partner Info</p>
-              <div className="bg-gray-50 rounded-xl p-3 space-y-2">
-                <p className="font-bold text-gray-900 text-lg">{conn?.company_name || conn?.partner_name || conn?.name}</p>
+              <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">Partner Info</p>
+              <div className="bg-background rounded-xl p-3 space-y-2">
+                <p className="font-bold text-ink text-lg">{conn?.company_name || conn?.partner_name || conn?.name}</p>
                 {partnerUcmId && (
                   <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-500 font-mono flex-1">{partnerUcmId}</p>
+                    <p className="text-sm text-muted font-mono flex-1">{partnerUcmId}</p>
                     <button
                       onClick={() => copyPartnerUcm(partnerUcmId)}
-                      className="text-xs text-[#1A73E8] font-medium min-h-[36px] px-2 flex items-center gap-1"
+                      className="text-xs text-blue font-medium min-h-[36px] px-2 flex items-center gap-1"
                     >
                       {ucmCopied ? <Check size={14} /> : <Copy size={14} />}
                       {ucmCopied ? 'Copied' : 'Copy'}
@@ -360,7 +360,7 @@ export default function Network() {
                   </div>
                 )}
                 {(conn?.city || conn?.state) && (
-                  <p className="text-sm text-gray-500">📍 {[conn.city, conn.state].filter(Boolean).join(', ')}</p>
+                  <p className="text-sm text-muted">📍 {[conn.city, conn.state].filter(Boolean).join(', ')}</p>
                 )}
                 <div className="flex items-center gap-2">
                   <Badge status={conn?.status} label={conn?.status || 'active'} />
@@ -371,16 +371,16 @@ export default function Network() {
             {/* Pending invite — accept/decline (recipient only; server enforces non-inviter) */}
             {conn?.status === 'pending' && conn?.invited_by && conn?.invited_by !== company?.id && (
               <div>
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Connection Request</p>
+                <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">Connection Request</p>
                 <div className="bg-amber-50 rounded-xl p-3 space-y-2 border border-amber-200">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-ink">
                     {conn?.partner_name || conn?.company_name || 'This contractor'} invited you to connect.
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleRespondConnection('accept')}
                       disabled={responding}
-                      className="flex-1 py-2.5 bg-[#1A73E8] text-white rounded-xl font-semibold text-sm min-h-[44px] disabled:opacity-50"
+                      className="flex-1 py-2.5 bg-blue text-white rounded-xl font-semibold text-sm min-h-[44px] disabled:opacity-50"
                     >
                       {responding ? '...' : 'Accept'}
                     </button>
@@ -399,20 +399,20 @@ export default function Network() {
             {/* Revenue Split */}
             {activeAgreement && (
               <div>
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Revenue Split</p>
-                <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+                <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">Revenue Split</p>
+                <div className="bg-background rounded-xl p-3 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">You keep</span>
-                    <span className="font-bold text-gray-900">{activeAgreement.sender_keeps_pct ?? activeAgreement.you_keep_pct ?? '—'}%</span>
+                    <span className="text-ink">You keep</span>
+                    <span className="font-bold text-ink">{activeAgreement.sender_keeps_pct ?? activeAgreement.you_keep_pct ?? '—'}%</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Partner keeps</span>
-                    <span className="font-bold text-gray-900">{activeAgreement.receiver_keeps_pct ?? activeAgreement.partner_keeps_pct ?? '—'}%</span>
+                    <span className="text-ink">Partner keeps</span>
+                    <span className="font-bold text-ink">{activeAgreement.receiver_keeps_pct ?? activeAgreement.partner_keeps_pct ?? '—'}%</span>
                   </div>
                   {activeAgreement.review_goes_to && (
                     <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Reviews go to</span>
-                      <span className="font-medium text-gray-900 capitalize">{activeAgreement.review_goes_to}</span>
+                      <span className="text-ink">Reviews go to</span>
+                      <span className="font-medium text-ink capitalize">{activeAgreement.review_goes_to}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 pt-1">
@@ -425,18 +425,18 @@ export default function Network() {
             {/* Pending agreement — respond */}
             {pendingAgreement && (
               <div>
-                <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Pending Agreement</p>
+                <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">Pending Agreement</p>
                 <div className="bg-amber-50 rounded-xl p-3 space-y-2 border border-amber-200">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Sender keeps</span>
+                    <span className="text-ink">Sender keeps</span>
                     <span className="font-bold">{pendingAgreement.sender_keeps_pct ?? '—'}%</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Receiver keeps</span>
+                    <span className="text-ink">Receiver keeps</span>
                     <span className="font-bold">{pendingAgreement.receiver_keeps_pct ?? '—'}%</span>
                   </div>
                   {pendingAgreement.notes && (
-                    <p className="text-xs text-gray-500 italic">{pendingAgreement.notes}</p>
+                    <p className="text-xs text-muted italic">{pendingAgreement.notes}</p>
                   )}
                   <div className="flex gap-2 pt-1">
                     <button
@@ -463,14 +463,14 @@ export default function Network() {
               {!activeAgreement && !pendingAgreement && (
                 <button
                   onClick={() => setDetailView('propose')}
-                  className="w-full py-3 bg-[#1A73E8] text-white rounded-xl text-sm font-semibold min-h-[44px]"
+                  className="w-full py-3 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]"
                 >
                   📋 Propose Agreement
                 </button>
               )}
               <button
                 onClick={() => { setReportData(null); setDetailView('report'); }}
-                className="w-full py-3 border border-gray-300 text-gray-700 rounded-xl text-sm font-semibold min-h-[44px]"
+                className="w-full py-3 border border-hairline text-ink rounded-xl text-sm font-semibold min-h-[44px]"
               >
                 📊 View Report
               </button>
@@ -487,27 +487,27 @@ export default function Network() {
 
         ) : detailView === 'propose' ? (
           <div className="space-y-4">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Propose Agreement</p>
+            <p className="text-xs font-semibold text-blue uppercase tracking-wider">Propose Agreement</p>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Your percentage (you keep)</label>
+              <label className="block text-xs font-semibold text-ink mb-1">Your percentage (you keep)</label>
               <input
                 type="number"
                 min={0}
                 max={100}
                 value={proposeSenderPct}
                 onChange={e => setProposeSenderPct(Math.min(100, Math.max(0, Number(e.target.value))))}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               />
-              <p className="text-xs text-gray-400 mt-1">Partner keeps: {100 - Number(proposeSenderPct)}%</p>
+              <p className="text-xs text-muted mt-1">Partner keeps: {100 - Number(proposeSenderPct)}%</p>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Reviews go to</label>
+              <label className="block text-xs font-semibold text-ink mb-1">Reviews go to</label>
               <select
                 value={proposeReviewTo}
                 onChange={e => setProposeReviewTo(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               >
                 <option value="sender">Sender (you)</option>
                 <option value="receiver">Receiver (partner)</option>
@@ -516,11 +516,11 @@ export default function Network() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Notes (optional)</label>
+              <label className="block text-xs font-semibold text-ink mb-1">Notes (optional)</label>
               <textarea
                 value={proposeNotes}
                 onChange={e => setProposeNotes(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue"
                 placeholder="Any notes for the partner..."
               />
             </div>
@@ -528,14 +528,14 @@ export default function Network() {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => setDetailView('main')}
-                className="flex-1 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 min-h-[44px]"
+                className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={handlePropose}
                 disabled={proposing}
-                className="flex-1 py-3 bg-[#1A73E8] text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
               >
                 {proposing ? 'Sending...' : 'Send Proposal'}
               </button>
@@ -544,14 +544,14 @@ export default function Network() {
 
         ) : detailView === 'pause' ? (
           <div className="space-y-4">
-            <p className="text-gray-600">
+            <p className="text-ink">
               Pause your partnership with <strong>{conn?.company_name || conn?.partner_name || conn?.name}</strong>?
               You can resume it at any time.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDetailView('main')}
-                className="flex-1 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 min-h-[44px]"
+                className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]"
               >
                 Cancel
               </button>
@@ -567,25 +567,25 @@ export default function Network() {
 
         ) : detailView === 'report' ? (
           <div className="space-y-4">
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Connection Report</p>
+            <p className="text-xs font-semibold text-blue uppercase tracking-wider">Connection Report</p>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">From</label>
+                <label className="block text-xs font-semibold text-ink mb-1">From</label>
                 <input
                   type="date"
                   value={reportFrom}
                   onChange={e => setReportFrom(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-hairline rounded-xl px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">To</label>
+                <label className="block text-xs font-semibold text-ink mb-1">To</label>
                 <input
                   type="date"
                   value={reportTo}
                   onChange={e => setReportTo(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-hairline rounded-xl px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue"
                 />
               </div>
             </div>
@@ -593,20 +593,20 @@ export default function Network() {
             <button
               onClick={handleRunReport}
               disabled={reportLoading}
-              className="w-full py-3 bg-[#1A73E8] text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+              className="w-full py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
             >
               {reportLoading ? 'Loading...' : 'Run Report'}
             </button>
 
             {reportData && (
-              <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+              <div className="bg-background rounded-xl p-4 space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Total Jobs</span>
-                  <span className="font-bold text-gray-900">{reportData.total_jobs ?? reportData.job_count ?? 0}</span>
+                  <span className="text-ink">Total Jobs</span>
+                  <span className="font-bold text-ink">{reportData.total_jobs ?? reportData.job_count ?? 0}</span>
                 </div>
                 {reportData.sender_earnings != null && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">You earn</span>
+                    <span className="text-ink">You earn</span>
                     <span className="font-bold text-green-600">
                       ${Number(reportData.sender_earnings).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
@@ -614,16 +614,16 @@ export default function Network() {
                 )}
                 {reportData.receiver_earnings != null && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Partner earns</span>
-                    <span className="font-bold text-gray-900">
+                    <span className="text-ink">Partner earns</span>
+                    <span className="font-bold text-ink">
                       ${Number(reportData.receiver_earnings).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 )}
                 {reportData.total_revenue != null && (
-                  <div className="flex justify-between text-sm border-t border-gray-200 pt-2">
-                    <span className="text-gray-600 font-semibold">Total Revenue</span>
-                    <span className="font-bold text-gray-900">
+                  <div className="flex justify-between text-sm border-t border-hairline pt-2">
+                    <span className="text-ink font-semibold">Total Revenue</span>
+                    <span className="font-bold text-ink">
                       ${Number(reportData.total_revenue).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </span>
                   </div>
@@ -633,7 +633,7 @@ export default function Network() {
 
             <button
               onClick={() => setDetailView('main')}
-              className="w-full py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 min-h-[44px]"
+              className="w-full py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]"
             >
               Back
             </button>

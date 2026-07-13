@@ -199,14 +199,14 @@ export default function LiveMap() {
   return (
     <div className="relative" style={{ height: 'calc(100vh - 56px)' }}>
       {/* Header overlay */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-white/90 backdrop-blur-sm p-3 flex items-center justify-between border-b border-gray-200">
+      <div className="absolute top-0 left-0 right-0 z-10 bg-card/90 backdrop-blur-sm p-3 flex items-center justify-between border-b border-hairline">
         <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/dashboard')} className="text-gray-500 text-xl">←</button>
-          <h1 className="font-bold text-gray-900">Live Map</h1>
+          <button onClick={() => navigate('/dashboard')} className="text-muted text-xl">←</button>
+          <h1 className="font-bold text-ink">Live Map</h1>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-blue-600 inline-block" />
+            <span className="w-3 h-3 rounded-full bg-blue inline-block" />
             Techs ({techs.length})
           </span>
           <span className="flex items-center gap-1">
@@ -214,7 +214,7 @@ export default function LiveMap() {
             Jobs ({jobs.length})
           </span>
         </div>
-        <button onClick={() => fetchData()} className="text-blue-600 text-sm font-medium">
+        <button onClick={() => fetchData()} className="text-blue text-sm font-medium">
           ⟳ Refresh
         </button>
       </div>
@@ -223,8 +223,8 @@ export default function LiveMap() {
       <div ref={mapRef} className="w-full h-full" />
 
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/50">
-          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+        <div className="absolute inset-0 flex items-center justify-center bg-card/50">
+          <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
         </div>
       )}
     </div>

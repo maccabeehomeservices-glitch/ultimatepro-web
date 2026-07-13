@@ -13,7 +13,7 @@ function CompRow({ label, value, bold = false }) {
   return (
     <div
       className={`flex justify-between py-1.5 text-sm ${
-        bold ? 'text-base font-bold text-[#1A73E8]' : 'text-gray-700'
+        bold ? 'text-base font-bold text-blue' : 'text-ink'
       }`}
     >
       <span>{label}</span>
@@ -36,18 +36,18 @@ function CompensationSummary({ summary, bonuses, deductions, allTime }) {
 
   return (
     <div className="space-y-4 mb-4">
-      <div className="bg-white rounded-2xl shadow p-4 border-l-4 border-[#1A73E8]">
-        <h3 className="font-semibold text-[#1A73E8] mb-3">Compensation Summary</h3>
+      <div className="bg-card rounded-2xl shadow p-4 border-l-4 border-blue">
+        <h3 className="font-semibold text-blue mb-3">Compensation Summary</h3>
         <CompRow label="Period Tech Profit (from jobs)" value={periodProfit} />
         <CompRow label="+ Bonuses"    value={bonusTotal} />
         <CompRow label="- Deductions" value={deductionTotal} />
-        <div className="border-t-2 border-[#1A73E8] mt-3 pt-3">
+        <div className="border-t-2 border-blue mt-3 pt-3">
           <CompRow label="Net Pay for Period" value={netPay} bold />
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow p-4 border-l-4 border-gray-400">
-        <h3 className="font-semibold text-gray-700 mb-3">All-Time Balance</h3>
+      <div className="bg-card rounded-2xl shadow p-4 border-l-4 border-gray-400">
+        <h3 className="font-semibold text-ink mb-3">All-Time Balance</h3>
         <CompRow label="Lifetime Owed (Unpaid)" value={Number(allTime?.unpaid || 0)} />
         <CompRow label="Lifetime Paid"          value={Number(allTime?.paid   || 0)} />
       </div>
@@ -110,7 +110,7 @@ export default function TeamReport() {
       {/* Header */}
       <button
         onClick={() => navigate(-1)}
-        className="flex items-center gap-1 text-[#1A73E8] text-sm mb-3 min-h-[44px]"
+        className="flex items-center gap-1 text-blue text-sm mb-3 min-h-[44px]"
       >
         <ArrowLeft size={16} />
         Back
@@ -120,17 +120,17 @@ export default function TeamReport() {
         <div className="flex items-center gap-3 min-w-0">
           <Avatar name={actor.name || 'Tech'} size="md" color={actorColor} />
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 truncate">
+            <h1 className="text-xl font-bold text-ink truncate">
               {actor.name || 'Pay Statement'}
             </h1>
-            <p className="text-sm text-gray-500">Pay Statement</p>
+            <p className="text-sm text-muted">Pay Statement</p>
           </div>
         </div>
         <div className="flex gap-2 flex-wrap">
           <ExportReportMenu actorType="tech" actorId={userId} period={period} />
           <button
             onClick={() => setSendOpen(true)}
-            className="px-3 py-2 bg-[#1A73E8] text-white rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-700 min-h-[44px]"
+            className="px-3 py-2 bg-blue text-white rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-ink min-h-[44px]"
           >
             <Send size={16} />
             Send Report
@@ -149,8 +149,8 @@ export default function TeamReport() {
                 onClick={() => setChip(id)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors min-h-[36px] flex-shrink-0 ${
                   selected
-                    ? 'bg-[#1A73E8] text-white'
-                    : 'bg-white text-gray-600 border border-gray-200'
+                    ? 'bg-blue text-white'
+                    : 'bg-card text-ink border border-hairline'
                 }`}
               >
                 {label}
@@ -158,7 +158,7 @@ export default function TeamReport() {
             );
           })}
         </div>
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-xs text-muted mt-2">
           {period.from} to {period.to}
         </p>
       </Card>
@@ -180,18 +180,18 @@ export default function TeamReport() {
 
           {/* Bonuses */}
           {bonuses.length > 0 && (
-            <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
-              <div className="px-4 py-3 border-b border-gray-100 font-semibold text-green-700">
+            <div className="bg-card rounded-2xl shadow overflow-hidden mb-4">
+              <div className="px-4 py-3 border-b border-hairline font-semibold text-green-700">
                 Bonuses ({bonuses.length})
               </div>
               <table className="w-full text-sm">
                 <tbody>
                   {bonuses.map((b, i) => (
-                    <tr key={b.id || i} className="border-b border-gray-50 last:border-0">
-                      <td className="px-4 py-2.5 text-gray-700">
+                    <tr key={b.id || i} className="border-b border-hairline last:border-0">
+                      <td className="px-4 py-2.5 text-ink">
                         {b.reason || b.description || '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-gray-400 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">
                         {b.created_at
                           ? new Date(b.created_at).toLocaleDateString()
                           : ''}
@@ -208,18 +208,18 @@ export default function TeamReport() {
 
           {/* Deductions */}
           {deductions.length > 0 && (
-            <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
-              <div className="px-4 py-3 border-b border-gray-100 font-semibold text-red-700">
+            <div className="bg-card rounded-2xl shadow overflow-hidden mb-4">
+              <div className="px-4 py-3 border-b border-hairline font-semibold text-red-700">
                 Deductions ({deductions.length})
               </div>
               <table className="w-full text-sm">
                 <tbody>
                   {deductions.map((d, i) => (
-                    <tr key={d.id || i} className="border-b border-gray-50 last:border-0">
-                      <td className="px-4 py-2.5 text-gray-700">
+                    <tr key={d.id || i} className="border-b border-hairline last:border-0">
+                      <td className="px-4 py-2.5 text-ink">
                         {d.reason || d.description || '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-xs text-gray-400 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-xs text-muted whitespace-nowrap">
                         {d.created_at
                           ? new Date(d.created_at).toLocaleDateString()
                           : ''}

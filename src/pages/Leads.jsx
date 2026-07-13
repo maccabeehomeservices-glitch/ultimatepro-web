@@ -139,9 +139,9 @@ export default function Leads() {
   return (
     <div className="max-w-4xl mx-auto p-4 pb-24">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Lead Pipeline</h1>
+        <h1 className="text-xl font-bold text-ink">Lead Pipeline</h1>
         <button onClick={openAdd}
-          className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold min-h-[44px]">
+          className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]">
           + New Lead
         </button>
       </div>
@@ -149,12 +149,12 @@ export default function Leads() {
       {/* Search */}
       <div className="relative mb-4">
         <input
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 pl-10 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border border-hairline rounded-xl px-4 py-3 pl-10 text-base focus:outline-none focus:ring-2 focus:ring-blue"
           placeholder="Search leads..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
-        <span className="absolute left-3 top-3.5 text-gray-400">🔍</span>
+        <span className="absolute left-3 top-3.5 text-muted">🔍</span>
       </div>
 
       {/* Status filters */}
@@ -164,8 +164,8 @@ export default function Leads() {
             onClick={() => setFilter(s.key)}
             className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border transition-colors min-h-[44px] ${
               filter === s.key
-                ? 'bg-blue-600 text-white border-blue-600'
-                : 'bg-white text-gray-600 border-gray-300'
+                ? 'bg-blue text-white border-blue'
+                : 'bg-card text-ink border-hairline'
             }`}
           >
             {s.label}
@@ -176,22 +176,22 @@ export default function Leads() {
       {/* Leads list */}
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+          <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
         </div>
       ) : leads.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-muted">
           <div className="text-4xl mb-3">📋</div>
           <p>No leads found</p>
         </div>
       ) : (
         <div className="space-y-3">
           {leads.map(lead => (
-            <div key={lead.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div key={lead.id} className="bg-card rounded-2xl shadow-sm border border-hairline p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-gray-900 truncate">{lead.name}</div>
+                  <div className="font-semibold text-ink truncate">{lead.name}</div>
                   {lead.company && (
-                    <div className="text-sm text-gray-500">{lead.company}</div>
+                    <div className="text-sm text-muted">{lead.company}</div>
                   )}
                 </div>
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ml-2 ${statusColor(lead.status)}`}>
@@ -199,7 +199,7 @@ export default function Leads() {
                 </span>
               </div>
 
-              <div className="flex items-center gap-4 text-sm text-gray-500 mb-3 flex-wrap">
+              <div className="flex items-center gap-4 text-sm text-muted mb-3 flex-wrap">
                 {lead.phone && <span>📱 {lead.phone}</span>}
                 {lead.email && <span>✉️ {lead.email}</span>}
                 {lead.value && (
@@ -208,7 +208,7 @@ export default function Leads() {
               </div>
 
               {lead.notes && (
-                <p className="text-sm text-gray-500 mb-3 line-clamp-2">{lead.notes}</p>
+                <p className="text-sm text-muted mb-3 line-clamp-2">{lead.notes}</p>
               )}
 
               <div className="flex gap-2 flex-wrap">
@@ -237,7 +237,7 @@ export default function Leads() {
                   </>
                 )}
                 <button onClick={() => openEdit(lead)}
-                  className="px-3 py-1 text-xs border border-gray-300 text-gray-600 rounded-full min-h-[36px]">
+                  className="px-3 py-1 text-xs border border-hairline text-ink rounded-full min-h-[36px]">
                   Edit
                 </button>
                 <button onClick={() => handleDelete(lead)}
@@ -258,26 +258,26 @@ export default function Leads() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Name *</label>
+            <label className="block text-xs font-semibold text-ink mb-1">Name *</label>
             <input
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.name}
               onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Phone</label>
+              <label className="block text-xs font-semibold text-ink mb-1">Phone</label>
               <input type="tel"
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue"
                 value={form.phone}
                 onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Email</label>
+              <label className="block text-xs font-semibold text-ink mb-1">Email</label>
               <input type="email"
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue"
                 value={form.email}
                 onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
               />
@@ -285,17 +285,17 @@ export default function Leads() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Company</label>
+              <label className="block text-xs font-semibold text-ink mb-1">Company</label>
               <input
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue"
                 value={form.company}
                 onChange={e => setForm(p => ({ ...p, company: e.target.value }))}
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Estimated Value</label>
+              <label className="block text-xs font-semibold text-ink mb-1">Estimated Value</label>
               <input type="number"
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue"
                 value={form.value}
                 onChange={e => setForm(p => ({ ...p, value: e.target.value }))}
                 placeholder="0"
@@ -303,26 +303,26 @@ export default function Leads() {
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Source</label>
+            <label className="block text-xs font-semibold text-ink mb-1">Source</label>
             <input
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.source}
               onChange={e => setForm(p => ({ ...p, source: e.target.value }))}
               placeholder="Google Ads, Referral, Walk-in..."
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Address</label>
+            <label className="block text-xs font-semibold text-ink mb-1">Address</label>
             <input
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.address}
               onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+            <label className="block text-xs font-semibold text-ink mb-1">Status</label>
             <select
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.status}
               onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
             >
@@ -332,20 +332,20 @@ export default function Leads() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Notes</label>
+            <label className="block text-xs font-semibold text-ink mb-1">Notes</label>
             <textarea
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-hairline rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.notes}
               onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
             />
           </div>
           <div className="flex gap-3 pt-2">
             <button onClick={() => setShowForm(false)}
-              className="flex-1 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 min-h-[44px]">
+              className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]">
               Cancel
             </button>
             <button onClick={handleSave}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold min-h-[44px]">
+              className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold min-h-[44px]">
               {editingLead ? 'Save' : 'Create Lead'}
             </button>
           </div>

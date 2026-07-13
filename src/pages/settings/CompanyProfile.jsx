@@ -97,7 +97,7 @@ export default function CompanyProfile() {
 
   if (loading) return (
     <div className="flex justify-center py-20">
-      <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full" />
+      <div className="animate-spin w-8 h-8 border-4 border-blue border-t-transparent rounded-full" />
     </div>
   )
 
@@ -107,39 +107,39 @@ export default function CompanyProfile() {
     <div className="max-w-2xl mx-auto p-4 pb-24">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate('/settings')}
-          className="text-gray-400 hover:text-gray-600 text-2xl min-h-[44px] min-w-[44px] flex items-center justify-center">
+          className="text-muted hover:text-ink text-2xl min-h-[44px] min-w-[44px] flex items-center justify-center">
           ←
         </button>
-        <h1 className="text-xl font-bold text-gray-900">Company Profile</h1>
+        <h1 className="text-xl font-bold text-ink">Company Profile</h1>
       </div>
 
       <div className="space-y-4">
 
         {/* UCM ID */}
         {ucmId && (
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-            <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">ULTIMATEPRO ID</label>
+          <div className="bg-blue-50 border border-blue rounded-xl p-4">
+            <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">ULTIMATEPRO ID</label>
             <div className="flex items-center gap-3">
-              <span className="text-xl font-bold text-blue-700">{ucmId}</span>
+              <span className="text-xl font-bold text-blue">{ucmId}</span>
               <button
                 onClick={() => { navigator.clipboard.writeText(ucmId); showSnack('Copied!') }}
-                className="text-xs text-blue-600 border border-blue-300 rounded-lg px-3 py-1 hover:bg-blue-100 min-h-[36px]"
+                className="text-xs text-blue border border-blue rounded-lg px-3 py-1 hover:bg-blue-100 min-h-[36px]"
               >
                 Copy
               </button>
             </div>
-            <p className="text-xs text-blue-500 mt-1">Share with contractors to connect on the network</p>
+            <p className="text-xs text-blue mt-1">Share with contractors to connect on the network</p>
           </div>
         )}
 
         {/* Logo upload */}
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">COMPANY LOGO</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-2">COMPANY LOGO</label>
           <div className="flex items-center gap-4">
-            <div className="w-24 h-24 border border-gray-200 rounded-xl bg-white flex items-center justify-center overflow-hidden flex-shrink-0">
+            <div className="w-24 h-24 border border-hairline rounded-xl bg-card flex items-center justify-center overflow-hidden flex-shrink-0">
               {displayLogo
                 ? <img src={displayLogo} alt="Company logo" className="w-full h-full object-contain p-2" />
-                : <span className="text-3xl text-gray-300">🏢</span>
+                : <span className="text-3xl text-muted">🏢</span>
               }
             </div>
             <div className="flex flex-col gap-2">
@@ -153,7 +153,7 @@ export default function CompanyProfile() {
               <button
                 onClick={() => logoInputRef.current?.click()}
                 disabled={logoUploading}
-                className="px-4 py-2 border border-gray-300 rounded-xl text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50 min-h-[44px]"
+                className="px-4 py-2 border border-hairline rounded-xl text-ink text-sm font-medium hover:bg-background disabled:opacity-50 min-h-[44px]"
               >
                 {logoUploading ? '⏳ Uploading...' : '📷 Upload Logo'}
               </button>
@@ -170,9 +170,9 @@ export default function CompanyProfile() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">COMPANY NAME *</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">COMPANY NAME *</label>
           <input
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
             value={form.name}
             onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
             placeholder="Your Company Name"
@@ -180,9 +180,9 @@ export default function CompanyProfile() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">TAGLINE</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">TAGLINE</label>
           <input
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
             value={form.tagline}
             onChange={e => setForm(p => ({ ...p, tagline: e.target.value }))}
             placeholder="Your company slogan"
@@ -190,9 +190,9 @@ export default function CompanyProfile() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">PHONE</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">PHONE</label>
           <input type="tel"
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
             value={form.phone}
             onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
             placeholder="(757) 555-0100"
@@ -200,9 +200,9 @@ export default function CompanyProfile() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">EMAIL</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">EMAIL</label>
           <input type="email"
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
             value={form.email}
             onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
             placeholder="info@yourcompany.com"
@@ -210,9 +210,9 @@ export default function CompanyProfile() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">WEBSITE</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">WEBSITE</label>
           <input type="url"
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
             value={form.website}
             onChange={e => setForm(p => ({ ...p, website: e.target.value }))}
             placeholder="https://yourcompany.com"
@@ -220,28 +220,28 @@ export default function CompanyProfile() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">ADDRESS</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">ADDRESS</label>
           <input
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 mb-3"
+            className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue mb-3"
             value={form.address}
             onChange={e => setForm(p => ({ ...p, address: e.target.value }))}
             placeholder="Street address"
           />
           <div className="grid grid-cols-3 gap-3">
             <input
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.city}
               onChange={e => setForm(p => ({ ...p, city: e.target.value }))}
               placeholder="City"
             />
             <input
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.state}
               onChange={e => setForm(p => ({ ...p, state: e.target.value }))}
               placeholder="State"
             />
             <input
-              className="border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
               value={form.zip}
               onChange={e => setForm(p => ({ ...p, zip: e.target.value }))}
               placeholder="ZIP"
@@ -250,21 +250,21 @@ export default function CompanyProfile() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">DEFAULT TERMS &amp; CONDITIONS</label>
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">DEFAULT TERMS &amp; CONDITIONS</label>
           <textarea
             rows={5}
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
             value={form.default_terms}
             onChange={e => setForm(p => ({ ...p, default_terms: e.target.value }))}
             placeholder="Payment due within 30 days. Auto-filled into new estimates and invoices; you can override it on any individual document."
           />
-          <p className="text-xs text-gray-500 mt-1">Auto-filled into new estimates &amp; invoices. Editing an individual document's terms only affects that document.</p>
+          <p className="text-xs text-muted mt-1">Auto-filled into new estimates &amp; invoices. Editing an individual document's terms only affects that document.</p>
         </div>
 
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 mt-6 min-h-[44px]"
+          className="w-full py-3 bg-blue text-white rounded-xl font-semibold hover:bg-blue-ink disabled:opacity-50 mt-6 min-h-[44px]"
         >
           {saving ? 'Saving...' : 'Save Company Profile'}
         </button>

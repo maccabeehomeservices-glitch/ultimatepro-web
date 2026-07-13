@@ -15,18 +15,18 @@ export default function RequirePermission({ section, level = 'view', children })
 
   return (
     <div className="p-4 max-w-2xl mx-auto">
-      <div className="bg-white rounded-2xl shadow p-8 flex flex-col items-center text-center">
+      <div className="bg-card rounded-2xl shadow p-8 flex flex-col items-center text-center">
         <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center mb-4">
           <ShieldOff size={22} className="text-red-500" />
         </div>
-        <h1 className="text-lg font-bold text-gray-900 mb-1">Access denied</h1>
-        <p className="text-sm text-gray-500 mb-6">
+        <h1 className="text-lg font-bold text-ink mb-1">Access denied</h1>
+        <p className="text-sm text-muted mb-6">
           You don't have permission to view this page. Contact your account owner if you
           believe this is a mistake.
         </p>
         <Link
           to="/dashboard"
-          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#1A73E8] text-white text-sm font-medium hover:bg-[#1557b0] transition-colors"
+          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-blue text-white text-sm font-medium hover:bg-blue-ink transition-colors"
         >
           Back to Dashboard
         </Link>

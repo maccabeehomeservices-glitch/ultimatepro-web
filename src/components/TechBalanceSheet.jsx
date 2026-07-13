@@ -51,17 +51,17 @@ export default function TechBalanceSheet({ jobs = [], summary = {} }) {
   const reportBalance = Number(summary.total_balance || 0);
   const owed = reportBalance < 0;
   return (
-    <div className="bg-white rounded-2xl shadow overflow-hidden mb-4">
-      <div className="px-4 py-3 border-b border-gray-100 font-semibold text-gray-900">
+    <div className="bg-card rounded-2xl shadow overflow-hidden mb-4">
+      <div className="px-4 py-3 border-b border-hairline font-semibold text-ink">
         Tech Balance Sheet
       </div>
       {jobs.length === 0 ? (
-        <div className="px-4 py-6 text-center text-gray-400 text-sm">No jobs in this period.</div>
+        <div className="px-4 py-6 text-center text-muted text-sm">No jobs in this period.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500">
+              <tr className="bg-background border-b border-hairline text-xs font-semibold text-muted">
                 <th className="text-left px-3 py-3 whitespace-nowrap">Ticket #</th>
                 <th className="text-left px-3 py-3">Client Info</th>
                 <th className="text-left px-3 py-3 whitespace-nowrap">Date Closed</th>
@@ -77,23 +77,23 @@ export default function TechBalanceSheet({ jobs = [], summary = {} }) {
               {jobs.map((j, i) => {
                 const bal = Number(j.balance) || 0;
                 return (
-                  <tr key={j.job_id || i} className="border-b border-gray-50 last:border-0 align-top">
-                    <td className="px-3 py-2.5 font-mono text-xs text-gray-700 whitespace-nowrap">{j.ticket || '—'}</td>
-                    <td className="px-3 py-2.5 text-gray-700">
+                  <tr key={j.job_id || i} className="border-b border-hairline last:border-0 align-top">
+                    <td className="px-3 py-2.5 font-mono text-xs text-ink whitespace-nowrap">{j.ticket || '—'}</td>
+                    <td className="px-3 py-2.5 text-ink">
                       <div className="font-medium">{j.customer_name || '—'}</div>
-                      {j.address ? <div className="text-xs text-gray-400">{j.address}</div> : null}
+                      {j.address ? <div className="text-xs text-muted">{j.address}</div> : null}
                     </td>
-                    <td className="px-3 py-2.5 text-gray-500 whitespace-nowrap">{fmtDate(j.date)}</td>
-                    <td className="px-3 py-2.5 text-gray-500 whitespace-nowrap">{cap(j.job_type)}</td>
-                    <td className="px-3 py-2.5 text-right text-gray-700 whitespace-nowrap">{formatMoney(j.total_sale)}</td>
-                    <td className="px-3 py-2.5 text-gray-600 text-xs"><Stacked lines={paymentLines(j)} /></td>
-                    <td className="px-3 py-2.5 text-gray-600 text-xs"><Stacked lines={partsFeesLines(j)} /></td>
-                    <td className="px-3 py-2.5 text-gray-600 text-xs"><Stacked lines={techProfitLines(j)} /></td>
+                    <td className="px-3 py-2.5 text-muted whitespace-nowrap">{fmtDate(j.date)}</td>
+                    <td className="px-3 py-2.5 text-muted whitespace-nowrap">{cap(j.job_type)}</td>
+                    <td className="px-3 py-2.5 text-right text-ink whitespace-nowrap">{formatMoney(j.total_sale)}</td>
+                    <td className="px-3 py-2.5 text-ink text-xs"><Stacked lines={paymentLines(j)} /></td>
+                    <td className="px-3 py-2.5 text-ink text-xs"><Stacked lines={partsFeesLines(j)} /></td>
+                    <td className="px-3 py-2.5 text-ink text-xs"><Stacked lines={techProfitLines(j)} /></td>
                     <td className="px-3 py-2.5 text-right font-semibold whitespace-nowrap" style={{ color: bal < 0 ? '#059669' : '#EA580C' }}>{signed(bal)}</td>
                   </tr>
                 );
               })}
-              <tr className="bg-gray-50 font-semibold text-gray-800">
+              <tr className="bg-background font-semibold text-ink">
                 <td className="px-3 py-3">TOTAL</td>
                 <td /><td /><td />
                 <td className="px-3 py-3 text-right whitespace-nowrap">{formatMoney(summary.total_total_sale)}</td>
@@ -105,10 +105,10 @@ export default function TechBalanceSheet({ jobs = [], summary = {} }) {
           </table>
         </div>
       )}
-      <div className="px-4 py-4 border-t border-gray-100 flex items-center justify-between">
+      <div className="px-4 py-4 border-t border-hairline flex items-center justify-between">
         <div>
-          <div className="text-sm font-bold text-gray-900">REPORT BALANCE</div>
-          <div className="text-xs text-gray-500">{owed ? 'Company owes tech' : 'Tech owes company'}</div>
+          <div className="text-sm font-bold text-ink">REPORT BALANCE</div>
+          <div className="text-xs text-muted">{owed ? 'Company owes tech' : 'Tech owes company'}</div>
         </div>
         <div className="text-2xl font-bold" style={{ color: owed ? '#059669' : '#EA580C' }}>{signed(reportBalance)}</div>
       </div>

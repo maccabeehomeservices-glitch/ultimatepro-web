@@ -26,12 +26,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 flex flex-col items-center justify-center px-4 py-8">
+    <div className="min-h-dvh bg-background flex flex-col items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#0D1B2A]">UltimatePro</h1>
-          <p className="text-gray-500 mt-2">Sign in to your account</p>
+          <h1 className="text-3xl font-bold text-ink">UltimatePro</h1>
+          <p className="text-muted mt-2">Sign in to your account</p>
         </div>
 
         <Card>
@@ -70,16 +70,16 @@ export default function Login() {
           </form>
         </Card>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm text-muted mt-6">
           Don't have an account?{' '}
-          <Link to="/register" className="text-[#1A73E8] font-medium hover:underline">
+          <Link to="/register" className="text-blue font-medium hover:underline">
             Create one
           </Link>
         </p>
 
-        <p className="text-center text-sm text-gray-500 mt-3">
+        <p className="text-center text-sm text-muted mt-3">
           Need service?{' '}
-          <Link to="/book" className="text-[#1A73E8] font-medium underline hover:text-blue-700">
+          <Link to="/book" className="text-blue font-medium underline hover:text-blue-ink">
             Request a service call
           </Link>
         </p>

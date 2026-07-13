@@ -145,14 +145,14 @@ export default function CustomFields() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate('/settings')}
-          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600"
+          className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink"
         >
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">Custom Fields</h1>
+        <h1 className="text-xl font-bold text-ink flex-1">Custom Fields</h1>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 bg-[#1A73E8] text-white text-sm font-medium px-4 py-2 rounded-xl min-h-[44px]"
+          className="flex items-center gap-1.5 bg-blue text-white text-sm font-medium px-4 py-2 rounded-xl min-h-[44px]"
         >
           <Plus size={16} /> Add Field
         </button>
@@ -162,22 +162,22 @@ export default function CustomFields() {
         <LoadingSpinner />
       ) : fields.length === 0 ? (
         <Card>
-          <p className="text-center text-gray-400 py-6">No custom fields yet. Add one to get started.</p>
+          <p className="text-center text-muted py-6">No custom fields yet. Add one to get started.</p>
         </Card>
       ) : (
         <div className="space-y-5">
           {grouped.map(group => (
             <div key={group.value}>
-              <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-2">{group.label}</p>
-              <div className="bg-white rounded-2xl shadow overflow-hidden">
+              <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">{group.label}</p>
+              <div className="bg-card rounded-2xl shadow overflow-hidden">
                 {group.items.map((field, i) => (
                   <div
                     key={field.id}
-                    className={`flex items-center gap-3 px-4 py-3 min-h-[60px] ${i < group.items.length - 1 ? 'border-b border-gray-100' : ''}`}
+                    className={`flex items-center gap-3 px-4 py-3 min-h-[60px] ${i < group.items.length - 1 ? 'border-b border-hairline' : ''}`}
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900">{field.label}</p>
-                      <p className="text-xs text-gray-400">
+                      <p className="font-medium text-ink">{field.label}</p>
+                      <p className="text-xs text-muted">
                         {FIELD_TYPES.find(ft => ft.value === field.field_type)?.label || field.field_type}
                         {field.required ? ' · Required' : ''}
                         {field.field_type === 'select' && field.options?.length > 0
@@ -187,13 +187,13 @@ export default function CustomFields() {
                     </div>
                     <button
                       onClick={() => openEdit(field)}
-                      className="p-2 text-gray-400 hover:text-[#1A73E8] min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      className="p-2 text-muted hover:text-blue min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       <Pencil size={16} />
                     </button>
                     <button
                       onClick={() => setConfirmDelete(field.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                      className="p-2 text-muted hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -208,12 +208,12 @@ export default function CustomFields() {
       {/* Add / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl">
+          <div className="bg-card rounded-2xl w-full max-w-md shadow-xl">
             <div className="flex items-center justify-between px-5 pt-5 pb-3">
-              <h2 className="text-lg font-bold text-gray-900">
+              <h2 className="text-lg font-bold text-ink">
                 {editing ? 'Edit Custom Field' : 'New Custom Field'}
               </h2>
-              <button onClick={closeModal} className="p-2 text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+              <button onClick={closeModal} className="p-2 text-muted hover:text-ink min-h-[44px] min-w-[44px] flex items-center justify-center">
                 <X size={20} />
               </button>
             </div>
@@ -229,11 +229,11 @@ export default function CustomFields() {
               {!editing && (
                 <>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Field Type</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Field Type</label>
                     <select
                       value={form.field_type}
                       onChange={e => setForm(p => ({ ...p, field_type: e.target.value }))}
-                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white"
+                      className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-blue bg-card"
                     >
                       {FIELD_TYPES.map(ft => (
                         <option key={ft.value} value={ft.value}>{ft.label}</option>
@@ -242,11 +242,11 @@ export default function CustomFields() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Applies To</label>
+                    <label className="block text-sm font-medium text-ink mb-1">Applies To</label>
                     <select
                       value={form.entity}
                       onChange={e => setForm(p => ({ ...p, entity: e.target.value }))}
-                      className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white"
+                      className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-base focus:outline-none focus:ring-2 focus:ring-blue bg-card"
                     >
                       {ENTITY_TYPES.map(et => (
                         <option key={et.value} value={et.value}>{et.label}</option>
@@ -270,14 +270,14 @@ export default function CustomFields() {
                   type="checkbox"
                   checked={form.required}
                   onChange={e => setForm(p => ({ ...p, required: e.target.checked }))}
-                  className="w-5 h-5 rounded accent-[#1A73E8]"
+                  className="w-5 h-5 rounded accent-blue"
                 />
-                <span className="text-sm font-medium text-gray-700">Required field</span>
+                <span className="text-sm font-medium text-ink">Required field</span>
               </label>
 
               {!editing && form.label && (
-                <p className="text-xs text-gray-400">
-                  Field key: <code className="bg-gray-100 px-1 rounded">{toFieldKey(form.label) || '—'}</code>
+                <p className="text-xs text-muted">
+                  Field key: <code className="bg-background px-1 rounded">{toFieldKey(form.label) || '—'}</code>
                 </p>
               )}
 
@@ -295,9 +295,9 @@ export default function CustomFields() {
       {/* Delete Confirmation */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl p-6">
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Remove Field?</h2>
-            <p className="text-sm text-gray-500 mb-5">This field will be hidden from all forms. Existing data is preserved.</p>
+          <div className="bg-card rounded-2xl w-full max-w-sm shadow-xl p-6">
+            <h2 className="text-lg font-bold text-ink mb-2">Remove Field?</h2>
+            <p className="text-sm text-muted mb-5">This field will be hidden from all forms. Existing data is preserved.</p>
             <div className="flex gap-3">
               <Button variant="outlined" onClick={() => setConfirmDelete(null)} className="flex-1">Cancel</Button>
               <button

@@ -130,15 +130,15 @@ export default function ReviewPlatforms() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => navigate('/settings')}
-          className="text-gray-400 hover:text-gray-600 text-2xl min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="text-muted hover:text-ink text-2xl min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           ←
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">Review Platforms</h1>
+        <h1 className="text-xl font-bold text-ink flex-1">Review Platforms</h1>
         {can('team_settings','full') && (
         <button
           onClick={openAdd}
-          className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-semibold min-h-[44px]"
+          className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]"
         >
           + Add
         </button>
@@ -148,17 +148,17 @@ export default function ReviewPlatforms() {
       {/* Quick-add templates */}
       {availableTemplates.length > 0 && (
         <div className="mb-6">
-          <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2">QUICK ADD</p>
+          <p className="text-xs font-bold text-blue uppercase tracking-wider mb-2">QUICK ADD</p>
           <div className="flex flex-wrap gap-2">
             {availableTemplates.map(t => (
               <button
                 key={t.name}
                 onClick={() => openTemplate(t)}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 hover:border-blue-300 min-h-[44px]"
+                className="flex items-center gap-2 px-4 py-2 bg-card border border-hairline rounded-full text-sm font-medium text-ink hover:bg-background hover:border-blue min-h-[44px]"
               >
                 <span>{t.icon}</span>
                 <span>{t.name}</span>
-                <span className="text-blue-500">+</span>
+                <span className="text-blue">+</span>
               </button>
             ))}
           </div>
@@ -168,10 +168,10 @@ export default function ReviewPlatforms() {
       {/* Platform list */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-4 border-blue border-t-transparent rounded-full animate-spin" />
         </div>
       ) : platforms.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-muted">
           <p className="text-lg font-medium">No platforms yet</p>
           <p className="text-sm mt-1">Add review platforms to include links in payment receipts</p>
         </div>
@@ -180,22 +180,22 @@ export default function ReviewPlatforms() {
           {platforms.map(platform => (
             <div
               key={platform.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4"
+              className="bg-card rounded-2xl shadow-sm border border-hairline p-4"
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <span className="text-2xl shrink-0">{getPlatformIcon(platform)}</span>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">{getPlatformName(platform)}</span>
+                      <span className="font-semibold text-ink">{getPlatformName(platform)}</span>
                       {platform.is_default && (
-                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold shrink-0">
+                        <span className="text-xs bg-blue-100 text-blue px-2 py-0.5 rounded-full font-semibold shrink-0">
                           Default
                         </span>
                       )}
                     </div>
                     {platform.url && (
-                      <div className="text-xs text-gray-400 mt-0.5 truncate max-w-[200px]">
+                      <div className="text-xs text-muted mt-0.5 truncate max-w-[200px]">
                         {platform.url}
                       </div>
                     )}
@@ -207,11 +207,11 @@ export default function ReviewPlatforms() {
                   <button
                     onClick={() => toggleEnabled(platform)}
                     className={`relative w-10 h-6 rounded-full transition-colors ${
-                      platform.is_active !== false ? 'bg-blue-600' : 'bg-gray-300'
+                      platform.is_active !== false ? 'bg-blue' : 'bg-gray-300'
                     }`}
                   >
                     <div
-                      className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                      className={`absolute top-1 w-4 h-4 bg-card rounded-full shadow transition-transform ${
                         platform.is_active !== false ? 'translate-x-5' : 'translate-x-1'
                       }`}
                     />
@@ -221,7 +221,7 @@ export default function ReviewPlatforms() {
                   {!platform.is_default && platform.is_active !== false && (
                     <button
                       onClick={() => setAsDefault(platform)}
-                      className="text-xs text-blue-600 font-semibold px-2 min-h-[44px] hover:underline"
+                      className="text-xs text-blue font-semibold px-2 min-h-[44px] hover:underline"
                     >
                       Default
                     </button>
@@ -230,7 +230,7 @@ export default function ReviewPlatforms() {
                   {/* Edit */}
                   <button
                     onClick={() => openEdit(platform)}
-                    className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    className="p-2 text-muted hover:text-blue hover:bg-blue-50 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     ✏️
                   </button>
@@ -238,7 +238,7 @@ export default function ReviewPlatforms() {
                   {/* Delete */}
                   <button
                     onClick={() => setShowDeleteConfirm(platform)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
+                    className="p-2 text-muted hover:text-red-500 hover:bg-red-50 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center"
                   >
                     🗑️
                   </button>
@@ -256,21 +256,21 @@ export default function ReviewPlatforms() {
           onClick={() => setShowForm(false)}
         >
           <div
-            className="bg-white rounded-2xl p-6 max-w-md w-full"
+            className="bg-card rounded-2xl p-6 max-w-md w-full"
             onClick={e => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
+            <h3 className="text-lg font-bold text-ink mb-4">
               {editingPlatform ? 'Edit Platform' : 'Add Review Platform'}
             </h3>
             <div className="space-y-3">
               <input
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
                 placeholder="Platform Name *"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
               />
               <input
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-hairline rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue"
                 placeholder="Review URL * (full link to your review page)"
                 value={form.url}
                 onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
@@ -279,14 +279,14 @@ export default function ReviewPlatforms() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowForm(false)}
-                className="flex-1 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium min-h-[44px]"
+                className="flex-1 py-3 border border-hairline rounded-xl text-ink font-medium min-h-[44px]"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
               >
                 {saving ? 'Saving...' : editingPlatform ? 'Save Changes' : 'Add Platform'}
               </button>
@@ -302,18 +302,18 @@ export default function ReviewPlatforms() {
           onClick={() => setShowDeleteConfirm(null)}
         >
           <div
-            className="bg-white rounded-2xl p-6 max-w-sm w-full"
+            className="bg-card rounded-2xl p-6 max-w-sm w-full"
             onClick={e => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Remove Platform?</h3>
-            <p className="text-gray-600 mb-6">
+            <h3 className="text-lg font-bold text-ink mb-2">Remove Platform?</h3>
+            <p className="text-ink mb-6">
               <strong>{getPlatformName(showDeleteConfirm)}</strong> will be removed.
               Receipts will no longer include a review link from this platform.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1 py-3 border border-gray-300 rounded-xl font-medium text-gray-700 min-h-[44px]"
+                className="flex-1 py-3 border border-hairline rounded-xl font-medium text-ink min-h-[44px]"
               >
                 Cancel
               </button>

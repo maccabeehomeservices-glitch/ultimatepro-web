@@ -10,13 +10,13 @@ export default function Toggle({ checked, onChange, label, disabled = false }) {
           disabled={disabled}
         />
         <div
-          className={`w-11 h-6 rounded-full transition-colors ${checked ? 'bg-[#1A73E8]' : 'bg-gray-300'}`}
+          className={`w-11 h-6 rounded-full transition-colors ${checked ? 'bg-blue' : 'bg-gray-300'}`}
         />
         <div
-          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`}
+          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-card rounded-full shadow transition-transform ${checked ? 'translate-x-5' : 'translate-x-0'}`}
         />
       </div>
-      {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
+      {label && <span className="text-sm font-medium text-ink">{label}</span>}
     </label>
   );
 }

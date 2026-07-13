@@ -168,18 +168,18 @@ export default function Pricebook() {
   return (
     <div className="p-4 max-w-3xl mx-auto pb-8">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Pricebook</h1>
+        <h1 className="text-xl font-bold text-ink">Pricebook</h1>
         <div className="flex gap-2">
           <button
             onClick={() => navigate('/import?type=pricebook')}
-            className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
           >
             <Upload size={14} /> Import
           </button>
           {!selectedCategory && (
             <button
               onClick={() => { setCatName(''); setAddCatModal(true); }}
-              className="flex items-center gap-1.5 text-sm bg-[#1A73E8] text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-1.5 text-sm bg-blue text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
             >
               <Plus size={14} /> Category
             </button>
@@ -191,13 +191,13 @@ export default function Pricebook() {
         <>
           {/* Category search */}
           <div className="relative mb-4">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
               placeholder="Search categories..."
               value={categorySearch}
               onChange={e => setCategorySearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-hairline bg-card focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px] text-sm"
             />
           </div>
 
@@ -211,11 +211,11 @@ export default function Pricebook() {
                 <Card key={cat.id || cat._id} onClick={() => { setSelectedCategory(cat); setItemSearch(''); }}>
                   <div className="text-center py-2">
                     <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <BookOpen size={22} className="text-[#1A73E8]" />
+                      <BookOpen size={22} className="text-blue" />
                     </div>
-                    <p className="font-semibold text-gray-900">{cat.name}</p>
+                    <p className="font-semibold text-ink">{cat.name}</p>
                     {cat.item_count != null && (
-                      <p className="text-xs text-gray-400 mt-0.5">{cat.item_count} items</p>
+                      <p className="text-xs text-muted mt-0.5">{cat.item_count} items</p>
                     )}
                   </div>
                 </Card>
@@ -229,15 +229,15 @@ export default function Pricebook() {
           <div className="flex items-center gap-3 mb-4">
             <button
               onClick={() => { setSelectedCategory(null); setCategorySearch(''); }}
-              className="text-sm text-[#1A73E8] font-medium min-h-[44px] flex items-center"
+              className="text-sm text-blue font-medium min-h-[44px] flex items-center"
             >
               ← All Categories
             </button>
-            <h2 className="font-semibold text-gray-900 flex-1">{selectedCategory.name}</h2>
+            <h2 className="font-semibold text-ink flex-1">{selectedCategory.name}</h2>
             {can('pricebook','edit_self') && (
             <button
               onClick={openAddItem}
-              className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium min-h-[44px]"
+              className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px]"
             >
               <Plus size={16} /> Add Item
             </button>
@@ -246,16 +246,16 @@ export default function Pricebook() {
 
           {/* Item search within category */}
           <div className="relative mb-4">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               type="text"
               placeholder="Search items by name or SKU..."
               value={itemSearch}
               onChange={e => setItemSearch(e.target.value)}
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-hairline bg-card focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px] text-sm"
             />
             {itemSearch && (
-              <button onClick={() => setItemSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <button onClick={() => setItemSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted">
                 <X size={16} />
               </button>
             )}
@@ -276,33 +276,33 @@ export default function Pricebook() {
                 <Card key={item.id || item._id}>
                   <div className="flex items-center justify-between gap-3">
                     {item.image_url && (
-                      <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                      <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-hairline" />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-900">{item.name}</p>
+                        <p className="font-medium text-ink">{item.name}</p>
                         {item.is_active === false && (
-                          <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">Inactive</span>
+                          <span className="text-xs bg-background text-muted px-1.5 py-0.5 rounded-full">Inactive</span>
                         )}
                       </div>
-                      {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
-                      {item.description && <p className="text-xs text-gray-400 truncate">{item.description}</p>}
+                      {item.sku && <p className="text-xs text-muted">SKU: {item.sku}</p>}
+                      {item.description && <p className="text-xs text-muted truncate">{item.description}</p>}
                       {item.item_type && (
-                        <span className="text-xs text-gray-400 capitalize">{item.item_type}</span>
+                        <span className="text-xs text-muted capitalize">{item.item_type}</span>
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <p className="font-bold text-[#1A73E8]">{formatCurrency(item.unit_price || item.price)}</p>
+                      <p className="font-bold text-blue">{formatCurrency(item.unit_price || item.price)}</p>
                       {can('pricebook','full') && (<>
                       <button
                         onClick={(e) => { e.stopPropagation(); openEditItem(item); }}
-                        className="p-2 text-gray-400 hover:text-[#1A73E8] min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        className="p-2 text-muted hover:text-blue min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         <Edit2 size={16} />
                       </button>
                       <button
                         onClick={(e) => { e.stopPropagation(); setDeleteModal(item); }}
-                        className="p-2 text-gray-400 hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                        className="p-2 text-muted hover:text-red-500 min-h-[44px] min-w-[44px] flex items-center justify-center"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -408,17 +408,17 @@ export default function Pricebook() {
           />
           {/* P2.14 GAP 1: image upload (primary) + URL field (secondary), mirrors Android */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+            <label className="block text-sm font-medium text-ink mb-1">Image</label>
             <div className="flex items-center gap-3">
               {itemForm.image_url && (
-                <img src={itemForm.image_url} alt="Preview" className="w-16 h-16 rounded-xl object-cover border border-gray-200 flex-shrink-0" />
+                <img src={itemForm.image_url} alt="Preview" className="w-16 h-16 rounded-xl object-cover border border-hairline flex-shrink-0" />
               )}
-              <label className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] cursor-pointer hover:bg-blue-50 transition-colors">
+              <label className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] cursor-pointer hover:bg-blue-50 transition-colors">
                 <Upload size={14} /> {uploadingImg ? 'Uploading…' : (itemForm.image_url ? 'Replace' : 'Upload')}
                 <input type="file" accept="image/*" className="hidden" disabled={uploadingImg} onChange={handleImageUpload} />
               </label>
               {itemForm.image_url && (
-                <button type="button" onClick={() => setItemForm(prev => ({ ...prev, image_url: '' }))} className="text-sm text-gray-400 hover:text-red-500 min-h-[44px]">Remove</button>
+                <button type="button" onClick={() => setItemForm(prev => ({ ...prev, image_url: '' }))} className="text-sm text-muted hover:text-red-500 min-h-[44px]">Remove</button>
               )}
             </div>
           </div>
@@ -430,7 +430,7 @@ export default function Pricebook() {
             placeholder="https://..."
           />
           <div className="flex items-center justify-between py-1">
-            <span className="text-sm font-medium text-gray-700">Active</span>
+            <span className="text-sm font-medium text-ink">Active</span>
             <Toggle
               checked={itemForm.is_active}
               onChange={e => setItemForm(prev => ({ ...prev, is_active: e.target.checked }))}
@@ -451,7 +451,7 @@ export default function Pricebook() {
           </>
         }
       >
-        <p className="text-gray-600">
+        <p className="text-ink">
           Delete <strong>{deleteModal?.name}</strong>? This action cannot be undone.
         </p>
       </Modal>

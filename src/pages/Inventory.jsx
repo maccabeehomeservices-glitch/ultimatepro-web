@@ -183,7 +183,7 @@ export default function Inventory() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Inventory</h1>
+      <h1 className="text-xl font-bold text-ink mb-4">Inventory</h1>
 
       <Tabs tabs={tabList} active={activeTab} onChange={setActiveTab} />
 
@@ -200,8 +200,8 @@ export default function Inventory() {
                   <Card key={id}>
                     <div className="flex items-center justify-between gap-3 flex-wrap">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900">{item.item_name || '-'}</p>
-                        {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
+                        <p className="font-medium text-ink">{item.item_name || '-'}</p>
+                        {item.sku && <p className="text-xs text-muted">SKU: {item.sku}</p>}
                       </div>
                       <div className="flex items-center gap-2 flex-wrap">
                         <StepperInput value={getQty(item)} onChange={(v) => setQty(item, v)} min={0} />
@@ -216,7 +216,7 @@ export default function Inventory() {
                         </Button>
                         <button
                           onClick={() => openTransfer(item)}
-                          className="flex items-center gap-1 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+                          className="flex items-center gap-1 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
                         >
                           <ArrowRight size={14} /> Truck
                         </button>
@@ -241,12 +241,12 @@ export default function Inventory() {
                   <Card key={id}>
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900">{item.item_name || '-'}</p>
-                        {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
+                        <p className="font-medium text-ink">{item.item_name || '-'}</p>
+                        {item.sku && <p className="text-xs text-muted">SKU: {item.sku}</p>}
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-gray-900">{item.qty_on_hand ?? item.quantity ?? item.qty ?? 0}</p>
-                        <p className="text-xs text-gray-400">on hand</p>
+                        <p className="font-bold text-ink">{item.qty_on_hand ?? item.quantity ?? item.qty ?? 0}</p>
+                        <p className="text-xs text-muted">on hand</p>
                         {item.min_qty != null && (item.qty_on_hand ?? item.quantity ?? item.qty ?? 0) < item.min_qty && (
                           <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">Low Stock</span>
                         )}
@@ -281,8 +281,8 @@ export default function Inventory() {
                         <Card key={id}>
                           <div className="flex items-center justify-between gap-3 flex-wrap">
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900">{item.item_name || '-'}</p>
-                              {item.sku && <p className="text-xs text-gray-400">SKU: {item.sku}</p>}
+                              <p className="font-medium text-ink">{item.item_name || '-'}</p>
+                              {item.sku && <p className="text-xs text-muted">SKU: {item.sku}</p>}
                             </div>
                             <div className="flex items-center gap-2">
                               <StepperInput value={getTruckQty(item)} onChange={(v) => setTruckQty(item, v)} min={0} />
@@ -321,8 +321,8 @@ export default function Inventory() {
                   key={s}
                   onClick={() => setRequestStatus(s)}
                   className={requestStatus === s
-                    ? 'px-3 py-1.5 bg-[#1A73E8] text-white rounded-full text-sm font-medium min-h-[36px]'
-                    : 'px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full text-sm min-h-[36px]'}
+                    ? 'px-3 py-1.5 bg-blue text-white rounded-full text-sm font-medium min-h-[36px]'
+                    : 'px-3 py-1.5 bg-card border border-hairline text-ink rounded-full text-sm min-h-[36px]'}
                 >
                   {s === 'pending' ? 'Pending' : s === 'fulfilled' ? 'Fulfilled' : 'All'}
                 </button>
@@ -330,19 +330,19 @@ export default function Inventory() {
             </div>
 
             {(requestsData?.requests || requestsData || []).length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
+              <div className="text-center text-muted py-8">
                 No {requestStatus === 'all' ? '' : requestStatus + ' '}restock requests yet.
               </div>
             ) : (
               <div className="space-y-3">
                 {(requestsData?.requests || requestsData || []).map(req => (
-                  <div key={req.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                  <div key={req.id} className="bg-card rounded-2xl shadow-sm border border-hairline p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900">
+                        <p className="font-semibold text-ink">
                           {req.truck_name || '-'}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted">
                           Requested by {req.requested_by_name || '-'} · {req.created_at ? new Date(req.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-'}
                         </p>
                       </div>
@@ -353,17 +353,17 @@ export default function Inventory() {
                       </span>
                     </div>
                     {(req.items || []).length > 0 && (
-                      <div className="mt-2 pt-2 border-t border-gray-100">
+                      <div className="mt-2 pt-2 border-t border-hairline">
                         {(req.items || []).map((it, i) => (
                           <div key={i} className="flex justify-between text-sm py-0.5">
-                            <span className="text-gray-700">{it.item_name || '-'}</span>
-                            <span className="text-gray-500">Qty: {it.qty_requested || 0}</span>
+                            <span className="text-ink">{it.item_name || '-'}</span>
+                            <span className="text-muted">Qty: {it.qty_requested || 0}</span>
                           </div>
                         ))}
                       </div>
                     )}
                     {req.notes && (
-                      <p className="text-xs text-gray-500 mt-2 italic">"{req.notes}"</p>
+                      <p className="text-xs text-muted mt-2 italic">"{req.notes}"</p>
                     )}
                   </div>
                 ))}
@@ -386,16 +386,16 @@ export default function Inventory() {
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-gray-500">Select items you need restocked and enter the quantity needed.</p>
+          <p className="text-sm text-muted">Select items you need restocked and enter the quantity needed.</p>
           {restockItems.map((item, i) => (
-            <div key={item.id} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+            <div key={item.id} className="flex items-center gap-3 py-2 border-b border-hairline last:border-0">
               <input
                 type="checkbox"
                 checked={item.checked}
                 onChange={e => setRestockItems(prev => prev.map((it, j) => j === i ? { ...it, checked: e.target.checked } : it))}
-                className="w-5 h-5 rounded accent-[#1A73E8] flex-shrink-0"
+                className="w-5 h-5 rounded accent-blue flex-shrink-0"
               />
-              <span className="flex-1 text-sm font-medium text-gray-900 min-w-0 truncate">{item.name}</span>
+              <span className="flex-1 text-sm font-medium text-ink min-w-0 truncate">{item.name}</span>
               {item.checked && (
                 <StepperInput
                   value={item.qty_requested}
@@ -429,14 +429,14 @@ export default function Inventory() {
               options={[{ value: '', label: 'Select a truck...' }, ...truckOptions]}
             />
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">Quantity</p>
+              <p className="text-sm font-medium text-ink mb-1">Quantity</p>
               <StepperInput
                 value={transferQty}
                 onChange={setTransferQty}
                 min={1}
                 max={Number(transferItem.quantity || transferItem.qty || 0)}
               />
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Available: {Number(transferItem.quantity || transferItem.qty || 0)}
               </p>
             </div>

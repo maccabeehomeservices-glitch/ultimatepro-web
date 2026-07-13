@@ -158,10 +158,10 @@ export default function OnlineBooking() {
   return (
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">Online Booking</h1>
+        <h1 className="text-xl font-bold text-ink flex-1">Online Booking</h1>
       </div>
 
       <div className="space-y-4">
@@ -169,8 +169,8 @@ export default function OnlineBooking() {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <span className="font-semibold text-gray-900">Enable Online Booking</span>
-              <p className="text-xs text-gray-400 mt-0.5">Customers can request appointments online</p>
+              <span className="font-semibold text-ink">Enable Online Booking</span>
+              <p className="text-xs text-muted mt-0.5">Customers can request appointments online</p>
             </div>
             <Toggle checked={settings.enabled} onChange={e => set('enabled', e.target.checked)} />
           </div>
@@ -179,13 +179,13 @@ export default function OnlineBooking() {
         {/* Booking link card */}
         {settings.enabled && ucmId && (
           <Card>
-            <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Your Booking Link</p>
-            <div className="bg-gray-50 rounded-xl p-3 text-xs text-gray-700 break-all mb-3 font-mono">{bookingUrl}</div>
+            <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">Your Booking Link</p>
+            <div className="bg-background rounded-xl p-3 text-xs text-ink break-all mb-3 font-mono">{bookingUrl}</div>
             <div className="flex gap-2">
-              <button onClick={copyLink} className="flex-1 py-2.5 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2 hover:bg-gray-50">
+              <button onClick={copyLink} className="flex-1 py-2.5 border border-hairline text-ink rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2 hover:bg-background">
                 <Copy size={16} /> Copy
               </button>
-              <button onClick={shareLink} className="flex-1 py-2.5 bg-[#1A73E8] text-white rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2">
+              <button onClick={shareLink} className="flex-1 py-2.5 bg-blue text-white rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2">
                 <Share2 size={16} /> Share
               </button>
             </div>
@@ -196,7 +196,7 @@ export default function OnlineBooking() {
           <>
             {/* Appearance */}
             <Card>
-              <p className="font-semibold text-gray-900 mb-3">Appearance</p>
+              <p className="font-semibold text-ink mb-3">Appearance</p>
               <div className="space-y-3">
                 <Input label="Display Name" value={settings.company_display_name || ''} onChange={e => set('company_display_name', e.target.value)} placeholder="Shown on your booking page" />
                 <Input label="Tagline (optional)" value={settings.company_tagline || ''} onChange={e => set('company_tagline', e.target.value)} placeholder="e.g. Fast, reliable service" />
@@ -205,50 +205,50 @@ export default function OnlineBooking() {
 
             {/* Availability */}
             <Card>
-              <p className="font-semibold text-gray-900 mb-3">Availability</p>
-              <p className="text-sm font-medium text-gray-700 mb-2">Working Days</p>
+              <p className="font-semibold text-ink mb-3">Availability</p>
+              <p className="text-sm font-medium text-ink mb-2">Working Days</p>
               <div className="flex flex-wrap gap-2 mb-4">
                 {ALL_DAYS.map(day => {
                   const on = (settings.working_days || []).includes(day);
                   return (
                     <button key={day} onClick={() => toggleDay(day)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border min-h-[36px] capitalize transition-colors ${on ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300'}`}>
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border min-h-[36px] capitalize transition-colors ${on ? 'bg-blue text-white border-blue' : 'bg-card text-ink border-hairline'}`}>
                       {day.slice(0, 3)}
                     </button>
                   );
                 })}
               </div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Time Windows</p>
+              <p className="text-sm font-medium text-ink mb-2">Time Windows</p>
               <div className="space-y-1 mb-4">
                 {(settings.time_windows || []).map((w, i) => (
                   <div key={w.id || i} className="flex items-center justify-between py-1.5">
                     <div>
-                      <p className="text-sm font-medium text-gray-800">{w.label}</p>
-                      <p className="text-xs text-gray-400">{w.time}</p>
+                      <p className="text-sm font-medium text-ink">{w.label}</p>
+                      <p className="text-xs text-muted">{w.time}</p>
                     </div>
                     <Toggle checked={!!w.enabled} onChange={e => toggleWindow(i, e.target.checked)} />
                   </div>
                 ))}
               </div>
-              <div className="flex items-center justify-between border-t border-gray-100 pt-3">
-                <span className="text-sm text-gray-700">Max bookings per window</span>
+              <div className="flex items-center justify-between border-t border-hairline pt-3">
+                <span className="text-sm text-ink">Max bookings per window</span>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => stepMax(-1)} className="w-9 h-9 rounded-lg border border-gray-300 text-gray-600 flex items-center justify-center">−</button>
-                  <span className="font-bold text-gray-900 w-6 text-center">{settings.max_bookings_per_window}</span>
-                  <button onClick={() => stepMax(1)} className="w-9 h-9 rounded-lg border border-gray-300 text-gray-600 flex items-center justify-center">+</button>
+                  <button onClick={() => stepMax(-1)} className="w-9 h-9 rounded-lg border border-hairline text-ink flex items-center justify-center">−</button>
+                  <span className="font-bold text-ink w-6 text-center">{settings.max_bookings_per_window}</span>
+                  <button onClick={() => stepMax(1)} className="w-9 h-9 rounded-lg border border-hairline text-ink flex items-center justify-center">+</button>
                 </div>
               </div>
             </Card>
 
             {/* Service Areas */}
             <Card>
-              <p className="font-semibold text-gray-900 mb-3">Service Area</p>
+              <p className="font-semibold text-ink mb-3">Service Area</p>
               {(settings.service_areas || []).length === 0 && (
-                <p className="text-sm text-gray-400 mb-2">No service areas added — all locations accepted.</p>
+                <p className="text-sm text-muted mb-2">No service areas added — all locations accepted.</p>
               )}
               {(settings.service_areas || []).map((area, i) => (
                 <div key={i} className="flex items-center gap-3 mb-2">
-                  <p className="flex-1 text-sm text-gray-700">
+                  <p className="flex-1 text-sm text-ink">
                     ZIP: {area.zip_code} &nbsp;|&nbsp; {area.radius_miles} mi{area.label ? ` | ${area.label}` : ''}
                   </p>
                   <button onClick={() => removeArea(i)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center">
@@ -259,10 +259,10 @@ export default function OnlineBooking() {
               <div className="flex gap-2 mt-3">
                 <Input value={newZip} onChange={e => setNewZip(e.target.value)} placeholder="ZIP code" />
                 <div className="flex-1">
-                  <label className="block text-xs text-gray-500 mb-1">Radius: {newRadius} mi</label>
+                  <label className="block text-xs text-muted mb-1">Radius: {newRadius} mi</label>
                   <input type="range" min={1} max={100} value={newRadius} onChange={e => setNewRadius(Number(e.target.value))} className="w-full" />
                 </div>
-                <button onClick={addArea} className="p-2 rounded-xl bg-[#1A73E8] text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <button onClick={addArea} className="p-2 rounded-xl bg-blue text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <Plus size={18} />
                 </button>
               </div>
@@ -271,21 +271,21 @@ export default function OnlineBooking() {
 
             {/* Services Offered */}
             <Card>
-              <p className="font-semibold text-gray-900 mb-3">Services Offered</p>
+              <p className="font-semibold text-ink mb-3">Services Offered</p>
               {(settings.services || []).length === 0 && (
-                <p className="text-sm text-gray-400 mb-2">No services added yet.</p>
+                <p className="text-sm text-muted mb-2">No services added yet.</p>
               )}
               {(settings.services || []).map((svc, i) => (
                 <div key={i} className="flex items-center gap-2 py-1">
-                  <p className="flex-1 text-sm text-gray-700">{svc}</p>
-                  <button onClick={() => removeService(i)} className="p-1.5 text-gray-400 hover:bg-gray-50 rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center">
+                  <p className="flex-1 text-sm text-ink">{svc}</p>
+                  <button onClick={() => removeService(i)} className="p-1.5 text-muted hover:bg-background rounded-lg min-h-[36px] min-w-[36px] flex items-center justify-center">
                     <X size={14} />
                   </button>
                 </div>
               ))}
               <div className="flex gap-2 mt-3">
                 <Input value={newService} onChange={e => setNewService(e.target.value)} placeholder="Add a service type" />
-                <button onClick={addService} className="p-2 rounded-xl bg-[#1A73E8] text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <button onClick={addService} className="p-2 rounded-xl bg-blue text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <Plus size={18} />
                 </button>
               </div>
@@ -293,13 +293,13 @@ export default function OnlineBooking() {
 
             {/* Confirmation */}
             <Card>
-              <p className="font-semibold text-gray-900 mb-3">Confirmation Message</p>
+              <p className="font-semibold text-ink mb-3">Confirmation Message</p>
               <textarea
                 value={settings.confirmation_message || ''}
                 onChange={e => set('confirmation_message', e.target.value)}
                 rows={3}
                 placeholder="Shown to customers after they book."
-                className="w-full px-3 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] text-sm"
+                className="w-full px-3 py-2.5 rounded-xl border border-hairline bg-card focus:outline-none focus:ring-2 focus:ring-blue text-sm"
               />
             </Card>
           </>
@@ -308,7 +308,7 @@ export default function OnlineBooking() {
         {/* Appointment Reminders */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <span className="font-semibold text-gray-900">Appointment Reminders</span>
+            <span className="font-semibold text-ink">Appointment Reminders</span>
             <Toggle checked={settings.reminder_enabled} onChange={e => set('reminder_enabled', e.target.checked)} />
           </div>
           {settings.reminder_enabled && (
@@ -322,7 +322,7 @@ export default function OnlineBooking() {
         {/* Follow-up Reminders */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <span className="font-semibold text-gray-900">Follow-up Reminders</span>
+            <span className="font-semibold text-ink">Follow-up Reminders</span>
             <Toggle checked={settings.followup_enabled} onChange={e => set('followup_enabled', e.target.checked)} />
           </div>
           {settings.followup_enabled && (

@@ -104,7 +104,7 @@ export default function SignaturePad({ onSave, onCancel }) {
     <div className="space-y-3">
       <canvas
         ref={canvasRef}
-        className="w-full border border-gray-300 rounded-xl touch-none cursor-crosshair"
+        className="w-full border border-hairline rounded-xl touch-none cursor-crosshair"
         style={{ height: '200px' }}
         onMouseDown={startDraw}
         onMouseMove={draw}
@@ -117,14 +117,14 @@ export default function SignaturePad({ onSave, onCancel }) {
       <div className="flex gap-3">
         <button
           onClick={clear}
-          className="flex-1 py-2 border border-gray-300 rounded-xl text-gray-600 font-medium hover:bg-gray-50 min-h-[44px]"
+          className="flex-1 py-2 border border-hairline rounded-xl text-ink font-medium hover:bg-background min-h-[44px]"
         >
           Clear
         </button>
         {onCancel && (
           <button
             onClick={onCancel}
-            className="flex-1 py-2 border border-gray-300 rounded-xl text-gray-600 font-medium hover:bg-gray-50 min-h-[44px]"
+            className="flex-1 py-2 border border-hairline rounded-xl text-ink font-medium hover:bg-background min-h-[44px]"
           >
             Cancel
           </button>
@@ -132,7 +132,7 @@ export default function SignaturePad({ onSave, onCancel }) {
         <button
           onClick={save}
           disabled={!hasDrawn}
-          className="flex-1 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-40 min-h-[44px]"
+          className="flex-1 py-2 bg-blue text-white rounded-xl font-medium hover:bg-blue-ink disabled:opacity-40 min-h-[44px]"
         >
           Save Signature
         </button>

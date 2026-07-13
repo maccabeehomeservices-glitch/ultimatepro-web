@@ -1,19 +1,19 @@
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-card">
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-3xl font-bold text-ink mb-2">
           Terms of Service
         </h1>
-        <p className="text-sm text-gray-500 mb-8">
+        <p className="text-sm text-muted mb-8">
           Last updated: April 28, 2026
         </p>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             1. Acceptance of Terms
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             By accessing or using UltimatePro ("the Platform"),
             operated by UltimatePro Solutions LLC, you agree to
             be bound by these Terms of Service. If you do not
@@ -22,10 +22,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             2. Description of Service
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             UltimatePro is a field service management platform
             that provides tools for job scheduling, customer
             management, estimates, invoicing, payment collection,
@@ -35,10 +35,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             3. User Accounts
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             You are responsible for maintaining the
             confidentiality of your account credentials and for
             all activities that occur under your account. You must
@@ -49,17 +49,17 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             4. SMS Communications and Mobile Messaging Consent
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+          <p className="text-ink text-sm leading-relaxed mb-3">
             UltimatePro enables service businesses to send
             transactional SMS messages to their customers. These
             messages may include appointment confirmations,
             estimate and invoice delivery, payment links, job
             status updates, and service follow-ups.
           </p>
-          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+          <p className="text-ink text-sm leading-relaxed mb-3">
             <strong>Consent:</strong> End-user customers consent
             to receive transactional SMS messages when they
             provide their phone number to a service business
@@ -69,28 +69,28 @@ export default function Terms() {
             phone) or via a written service agreement that
             includes SMS authorization language.
           </p>
-          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+          <p className="text-ink text-sm leading-relaxed mb-3">
             <strong>Message Frequency:</strong> Message frequency
             varies based on service activity. Customers typically
             receive 1–5 messages per service engagement.
           </p>
-          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+          <p className="text-ink text-sm leading-relaxed mb-3">
             <strong>Opt-Out:</strong> Customers can opt out of SMS
             messages at any time by replying <strong>STOP</strong> to any message.
             After opting out, no further messages will be sent
             unless the customer re-subscribes by replying <strong>START</strong>.
           </p>
-          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+          <p className="text-ink text-sm leading-relaxed mb-3">
             <strong>Help:</strong> Customers can reply <strong>HELP</strong> to any
             message for assistance.
           </p>
-          <p className="text-gray-700 text-sm leading-relaxed mb-3">
+          <p className="text-ink text-sm leading-relaxed mb-3">
             Message and data rates may apply. Contact your
             wireless carrier for details about your messaging
             plan. Carriers are not liable for delayed or
             undelivered messages.
           </p>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             No mobile information, including phone numbers and
             SMS opt-in consent, will be shared with third parties
             or affiliates for marketing or promotional purposes.
@@ -104,10 +104,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             5. Payment Processing
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             Payment processing services are provided by
             third-party payment processors. UltimatePro does not
             store credit card information. All payment
@@ -118,10 +118,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             6. Data Ownership
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             You retain ownership of all data you enter into the
             Platform, including customer information, job records,
             estimates, invoices, and photos. UltimatePro does not
@@ -132,10 +132,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             7. Acceptable Use
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             You agree not to use the Platform for any unlawful
             purpose, to send spam or unsolicited marketing
             messages, to transmit harmful code or malware, to
@@ -145,10 +145,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             8. Service Availability
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             We strive to maintain continuous availability of the
             Platform but do not guarantee uninterrupted service.
             We reserve the right to modify, suspend, or
@@ -158,10 +158,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             9. Limitation of Liability
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             UltimatePro Solutions LLC shall not be liable for any
             indirect, incidental, special, consequential, or
             punitive damages arising from your use of the
@@ -172,10 +172,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             10. Termination
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             Either party may terminate the use of the Platform at
             any time. Upon termination, your right to use the
             Platform ceases immediately. You may request export
@@ -184,10 +184,10 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             11. Governing Law
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             These Terms shall be governed by the laws of the
             Commonwealth of Virginia, without regard to conflict
             of law principles. Any disputes shall be resolved in
@@ -196,13 +196,13 @@ export default function Terms() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">
+          <h2 className="text-lg font-semibold text-ink mb-3">
             12. Contact
           </h2>
-          <p className="text-gray-700 text-sm leading-relaxed">
+          <p className="text-ink text-sm leading-relaxed">
             For questions about these Terms, contact us at:
           </p>
-          <p className="text-gray-700 text-sm leading-relaxed mt-2">
+          <p className="text-ink text-sm leading-relaxed mt-2">
             UltimatePro Solutions LLC<br />
             Virginia Beach, VA<br />
             Email: support@ultimatepro.pro
