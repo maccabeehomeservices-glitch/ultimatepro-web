@@ -33,39 +33,39 @@ export default function Payments() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Payments</h1>
+      <h1 className="text-xl font-bold text-ink mb-4">Payments</h1>
 
       {/* Date range */}
       <Card className="mb-4">
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+            <label className="block text-xs font-medium text-muted mb-1">From</label>
             <input
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
             />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+            <label className="block text-xs font-medium text-muted mb-1">To</label>
             <input
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
             />
           </div>
         </div>
       </Card>
 
       {data?.total_collected !== undefined && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-4">
-          <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Collected</div>
+        <div className="bg-card rounded-xl shadow-sm border border-hairline p-4 mb-4">
+          <div className="text-xs font-semibold text-muted uppercase tracking-wider mb-1">Total Collected</div>
           <div className="text-2xl font-bold text-green-600">
             {formatCurrency(data.total_collected || 0)}
           </div>
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-muted mt-1">
             {data.payments?.length || 0} payments · {from} to {to}
           </div>
         </div>
@@ -81,21 +81,21 @@ export default function Payments() {
             <Card key={p.id || p._id || i}>
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{`${p.cust_first || ''} ${p.cust_last || ''}`.trim() || '-'}</p>
+                  <p className="font-medium text-ink truncate">{`${p.cust_first || ''} ${p.cust_last || ''}`.trim() || '-'}</p>
                   <div className="flex items-center gap-2 mt-0.5">
                     {p.method && (
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${methodBadgeClass(p.method)}`}>
                         {p.method.replace(/_/g, ' ')}
                       </span>
                     )}
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted">
                       {(p.processed_at || p.created_at) ? format(new Date(p.processed_at || p.created_at), 'MMM d, yyyy') : ''}
                     </span>
                   </div>
                   {p.invoice_id && (
                     <button
                       onClick={() => navigate(`/invoices/${p.invoice_id}`)}
-                      className="text-xs text-[#1A73E8] font-medium mt-0.5"
+                      className="text-xs text-blue font-medium mt-0.5"
                     >
                       {p.invoice_number || `INV-${(p.invoice_id || '').slice(0,6)}`}
                     </button>

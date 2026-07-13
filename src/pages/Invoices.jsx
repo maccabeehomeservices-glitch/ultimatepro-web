@@ -42,18 +42,18 @@ export default function Invoices() {
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Invoices</h1>
+        <h1 className="text-xl font-bold text-ink">Invoices</h1>
         <div className="flex items-center gap-2">
           <button
             onClick={() => refetch()}
             disabled={loading}
-            className="text-blue-600 text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
+            className="text-blue text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
           >
             {loading ? '⟳ Loading...' : '⟳ Refresh'}
           </button>
           <button
             onClick={() => navigate('/invoices/new')}
-            className="flex items-center gap-1.5 text-sm bg-[#1A73E8] text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-1.5 text-sm bg-blue text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
           >
             <Plus size={14} /> New
           </button>
@@ -62,16 +62,16 @@ export default function Invoices() {
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           type="text"
           placeholder="Search invoices..."
           value={searchInput}
           onChange={handleSearchChange}
-          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
+          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-hairline bg-card focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px] text-sm"
         />
         {searchInput && (
-          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted min-h-[44px] min-w-[44px] flex items-center justify-center">
             <X size={16} />
           </button>
         )}
@@ -84,7 +84,7 @@ export default function Invoices() {
             key={f.id}
             onClick={() => setActiveFilter(f.id)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap min-h-[36px] flex-shrink-0 transition-colors ${
-              activeFilter === f.id ? 'bg-[#1A73E8] text-white' : 'bg-white text-gray-600 border border-gray-200'
+              activeFilter === f.id ? 'bg-blue text-white' : 'bg-card text-ink border border-hairline'
             }`}
           >
             {f.label}
@@ -102,16 +102,16 @@ export default function Invoices() {
             <Card key={inv.id || inv._id} onClick={() => navigate(`/invoices/${inv.id || inv._id}`)}>
               <div className="flex items-center justify-between">
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-400">{inv.invoice_number || `INV-${(inv.id || '').slice(0,6)}`}</p>
-                  <p className="font-semibold text-gray-900 truncate">{`${inv.cust_first || ''} ${inv.cust_last || ''}`.trim() || '-'}</p>
+                  <p className="text-xs text-muted">{inv.invoice_number || `INV-${(inv.id || '').slice(0,6)}`}</p>
+                  <p className="font-semibold text-ink truncate">{`${inv.cust_first || ''} ${inv.cust_last || ''}`.trim() || '-'}</p>
                   {inv.due_date && (
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-muted">
                       Due: {new Date(inv.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
                   )}
                 </div>
                 <div className="text-right ml-3 flex-shrink-0">
-                  <p className="font-bold text-gray-900">{formatCurrency(inv.total)}</p>
+                  <p className="font-bold text-ink">{formatCurrency(inv.total)}</p>
                   <Badge status={inv.status} label={inv.status} />
                 </div>
               </div>

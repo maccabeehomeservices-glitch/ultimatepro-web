@@ -188,7 +188,7 @@ export default function CustomerDetail() {
   }
 
   if (loading) return <LoadingSpinner fullPage />;
-  if (!customer) return <div className="p-4 text-gray-500">Customer not found.</div>;
+  if (!customer) return <div className="p-4 text-muted">Customer not found.</div>;
 
   const name = `${customer.first_name || ''} ${customer.last_name || ''}`.trim() || customer.name || 'Customer';
   const jobs = jobsData?.jobs || (Array.isArray(jobsData) ? jobsData : []);
@@ -205,18 +205,18 @@ export default function CustomerDetail() {
     <div className="p-4 max-w-3xl mx-auto pb-8">
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="font-bold text-gray-900 text-lg flex-1 truncate">{name}</h1>
+        <h1 className="font-bold text-ink text-lg flex-1 truncate">{name}</h1>
         <button
           onClick={() => navigate('/jobs/new', { state: { customer: { id, name } } })}
-          className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1A73E8]"
+          className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-blue"
           title="Add Job"
         >
           <Plus size={20} />
         </button>
-        <button onClick={() => navigate(`/customers/${id}/edit`)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(`/customers/${id}/edit`)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <Edit size={20} />
         </button>
         {/* P2.1l Part A: no delete/archive — customers are permanent. */}
@@ -225,21 +225,21 @@ export default function CustomerDetail() {
       {/* Stats Card */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.total_jobs || 0}</div>
-            <div className="text-xs text-gray-500">Total Jobs</div>
+          <div className="bg-card rounded-xl p-3 border border-hairline shadow-sm text-center">
+            <div className="text-2xl font-bold text-blue">{stats.total_jobs || 0}</div>
+            <div className="text-xs text-muted">Total Jobs</div>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+          <div className="bg-card rounded-xl p-3 border border-hairline shadow-sm text-center">
             <div className="text-2xl font-bold text-green-600">{formatMoney(stats.total_revenue || 0)}</div>
-            <div className="text-xs text-gray-500">Total Revenue</div>
+            <div className="text-xs text-muted">Total Revenue</div>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+          <div className="bg-card rounded-xl p-3 border border-hairline shadow-sm text-center">
             <div className="text-2xl font-bold text-amber-600">{stats.open_estimates || 0}</div>
-            <div className="text-xs text-gray-500">Open Estimates</div>
+            <div className="text-xs text-muted">Open Estimates</div>
           </div>
-          <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-sm text-center">
+          <div className="bg-card rounded-xl p-3 border border-hairline shadow-sm text-center">
             <div className="text-2xl font-bold text-red-600">{formatMoney(stats.outstanding_balance || 0)}</div>
-            <div className="text-xs text-gray-500">Outstanding</div>
+            <div className="text-xs text-muted">Outstanding</div>
           </div>
         </div>
       )}
@@ -248,31 +248,31 @@ export default function CustomerDetail() {
       <Card className="mb-4">
         <div className="space-y-2">
           {customer.customer_type && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-[#1A73E8]">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue">
               {customer.customer_type}
             </span>
           )}
           {customer.phone && (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Phone size={14} className="text-gray-400" />
+            <div className="flex items-center gap-2 text-sm text-ink">
+              <Phone size={14} className="text-muted" />
               {customer.phone}
             </div>
           )}
           {(customer.extra_phones || []).map((ph, i) => ph ? (
-            <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
-              <Phone size={14} className="text-gray-400" />
+            <div key={i} className="flex items-center gap-2 text-sm text-ink">
+              <Phone size={14} className="text-muted" />
               {ph}
             </div>
           ) : null)}
           {customer.email && (
-            <div className="flex items-center gap-2 text-sm text-gray-700">
-              <Mail size={14} className="text-gray-400" />
+            <div className="flex items-center gap-2 text-sm text-ink">
+              <Mail size={14} className="text-muted" />
               {customer.email}
             </div>
           )}
           {(customer.extra_emails || []).map((em, i) => em ? (
-            <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
-              <Mail size={14} className="text-gray-400" />
+            <div key={i} className="flex items-center gap-2 text-sm text-ink">
+              <Mail size={14} className="text-muted" />
               {em}
             </div>
           ) : null)}
@@ -283,15 +283,15 @@ export default function CustomerDetail() {
       {(contacts.length > 0 || true) && (
         <Card className="mb-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-xs text-gray-400 font-medium uppercase">Additional Contacts</p>
+            <p className="text-xs text-muted font-medium uppercase">Additional Contacts</p>
           </div>
           {contacts.filter(c => c.type === 'phone').length > 0 && (
             <div className="mb-2">
               {contacts.filter(c => c.type === 'phone').map(c => (
                 <div key={c.id} className="flex items-center gap-2 py-1">
-                  <Phone size={14} className="text-gray-400 flex-shrink-0" />
-                  <span className="text-sm text-gray-700 flex-1">{c.value}</span>
-                  <button onClick={() => handleDeleteContact(c.id)} className="p-1 text-gray-400 hover:text-red-500 min-h-[32px] min-w-[32px] flex items-center justify-center">
+                  <Phone size={14} className="text-muted flex-shrink-0" />
+                  <span className="text-sm text-ink flex-1">{c.value}</span>
+                  <button onClick={() => handleDeleteContact(c.id)} className="p-1 text-muted hover:text-red-500 min-h-[32px] min-w-[32px] flex items-center justify-center">
                     <X size={14} />
                   </button>
                 </div>
@@ -305,7 +305,7 @@ export default function CustomerDetail() {
                 value={addPhoneInput}
                 onChange={e => setAddPhoneInput(e.target.value)}
                 placeholder="+1 (555) 000-0000 or paste multiple"
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue"
                 autoFocus
                 onKeyDown={e => { if (e.key === 'Enter') handleAddContact('phone', addPhoneInput); if (e.key === 'Escape') setShowAddPhone(false); }}
                 onPaste={e => {
@@ -318,11 +318,11 @@ export default function CustomerDetail() {
                   }
                 }}
               />
-              <button onClick={() => handleAddContact('phone', addPhoneInput)} disabled={savingContact || !addPhoneInput.trim()} className="px-3 rounded-xl bg-[#1A73E8] text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
-              <button onClick={() => setShowAddPhone(false)} className="px-3 rounded-xl border border-gray-300 text-sm min-h-[44px]">Cancel</button>
+              <button onClick={() => handleAddContact('phone', addPhoneInput)} disabled={savingContact || !addPhoneInput.trim()} className="px-3 rounded-xl bg-blue text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
+              <button onClick={() => setShowAddPhone(false)} className="px-3 rounded-xl border border-hairline text-sm min-h-[44px]">Cancel</button>
             </div>
           ) : (
-            <button onClick={() => setShowAddPhone(true)} className="flex items-center gap-1 text-sm text-[#1A73E8] font-medium mb-2 min-h-[36px]">
+            <button onClick={() => setShowAddPhone(true)} className="flex items-center gap-1 text-sm text-blue font-medium mb-2 min-h-[36px]">
               <Plus size={14} /> Add Phone
             </button>
           )}
@@ -330,9 +330,9 @@ export default function CustomerDetail() {
             <div className="mb-2">
               {contacts.filter(c => c.type === 'email').map(c => (
                 <div key={c.id} className="flex items-center gap-2 py-1">
-                  <Mail size={14} className="text-gray-400 flex-shrink-0" />
-                  <span className="text-sm text-gray-700 flex-1">{c.value}</span>
-                  <button onClick={() => handleDeleteContact(c.id)} className="p-1 text-gray-400 hover:text-red-500 min-h-[32px] min-w-[32px] flex items-center justify-center">
+                  <Mail size={14} className="text-muted flex-shrink-0" />
+                  <span className="text-sm text-ink flex-1">{c.value}</span>
+                  <button onClick={() => handleDeleteContact(c.id)} className="p-1 text-muted hover:text-red-500 min-h-[32px] min-w-[32px] flex items-center justify-center">
                     <X size={14} />
                   </button>
                 </div>
@@ -346,7 +346,7 @@ export default function CustomerDetail() {
                 value={addEmailInput}
                 onChange={e => setAddEmailInput(e.target.value)}
                 placeholder="email@example.com or paste multiple"
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue"
                 autoFocus
                 onKeyDown={e => { if (e.key === 'Enter') handleAddContact('email', addEmailInput); if (e.key === 'Escape') setShowAddEmail(false); }}
                 onPaste={e => {
@@ -359,11 +359,11 @@ export default function CustomerDetail() {
                   }
                 }}
               />
-              <button onClick={() => handleAddContact('email', addEmailInput)} disabled={savingContact || !addEmailInput.trim()} className="px-3 rounded-xl bg-[#1A73E8] text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
-              <button onClick={() => setShowAddEmail(false)} className="px-3 rounded-xl border border-gray-300 text-sm min-h-[44px]">Cancel</button>
+              <button onClick={() => handleAddContact('email', addEmailInput)} disabled={savingContact || !addEmailInput.trim()} className="px-3 rounded-xl bg-blue text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
+              <button onClick={() => setShowAddEmail(false)} className="px-3 rounded-xl border border-hairline text-sm min-h-[44px]">Cancel</button>
             </div>
           ) : (
-            <button onClick={() => setShowAddEmail(true)} className="flex items-center gap-1 text-sm text-[#1A73E8] font-medium min-h-[36px]">
+            <button onClick={() => setShowAddEmail(true)} className="flex items-center gap-1 text-sm text-blue font-medium min-h-[36px]">
               <Plus size={14} /> Add Email
             </button>
           )}
@@ -374,16 +374,16 @@ export default function CustomerDetail() {
       {hasAddress && (
         <Card className="mb-4">
           <div className="flex items-start gap-3">
-            <MapPin size={18} className="text-[#1A73E8] mt-0.5 flex-shrink-0" />
+            <MapPin size={18} className="text-blue mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-400 font-medium uppercase mb-0.5">Address</p>
-              <p className="text-sm text-gray-800">
+              <p className="text-xs text-muted font-medium uppercase mb-0.5">Address</p>
+              <p className="text-sm text-ink">
                 {[customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(', ')}
               </p>
             </div>
             <button
               onClick={handleNavigate}
-              className="text-sm text-[#1A73E8] font-semibold min-h-[44px] flex items-center px-2"
+              className="text-sm text-blue font-semibold min-h-[44px] flex items-center px-2"
             >
               Navigate
             </button>
@@ -394,24 +394,24 @@ export default function CustomerDetail() {
       {/* Memberships card */}
       <Card className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs text-gray-400 font-medium uppercase">Memberships</p>
+          <p className="text-xs text-muted font-medium uppercase">Memberships</p>
           <button
             onClick={() => setAddMembershipModal(true)}
-            className="flex items-center gap-1 text-xs text-[#1A73E8] font-semibold min-h-[44px] px-2"
+            className="flex items-center gap-1 text-xs text-blue font-semibold min-h-[44px] px-2"
           >
             <Plus size={14} /> Add
           </button>
         </div>
         {memberships.length === 0 ? (
-          <p className="text-sm text-gray-400">No active memberships.</p>
+          <p className="text-sm text-muted">No active memberships.</p>
         ) : (
           <div className="space-y-2">
             {memberships.map((m, i) => (
               <div key={m.id || i} className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-900">{m.plan_name || 'Membership'}</p>
+                  <p className="text-sm font-medium text-ink">{m.plan_name || 'Membership'}</p>
                   {m.renewal_date && (
-                    <p className="text-xs text-gray-400">Renews {m.renewal_date}</p>
+                    <p className="text-xs text-muted">Renews {m.renewal_date}</p>
                   )}
                 </div>
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
@@ -427,8 +427,8 @@ export default function CustomerDetail() {
 
       {/* Notes card */}
       <Card className="mb-4">
-        <p className="text-xs text-gray-400 font-medium uppercase mb-2">
-          Notes {notesSaving && <span className="text-[#1A73E8] ml-1">saving...</span>}
+        <p className="text-xs text-muted font-medium uppercase mb-2">
+          Notes {notesSaving && <span className="text-blue ml-1">saving...</span>}
         </p>
         <textarea
           value={notes}
@@ -436,19 +436,19 @@ export default function CustomerDetail() {
           onBlur={handleNotesBlur}
           placeholder="Add customer notes..."
           rows={3}
-          className="w-full text-sm text-gray-800 resize-none focus:outline-none bg-transparent placeholder-gray-400"
+          className="w-full text-sm text-ink resize-none focus:outline-none bg-transparent placeholder-muted"
         />
       </Card>
 
       {/* Customer Portal */}
       {portalUrl && (
-        <Card className="mb-4 border border-blue-100 bg-blue-50">
-          <p className="text-xs font-semibold text-blue-700 uppercase mb-2">Customer Portal</p>
-          <p className="text-xs text-blue-500 truncate mb-3">{portalUrl}</p>
+        <Card className="mb-4 border border-blue bg-blue-50">
+          <p className="text-xs font-semibold text-blue uppercase mb-2">Customer Portal</p>
+          <p className="text-xs text-blue truncate mb-3">{portalUrl}</p>
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => handleCopyPortal(portalUrl)}
-              className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
             >
               {portalCopied ? <Check size={14} /> : <Copy size={14} />}
               {portalCopied ? 'Copied' : 'Copy Link'}
@@ -456,7 +456,7 @@ export default function CustomerDetail() {
             {typeof navigator !== 'undefined' && navigator.share && (
               <button
                 onClick={() => navigator.share({ title: `${name}'s Portal`, url: portalUrl }).catch(() => {})}
-                className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50 transition-colors"
+                className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
               >
                 <Send size={14} /> Share
               </button>
@@ -465,7 +465,7 @@ export default function CustomerDetail() {
               href={portalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-white bg-[#1A73E8] font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-white bg-blue font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
             >
               Open Portal
             </a>
@@ -495,8 +495,8 @@ export default function CustomerDetail() {
             <Card key={job.id || job._id} onClick={() => navigate(`/jobs/${job.id || job._id}`)}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">{job.title || job.job_title}</p>
-                  <p className="text-xs text-gray-400">#{job.job_number || job.id}</p>
+                  <p className="font-medium text-ink">{job.title || job.job_title}</p>
+                  <p className="text-xs text-muted">#{job.job_number || job.id}</p>
                 </div>
                 <Badge status={job.status} label={job.status?.replace(/_/g, ' ')} />
               </div>
@@ -512,8 +512,8 @@ export default function CustomerDetail() {
             <Card key={est.id || est._id} onClick={() => navigate(`/estimates/${est.id || est._id}`)}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">#{est.estimate_number || est.id}</p>
-                  <p className="text-sm text-gray-500">{est.title || 'Estimate'}</p>
+                  <p className="font-medium text-ink">#{est.estimate_number || est.id}</p>
+                  <p className="text-sm text-muted">{est.title || 'Estimate'}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">{formatCurrency(est.total)}</p>
@@ -532,7 +532,7 @@ export default function CustomerDetail() {
             <Card key={inv.id || inv._id} onClick={() => navigate(`/invoices/${inv.id || inv._id}`)}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-gray-900">#{inv.invoice_number || inv.id}</p>
+                  <p className="font-medium text-ink">#{inv.invoice_number || inv.id}</p>
                 </div>
                 <div className="text-right">
                   <p className="font-semibold">{formatCurrency(inv.total)}</p>
@@ -552,7 +552,7 @@ export default function CustomerDetail() {
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <MessageSquare size={40} className="text-gray-200 mb-3" />
-                  <p className="text-gray-400 text-sm">No messages with this customer yet.</p>
+                  <p className="text-muted text-sm">No messages with this customer yet.</p>
                 </div>
               ) : (
                 messages.map((msg, i) => {
@@ -560,10 +560,10 @@ export default function CustomerDetail() {
                   return (
                     <div key={msg.id || i} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                        isOutbound ? 'bg-[#1A73E8] text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                        isOutbound ? 'bg-blue text-white rounded-br-sm' : 'bg-background text-ink rounded-bl-sm'
                       }`}>
                         <p className="text-sm">{msg.body || msg.message}</p>
-                        <p className={`text-[10px] mt-1 ${isOutbound ? 'text-blue-200' : 'text-gray-400'}`}>
+                        <p className={`text-[10px] mt-1 ${isOutbound ? 'text-blue-200' : 'text-muted'}`}>
                           {msg.created_at ? format(new Date(msg.created_at), 'h:mm a') : ''}
                         </p>
                       </div>
@@ -574,24 +574,24 @@ export default function CustomerDetail() {
               <div ref={messagesEndRef} />
             </div>
             {convId ? (
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2 pt-3 border-t border-gray-100">
+              <form onSubmit={handleSendMessage} className="flex items-center gap-2 pt-3 border-t border-hairline">
                 <input
                   type="text"
                   value={messageBody}
                   onChange={e => setMessageBody(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 rounded-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+                  className="flex-1 rounded-full border border-hairline px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
                 />
                 <button
                   type="submit"
                   disabled={sendingMsg || !messageBody.trim()}
-                  className="w-11 h-11 bg-[#1A73E8] text-white rounded-full flex items-center justify-center disabled:opacity-50"
+                  className="w-11 h-11 bg-blue text-white rounded-full flex items-center justify-center disabled:opacity-50"
                 >
                   <Send size={18} />
                 </button>
               </form>
             ) : (
-              <p className="text-xs text-gray-400 text-center pt-3 border-t border-gray-100">
+              <p className="text-xs text-muted text-center pt-3 border-t border-hairline">
                 No SMS conversation found for this customer.
               </p>
             )}

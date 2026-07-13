@@ -43,11 +43,11 @@ export default function Estimates() {
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Estimates</h1>
+        <h1 className="text-xl font-bold text-ink">Estimates</h1>
         <button
           onClick={() => refetch()}
           disabled={loading}
-          className="text-blue-600 text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
+          className="text-blue text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
         >
           {loading ? '⟳ Loading...' : '⟳ Refresh'}
         </button>
@@ -55,16 +55,16 @@ export default function Estimates() {
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           type="text"
           placeholder="Search estimates..."
           value={searchInput}
           onChange={handleSearchChange}
-          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
+          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-hairline bg-card focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px] text-sm"
         />
         {searchInput && (
-          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted min-h-[44px] min-w-[44px] flex items-center justify-center">
             <X size={16} />
           </button>
         )}
@@ -77,7 +77,7 @@ export default function Estimates() {
             key={f.id}
             onClick={() => setActiveFilter(f.id)}
             className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap min-h-[36px] flex-shrink-0 transition-colors ${
-              activeFilter === f.id ? 'bg-[#1A73E8] text-white' : 'bg-white text-gray-600 border border-gray-200'
+              activeFilter === f.id ? 'bg-blue text-white' : 'bg-card text-ink border border-hairline'
             }`}
           >
             {f.label}
@@ -97,11 +97,11 @@ export default function Estimates() {
               <Card key={est.id || est._id} onClick={() => navigate(`/estimates/${est.id || est._id}`)}>
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-400">{est.estimate_number || `EST-${(est.id || '').slice(0,6)}`}</p>
-                    <p className="font-semibold text-gray-900 truncate">{`${est.cust_first || ''} ${est.cust_last || ''}`.trim() || '-'}</p>
-                    {est.title && <p className="text-sm text-gray-500 truncate">{est.title}</p>}
+                    <p className="text-xs text-muted">{est.estimate_number || `EST-${(est.id || '').slice(0,6)}`}</p>
+                    <p className="font-semibold text-ink truncate">{`${est.cust_first || ''} ${est.cust_last || ''}`.trim() || '-'}</p>
+                    {est.title && <p className="text-sm text-muted truncate">{est.title}</p>}
                     {est.created_at && (
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-muted">
                         {new Date(est.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </p>
                     )}
@@ -112,7 +112,7 @@ export default function Estimates() {
                     )}
                   </div>
                   <div className="text-right ml-3 flex-shrink-0">
-                    <p className="font-bold text-gray-900">{formatCurrency(est.total)}</p>
+                    <p className="font-bold text-ink">{formatCurrency(est.total)}</p>
                     <Badge status={est.status} label={est.status} />
                   </div>
                 </div>
@@ -125,7 +125,7 @@ export default function Estimates() {
       {/* FAB */}
       <button
         onClick={() => navigate('/estimates/new')}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-[#1A73E8] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-colors z-10"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-ink transition-colors z-10"
       >
         <Plus size={24} />
       </button>

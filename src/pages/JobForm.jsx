@@ -79,7 +79,7 @@ function fallbackCustomerName(phoneStr) {
 }
 
 function SectionLabel({ children }) {
-  return <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-2">{children}</p>;
+  return <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">{children}</p>;
 }
 
 // Assignment category tabs
@@ -640,12 +640,12 @@ export default function JobForm() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)}
-          className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+          className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900 flex-1">{isEdit ? 'Edit Job' : 'New Job'}</h1>
+        <h1 className="text-xl font-bold text-ink flex-1">{isEdit ? 'Edit Job' : 'New Job'}</h1>
         <button type="button" onClick={handlePasteFromClipboard}
-          className="flex items-center gap-1.5 text-sm text-[#1A73E8] font-medium px-3 py-2 rounded-xl border border-[#1A73E8] min-h-[44px] hover:bg-blue-50">
+          className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50">
           <ClipboardList size={16} />
           <span className="hidden sm:inline">Paste Ticket</span>
         </button>
@@ -660,7 +660,7 @@ export default function JobForm() {
           <select
             value={form.source_option}
             onChange={e => setForm(prev => ({ ...prev, source_option: e.target.value }))}
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white"
+            className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue bg-card"
           >
             <option value="company">{companyName} (My Company)</option>
             {sourceContacts.length > 0 && (
@@ -690,8 +690,8 @@ export default function JobForm() {
                 onClick={() => setForm(prev => ({ ...prev, job_type: t.key }))}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium border transition-colors min-h-[36px] ${
                   form.job_type === t.key
-                    ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
-                    : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                    ? 'bg-blue text-white border-blue'
+                    : 'bg-card text-ink border-hairline hover:bg-background'
                 }`}>{t.label}</button>
             ))}
           </div>
@@ -702,26 +702,26 @@ export default function JobForm() {
           <SectionLabel>Assign Technician</SectionLabel>
 
           {/* Category tabs */}
-          <div className="flex gap-1 mb-3 bg-gray-100 rounded-xl p-1">
+          <div className="flex gap-1 mb-3 bg-background rounded-xl p-1">
             {ASSIGN_CATS.map(cat => (
               <button key={cat.id} type="button"
                 onClick={() => setForm(prev => ({ ...prev, assign_cat: cat.id, assigned_tech_id: '', assigned_roster_tech_id: '', assigned_partner_company_id: '' }))}
                 className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors min-h-[36px] ${
                   form.assign_cat === cat.id
-                    ? 'bg-white text-[#1A73E8] shadow-sm font-semibold'
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-card text-blue shadow-sm font-semibold'
+                    : 'text-muted hover:text-ink'
                 }`}>{cat.label}</button>
             ))}
           </div>
 
           {form.assign_cat === 'self' && (
-            <p className="text-sm text-gray-500 py-1">Job assigned to you.</p>
+            <p className="text-sm text-muted py-1">Job assigned to you.</p>
           )}
 
           {form.assign_cat === 'team' && (
             <select value={form.assigned_tech_id}
               onChange={e => setForm(prev => ({ ...prev, assigned_tech_id: e.target.value }))}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
+              className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue bg-card">
               <option value="">— Select Team Member —</option>
               {teamMembers.map(t => (
                 <option key={t.id||t._id} value={t.id||t._id}>
@@ -734,7 +734,7 @@ export default function JobForm() {
           {form.assign_cat === 'roster' && (
             <select value={form.assigned_roster_tech_id}
               onChange={e => setForm(prev => ({ ...prev, assigned_roster_tech_id: e.target.value }))}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
+              className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue bg-card">
               <option value="">— Select Roster Tech —</option>
               {rosterTechs.map(t => (
                 <option key={t.id||t._id} value={t.id||t._id}>{t.name||t.first_name}</option>
@@ -745,7 +745,7 @@ export default function JobForm() {
           {form.assign_cat === 'partner' && (
             <select value={form.assigned_partner_company_id}
               onChange={e => setForm(prev => ({ ...prev, assigned_partner_company_id: e.target.value }))}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white">
+              className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue bg-card">
               <option value="">— Select Partner —</option>
               {partners.map(p => (
                 <option key={p.id||p._id||p.company_id} value={p.id||p._id||p.company_id}>
@@ -757,26 +757,26 @@ export default function JobForm() {
 
           {/* Notification toggles — only for non-self */}
           {isNonSelf && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <p className="text-xs font-semibold text-[#1A73E8] uppercase tracking-wider mb-3">SEND VIA</p>
+            <div className="mt-3 pt-3 border-t border-hairline">
+              <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-3">SEND VIA</p>
               <div className="flex gap-6">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.notify_sms}
                     onChange={e => setForm(prev => ({ ...prev, notify_sms: e.target.checked }))}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                    className="w-4 h-4 rounded border-hairline text-blue cursor-pointer" />
                   <span className="text-sm font-medium">SMS</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.notify_email}
                     onChange={e => setForm(prev => ({ ...prev, notify_email: e.target.checked }))}
-                    className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                    className="w-4 h-4 rounded border-hairline text-blue cursor-pointer" />
                   <span className="text-sm font-medium">Email</span>
                 </label>
                 {form.assign_cat === 'team' && (
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" checked={form.notify_push}
                       onChange={e => setForm(prev => ({ ...prev, notify_push: e.target.checked }))}
-                      className="w-4 h-4 rounded border-gray-300 text-blue-600 cursor-pointer" />
+                      className="w-4 h-4 rounded border-hairline text-blue cursor-pointer" />
                     <span className="text-sm font-medium">Push</span>
                   </label>
                 )}
@@ -790,17 +790,17 @@ export default function JobForm() {
           <SectionLabel>Customer</SectionLabel>
 
           {selectedCustomer ? (
-            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl mb-2">
-              <UserCheck size={18} className="text-[#1A73E8] shrink-0" />
+            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue rounded-xl mb-2">
+              <UserCheck size={18} className="text-blue shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-gray-900 truncate">
+                <p className="font-semibold text-ink truncate">
                   {`${selectedCustomer.first_name||''} ${selectedCustomer.last_name||''}`.trim() || selectedCustomer.name}
                 </p>
-                {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
+                {selectedCustomer.phone && <p className="text-xs text-muted">{selectedCustomer.phone}</p>}
               </div>
               <button type="button"
                 onClick={() => { setSelectedCustomer(null); setForm(prev => ({ ...prev, customer_id: '', customer_name: '' })); setCustomerSearch(''); }}
-                className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg">
+                className="p-1.5 text-muted hover:text-red-500 rounded-lg">
                 <X size={16} />
               </button>
             </div>
@@ -810,20 +810,20 @@ export default function JobForm() {
                 value={customerSearch}
                 onChange={handleCustomerInput}
                 placeholder="Search customer by name, phone, or email..."
-                className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] ${fieldErrors.customer_id ? 'border-red-400' : 'border-gray-300'}`}
+                className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue ${fieldErrors.customer_id ? 'border-red-400' : 'border-hairline'}`}
               />
               {showCustomerDropdown && (
-                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-card border border-hairline rounded-xl shadow-lg overflow-hidden">
                   {customerResults.map(c => (
                     <button key={c.id||c._id} type="button" onClick={() => selectCustomer(c)}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
+                      className="w-full text-left px-4 py-3 hover:bg-background text-sm border-b last:border-0 flex items-center justify-between">
                       <span className="font-medium">{`${c.first_name||''} ${c.last_name||''}`.trim() || c.name}</span>
-                      {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
+                      {c.phone && <span className="text-muted text-xs">{c.phone}</span>}
                     </button>
                   ))}
                   <button type="button"
                     onClick={() => { setShowCustomerDropdown(false); setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
-                    className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-[#1A73E8] font-medium flex items-center gap-2">
+                    className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue font-medium flex items-center gap-2">
                     <Plus size={14} /> Create new customer
                   </button>
                 </div>
@@ -831,7 +831,7 @@ export default function JobForm() {
               {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
                 <button type="button"
                   onClick={() => { setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
-                  className="mt-1.5 text-sm text-[#1A73E8] font-medium flex items-center gap-1 min-h-[36px]">
+                  className="mt-1.5 text-sm text-blue font-medium flex items-center gap-1 min-h-[36px]">
                   <Plus size={14} /> Create new customer
                 </button>
               )}
@@ -845,13 +845,13 @@ export default function JobForm() {
               <input type="tel" value={ph}
                 onChange={e => { const a = [...extraPhones]; a[idx] = e.target.value; setExtraPhones(a); }}
                 placeholder={`Phone ${idx+2}`}
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                className="flex-1 rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue" />
               <button type="button" onClick={() => setExtraPhones(prev => prev.filter((_,i) => i !== idx))}
-                className="p-2 text-gray-400 hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
+                className="p-2 text-muted hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
             </div>
           ))}
           <button type="button" onClick={() => setExtraPhones(prev => [...prev, ''])}
-            className="mt-2 text-sm text-[#1A73E8] font-medium min-h-[36px] flex items-center gap-1">
+            className="mt-2 text-sm text-blue font-medium min-h-[36px] flex items-center gap-1">
             <Plus size={14} /> Add phone
           </button>
 
@@ -861,13 +861,13 @@ export default function JobForm() {
               <input type="email" value={em}
                 onChange={e => { const a = [...extraEmails]; a[idx] = e.target.value; setExtraEmails(a); }}
                 placeholder={`Email ${idx+2}`}
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                className="flex-1 rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue" />
               <button type="button" onClick={() => setExtraEmails(prev => prev.filter((_,i) => i !== idx))}
-                className="p-2 text-gray-400 hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
+                className="p-2 text-muted hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
             </div>
           ))}
           <button type="button" onClick={() => setExtraEmails(prev => [...prev, ''])}
-            className="mt-2 text-sm text-[#1A73E8] font-medium min-h-[36px] flex items-center gap-1">
+            className="mt-2 text-sm text-blue font-medium min-h-[36px] flex items-center gap-1">
             <Plus size={14} /> Add email
           </button>
         </Card>
@@ -885,9 +885,9 @@ export default function JobForm() {
             </div>
           )}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Street Address</label>
+            <label className="block text-sm font-medium text-ink mb-1">Street Address</label>
             <input ref={streetInputRef}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+              className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue"
               placeholder="Start typing address..."
               value={form.address}
               onChange={e => setForm(prev => ({ ...prev, address: e.target.value }))} />
@@ -910,7 +910,7 @@ export default function JobForm() {
           <textarea name="notes" value={form.notes}
             onChange={e => setForm(prev => ({ ...prev, notes: e.target.value }))}
             rows={3} placeholder="Job details, special instructions..."
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-gray-900 text-[16px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none" />
+            className="w-full rounded-xl border border-hairline px-3 py-2.5 text-ink text-[16px] placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue resize-none" />
         </Card>
 
         {/* ── SCHEDULE ───────────────────────────────────────────────────── */}
@@ -918,28 +918,28 @@ export default function JobForm() {
           <SectionLabel>Schedule</SectionLabel>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <label className="block text-sm font-medium text-ink mb-1">Date</label>
               <div className="relative">
                 <input type="date" value={form.scheduled_date}
                   onChange={e => setForm(prev => ({ ...prev, scheduled_date: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                  className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue" />
                 {form.scheduled_date && (
                   <button type="button" onClick={() => setForm(p => ({ ...p, scheduled_date: '' }))}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center">
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-ink w-6 h-6 flex items-center justify-center">
                     <X size={14} />
                   </button>
                 )}
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+              <label className="block text-sm font-medium text-ink mb-1">Time</label>
               <div className="relative">
                 <input type="time" value={form.scheduled_time}
                   onChange={e => setForm(prev => ({ ...prev, scheduled_time: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                  className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue" />
                 {form.scheduled_time && (
                   <button type="button" onClick={() => setForm(p => ({ ...p, scheduled_time: '' }))}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center">
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-ink w-6 h-6 flex items-center justify-center">
                     <X size={14} />
                   </button>
                 )}
@@ -947,23 +947,23 @@ export default function JobForm() {
             </div>
             {/* P2.19: optional arrival-window "to" time */}
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Arrival window end <span className="text-gray-400 font-normal">(optional)</span></label>
+              <label className="block text-sm font-medium text-ink mb-1">Arrival window end <span className="text-muted font-normal">(optional)</span></label>
               <div className="relative max-w-[calc(50%-0.375rem)]">
                 <input type="time" value={form.scheduled_end_time} disabled={!form.scheduled_time}
                   onChange={e => setForm(prev => ({ ...prev, scheduled_end_time: e.target.value }))}
-                  className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] disabled:bg-gray-50 disabled:text-gray-400" />
+                  className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue disabled:bg-background disabled:text-muted" />
                 {form.scheduled_end_time && (
                   <button type="button" onClick={() => setForm(p => ({ ...p, scheduled_end_time: '' }))}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center">
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted hover:text-ink w-6 h-6 flex items-center justify-center">
                     <X size={14} />
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-gray-500">Gives the customer an arrival window (e.g. 8:00 AM – 10:00 AM) instead of an exact time.</p>
+              <p className="mt-1 text-xs text-muted">Gives the customer an arrival window (e.g. 8:00 AM – 10:00 AM) instead of an exact time.</p>
             </div>
           </div>
           {schedulePreview && (
-            <p className="mt-2 text-sm text-[#1A73E8] font-medium">{schedulePreview}</p>
+            <p className="mt-2 text-sm text-blue font-medium">{schedulePreview}</p>
           )}
         </Card>
 
@@ -996,10 +996,10 @@ export default function JobForm() {
           </>
         }>
         <div className="space-y-2">
-          <p className="text-sm text-gray-500">Paste any job ticket, email, or work order. AI will extract job details automatically.</p>
+          <p className="text-sm text-muted">Paste any job ticket, email, or work order. AI will extract job details automatically.</p>
           <textarea value={pasteText} onChange={e => setPasteText(e.target.value)} rows={8}
             placeholder="Paste any job ticket text here, emails, screenshots OCR, etc."
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
+            className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue resize-none"
             autoFocus />
           {pasteError && (
             <p className="text-sm text-red-600">{pasteError}</p>
@@ -1012,16 +1012,16 @@ export default function JobForm() {
       <Modal isOpen={Boolean(duplicateModal)} onClose={createNewFromDuplicate} title="Possible Existing Customer">
         {duplicateModal && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-ink">
               A customer with a similar name to <strong>{duplicateModal.parsedName||'this contact'}</strong> already
               exists. We'll create a NEW customer unless this is the same person:
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-              <p className="font-semibold text-gray-900">
+            <div className="bg-blue-50 border border-blue rounded-xl p-3">
+              <p className="font-semibold text-ink">
                 {`${duplicateModal.matched.first_name||''} ${duplicateModal.matched.last_name||''}`.trim() || duplicateModal.matched.name}
               </p>
-              {duplicateModal.matched.phone    && <p className="text-sm text-gray-600">{duplicateModal.matched.phone}</p>}
-              {duplicateModal.matched.address  && <p className="text-xs text-gray-500">{duplicateModal.matched.address}</p>}
+              {duplicateModal.matched.phone    && <p className="text-sm text-ink">{duplicateModal.matched.phone}</p>}
+              {duplicateModal.matched.address  && <p className="text-xs text-muted">{duplicateModal.matched.address}</p>}
             </div>
             <div className="grid grid-cols-1 gap-2">
               <Button onClick={createNewFromDuplicate} className="w-full">

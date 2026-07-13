@@ -197,7 +197,7 @@ export default function Reports() {
 
   return (
     <div className="p-4 max-w-3xl mx-auto">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">Reports</h1>
+      <h1 className="text-xl font-bold text-ink mb-4">Reports</h1>
 
       {/* Date Range: chips + inputs. Inputs are always visible so the user
            can see the active range; manually editing either input flips the
@@ -211,7 +211,7 @@ export default function Reports() {
                 key={id}
                 onClick={() => pickDateChip(id)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors min-h-[36px] flex-shrink-0 ${
-                  selected ? 'bg-[#1A73E8] text-white' : 'bg-white text-gray-600 border border-gray-200'
+                  selected ? 'bg-blue text-white' : 'bg-card text-ink border border-hairline'
                 }`}
               >
                 {label}
@@ -221,21 +221,21 @@ export default function Reports() {
         </div>
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
+            <label className="block text-xs font-medium text-muted mb-1">From</label>
             <input
               type="date"
               value={from}
               onChange={e => { setFrom(e.target.value); setDateRange('custom'); }}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
             />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
+            <label className="block text-xs font-medium text-muted mb-1">To</label>
             <input
               type="date"
               value={to}
               onChange={e => { setTo(e.target.value); setDateRange('custom'); }}
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
             />
           </div>
         </div>
@@ -260,54 +260,54 @@ export default function Reports() {
                     finally { setExporting(false); }
                   }}
                   disabled={exporting}
-                  className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+                  className="px-4 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
                 >
                   {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase">Total Revenue</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(totalRevenue)}</p>
+                  <p className="text-xs text-muted uppercase">Total Revenue</p>
+                  <p className="text-2xl font-bold text-ink mt-1">{formatCurrency(totalRevenue)}</p>
                 </Card>
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase">Payments</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{totalPayments}</p>
+                  <p className="text-xs text-muted uppercase">Payments</p>
+                  <p className="text-2xl font-bold text-ink mt-1">{totalPayments}</p>
                 </Card>
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase">Cash</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(totalCash)}</p>
+                  <p className="text-xs text-muted uppercase">Cash</p>
+                  <p className="text-2xl font-bold text-ink mt-1">{formatCurrency(totalCash)}</p>
                 </Card>
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase">Card + Online</p>
-                  <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(totalElectronic)}</p>
+                  <p className="text-xs text-muted uppercase">Card + Online</p>
+                  <p className="text-2xl font-bold text-ink mt-1">{formatCurrency(totalElectronic)}</p>
                 </Card>
               </div>
               {revenueRows.length > 0 && (
-                <div className="bg-white rounded-2xl shadow overflow-hidden">
+                <div className="bg-card rounded-2xl shadow overflow-hidden">
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Date</th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Cash</th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Card</th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Check</th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Online</th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Total</th>
-                          <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 whitespace-nowrap">Payments</th>
+                        <tr className="border-b border-hairline bg-background">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted whitespace-nowrap">Date</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted whitespace-nowrap">Cash</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted whitespace-nowrap">Card</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted whitespace-nowrap">Check</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted whitespace-nowrap">Online</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted whitespace-nowrap">Total</th>
+                          <th className="text-right px-4 py-3 text-xs font-semibold text-muted whitespace-nowrap">Payments</th>
                         </tr>
                       </thead>
                       <tbody>
                         {revenueRows.map((row, i) => (
-                          <tr key={i} className="border-b border-gray-50 last:border-0">
-                            <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">{row.period ? format(new Date(row.period), 'MMM d, yyyy') : ''}</td>
-                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.cash)}</td>
-                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.card)}</td>
-                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.check)}</td>
-                            <td className="px-4 py-2.5 text-gray-600 text-right">{formatCurrency(row.online)}</td>
-                            <td className="px-4 py-2.5 font-semibold text-gray-900 text-right">{formatCurrency(row.total)}</td>
-                            <td className="px-4 py-2.5 text-gray-600 text-right">{row.payment_count || 0}</td>
+                          <tr key={i} className="border-b border-hairline last:border-0">
+                            <td className="px-4 py-2.5 text-ink whitespace-nowrap">{row.period ? format(new Date(row.period), 'MMM d, yyyy') : ''}</td>
+                            <td className="px-4 py-2.5 text-ink text-right">{formatCurrency(row.cash)}</td>
+                            <td className="px-4 py-2.5 text-ink text-right">{formatCurrency(row.card)}</td>
+                            <td className="px-4 py-2.5 text-ink text-right">{formatCurrency(row.check)}</td>
+                            <td className="px-4 py-2.5 text-ink text-right">{formatCurrency(row.online)}</td>
+                            <td className="px-4 py-2.5 font-semibold text-ink text-right">{formatCurrency(row.total)}</td>
+                            <td className="px-4 py-2.5 text-ink text-right">{row.payment_count || 0}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -338,7 +338,7 @@ export default function Reports() {
                     finally { setExporting(false); }
                   }}
                   disabled={exporting}
-                  className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+                  className="px-4 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
                 >
                   {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
                 </button>
@@ -347,14 +347,14 @@ export default function Reports() {
                 <Card key={i}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900">{s.source_name || 'Unknown'}</p>
-                      <p className="text-xs text-gray-400">{s._category}</p>
-                      <p className="text-sm text-gray-500">{s.job_count || 0} jobs</p>
+                      <p className="font-medium text-ink">{s.source_name || 'Unknown'}</p>
+                      <p className="text-xs text-muted">{s._category}</p>
+                      <p className="text-sm text-muted">{s.job_count || 0} jobs</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold text-[#1A73E8]">{formatCurrency(s.total_revenue || 0)}</p>
+                      <p className="font-bold text-blue">{formatCurrency(s.total_revenue || 0)}</p>
                       {s.profit_allocation_pct != null && (
-                        <p className="text-xs text-gray-400">Allocation: {s.profit_allocation_pct}%</p>
+                        <p className="text-xs text-muted">Allocation: {s.profit_allocation_pct}%</p>
                       )}
                     </div>
                   </div>
@@ -376,8 +376,8 @@ export default function Reports() {
                   <Card key={conn.id || conn._id}>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-semibold text-gray-900">{conn.company_name || conn.partner_name || conn.name}</p>
-                        <p className="text-xs text-gray-400">{conn.status || 'active'}</p>
+                        <p className="font-semibold text-ink">{conn.company_name || conn.partner_name || conn.name}</p>
+                        <p className="text-xs text-muted">{conn.status || 'active'}</p>
                       </div>
                       <Button
                         size="sm"
@@ -401,45 +401,45 @@ export default function Reports() {
                 const theySent = partnerReport.they_sent || [];
                 const totalJobs = weSent.length + theySent.length;
                 const jobRow = (j, i) => (
-                  <div key={j.job_id || i} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
+                  <div key={j.job_id || i} className="flex items-center justify-between py-1.5 border-b border-hairline last:border-0">
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-gray-700 truncate">{j.job_number || j.ticket || `Job ${i + 1}`}</p>
-                      {(j.customer_name || j.customer) && <p className="text-xs text-gray-400 truncate">{j.customer_name || j.customer}</p>}
+                      <p className="text-sm text-ink truncate">{j.job_number || j.ticket || `Job ${i + 1}`}</p>
+                      {(j.customer_name || j.customer) && <p className="text-xs text-muted truncate">{j.customer_name || j.customer}</p>}
                     </div>
                     <div className="text-right ml-3 flex-shrink-0">
-                      <p className="text-sm font-medium text-gray-900">{formatCurrency(j.our_profit || 0)}</p>
+                      <p className="text-sm font-medium text-ink">{formatCurrency(j.our_profit || 0)}</p>
                       <p className={`text-xs ${Number(j.balance) < 0 ? 'text-red-600' : 'text-green-600'}`}>{formatCurrency(j.balance || 0)}</p>
                     </div>
                   </div>
                 );
                 return (
                 <Card>
-                  <p className="text-xs text-gray-400 uppercase font-medium mb-2">
+                  <p className="text-xs text-muted uppercase font-medium mb-2">
                     {selectedConnection.company_name || selectedConnection.partner_name} — {from} to {to}
                   </p>
                   {/* Net balance headline — mirrors the settlement PDF */}
                   <div className={`rounded-xl px-4 py-3 mb-3 ${net < 0 ? 'bg-red-50 border border-red-200' : net > 0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
-                    <p className="text-xs uppercase font-medium text-gray-500">{net < 0 ? 'You Owe Them' : net > 0 ? 'They Owe You' : 'Settled'}</p>
+                    <p className="text-xs uppercase font-medium text-muted">{net < 0 ? 'You Owe Them' : net > 0 ? 'They Owe You' : 'Settled'}</p>
                     <p className={`text-2xl font-bold ${net < 0 ? 'text-red-600' : net > 0 ? 'text-green-700' : 'text-gray-700'}`}>{formatCurrency(Math.abs(net))}</p>
                   </div>
-                  <p className="text-xs text-gray-400 mb-3">{totalJobs} settled job{totalJobs === 1 ? '' : 's'}</p>
+                  <p className="text-xs text-muted mb-3">{totalJobs} settled job{totalJobs === 1 ? '' : 's'}</p>
                   {weSent.length > 0 && (
-                    <div className="mb-3"><p className="text-xs font-semibold text-gray-600 mb-1">Jobs We Sent</p>{weSent.map(jobRow)}</div>
+                    <div className="mb-3"><p className="text-xs font-semibold text-ink mb-1">Jobs We Sent</p>{weSent.map(jobRow)}</div>
                   )}
                   {theySent.length > 0 && (
-                    <div className="mb-3"><p className="text-xs font-semibold text-gray-600 mb-1">Jobs They Sent</p>{theySent.map(jobRow)}</div>
+                    <div className="mb-3"><p className="text-xs font-semibold text-ink mb-1">Jobs They Sent</p>{theySent.map(jobRow)}</div>
                   )}
-                  {totalJobs === 0 && <p className="text-sm text-gray-400 mb-3">No confirmed partner jobs in this range.</p>}
-                  <div className="flex gap-2 pt-2 border-t border-gray-100">
+                  {totalJobs === 0 && <p className="text-sm text-muted mb-3">No confirmed partner jobs in this range.</p>}
+                  <div className="flex gap-2 pt-2 border-t border-hairline">
                     <button
                       onClick={() => { setSendRecipient(''); setShowSendModal(true); }}
-                      className="flex-1 py-2 bg-[#1A73E8] text-white rounded-xl text-sm font-medium hover:bg-blue-700 min-h-[44px]"
+                      className="flex-1 py-2 bg-blue text-white rounded-xl text-sm font-medium hover:bg-blue-ink min-h-[44px]"
                     >
                       📧 Send Report
                     </button>
                     <button
                       onClick={handleExportPartner}
-                      className="flex-1 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium hover:bg-blue-50 min-h-[44px]"
+                      className="flex-1 py-2 border border-blue text-blue rounded-xl text-sm font-medium hover:bg-blue-50 min-h-[44px]"
                     >
                       📥 Export CSV
                     </button>
@@ -471,7 +471,7 @@ export default function Reports() {
                   finally { setExporting(false); }
                 }}
                 disabled={exporting}
-                className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+                className="px-4 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
               >
                 {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
               </button>
@@ -487,12 +487,12 @@ export default function Reports() {
                         <Card key={tech.id || tech._id || i}>
                           <div className="flex items-center justify-between">
                             <div>
-                              <p className="font-semibold text-gray-900">{name}</p>
-                              <p className="text-sm text-gray-500">
+                              <p className="font-semibold text-ink">{name}</p>
+                              <p className="text-sm text-muted">
                                 {tech.days_worked || 0} days · {tech.total_jobs || 0} jobs
                               </p>
                             </div>
-                            <p className="font-bold text-[#1A73E8] text-lg">
+                            <p className="font-bold text-blue text-lg">
                               {formatDuration(tech.total_minutes || tech.total_hours * 60)}
                             </p>
                           </div>
@@ -506,27 +506,27 @@ export default function Reports() {
                 {tsRows.length === 0 ? (
                   <EmptyState icon={BarChart2} title="No timesheet data" description="No clock-in records found for this period." />
                 ) : (
-                  <div className="bg-white rounded-2xl shadow overflow-hidden">
+                  <div className="bg-card rounded-2xl shadow overflow-hidden">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-100 bg-gray-50">
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Tech</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Date</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">In</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Out</th>
-                          <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Hours</th>
+                        <tr className="border-b border-hairline bg-background">
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Tech</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Date</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted">In</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Out</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Hours</th>
                         </tr>
                       </thead>
                       <tbody>
                         {tsRows.map((row, i) => {
                           const name = `${row.first_name || ''} ${row.last_name || ''}`.trim() || row.name || row.tech_name || '';
                           return (
-                            <tr key={i} className="border-b border-gray-50 last:border-0">
-                              <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{name}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-600">{row.date || row.work_date || ''}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-600">{row.clock_in || row.clocked_in_at || '—'}</td>
-                              <td className="px-4 py-2.5 text-sm text-gray-600">{row.clock_out || row.clocked_out_at || '—'}</td>
-                              <td className="px-4 py-2.5 text-sm font-semibold text-[#1A73E8]">
+                            <tr key={i} className="border-b border-hairline last:border-0">
+                              <td className="px-4 py-2.5 text-sm font-medium text-ink">{name}</td>
+                              <td className="px-4 py-2.5 text-sm text-ink">{row.date || row.work_date || ''}</td>
+                              <td className="px-4 py-2.5 text-sm text-ink">{row.clock_in || row.clocked_in_at || '—'}</td>
+                              <td className="px-4 py-2.5 text-sm text-ink">{row.clock_out || row.clocked_out_at || '—'}</td>
+                              <td className="px-4 py-2.5 text-sm font-semibold text-blue">
                                 {formatDuration(row.total_minutes || row.duration_minutes)}
                               </td>
                             </tr>
@@ -578,12 +578,12 @@ export default function Reports() {
       >
         <div className="space-y-3">
           <div>
-            <p className="text-xs text-gray-400 uppercase font-medium mb-1">Period</p>
-            <p className="text-sm text-gray-700">
+            <p className="text-xs text-muted uppercase font-medium mb-1">Period</p>
+            <p className="text-sm text-ink">
               {selectedConnection?.company_name || selectedConnection?.partner_name} · {from} to {to}
             </p>
           </div>
-          <div className="text-xs text-gray-500 bg-gray-50 rounded-lg p-3">
+          <div className="text-xs text-muted bg-background rounded-lg p-3">
             A PDF copy is always sent to your office email. Add a partner address below if you also want them to receive it.
           </div>
           <Input

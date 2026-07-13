@@ -76,7 +76,7 @@ function formatCurrency(v) {
 }
 
 function SectionLabel({ children }) {
-  return <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2 mt-4">{children}</p>;
+  return <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2 mt-4">{children}</p>;
 }
 
 function Lightbox({ photos, startIndex, onClose }) {
@@ -662,7 +662,7 @@ export default function JobDetail() {
   }
 
   if (loading) return <LoadingSpinner fullPage />;
-  if (!jobData) return <div className="p-4 text-gray-500">Job not found.</div>;
+  if (!jobData) return <div className="p-4 text-muted">Job not found.</div>;
 
   function openProfitModal() {
     setProfitOverrideEnabled(jobData?.profit_override === true);
@@ -749,10 +749,10 @@ export default function JobDetail() {
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
           <button onClick={() => navigate(-1)}
-            className="p-2 -ml-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+            className="p-2 -ml-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">
+          <h1 className="text-xl font-bold text-ink">
             #{jobData.job_number || jobData.id?.slice(0,8)}
           </h1>
           {/* Status badge */}
@@ -772,7 +772,7 @@ export default function JobDetail() {
           {/* Dispatch icon — only when unscheduled or scheduled */}
           {['unscheduled', 'scheduled'].includes(jobData.status) && (
             <button onClick={() => setDispatchModal(true)} title="Dispatch"
-              className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-[#1A73E8]">
+              className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-blue">
               <Navigation size={18} />
             </button>
           )}
@@ -785,7 +785,7 @@ export default function JobDetail() {
           )}
           {/* Edit */}
           <button onClick={() => navigate(`/jobs/${id}/edit`)}
-            className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+            className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
             <Edit size={20} />
           </button>
           {/* Delete */}
@@ -864,14 +864,14 @@ export default function JobDetail() {
                 <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                   <span className="text-base">🔔</span>
                   <select value={reminderMethod} onChange={handleReminderChange}
-                    className="flex-1 rounded-xl border border-gray-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] bg-white min-h-[36px]">
+                    className="flex-1 rounded-xl border border-hairline px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue bg-card min-h-[36px]">
                     {REMINDER_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-2 flex-1 min-w-[180px]">
                   <span className="text-base">📅</span>
                   {jobData.scheduled_start ? (
-                    <span className="text-sm text-gray-700 font-medium">
+                    <span className="text-sm text-ink font-medium">
                       {formatInJobZone(jobData.scheduled_start, jobData, 'MMM d, yyyy')}{' '}
                       {/* P2.19: arrival window when a distinct end is present */}
                       {jobData.scheduled_end && jobData.scheduled_end !== jobData.scheduled_start
@@ -879,7 +879,7 @@ export default function JobDetail() {
                         : formatInJobZone(jobData.scheduled_start, jobData, 'h:mm a zzz')}
                     </span>
                   ) : (
-                    <span className="text-sm text-gray-400">Not scheduled</span>
+                    <span className="text-sm text-muted">Not scheduled</span>
                   )}
                 </div>
               </div>
@@ -887,25 +887,25 @@ export default function JobDetail() {
 
             {/* Section 4: Compact source | type | assigned row */}
             <Card>
-              <div className="flex items-center gap-1 divide-x divide-gray-100">
+              <div className="flex items-center gap-1 divide-x divide-hairline">
                 <button onClick={() => navigate(`/jobs/${id}/edit`)}
-                  className="flex-1 text-center py-2 min-h-[44px] hover:bg-gray-50 rounded-l-xl">
-                  <p className="text-[10px] text-gray-400 uppercase font-semibold">Source</p>
-                  <p className="text-xs font-medium text-gray-800 truncate px-1">
+                  className="flex-1 text-center py-2 min-h-[44px] hover:bg-background rounded-l-xl">
+                  <p className="text-[10px] text-muted uppercase font-semibold">Source</p>
+                  <p className="text-xs font-medium text-ink truncate px-1">
                     {jobData.job_source_name || jobData.ad_channel_name || 'My Company'}
                   </p>
                 </button>
                 <button onClick={() => navigate(`/jobs/${id}/edit`)}
-                  className="flex-1 text-center py-2 min-h-[44px] hover:bg-gray-50">
-                  <p className="text-[10px] text-gray-400 uppercase font-semibold">Type</p>
-                  <p className="text-xs font-medium text-gray-800 truncate px-1">
+                  className="flex-1 text-center py-2 min-h-[44px] hover:bg-background">
+                  <p className="text-[10px] text-muted uppercase font-semibold">Type</p>
+                  <p className="text-xs font-medium text-ink truncate px-1">
                     {jobData.type ? (jobData.type.charAt(0).toUpperCase() + jobData.type.slice(1)) : '—'}
                   </p>
                 </button>
                 <button onClick={() => navigate(`/jobs/${id}/edit`)}
-                  className="flex-1 text-center py-2 min-h-[44px] hover:bg-gray-50 rounded-r-xl">
-                  <p className="text-[10px] text-gray-400 uppercase font-semibold">Assigned</p>
-                  <p className="text-xs font-medium text-gray-800 truncate px-1">
+                  className="flex-1 text-center py-2 min-h-[44px] hover:bg-background rounded-r-xl">
+                  <p className="text-[10px] text-muted uppercase font-semibold">Assigned</p>
+                  <p className="text-xs font-medium text-ink truncate px-1">
                     {(jobData.tech_first || jobData.tech_last)
                       ? `${jobData.tech_first || ''} ${jobData.tech_last || ''}`.trim()
                       : jobData.roster_tech_name || 'Unassigned'}
@@ -918,50 +918,50 @@ export default function JobDetail() {
             {(jobData.customer_id || jobData.customer) && (
               <Card>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Customer</h3>
+                  <h3 className="text-xs font-semibold text-blue uppercase tracking-wider">Customer</h3>
                   <button onClick={() => navigate(`/customers/${jobData.customer_id || jobData.customer?.id}`)}
-                    className="text-sm text-blue-600 font-medium min-h-[36px] px-2">
+                    className="text-sm text-blue font-medium min-h-[36px] px-2">
                     View
                   </button>
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-400 text-sm">👤</span>
-                    <span className="text-sm font-medium text-gray-900">
+                    <span className="text-muted text-sm">👤</span>
+                    <span className="text-sm font-medium text-ink">
                       {[jobData.cust_first, jobData.cust_last].filter(Boolean).join(' ') || '—'}
                     </span>
                   </div>
                   {jobData.cust_phone && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">📱</span>
-                        <span className="text-sm text-gray-900">{jobData.cust_phone}</span>
+                        <span className="text-muted text-sm">📱</span>
+                        <span className="text-sm text-ink">{jobData.cust_phone}</span>
                       </div>
-                      <a href={`tel:${jobData.cust_phone}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📞</a>
+                      <a href={`tel:${jobData.cust_phone}`} className="text-blue text-lg min-h-[36px] flex items-center">📞</a>
                     </div>
                   )}
                   {jobData.cust_phone2 && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">📱</span>
-                        <span className="text-sm text-gray-900">{jobData.cust_phone2}</span>
+                        <span className="text-muted text-sm">📱</span>
+                        <span className="text-sm text-ink">{jobData.cust_phone2}</span>
                       </div>
-                      <a href={`tel:${jobData.cust_phone2}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📞</a>
+                      <a href={`tel:${jobData.cust_phone2}`} className="text-blue text-lg min-h-[36px] flex items-center">📞</a>
                     </div>
                   )}
                   {jobData.cust_email && (
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">✉️</span>
-                        <span className="text-sm text-gray-900">{jobData.cust_email}</span>
+                        <span className="text-muted text-sm">✉️</span>
+                        <span className="text-sm text-ink">{jobData.cust_email}</span>
                       </div>
-                      <a href={`mailto:${jobData.cust_email}`} className="text-blue-600 text-lg min-h-[36px] flex items-center">📧</a>
+                      <a href={`mailto:${jobData.cust_email}`} className="text-blue text-lg min-h-[36px] flex items-center">📧</a>
                     </div>
                   )}
                   {jobData.cust_address && (
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-400 text-sm">📍</span>
-                      <span className="text-sm text-gray-900">
+                      <span className="text-muted text-sm">📍</span>
+                      <span className="text-sm text-ink">
                         {jobData.cust_address}
                         {jobData.cust_city ? `, ${jobData.cust_city}` : ''}
                         {jobData.cust_state ? `, ${jobData.cust_state}` : ''}
@@ -986,10 +986,10 @@ export default function JobDetail() {
                   </div>
                 )}
                 <div className="flex items-start gap-3">
-                  <MapPin size={18} className="text-[#1A73E8] mt-0.5 shrink-0" />
+                  <MapPin size={18} className="text-blue mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-400 font-medium uppercase mb-0.5">Job Site</p>
-                    <p className="text-sm text-gray-800">
+                    <p className="text-xs text-muted font-medium uppercase mb-0.5">Job Site</p>
+                    <p className="text-sm text-ink">
                       {address}
                       {jobData.city ? `, ${jobData.city}` : ''}
                       {jobData.state ? `, ${jobData.state}` : ''}
@@ -997,7 +997,7 @@ export default function JobDetail() {
                     </p>
                   </div>
                   <button onClick={handleNavigate}
-                    className="text-sm text-[#1A73E8] font-semibold min-h-[44px] flex items-center px-2">
+                    className="text-sm text-blue font-semibold min-h-[44px] flex items-center px-2">
                     Navigate
                   </button>
                 </div>
@@ -1006,11 +1006,11 @@ export default function JobDetail() {
 
             {/* Section 7: Notes */}
             <div>
-              <SectionLabel>Notes {notesSaving && <span className="text-[#1A73E8] ml-1">saving...</span>}</SectionLabel>
+              <SectionLabel>Notes {notesSaving && <span className="text-blue ml-1">saving...</span>}</SectionLabel>
               <Card>
                 <textarea value={notes} onChange={e => setNotes(e.target.value)} onBlur={handleNotesBlur}
                   placeholder="Add job notes..." rows={4}
-                  className="w-full text-sm text-gray-800 resize-none focus:outline-none bg-transparent placeholder-gray-400" />
+                  className="w-full text-sm text-ink resize-none focus:outline-none bg-transparent placeholder-muted" />
               </Card>
             </div>
 
@@ -1034,10 +1034,10 @@ export default function JobDetail() {
                   <div className="space-y-2">
                     {currentJobEstimates.map(e => (
                       <button key={e.id} onClick={() => navigate(`/estimates/${e.id}`)}
-                        className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
+                        className="w-full flex items-center justify-between text-left py-2 hover:bg-background rounded-lg px-1">
                         <div>
-                          <p className="text-sm font-medium text-gray-900">{e.estimate_number || `EST-${e.id?.slice(0,6)}`}</p>
-                          <p className="text-xs text-gray-400">{formatCurrency(e.total)}</p>
+                          <p className="text-sm font-medium text-ink">{e.estimate_number || `EST-${e.id?.slice(0,6)}`}</p>
+                          <p className="text-xs text-muted">{formatCurrency(e.total)}</p>
                         </div>
                         <Badge status={e.status} label={e.status} />
                       </button>
@@ -1057,40 +1057,40 @@ export default function JobDetail() {
               {jobInvoice && (
                 <Card>
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-semibold text-gray-900">{jobInvoice.invoice_number || `INV-${jobInvoice.id?.slice(0,6)}`}</p>
+                    <p className="text-sm font-semibold text-ink">{jobInvoice.invoice_number || `INV-${jobInvoice.id?.slice(0,6)}`}</p>
                     <Badge status={jobInvoice.status} label={jobInvoice.status} />
                   </div>
                   {(jobInvoice.line_items || []).map((item, i) => (
-                    <div key={i} className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-b-0">
+                    <div key={i} className="flex items-start gap-3 py-2 border-b border-hairline last:border-b-0">
                       {item.image_url ? (
                         <img
                           src={item.image_url}
                           alt=""
-                          className="w-12 h-12 object-cover rounded-lg flex-shrink-0 bg-gray-50"
+                          className="w-12 h-12 object-cover rounded-lg flex-shrink-0 bg-background"
                         />
                       ) : (
-                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex-shrink-0 flex items-center justify-center text-gray-300 text-sm">
+                        <div className="w-12 h-12 bg-background rounded-lg flex-shrink-0 flex items-center justify-center text-gray-300 text-sm">
                           📦
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-900 truncate">{item.name || '(unnamed)'}</p>
+                        <p className="text-sm font-medium text-ink truncate">{item.name || '(unnamed)'}</p>
                         {item.description && (
-                          <p className="text-xs text-gray-500 line-clamp-2">{item.description}</p>
+                          <p className="text-xs text-muted line-clamp-2">{item.description}</p>
                         )}
-                        <div className="flex items-center gap-2 text-xs text-gray-400 mt-0.5">
+                        <div className="flex items-center gap-2 text-xs text-muted mt-0.5">
                           {item.sku && <span>SKU: {item.sku}</span>}
                           {item.sku && <span>·</span>}
                           <span>{item.quantity || item.qty || 1} × {formatCurrency(item.unit_price || item.price || 0)}</span>
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-gray-900 flex-shrink-0 self-center">
+                      <span className="text-sm font-semibold text-ink flex-shrink-0 self-center">
                         {formatCurrency(item.total || item.amount || ((item.quantity || item.qty || 1) * (item.unit_price || item.price || 0)))}
                       </span>
                     </div>
                   ))}
                   {(jobInvoice.line_items || []).length > 0 && (
-                    <div className="border-t border-gray-100 pt-2 mt-1 flex justify-between text-sm font-bold">
+                    <div className="border-t border-hairline pt-2 mt-1 flex justify-between text-sm font-bold">
                       <span>Total</span>
                       <span>{formatCurrency(jobInvoice.total)}</span>
                     </div>
@@ -1105,7 +1105,7 @@ export default function JobDetail() {
               <Card>
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-medium text-gray-900">
+                    <div className="text-sm font-medium text-ink">
                       {jobData?.profit_override ? 'Custom split' : 'Default split'}
                     </div>
                     {jobData?.profit_override
@@ -1124,7 +1124,7 @@ export default function JobDetail() {
                           );
                         }
                         return (
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-muted mt-1">
                             Source {fmt(src)}%
                             {' · '}Tech {fmt(tech)}%
                             {' · '}Company {fmt(100 - sum)}%
@@ -1132,7 +1132,7 @@ export default function JobDetail() {
                         );
                       })()
                     ) : (
-                      <div className="text-xs text-gray-500 mt-1">
+                      <div className="text-xs text-muted mt-1">
                         From source + tech defaults
                       </div>
                     )}
@@ -1144,14 +1144,14 @@ export default function JobDetail() {
 
             {/* Section 11: Before / After photos — card with bordered boxes (FIX 6) */}
             <Card>
-              <h3 className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-3">Photos</h3>
+              <h3 className="text-xs font-semibold text-blue uppercase tracking-wider mb-3">Photos</h3>
               <div className="grid grid-cols-2 gap-4">
                 {/* Before box */}
-                <div className="border border-gray-200 rounded-xl p-3 min-h-[120px]">
+                <div className="border border-hairline rounded-xl p-3 min-h-[120px]">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase">Before</span>
+                    <span className="text-xs font-semibold text-muted uppercase">Before</span>
                     <button onClick={() => beforeInputRef.current?.click()} disabled={uploadingPhoto}
-                      className="text-[#1A73E8] min-h-[32px] flex items-center">
+                      className="text-blue min-h-[32px] flex items-center">
                       <Camera size={14} />
                     </button>
                   </div>
@@ -1165,17 +1165,17 @@ export default function JobDetail() {
                         </button>
                       ))
                     ) : (
-                      <p className="text-xs text-gray-400 text-center w-full py-4">No before photos</p>
+                      <p className="text-xs text-muted text-center w-full py-4">No before photos</p>
                     )}
                   </div>
                 </div>
 
                 {/* After box */}
-                <div className="border border-gray-200 rounded-xl p-3 min-h-[120px]">
+                <div className="border border-hairline rounded-xl p-3 min-h-[120px]">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold text-gray-500 uppercase">After</span>
+                    <span className="text-xs font-semibold text-muted uppercase">After</span>
                     <button onClick={() => afterInputRef.current?.click()} disabled={uploadingPhoto}
-                      className="text-[#1A73E8] min-h-[32px] flex items-center">
+                      className="text-blue min-h-[32px] flex items-center">
                       <Camera size={14} />
                     </button>
                   </div>
@@ -1189,7 +1189,7 @@ export default function JobDetail() {
                         </button>
                       ))
                     ) : (
-                      <p className="text-xs text-gray-400 text-center w-full py-4">No after photos</p>
+                      <p className="text-xs text-muted text-center w-full py-4">No after photos</p>
                     )}
                   </div>
                 </div>
@@ -1200,12 +1200,12 @@ export default function JobDetail() {
                 this job to a partner (sent_to set, you're the sender). Toggles → PUT /jobs/:id. */}
             {jobData.sent_to_company_id && !jobData.sent_by_company_id && (
               <Card className="mt-3">
-                <h3 className="text-sm font-semibold text-gray-900">Partner Permissions</h3>
-                <p className="text-xs text-gray-500 mb-2">Control what the partner company can do with this job.</p>
-                <div className="divide-y divide-gray-100">
+                <h3 className="text-sm font-semibold text-ink">Partner Permissions</h3>
+                <p className="text-xs text-muted mb-2">Control what the partner company can do with this job.</p>
+                <div className="divide-y divide-hairline">
                   {TECH_PERM_KEYS.map(([key, label]) => (
                     <div key={key} className="flex items-center justify-between py-2 min-h-[44px]">
-                      <span className="text-sm text-gray-700">{label}</span>
+                      <span className="text-sm text-ink">{label}</span>
                       <Toggle checked={!!techPerms[key]} onChange={e => handleTechPermToggle(key, e.target.checked)} />
                     </div>
                   ))}
@@ -1222,8 +1222,8 @@ export default function JobDetail() {
                     {parts.map(p => (
                       <div key={p.id} className="flex items-center justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">{p.name}</p>
-                          <p className="text-xs text-gray-400">{p.provider === 'tech' ? 'Tech supplies' : 'Company supplies'}</p>
+                          <p className="text-sm font-medium text-ink truncate">{p.name}</p>
+                          <p className="text-xs text-muted">{p.provider === 'tech' ? 'Tech supplies' : 'Company supplies'}</p>
                         </div>
                         <p className="text-sm font-semibold">{formatCurrency(p.cost)}</p>
                         <button onClick={() => handleDeletePart(p.id)}
@@ -1232,25 +1232,25 @@ export default function JobDetail() {
                         </button>
                       </div>
                     ))}
-                    <div className="border-t border-gray-100 pt-2 flex justify-between text-sm font-bold">
+                    <div className="border-t border-hairline pt-2 flex justify-between text-sm font-bold">
                       <span>Parts Total</span>
                       <span>{formatCurrency(parts.reduce((s,p) => s + Number(p.cost||0), 0))}</span>
                     </div>
                   </div>
                 </Card>
               ) : (
-                <p className="text-sm text-gray-400 text-center py-3 bg-gray-50 rounded-xl mb-3">No parts added</p>
+                <p className="text-sm text-muted text-center py-3 bg-background rounded-xl mb-3">No parts added</p>
               )}
               <div className="flex gap-3">
                 <button
                   onClick={() => { setPartsModal(true); setPartForm({ name: '', cost: '', provider: 'company' }); }}
-                  className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
+                  className="flex-1 py-3 border border-hairline text-ink rounded-xl font-semibold text-sm min-h-[48px]">
                   🔩 Add Parts
                 </button>
                 {jobInvoice && jobInvoice.status !== 'paid' && can('payments_refunds','edit_self') && (
                   <button
                     onClick={() => setDepositModal(true)}
-                    className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm min-h-[48px]">
+                    className="flex-1 py-3 border border-hairline text-ink rounded-xl font-semibold text-sm min-h-[48px]">
                     💳 Charge Payment
                   </button>
                 )}
@@ -1295,21 +1295,21 @@ export default function JobDetail() {
                   ? setHistOpen(prev => ({ ...prev, [key]: !prev[key] }))
                   : toggleHistSection(key)}
                   className="w-full flex items-center justify-between min-h-[44px]">
-                  <span className="font-semibold text-gray-900 text-sm">{label}</span>
-                  <ChevronDown size={16} className={`text-gray-400 transition-transform ${histOpen[key] ? 'rotate-180' : ''}`} />
+                  <span className="font-semibold text-ink text-sm">{label}</span>
+                  <ChevronDown size={16} className={`text-muted transition-transform ${histOpen[key] ? 'rotate-180' : ''}`} />
                 </button>
                 {histOpen[key] && (
-                  <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="mt-3 pt-3 border-t border-hairline">
                     {key === 'past_jobs' && (
                       histLoading[key] ? <LoadingSpinner /> :
-                      pastJobs.length === 0 ? <p className="text-sm text-gray-400 py-2 text-center">No other jobs for this customer</p> :
+                      pastJobs.length === 0 ? <p className="text-sm text-muted py-2 text-center">No other jobs for this customer</p> :
                       <div className="space-y-2">
                         {pastJobs.map(j => (
                           <button key={j.id} onClick={() => navigate(`/jobs/${j.id}`)}
-                            className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
+                            className="w-full flex items-center justify-between text-left py-2 hover:bg-background rounded-lg px-1">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">#{j.job_number} · {j.title}</p>
-                              {j.scheduled_start && <p className="text-xs text-gray-400">{formatDate(j.scheduled_start)}</p>}
+                              <p className="text-sm font-medium text-ink">#{j.job_number} · {j.title}</p>
+                              {j.scheduled_start && <p className="text-xs text-muted">{formatDate(j.scheduled_start)}</p>}
                             </div>
                             <Badge status={j.status} label={j.status?.replace(/_/g,' ')} />
                           </button>
@@ -1318,14 +1318,14 @@ export default function JobDetail() {
                     )}
                     {key === 'estimates' && (
                       histLoading[key] ? <LoadingSpinner /> :
-                      jobEstimates.length === 0 ? <p className="text-sm text-gray-400 py-2 text-center">No estimates</p> :
+                      jobEstimates.length === 0 ? <p className="text-sm text-muted py-2 text-center">No estimates</p> :
                       <div className="space-y-2">
                         {jobEstimates.map(e => (
                           <button key={e.id} onClick={() => navigate(`/estimates/${e.id}`)}
-                            className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
+                            className="w-full flex items-center justify-between text-left py-2 hover:bg-background rounded-lg px-1">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{e.estimate_number || `EST-${e.id?.slice(0,6)}`}</p>
-                              <p className="text-xs text-gray-400">{formatCurrency(e.total)}</p>
+                              <p className="text-sm font-medium text-ink">{e.estimate_number || `EST-${e.id?.slice(0,6)}`}</p>
+                              <p className="text-xs text-muted">{formatCurrency(e.total)}</p>
                             </div>
                             <Badge status={e.status} label={e.status} />
                           </button>
@@ -1334,14 +1334,14 @@ export default function JobDetail() {
                     )}
                     {key === 'invoices' && (
                       histLoading[key] ? <LoadingSpinner /> :
-                      jobInvoices.length === 0 ? <p className="text-sm text-gray-400 py-2 text-center">No invoices</p> :
+                      jobInvoices.length === 0 ? <p className="text-sm text-muted py-2 text-center">No invoices</p> :
                       <div className="space-y-2">
                         {jobInvoices.map(inv => (
                           <button key={inv.id} onClick={() => navigate(`/invoices/${inv.id}`)}
-                            className="w-full flex items-center justify-between text-left py-2 hover:bg-gray-50 rounded-lg px-1">
+                            className="w-full flex items-center justify-between text-left py-2 hover:bg-background rounded-lg px-1">
                             <div>
-                              <p className="text-sm font-medium text-gray-900">{inv.invoice_number || `INV-${inv.id?.slice(0,6)}`}</p>
-                              <p className="text-xs text-gray-400">{formatCurrency(inv.total)}</p>
+                              <p className="text-sm font-medium text-ink">{inv.invoice_number || `INV-${inv.id?.slice(0,6)}`}</p>
+                              <p className="text-xs text-muted">{formatCurrency(inv.total)}</p>
                             </div>
                             <Badge status={inv.status} label={inv.status} />
                           </button>
@@ -1350,31 +1350,31 @@ export default function JobDetail() {
                     )}
                     {key === 'notes' && (
                       notes
-                        ? <p className="text-sm text-gray-700 whitespace-pre-wrap">{notes}</p>
-                        : <p className="text-sm text-gray-400 text-center py-2">No notes added</p>
+                        ? <p className="text-sm text-ink whitespace-pre-wrap">{notes}</p>
+                        : <p className="text-sm text-muted text-center py-2">No notes added</p>
                     )}
                     {key === 'photos' && (
                       beforePhotos.length === 0 && afterPhotos.length === 0 ? (
-                        <p className="text-sm text-gray-400 text-center py-2">No photos added</p>
+                        <p className="text-sm text-muted text-center py-2">No photos added</p>
                       ) : (
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Before</p>
+                            <p className="text-xs font-semibold text-muted uppercase mb-2">Before</p>
                             <div className="space-y-1">
                               {beforePhotos.map((photo, i) => (
                                 <button key={i} onClick={() => setLightbox({ photos: beforePhotos, index: i })}
-                                  className="aspect-square w-full rounded-xl overflow-hidden bg-gray-100">
+                                  className="aspect-square w-full rounded-xl overflow-hidden bg-background">
                                   <img src={photo?.url||photo} alt="" className="w-full h-full object-cover" />
                                 </button>
                               ))}
                             </div>
                           </div>
                           <div>
-                            <p className="text-xs font-semibold text-gray-400 uppercase mb-2">After</p>
+                            <p className="text-xs font-semibold text-muted uppercase mb-2">After</p>
                             <div className="space-y-1">
                               {afterPhotos.map((photo, i) => (
                                 <button key={i} onClick={() => setLightbox({ photos: afterPhotos, index: i })}
-                                  className="aspect-square w-full rounded-xl overflow-hidden bg-gray-100">
+                                  className="aspect-square w-full rounded-xl overflow-hidden bg-background">
                                   <img src={photo?.url||photo} alt="" className="w-full h-full object-cover" />
                                 </button>
                               ))}
@@ -1396,17 +1396,17 @@ export default function JobDetail() {
             <div className="flex-1 space-y-3 pb-4">
               {messagesLoading ? <LoadingSpinner /> :
                jobMessages.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">No messages for this job yet.</p>
+                <p className="text-center text-muted text-sm py-8">No messages for this job yet.</p>
                ) : (
                 jobMessages.map((msg, i) => {
                   const isOutbound = msg.direction === 'outbound' || msg.type === 'outbound';
                   return (
                     <div key={msg.id||i} className={`flex ${isOutbound ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
-                        isOutbound ? 'bg-[#1A73E8] text-white rounded-br-sm' : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                        isOutbound ? 'bg-blue text-white rounded-br-sm' : 'bg-background text-ink rounded-bl-sm'
                       }`}>
                         <p className="text-sm">{msg.body||msg.message}</p>
-                        <p className={`text-[10px] mt-1 ${isOutbound ? 'text-blue-200' : 'text-gray-400'}`}>
+                        <p className={`text-[10px] mt-1 ${isOutbound ? 'text-blue-200' : 'text-muted'}`}>
                           {msg.created_at ? format(new Date(msg.created_at), 'h:mm a') : ''}
                         </p>
                       </div>
@@ -1417,17 +1417,17 @@ export default function JobDetail() {
               <div ref={messagesEndRef} />
             </div>
             {convId ? (
-              <form onSubmit={handleSendMessage} className="flex items-center gap-2 pt-3 border-t border-gray-100">
+              <form onSubmit={handleSendMessage} className="flex items-center gap-2 pt-3 border-t border-hairline">
                 <input type="text" value={messageBody} onChange={e => setMessageBody(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 rounded-full border border-gray-300 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+                  className="flex-1 rounded-full border border-hairline px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]" />
                 <button type="submit" disabled={sendingMsg || !messageBody.trim()}
-                  className="w-11 h-11 bg-[#1A73E8] text-white rounded-full flex items-center justify-center disabled:opacity-50">
+                  className="w-11 h-11 bg-blue text-white rounded-full flex items-center justify-center disabled:opacity-50">
                   <Send size={18} />
                 </button>
               </form>
             ) : (
-              <p className="text-xs text-gray-400 text-center pt-3 border-t border-gray-100">
+              <p className="text-xs text-muted text-center pt-3 border-t border-hairline">
                 No SMS conversation linked to this job.
               </p>
             )}
@@ -1452,14 +1452,14 @@ export default function JobDetail() {
               value={pbSearch}
               onChange={e => { handlePbSearch(e.target.value); setNewItem(prev => ({ ...prev, name: e.target.value })); }}
               placeholder="AC filter, labor..." />
-            {pbSearching && <p className="text-xs text-gray-400 mt-1">Searching...</p>}
+            {pbSearching && <p className="text-xs text-muted mt-1">Searching...</p>}
             {pbResults.length > 0 && (
-              <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+              <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-card border border-hairline rounded-xl shadow-lg overflow-hidden">
                 {pbResults.map(item => (
                   <button key={item.id||item._id} type="button" onClick={() => selectPbItem(item)}
-                    className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
+                    className="w-full text-left px-4 py-3 hover:bg-background text-sm border-b last:border-0 flex items-center justify-between">
                     <span className="font-medium">{item.name}</span>
-                    <span className="text-gray-400">${Number(item.unit_price||item.price||0).toFixed(2)}</span>
+                    <span className="text-muted">${Number(item.unit_price||item.price||0).toFixed(2)}</span>
                   </button>
                 ))}
               </div>
@@ -1467,7 +1467,7 @@ export default function JobDetail() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-1">Qty</p>
+              <p className="text-sm font-medium text-ink mb-1">Qty</p>
               <StepperInput value={newItem.qty} min={1} onChange={v => setNewItem(prev => ({ ...prev, qty: v }))} />
             </div>
             <Input label="Unit Price ($)" type="number" value={newItem.unit_price}
@@ -1492,7 +1492,7 @@ export default function JobDetail() {
             onChange={e => setPartForm(prev => ({ ...prev, cost: e.target.value }))}
             placeholder="0.00" />
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Supplied by</p>
+            <p className="text-sm font-medium text-ink mb-2">Supplied by</p>
             <div className="flex gap-2">
               {[
                 { v: 'company', label: 'Company' },
@@ -1502,8 +1502,8 @@ export default function JobDetail() {
                   onClick={() => setPartForm(prev => ({ ...prev, provider: v }))}
                   className={`flex-1 py-2 rounded-xl text-sm font-medium border min-h-[44px] ${
                     partForm.provider === v
-                      ? 'bg-[#1A73E8] text-white border-[#1A73E8]'
-                      : 'bg-white text-gray-600 border-gray-300'
+                      ? 'bg-blue text-white border-blue'
+                      : 'bg-card text-ink border-hairline'
                   }`}>{label}</button>
               ))}
             </div>
@@ -1517,7 +1517,7 @@ export default function JobDetail() {
           {JOB_STATUSES.map(s => (
             <button key={s.value} onClick={() => handleStatusChange(s.value)}
               className={`w-full text-left px-4 py-3 rounded-xl transition-colors min-h-[44px] flex items-center gap-3 ${
-                jobData.status === s.value ? 'bg-blue-50 text-[#1A73E8] font-semibold' : 'hover:bg-gray-50 text-gray-700'
+                jobData.status === s.value ? 'bg-blue-50 text-blue font-semibold' : 'hover:bg-background text-ink'
               }`}>
               <Badge status={s.value} label={s.label} />
             </button>
@@ -1533,7 +1533,7 @@ export default function JobDetail() {
             <Button loading={mutating} onClick={handleDispatch}>Dispatch</Button>
           </>
         }>
-        <p className="text-gray-600">Dispatch tech to {jobData.customer_name || 'the customer'}? They will receive an ETA notification.</p>
+        <p className="text-ink">Dispatch tech to {jobData.customer_name || 'the customer'}? They will receive an ETA notification.</p>
       </Modal>
 
       {/* Send To */}
@@ -1547,23 +1547,23 @@ export default function JobDetail() {
         }>
         {sendToLoading ? <LoadingSpinner /> :
          sendToRecipients.length === 0 ? (
-          <p className="text-gray-400 text-sm text-center py-4">No recipients available.</p>
+          <p className="text-muted text-sm text-center py-4">No recipients available.</p>
          ) : (
           <div className="space-y-4">
             {sendToRecipients.some(r => r.type !== 'partner') && (
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Technicians</p>
+                <p className="text-xs font-semibold text-muted uppercase mb-2">Technicians</p>
                 {sendToRecipients.filter(r => r.type !== 'partner').map(r => (
                   <button key={r.id} onClick={() => { setSelectedRecipient(r); setSendMethod('sms'); }}
                     className={`w-full text-left px-4 py-3 rounded-xl mb-1 flex items-center gap-3 transition-colors border ${
-                      selectedRecipient?.id === r.id ? 'bg-blue-50 border-[#1A73E8]' : 'bg-gray-50 border-transparent hover:bg-gray-100'
+                      selectedRecipient?.id === r.id ? 'bg-blue-50 border-blue' : 'bg-background border-transparent hover:bg-background'
                     }`}>
-                    <div className="w-8 h-8 rounded-full bg-[#1A73E8] text-white flex items-center justify-center text-sm font-semibold shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-blue text-white flex items-center justify-center text-sm font-semibold shrink-0">
                       {(r.name||'?')[0].toUpperCase()}
                     </div>
                     <div>
-                      <p className="font-medium text-sm text-gray-900">{r.name}</p>
-                      <p className="text-xs text-gray-400">SMS / Email</p>
+                      <p className="font-medium text-sm text-ink">{r.name}</p>
+                      <p className="text-xs text-muted">SMS / Email</p>
                     </div>
                   </button>
                 ))}
@@ -1572,7 +1572,7 @@ export default function JobDetail() {
                     {['sms','email','both'].map(m => (
                       <button key={m} onClick={() => setSendMethod(m)}
                         className={`flex-1 py-2 rounded-xl text-sm font-medium border min-h-[44px] ${
-                          sendMethod === m ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-200'
+                          sendMethod === m ? 'bg-blue text-white border-blue' : 'bg-card text-ink border-hairline'
                         }`}>
                         {m.charAt(0).toUpperCase()+m.slice(1)}
                       </button>
@@ -1583,16 +1583,16 @@ export default function JobDetail() {
             )}
             {sendToRecipients.some(r => r.type === 'partner') && (
               <div>
-                <p className="text-xs font-semibold text-gray-400 uppercase mb-2">Network Partners</p>
+                <p className="text-xs font-semibold text-muted uppercase mb-2">Network Partners</p>
                 {sendToRecipients.filter(r => r.type === 'partner').map(r => (
                   <button key={r.id} onClick={() => setSelectedRecipient(r)}
                     className={`w-full text-left px-4 py-3 rounded-xl mb-1 flex items-center gap-3 transition-colors border ${
-                      selectedRecipient?.id === r.id ? 'bg-blue-50 border-[#1A73E8]' : 'bg-gray-50 border-transparent hover:bg-gray-100'
+                      selectedRecipient?.id === r.id ? 'bg-blue-50 border-blue' : 'bg-background border-transparent hover:bg-background'
                     }`}>
                     <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center text-sm font-semibold shrink-0">
                       {(r.name||'?')[0].toUpperCase()}
                     </div>
-                    <p className="font-medium text-sm text-gray-900">{r.name}</p>
+                    <p className="font-medium text-sm text-ink">{r.name}</p>
                   </button>
                 ))}
               </div>
@@ -1614,34 +1614,34 @@ export default function JobDetail() {
             <>
               {/* Parts */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Who provided parts?</label>
+                <label className="block text-xs font-semibold text-ink mb-1">Who provided parts?</label>
                 <div className="flex gap-2">
                   {[['sender','Company'],['receiver','Technician'],['none','No Parts']].map(([v, lbl]) => (
                     <button key={v} type="button" onClick={() => setPartsPaidBy(v)}
                       className={`flex-1 px-3 py-2 rounded-xl border text-base min-h-[44px] transition-colors ${
-                        partsPaidBy === v ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300'
+                        partsPaidBy === v ? 'bg-blue text-white border-blue' : 'bg-card text-ink border-hairline'
                       }`}>{lbl}</button>
                   ))}
                 </div>
                 {partsPaidBy !== 'none' && (
                   <div className="relative mt-2">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">$</span>
                     <input inputMode="decimal" value={partsAmount}
                       onChange={e => setPartsAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                       placeholder="Parts Amount"
-                      className="w-full border border-gray-300 rounded-xl pl-7 pr-4 py-3 text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                      className="w-full border border-hairline rounded-xl pl-7 pr-4 py-3 text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue" />
                   </div>
                 )}
               </div>
 
               {/* Payment Collection */}
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Who collected payment?</label>
+                <label className="block text-xs font-semibold text-ink mb-1">Who collected payment?</label>
                 <div className="flex gap-2">
                   {[['sender','Sender'],['receiver','Receiver']].map(([v, lbl]) => (
                     <button key={v} type="button" onClick={() => setPaymentCollectedBy(v)}
                       className={`flex-1 px-3 py-2 rounded-xl border text-base min-h-[44px] transition-colors ${
-                        paymentCollectedBy === v ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300'
+                        paymentCollectedBy === v ? 'bg-blue text-white border-blue' : 'bg-card text-ink border-hairline'
                       }`}>{lbl}</button>
                   ))}
                 </div>
@@ -1650,24 +1650,24 @@ export default function JobDetail() {
               {/* CC Fee */}
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-gray-900">CC processing fee?</span>
+                  <span className="text-sm font-medium text-ink">CC processing fee?</span>
                   <Toggle checked={hasCcFee} onChange={e => setHasCcFee(e.target.checked)} />
                 </div>
                 {hasCcFee && (
                   <div className="mt-2 space-y-2">
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted">$</span>
                       <input inputMode="decimal" value={ccFeeAmount}
                         onChange={e => setCcFeeAmount(e.target.value.replace(/[^0-9.]/g, ''))}
                         placeholder="CC Fee Amount"
-                        className="w-full border border-gray-300 rounded-xl pl-7 pr-4 py-3 text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+                        className="w-full border border-hairline rounded-xl pl-7 pr-4 py-3 text-base min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue" />
                     </div>
-                    <label className="block text-xs font-semibold text-gray-600">Absorbed by:</label>
+                    <label className="block text-xs font-semibold text-ink">Absorbed by:</label>
                     <div className="flex gap-2">
                       {[['sender','Sender'],['receiver','Receiver'],['split','Split 50/50']].map(([v, lbl]) => (
                         <button key={v} type="button" onClick={() => setCcFeePaidBy(v)}
                           className={`flex-1 px-3 py-2 rounded-xl border text-base min-h-[44px] transition-colors ${
-                            ccFeePaidBy === v ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-300'
+                            ccFeePaidBy === v ? 'bg-blue text-white border-blue' : 'bg-card text-ink border-hairline'
                           }`}>{lbl}</button>
                       ))}
                     </div>
@@ -1677,35 +1677,35 @@ export default function JobDetail() {
 
               {/* Live Calculation */}
               <div className="rounded-xl bg-blue-50 p-4 space-y-1.5">
-                <div className="text-xs font-bold text-[#1A73E8] uppercase tracking-wide">Live Calculation</div>
+                <div className="text-xs font-bold text-blue uppercase tracking-wide">Live Calculation</div>
                 {jobInvoice ? (
                   <>
-                    <div className="flex justify-between text-sm text-gray-600"><span>Job Total</span><span>{formatCurrency(calcGross)}</span></div>
+                    <div className="flex justify-between text-sm text-ink"><span>Job Total</span><span>{formatCurrency(calcGross)}</span></div>
                     {calcParts > 0 && (
-                      <div className="flex justify-between text-sm text-gray-600">
+                      <div className="flex justify-between text-sm text-ink">
                         <span>- Parts ({partsPaidBy === 'sender' ? 'Company' : 'Technician'})</span><span>-{formatCurrency(calcParts)}</span>
                       </div>
                     )}
                     {calcCc > 0 && (
-                      <div className="flex justify-between text-sm text-gray-600">
+                      <div className="flex justify-between text-sm text-ink">
                         <span>- CC Fee ({ccFeePaidBy})</span><span>-{formatCurrency(calcCc)}</span>
                       </div>
                     )}
                     <div className="border-t border-blue-200 my-1" />
-                    <div className="flex justify-between text-sm font-semibold text-gray-900"><span>Net</span><span>{formatCurrency(calcNet)}</span></div>
+                    <div className="flex justify-between text-sm font-semibold text-ink"><span>Net</span><span>{formatCurrency(calcNet)}</span></div>
                     {senderPct > 0 && (
-                      <div className="flex justify-between text-sm font-semibold text-gray-900">
+                      <div className="flex justify-between text-sm font-semibold text-ink">
                         <span>Your share ({Math.trunc(senderPct)}%)</span><span>{formatCurrency(calcSender)}</span>
                       </div>
                     )}
                     {receiverPct > 0 && (
-                      <div className="flex justify-between text-sm font-semibold text-gray-900">
+                      <div className="flex justify-between text-sm font-semibold text-ink">
                         <span>Partner share ({Math.trunc(receiverPct)}%)</span><span>{formatCurrency(calcReceiver)}</span>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="text-xs text-gray-500">No invoice found for this job. You can still submit; the office reconciles the split.</div>
+                  <div className="text-xs text-muted">No invoice found for this job. You can still submit; the office reconciles the split.</div>
                 )}
               </div>
             </>
@@ -1713,8 +1713,8 @@ export default function JobDetail() {
 
           {/* Completion Notes (always) */}
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Completion Notes</label>
-            <textarea className="w-full border border-gray-300 rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+            <label className="block text-xs font-semibold text-ink mb-1">Completion Notes</label>
+            <textarea className="w-full border border-hairline rounded-xl px-4 py-3 text-base min-h-[80px] focus:outline-none focus:ring-2 focus:ring-blue"
               value={completionNotes} onChange={e => setCompletionNotes(e.target.value)}
               placeholder="Describe the work completed..." />
           </div>
@@ -1732,8 +1732,8 @@ export default function JobDetail() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-gray-900">Override default split</div>
-              <div className="text-xs text-gray-500">For this job only. Doesn't change source or tech defaults.</div>
+              <div className="text-sm font-medium text-ink">Override default split</div>
+              <div className="text-xs text-muted">For this job only. Doesn't change source or tech defaults.</div>
             </div>
             <Toggle
               checked={profitOverrideEnabled}
@@ -1747,13 +1747,13 @@ export default function JobDetail() {
                 onChange={(e) => setProfitSourcePct(e.target.value)} placeholder="0" />
               <Input label="Tech %" type="number" value={profitTechPct}
                 onChange={(e) => setProfitTechPct(e.target.value)} placeholder="0" />
-              <div className={'text-xs ' + (isOverrideConflict ? 'text-red-600 font-medium' : 'text-gray-600')}>
+              <div className={'text-xs ' + (isOverrideConflict ? 'text-red-600 font-medium' : 'text-ink')}>
                 Sum: Source {profitSourcePct || 0}% + Tech {profitTechPct || 0}% = {overrideSum}%
                 {isOverrideConflict && (
                   <span className="block mt-1">Exceeds 100%. Adjust before saving.</span>
                 )}
                 {!isOverrideConflict && overrideSum > 0 && (
-                  <span className="block text-gray-500 mt-1">Company keeps: {100 - overrideSum}%</span>
+                  <span className="block text-muted mt-1">Company keeps: {100 - overrideSum}%</span>
                 )}
               </div>
             </>
@@ -1771,7 +1771,7 @@ export default function JobDetail() {
         }>
         <div className="space-y-3">
           {jobInvoice?.balance_due != null && (
-            <p className="text-sm text-gray-600">Balance due: <strong>{formatCurrency(jobInvoice.balance_due)}</strong></p>
+            <p className="text-sm text-ink">Balance due: <strong>{formatCurrency(jobInvoice.balance_due)}</strong></p>
           )}
           <Select label="Payment Method" value={depositForm.method}
             onChange={e => setDepositForm(p => ({ ...p, method: e.target.value }))}
@@ -1789,14 +1789,14 @@ export default function JobDetail() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
           onClick={() => setShowDeleteConfirm(false)}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-gray-900 mb-2">Archive this job?</h3>
-            <p className="text-sm text-gray-600 mb-6">
+          <div className="bg-card rounded-2xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-ink mb-2">Archive this job?</h3>
+            <p className="text-sm text-ink mb-6">
               The job will be moved to deleted jobs and can be retrieved from job search. Estimates and invoices will be kept.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-3 border border-gray-300 rounded-xl text-gray-700 font-medium min-h-[44px]">Cancel</button>
+                className="flex-1 py-3 border border-hairline rounded-xl text-ink font-medium min-h-[44px]">Cancel</button>
               <button onClick={handleDeleteJob}
                 className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]">Archive</button>
             </div>

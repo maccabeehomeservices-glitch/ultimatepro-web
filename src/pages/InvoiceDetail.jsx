@@ -481,7 +481,7 @@ export default function InvoiceDetail() {
   }
 
   if (loading) return <LoadingSpinner fullPage />;
-  if (!invoice) return <div className="p-4 text-gray-500">Invoice not found.</div>;
+  if (!invoice) return <div className="p-4 text-muted">Invoice not found.</div>;
 
   const lineItems = invoice.line_items || invoice.items || [];
   const payments = invoice.payments || [];
@@ -492,15 +492,15 @@ export default function InvoiceDetail() {
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
         <div className="flex-1">
-          <h1 className="font-bold text-gray-900 text-lg">
+          <h1 className="font-bold text-ink text-lg">
             {`Invoice ${invoice.invoice_number || invoice.id?.slice(0,8)}`}
           </h1>
           {(invoice.cust_first || invoice.cust_last) && (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted">
               {[invoice.cust_first, invoice.cust_last].filter(Boolean).join(' ')}
             </p>
           )}
@@ -513,15 +513,15 @@ export default function InvoiceDetail() {
       {/* Customer */}
       {(invoice.cust_first || invoice.cust_last || invoice.cust_phone || invoice.cust_email || invoice.cust_address) && (
         <Card className="mb-4">
-          <p className="text-xs text-blue-600 uppercase font-semibold tracking-wider mb-2">Bill To</p>
+          <p className="text-xs text-blue uppercase font-semibold tracking-wider mb-2">Bill To</p>
           <div className="space-y-1">
-            <p className="font-semibold text-gray-900 text-base">
+            <p className="font-semibold text-ink text-base">
               {[invoice.cust_first, invoice.cust_last].filter(Boolean).join(' ') || '-'}
             </p>
             {invoice.cust_phone && (
               <a
                 href={`tel:${invoice.cust_phone}`}
-                className="block text-sm text-blue-600 hover:underline"
+                className="block text-sm text-blue hover:underline"
               >
                 📞 {invoice.cust_phone}
               </a>
@@ -529,13 +529,13 @@ export default function InvoiceDetail() {
             {invoice.cust_email && (
               <a
                 href={`mailto:${invoice.cust_email}`}
-                className="block text-sm text-blue-600 hover:underline truncate"
+                className="block text-sm text-blue hover:underline truncate"
               >
                 ✉️ {invoice.cust_email}
               </a>
             )}
             {(invoice.cust_address || invoice.cust_city) && (
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-ink">
                 📍 {[invoice.cust_address, invoice.cust_city, invoice.cust_state, invoice.cust_zip]
                       .filter(Boolean)
                       .join(', ')}
@@ -548,11 +548,11 @@ export default function InvoiceDetail() {
       {/* Line Items */}
       <Card className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <p className="text-xs text-gray-400 uppercase font-medium">Line Items</p>
+          <p className="text-xs text-muted uppercase font-medium">Line Items</p>
           {editItems === null && !isPaid && invoice.status !== 'void' && can('estimates_invoices', 'edit_self') && (
             <button
               onClick={startEditItems}
-              className="flex items-center gap-1 text-xs font-semibold text-[#1A73E8] hover:bg-blue-50 px-2 py-1.5 rounded-lg min-h-[36px]"
+              className="flex items-center gap-1 text-xs font-semibold text-blue hover:bg-blue-50 px-2 py-1.5 rounded-lg min-h-[36px]"
             >
               <Pencil size={14} /> Edit items
             </button>
@@ -567,61 +567,61 @@ export default function InvoiceDetail() {
               const itemTotal = Number(item.total || qty * price);
               const isDiscount = item.item_type === 'discount';
               return (
-                <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-gray-50 last:border-0">
+                <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-hairline last:border-0">
                   {item.image_url && (
-                    <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                    <img src={item.image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-hairline" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-ink">
                       {item.name}
                       {isDiscount && (
                         <span className="ml-2 text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded">DISCOUNT</span>
                       )}
                     </p>
                     {item.description && (
-                      <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                      <p className="text-xs text-muted mt-0.5">{item.description}</p>
                     )}
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-muted mt-0.5">
                       {item.sku && <span className="mr-2">SKU: {item.sku}</span>}
                       {qty} × {formatCurrency(price)}
                     </p>
                   </div>
-                  <p className={`font-semibold text-sm ${isDiscount ? 'text-red-500' : 'text-gray-900'}`}>
+                  <p className={`font-semibold text-sm ${isDiscount ? 'text-red-500' : 'text-ink'}`}>
                     {isDiscount ? '-' : ''}{formatCurrency(itemTotal)}
                   </p>
                 </div>
               );
             })}
-            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between">
+            <div className="mt-3 pt-3 border-t border-hairline flex justify-between">
               <p className="font-bold">Total</p>
-              <p className="font-bold text-xl text-[#1A73E8]">{formatCurrency(invoice.total)}</p>
+              <p className="font-bold text-xl text-blue">{formatCurrency(invoice.total)}</p>
             </div>
           </>
         ) : (
           <>
             {editItems.map((it, idx) => (
-              <div key={idx} className="flex items-center gap-2 py-2 border-b border-gray-50 last:border-0">
+              <div key={idx} className="flex items-center gap-2 py-2 border-b border-hairline last:border-0">
                 <div className="flex-1 min-w-0 space-y-1">
                   <input
                     value={it.name}
                     onChange={(e) => updateEditItem(idx, 'name', e.target.value)}
                     placeholder="Item name"
-                    className="w-full px-2 py-2 border border-gray-200 rounded-lg text-sm min-h-[44px]"
+                    className="w-full px-2 py-2 border border-hairline rounded-lg text-sm min-h-[44px]"
                   />
                   <div className="flex items-center gap-2">
-                    <label className="text-[10px] text-gray-400 uppercase">Qty</label>
+                    <label className="text-[10px] text-muted uppercase">Qty</label>
                     <input
                       type="number" min="0" step="1" value={it.quantity}
                       onChange={(e) => updateEditItem(idx, 'quantity', e.target.value)}
-                      className="w-16 px-2 py-1.5 border border-gray-200 rounded-lg text-sm"
+                      className="w-16 px-2 py-1.5 border border-hairline rounded-lg text-sm"
                     />
-                    <label className="text-[10px] text-gray-400 uppercase ml-1">Price</label>
+                    <label className="text-[10px] text-muted uppercase ml-1">Price</label>
                     <input
                       type="number" min="0" step="0.01" placeholder="0.00" value={it.unit_price}
                       onChange={(e) => updateEditItem(idx, 'unit_price', e.target.value)}
-                      className="w-24 px-2 py-1.5 border border-gray-200 rounded-lg text-sm"
+                      className="w-24 px-2 py-1.5 border border-hairline rounded-lg text-sm"
                     />
-                    <span className="ml-auto text-sm font-semibold text-gray-700">
+                    <span className="ml-auto text-sm font-semibold text-ink">
                       {formatCurrency((Number(it.quantity) || 1) * (Number(it.unit_price) || 0))}
                     </span>
                   </div>
@@ -637,13 +637,13 @@ export default function InvoiceDetail() {
             ))}
             <button
               onClick={addEditItem}
-              className="flex items-center gap-1 text-xs font-semibold text-[#1A73E8] hover:bg-blue-50 px-2 py-2 rounded-lg mt-2 min-h-[40px]"
+              className="flex items-center gap-1 text-xs font-semibold text-blue hover:bg-blue-50 px-2 py-2 rounded-lg mt-2 min-h-[40px]"
             >
               <Plus size={14} /> Add item
             </button>
-            <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
+            <div className="mt-3 pt-3 border-t border-hairline flex justify-between items-center">
               <p className="font-bold">Total</p>
-              <p className="font-bold text-xl text-[#1A73E8]">
+              <p className="font-bold text-xl text-blue">
                 {formatCurrency((editItems || []).reduce((s, it) => {
                   const lt = (Number(it.quantity) || 1) * (Number(it.unit_price) || 0);
                   return it.item_type === 'discount' ? s - lt : s + lt;
@@ -666,28 +666,28 @@ export default function InvoiceDetail() {
       {/* Notes */}
       {invoice.notes && (
         <Card className="mb-4">
-          <p className="text-xs text-gray-400 uppercase font-medium mb-1">Notes</p>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.notes}</p>
+          <p className="text-xs text-muted uppercase font-medium mb-1">Notes</p>
+          <p className="text-sm text-ink whitespace-pre-wrap">{invoice.notes}</p>
         </Card>
       )}
 
       {/* Terms */}
       {invoice.terms && (
         <Card className="mb-4">
-          <p className="text-xs text-gray-400 uppercase font-medium mb-1">Terms</p>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.terms}</p>
+          <p className="text-xs text-muted uppercase font-medium mb-1">Terms</p>
+          <p className="text-sm text-ink whitespace-pre-wrap">{invoice.terms}</p>
         </Card>
       )}
 
       {/* Payment History */}
       {payments.length > 0 && (
         <Card className="mb-4">
-          <p className="text-xs text-gray-400 uppercase font-medium mb-3">Payment History</p>
+          <p className="text-xs text-muted uppercase font-medium mb-3">Payment History</p>
           {payments.map((p, i) => (
-            <div key={i} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+            <div key={i} className="flex items-center justify-between py-2 border-b border-hairline last:border-0">
               <div>
-                <p className="text-sm font-medium text-gray-900">{p.method || 'Payment'}</p>
-                <p className="text-xs text-gray-400">{formatDate(p.date || p.created_at)}</p>
+                <p className="text-sm font-medium text-ink">{p.method || 'Payment'}</p>
+                <p className="text-xs text-muted">{formatDate(p.date || p.created_at)}</p>
               </div>
               <p className="font-semibold text-green-600">{formatCurrency(p.amount)}</p>
             </div>
@@ -698,17 +698,17 @@ export default function InvoiceDetail() {
       {/* Follow-up reminders */}
       {!isPaid && hasFollowup && (
         <Card className="mb-4">
-          <p className="text-xs text-gray-400 uppercase font-medium mb-2">Follow-up Reminders</p>
+          <p className="text-xs text-muted uppercase font-medium mb-2">Follow-up Reminders</p>
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-ink">
               <strong>{invoice.followup_count || 0}</strong> reminder{invoice.followup_count !== 1 ? 's' : ''} sent
             </p>
             {invoice.followup_stopped && (
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">Stopped</span>
+              <span className="text-xs bg-background text-muted px-2 py-0.5 rounded-full">Stopped</span>
             )}
           </div>
           {invoice.followup_last_sent_at && (
-            <p className="text-xs text-gray-400 mb-3">
+            <p className="text-xs text-muted mb-3">
               Last sent: {formatDate(invoice.followup_last_sent_at)}
             </p>
           )}
@@ -760,7 +760,7 @@ export default function InvoiceDetail() {
             <button
               onClick={openLinkModal}
               disabled={scanpayLoading}
-              className="py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 min-h-[44px] text-sm"
+              className="py-3 bg-blue text-white rounded-xl font-semibold hover:bg-blue-ink disabled:opacity-50 min-h-[44px] text-sm"
             >
               {scanpayLoading ? '…' : '🔗 Send Payment Link'}
             </button>
@@ -777,7 +777,7 @@ export default function InvoiceDetail() {
       <div className="mb-4">
         <button
           onClick={() => setShowSignature(true)}
-          className="w-full py-3 border-2 border-[#1A73E8] text-[#1A73E8] rounded-xl font-semibold min-h-[44px]"
+          className="w-full py-3 border-2 border-blue text-blue rounded-xl font-semibold min-h-[44px]"
         >
           ✍️ Capture Signature
         </button>
@@ -795,7 +795,7 @@ export default function InvoiceDetail() {
           </>
         }
       >
-        <p className="text-sm text-gray-700">{overpayWarn}</p>
+        <p className="text-sm text-ink">{overpayWarn}</p>
       </Modal>
 
       {/* Payment Modal */}
@@ -853,14 +853,14 @@ export default function InvoiceDetail() {
             {scanpayQr.qr_data_url ? (
               <img src={scanpayQr.qr_data_url} alt="ScanPay QR code" className="w-60 h-60 rounded-lg" />
             ) : (
-              <div className="w-60 h-60 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">QR unavailable</div>
+              <div className="w-60 h-60 bg-background rounded-lg flex items-center justify-center text-muted text-sm">QR unavailable</div>
             )}
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block" />
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <span className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin inline-block" />
               Waiting for payment…
             </div>
-            <button onClick={() => copyLink(scanpayQr.payment_url)} className="w-full py-2.5 border border-gray-300 text-gray-700 rounded-xl text-sm font-medium min-h-[44px]">📋 Copy Link</button>
-            <button onClick={() => setScanpayQr(null)} className="w-full py-2.5 text-gray-500 text-sm min-h-[44px]">Cancel</button>
+            <button onClick={() => copyLink(scanpayQr.payment_url)} className="w-full py-2.5 border border-hairline text-ink rounded-xl text-sm font-medium min-h-[44px]">📋 Copy Link</button>
+            <button onClick={() => setScanpayQr(null)} className="w-full py-2.5 text-muted text-sm min-h-[44px]">Cancel</button>
           </div>
         )}
       </Modal>
@@ -869,22 +869,22 @@ export default function InvoiceDetail() {
       <Modal isOpen={!!scanpayLink} onClose={() => setScanpayLink(null)} title="Payment Link Sent">
         {scanpayLink && (
           <div className="flex flex-col items-center gap-4 py-2">
-            <p className="text-2xl font-bold text-blue-600">{formatCurrency(scanpayAmount)}</p>
+            <p className="text-2xl font-bold text-blue">{formatCurrency(scanpayAmount)}</p>
             {scanpayLink.sms_sent && scanpayLink.phone_used && (
               <div className="w-full bg-green-50 text-green-700 text-sm rounded-lg px-3 py-2 text-center">SMS sent to {scanpayLink.phone_used}</div>
             )}
             <div className="w-full">
-              <label className="block text-xs text-gray-500 mb-1">Payment Link</label>
+              <label className="block text-xs text-muted mb-1">Payment Link</label>
               <div className="flex items-center gap-2">
-                <input readOnly value={scanpayLink.payment_url} className="flex-1 border border-gray-300 rounded-xl px-3 py-2.5 text-sm min-h-[44px]" />
-                <button onClick={() => copyLink(scanpayLink.payment_url)} className="px-3 py-2.5 border border-gray-300 rounded-xl text-sm min-h-[44px]">📋</button>
+                <input readOnly value={scanpayLink.payment_url} className="flex-1 border border-hairline rounded-xl px-3 py-2.5 text-sm min-h-[44px]" />
+                <button onClick={() => copyLink(scanpayLink.payment_url)} className="px-3 py-2.5 border border-hairline rounded-xl text-sm min-h-[44px]">📋</button>
               </div>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
-              <span className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin inline-block" />
+            <div className="flex items-center gap-2 text-sm text-muted">
+              <span className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin inline-block" />
               Waiting for payment…
             </div>
-            <button onClick={() => setScanpayLink(null)} className="w-full py-2.5 text-gray-500 text-sm min-h-[44px]">Cancel</button>
+            <button onClick={() => setScanpayLink(null)} className="w-full py-2.5 text-muted text-sm min-h-[44px]">Cancel</button>
           </div>
         )}
       </Modal>
@@ -901,7 +901,7 @@ export default function InvoiceDetail() {
           </>
         }
       >
-        <p className="text-gray-600">Stop all follow-up reminders for this invoice?</p>
+        <p className="text-ink">Stop all follow-up reminders for this invoice?</p>
       </Modal>
 
       {/* Resume Reminders Modal */}
@@ -916,7 +916,7 @@ export default function InvoiceDetail() {
           </>
         }
       >
-        <p className="text-gray-600">Resume automatic follow-up reminders for this invoice?</p>
+        <p className="text-ink">Resume automatic follow-up reminders for this invoice?</p>
       </Modal>
 
       {/* P2.41 #4: Send Payment Link picker (recipient + channel) */}
@@ -932,22 +932,22 @@ export default function InvoiceDetail() {
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-gray-600">Send a secure payment link for <span className="font-semibold">{formatCurrency(scanpayAmount)}</span>.</p>
+          <p className="text-sm text-ink">Send a secure payment link for <span className="font-semibold">{formatCurrency(scanpayAmount)}</span>.</p>
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={linkSendEmail} onChange={e => setLinkSendEmail(e.target.checked)} />
-            <span className="text-sm text-gray-700">Email</span>
+            <span className="text-sm text-ink">Email</span>
           </label>
           {linkSendEmail && (
             <input type="email" value={linkEmail} onChange={e => setLinkEmail(e.target.value)} placeholder="customer@email.com"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue" />
           )}
           <label className="flex items-center gap-2">
             <input type="checkbox" checked={linkSendSms} onChange={e => setLinkSendSms(e.target.checked)} />
-            <span className="text-sm text-gray-700">SMS</span>
+            <span className="text-sm text-ink">SMS</span>
           </label>
           {linkSendSms && (
             <input type="tel" value={linkPhone} onChange={e => setLinkPhone(e.target.value)} placeholder="(555) 123-4567"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]" />
+              className="w-full rounded-xl border border-hairline px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue" />
           )}
         </div>
       </Modal>
@@ -966,8 +966,8 @@ export default function InvoiceDetail() {
       >
         <div className="space-y-4">
           <div>
-            <p className="text-xs text-gray-400 uppercase font-medium mb-2">Email Recipients</p>
-            {sendEmails.length === 0 && <p className="text-sm text-gray-400">No emails on file.</p>}
+            <p className="text-xs text-muted uppercase font-medium mb-2">Email Recipients</p>
+            {sendEmails.length === 0 && <p className="text-sm text-muted">No emails on file.</p>}
             {sendEmails.map((entry, i) => (
               <label key={i} className="flex items-center gap-2 py-1">
                 <input
@@ -975,7 +975,7 @@ export default function InvoiceDetail() {
                   checked={entry.checked}
                   onChange={e => setSendEmails(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
                 />
-                <span className="text-sm text-gray-700">{entry.value}</span>
+                <span className="text-sm text-ink">{entry.value}</span>
               </label>
             ))}
             <div className="flex items-center gap-2 mt-2">
@@ -984,14 +984,14 @@ export default function InvoiceDetail() {
                 value={newEmail}
                 onChange={e => setNewEmail(e.target.value)}
                 placeholder="Add email..."
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue"
               />
               <Button variant="outlined" onClick={handleAddSendEmail} className="text-sm">Add</Button>
             </div>
           </div>
           <div>
-            <p className="text-xs text-gray-400 uppercase font-medium mb-2">SMS / Phone Recipients</p>
-            {sendPhones.length === 0 && <p className="text-sm text-gray-400">No phones on file.</p>}
+            <p className="text-xs text-muted uppercase font-medium mb-2">SMS / Phone Recipients</p>
+            {sendPhones.length === 0 && <p className="text-sm text-muted">No phones on file.</p>}
             {sendPhones.map((entry, i) => (
               <label key={i} className="flex items-center gap-2 py-1">
                 <input
@@ -999,7 +999,7 @@ export default function InvoiceDetail() {
                   checked={entry.checked}
                   onChange={e => setSendPhones(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
                 />
-                <span className="text-sm text-gray-700">{entry.value}</span>
+                <span className="text-sm text-ink">{entry.value}</span>
               </label>
             ))}
             <div className="flex items-center gap-2 mt-2">
@@ -1008,18 +1008,18 @@ export default function InvoiceDetail() {
                 value={newPhone}
                 onChange={e => setNewPhone(e.target.value)}
                 placeholder="Add phone..."
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue"
               />
               <Button variant="outlined" onClick={handleAddSendPhone} className="text-sm">Add</Button>
             </div>
           </div>
-          <label className="flex items-center gap-2 pt-2 border-t border-gray-100">
+          <label className="flex items-center gap-2 pt-2 border-t border-hairline">
             <input
               type="checkbox"
               checked={saveContactsToProfile}
               onChange={e => setSaveContactsToProfile(e.target.checked)}
             />
-            <span className="text-xs text-gray-600">Save new contacts to customer profile</span>
+            <span className="text-xs text-muted">Save new contacts to customer profile</span>
           </label>
         </div>
       </Modal>
@@ -1038,8 +1038,8 @@ export default function InvoiceDetail() {
       >
         <div className="space-y-4">
           <div>
-            <p className="text-xs text-gray-400 uppercase font-medium mb-2">Email Recipients</p>
-            {receiptEmails.length === 0 && <p className="text-sm text-gray-400">No emails on file.</p>}
+            <p className="text-xs text-muted uppercase font-medium mb-2">Email Recipients</p>
+            {receiptEmails.length === 0 && <p className="text-sm text-muted">No emails on file.</p>}
             {receiptEmails.map((entry, i) => (
               <label key={i} className="flex items-center gap-2 py-1">
                 <input
@@ -1047,7 +1047,7 @@ export default function InvoiceDetail() {
                   checked={entry.checked}
                   onChange={e => setReceiptEmails(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
                 />
-                <span className="text-sm text-gray-700">{entry.value}</span>
+                <span className="text-sm text-ink">{entry.value}</span>
               </label>
             ))}
             <div className="flex items-center gap-2 mt-2">
@@ -1056,14 +1056,14 @@ export default function InvoiceDetail() {
                 value={receiptNewEmail}
                 onChange={e => setReceiptNewEmail(e.target.value)}
                 placeholder="Add email..."
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue"
               />
               <Button variant="outlined" onClick={handleAddReceiptEmail} className="text-sm">Add</Button>
             </div>
           </div>
           <div>
-            <p className="text-xs text-gray-400 uppercase font-medium mb-2">SMS / Phone Recipients</p>
-            {receiptPhones.length === 0 && <p className="text-sm text-gray-400">No phones on file.</p>}
+            <p className="text-xs text-muted uppercase font-medium mb-2">SMS / Phone Recipients</p>
+            {receiptPhones.length === 0 && <p className="text-sm text-muted">No phones on file.</p>}
             {receiptPhones.map((entry, i) => (
               <label key={i} className="flex items-center gap-2 py-1">
                 <input
@@ -1071,7 +1071,7 @@ export default function InvoiceDetail() {
                   checked={entry.checked}
                   onChange={e => setReceiptPhones(prev => prev.map((p, idx) => idx === i ? { ...p, checked: e.target.checked } : p))}
                 />
-                <span className="text-sm text-gray-700">{entry.value}</span>
+                <span className="text-sm text-ink">{entry.value}</span>
               </label>
             ))}
             <div className="flex items-center gap-2 mt-2">
@@ -1080,18 +1080,18 @@ export default function InvoiceDetail() {
                 value={receiptNewPhone}
                 onChange={e => setReceiptNewPhone(e.target.value)}
                 placeholder="Add phone..."
-                className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm min-h-[40px] focus:outline-none focus:ring-2 focus:ring-blue"
               />
               <Button variant="outlined" onClick={handleAddReceiptPhone} className="text-sm">Add</Button>
             </div>
           </div>
-          <label className="flex items-center gap-2 pt-2 border-t border-gray-100">
+          <label className="flex items-center gap-2 pt-2 border-t border-hairline">
             <input
               type="checkbox"
               checked={receiptSaveToProfile}
               onChange={e => setReceiptSaveToProfile(e.target.checked)}
             />
-            <span className="text-xs text-gray-600">Save new contacts to customer profile</span>
+            <span className="text-xs text-muted">Save new contacts to customer profile</span>
           </label>
           <label className="flex items-center gap-2">
             <input
@@ -1099,7 +1099,7 @@ export default function InvoiceDetail() {
               checked={receiptSendReview}
               onChange={e => setReceiptSendReview(e.target.checked)}
             />
-            <span className="text-xs text-gray-600">Include review request link</span>
+            <span className="text-xs text-muted">Include review request link</span>
           </label>
         </div>
       </Modal>

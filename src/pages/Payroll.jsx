@@ -115,7 +115,7 @@ export default function Payroll() {
   return (
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Payroll</h1>
+        <h1 className="text-xl font-bold text-ink">Payroll</h1>
         <div className="flex gap-2">
           {can('accounting_earnings','full') && (
           <button
@@ -136,7 +136,7 @@ export default function Payroll() {
               finally { setExporting(false); }
             }}
             disabled={exporting}
-            className="px-4 py-2 border border-[#1A73E8] text-[#1A73E8] rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
+            className="px-4 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
           >
             {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
           </button>
@@ -147,12 +147,12 @@ export default function Payroll() {
       <Card className="mb-4">
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">From</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+            <label className="block text-xs font-medium text-muted mb-1">From</label>
+            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]" />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-medium text-gray-500 mb-1">To</label>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]" />
+            <label className="block text-xs font-medium text-muted mb-1">To</label>
+            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]" />
           </div>
         </div>
       </Card>
@@ -187,15 +187,15 @@ export default function Payroll() {
                   <div className="flex items-center gap-3">
                     <Avatar name={name} size="md" color={actorColor} />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">{name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-semibold text-ink truncate">{name}</p>
+                      <p className="text-sm text-muted">
                         {tech.job_count || 0} jobs · {tech.type || (tech.is_source ? 'source' : tech.is_roster ? 'roster' : 'tech')}
                       </p>
                     </div>
                     <p className="font-bold text-lg" style={{ color: actorColor }}>
                       {formatCurrency(Number(tech.total || 0))}
                     </p>
-                    {clickable && <ChevronRight size={18} className="text-gray-300 -mr-1" />}
+                    {clickable && <ChevronRight size={18} className="text-muted -mr-1" />}
                   </div>
                 </Card>
               );
@@ -206,7 +206,7 @@ export default function Payroll() {
                   key={tech.id || tech._id || i}
                   type="button"
                   onClick={() => navigate(targetPath)}
-                  className="block w-full text-left rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                  className="block w-full text-left rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue"
                 >
                   {cardEl}
                 </button>
@@ -215,13 +215,13 @@ export default function Payroll() {
           </div>
 
           {/* Summary Table */}
-          <div className="bg-white rounded-2xl shadow overflow-hidden">
+          <div className="bg-card rounded-2xl shadow overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Technician</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Jobs</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500">Earnings</th>
+                <tr className="border-b border-hairline bg-background">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Technician</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Jobs</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted">Earnings</th>
                 </tr>
               </thead>
               <tbody>
@@ -229,9 +229,9 @@ export default function Payroll() {
                   const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || 'Unknown tech';
                   const actorColor = tech.color || '#1A73E8';
                   return (
-                    <tr key={i} className="border-b border-gray-50 last:border-0">
-                      <td className="px-4 py-2.5 text-sm font-medium text-gray-900">{name}</td>
-                      <td className="px-4 py-2.5 text-sm text-gray-600">{tech.job_count || 0}</td>
+                    <tr key={i} className="border-b border-hairline last:border-0">
+                      <td className="px-4 py-2.5 text-sm font-medium text-ink">{name}</td>
+                      <td className="px-4 py-2.5 text-sm text-ink">{tech.job_count || 0}</td>
                       <td className="px-4 py-2.5 text-sm font-semibold" style={{ color: actorColor }}>
                         {formatCurrency(Number(tech.total || 0))}
                       </td>
@@ -246,12 +246,12 @@ export default function Payroll() {
 
       {/* Mark range paid confirm (money action) */}
       <Modal isOpen={showMarkPaid} onClose={() => setShowMarkPaid(false)} title="Mark range paid">
-        <p className="text-gray-600 mb-6">
+        <p className="text-ink mb-6">
           Mark all earnings from <strong>{from}</strong> to <strong>{to}</strong> as paid? This records that the team was paid for this range and lowers balance owed. Earnings can still recompute if a payment or refund lands later.
         </p>
         <div className="flex gap-3">
           <button onClick={() => setShowMarkPaid(false)}
-            className="flex-1 py-3 border border-gray-300 rounded-xl font-semibold text-gray-700 min-h-[44px]">
+            className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]">
             Cancel
           </button>
           <button onClick={handleMarkPaid} disabled={marking}

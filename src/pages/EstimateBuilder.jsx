@@ -482,7 +482,7 @@ export default function EstimateBuilder() {
     return (
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase">{label}</p>
+          <p className="text-xs font-semibold text-muted uppercase">{label}</p>
           <div className="flex gap-2">
             <button
               type="button"
@@ -493,28 +493,28 @@ export default function EstimateBuilder() {
                 setPricebookModal(modal);
                 setPricebookSearch('');
               }}
-              className="text-xs text-[#1A73E8] font-medium"
+              className="text-xs text-blue font-medium"
             >
               Pricebook
             </button>
             <button
               type="button"
               onClick={() => setter(prev => ({ ...prev, [sectionKey]: [...prev[sectionKey], emptyItem(itemType)] }))}
-              className="flex items-center gap-0.5 text-xs text-[#1A73E8] font-medium min-h-[44px]"
+              className="flex items-center gap-0.5 text-xs text-blue font-medium min-h-[44px]"
             >
               <Plus size={12} /> Add
             </button>
           </div>
         </div>
         {items.length === 0 && (
-          <p className="text-xs text-gray-400 py-2 text-center">No {label.toLowerCase()} added.</p>
+          <p className="text-xs text-muted py-2 text-center">No {label.toLowerCase()} added.</p>
         )}
         <div className="space-y-2">
           {items.map((item, idx) => (
-            <div key={idx} className="border border-gray-100 rounded-xl p-3 space-y-2">
+            <div key={idx} className="border border-hairline rounded-xl p-3 space-y-2">
               <div className="flex items-center gap-2">
                 {item.image_url && (
-                  <img src={item.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                  <img src={item.image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-hairline" />
                 )}
                 <input
                   value={item.name}
@@ -526,7 +526,7 @@ export default function EstimateBuilder() {
                     });
                   }}
                   placeholder="Item name"
-                  className="flex-1 rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+                  className="flex-1 rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
                 />
                 <div className="flex flex-col gap-0.5">
                   <button
@@ -537,7 +537,7 @@ export default function EstimateBuilder() {
                       [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
                       return { ...prev, [sectionKey]: arr };
                     })}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-20 rounded"
+                    className="p-1 text-muted hover:text-ink disabled:opacity-20 rounded"
                   >
                     ▲
                   </button>
@@ -549,7 +549,7 @@ export default function EstimateBuilder() {
                       [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
                       return { ...prev, [sectionKey]: arr };
                     })}
-                    className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-20 rounded"
+                    className="p-1 text-muted hover:text-ink disabled:opacity-20 rounded"
                   >
                     ▼
                   </button>
@@ -564,7 +564,7 @@ export default function EstimateBuilder() {
               </div>
               <div className="flex gap-2">
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400">Qty</label>
+                  <label className="text-xs text-muted">Qty</label>
                   <StepperInput
                     value={Number(item.quantity || 1)}
                     min={1}
@@ -579,7 +579,7 @@ export default function EstimateBuilder() {
                 </div>
                 {itemType === 'discount' ? (
                   <div className="flex-1">
-                    <label className="text-xs text-gray-400">Amount {item._discountMode === 'percent' ? `($${(Number(item.unit_price) || 0).toFixed(2)})` : ''}</label>
+                    <label className="text-xs text-muted">Amount {item._discountMode === 'percent' ? `($${(Number(item.unit_price) || 0).toFixed(2)})` : ''}</label>
                     <div className="flex gap-1">
                       <select
                         value={item._discountMode || 'amount'}
@@ -597,7 +597,7 @@ export default function EstimateBuilder() {
                             return next;
                           });
                         }}
-                        className="rounded-xl border border-gray-200 px-2 text-sm min-h-[44px] bg-white"
+                        className="rounded-xl border border-hairline px-2 text-sm min-h-[44px] bg-card"
                       >
                         <option value="amount">$</option>
                         <option value="percent">%</option>
@@ -624,13 +624,13 @@ export default function EstimateBuilder() {
                         placeholder={item._discountMode === 'percent' ? '0' : '0.00'}
                         min="0"
                         step={item._discountMode === 'percent' ? '1' : '0.01'}
-                        className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+                        className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
                       />
                     </div>
                   </div>
                 ) : (
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400">Unit Price</label>
+                  <label className="text-xs text-muted">Unit Price</label>
                   <input
                     type="number"
                     value={item.unit_price}
@@ -644,13 +644,13 @@ export default function EstimateBuilder() {
                     placeholder="0.00"
                     min="0"
                     step="0.01"
-                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px]"
+                    className="w-full rounded-xl border border-hairline px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]"
                   />
                 </div>
                 )}
                 <div className="flex-1">
-                  <label className="text-xs text-gray-400">Total</label>
-                  <div className={`rounded-xl border border-gray-100 bg-gray-50 px-3 py-2 text-sm font-medium min-h-[44px] flex items-center ${itemType === 'discount' ? 'text-red-500' : ''}`}>
+                  <label className="text-xs text-muted">Total</label>
+                  <div className={`rounded-xl border border-hairline bg-background px-3 py-2 text-sm font-medium min-h-[44px] flex items-center ${itemType === 'discount' ? 'text-red-500' : ''}`}>
                     {itemType === 'discount' ? '-' : ''}${(Number(item.unit_price || 0) * Number(item.quantity || 1)).toFixed(2)}
                   </div>
                 </div>
@@ -665,10 +665,10 @@ export default function EstimateBuilder() {
   return (
     <div className="p-4 max-w-3xl mx-auto pb-32">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ArrowLeft size={20} />
         </button>
-        <h1 className="text-xl font-bold text-gray-900">{isEdit ? 'Edit Estimate' : 'New Estimate'}</h1>
+        <h1 className="text-xl font-bold text-ink">{isEdit ? 'Edit Estimate' : 'New Estimate'}</h1>
       </div>
 
       <div className="space-y-4">
@@ -676,18 +676,18 @@ export default function EstimateBuilder() {
         <Card>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+              <label className="block text-sm font-medium text-ink mb-1">Customer</label>
               {selectedCustomer ? (
-                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-                  <UserCheck size={18} className="text-[#1A73E8] shrink-0" />
+                <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue rounded-xl">
+                  <UserCheck size={18} className="text-blue shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">
+                    <p className="font-semibold text-ink truncate">
                       {`${selectedCustomer.first_name || ''} ${selectedCustomer.last_name || ''}`.trim() || selectedCustomer.name}
                     </p>
-                    {selectedCustomer.phone && <p className="text-xs text-gray-500">{selectedCustomer.phone}</p>}
+                    {selectedCustomer.phone && <p className="text-xs text-muted">{selectedCustomer.phone}</p>}
                   </div>
                   <button type="button" onClick={() => { setSelectedCustomer(null); setCustomerId(''); setCustomerName(''); setCustomerSearch(''); }}
-                    className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg">
+                    className="p-1.5 text-muted hover:text-red-500 rounded-lg">
                     <X size={16} />
                   </button>
                 </div>
@@ -697,25 +697,25 @@ export default function EstimateBuilder() {
                     value={customerSearch}
                     onChange={handleCustomerInput}
                     placeholder="Search customer by name, phone, or email..."
-                    className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] ${fieldErrors.customer_id ? 'border-red-400' : 'border-gray-300'}`}
+                    className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue ${fieldErrors.customer_id ? 'border-red-400' : 'border-hairline'}`}
                   />
                   {showCustomerDropdown && (
-                    <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                    <div className="absolute z-20 left-0 right-0 top-full mt-1 bg-card border border-hairline rounded-xl shadow-lg overflow-hidden">
                       {customerResults.map((c) => (
-                        <button key={c.id || c._id} type="button" onClick={() => selectCustomer(c)} className="w-full text-left px-4 py-3 hover:bg-gray-50 text-sm border-b last:border-0 flex items-center justify-between">
+                        <button key={c.id || c._id} type="button" onClick={() => selectCustomer(c)} className="w-full text-left px-4 py-3 hover:bg-background text-sm border-b last:border-0 flex items-center justify-between">
                           <span className="font-medium">{`${c.first_name || ''} ${c.last_name || ''}`.trim() || c.name}</span>
-                          {c.phone && <span className="text-gray-400 text-xs">{c.phone}</span>}
+                          {c.phone && <span className="text-muted text-xs">{c.phone}</span>}
                         </button>
                       ))}
                       <button type="button" onClick={() => { setShowCustomerDropdown(false); setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
-                        className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-[#1A73E8] font-medium flex items-center gap-2">
+                        className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue font-medium flex items-center gap-2">
                         <Plus size={14} /> Create new customer
                       </button>
                     </div>
                   )}
                   {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
                     <button type="button" onClick={() => { setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
-                      className="mt-1.5 text-sm text-[#1A73E8] font-medium flex items-center gap-1 min-h-[36px]">
+                      className="mt-1.5 text-sm text-blue font-medium flex items-center gap-1 min-h-[36px]">
                       <Plus size={14} /> Create new customer
                     </button>
                   )}
@@ -730,8 +730,8 @@ export default function EstimateBuilder() {
         <Card>
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium text-gray-900">Good-Better-Best Mode</p>
-              <p className="text-xs text-gray-400">Present 1–5 tier options to the customer</p>
+              <p className="font-medium text-ink">Good-Better-Best Mode</p>
+              <p className="text-xs text-muted">Present 1–5 tier options to the customer</p>
             </div>
             <Toggle checked={gbbMode} onChange={(e) => setGbbMode(e.target.checked)} />
           </div>
@@ -749,12 +749,12 @@ export default function EstimateBuilder() {
                   onClick={() => setActiveTierIdx(idx)}
                   className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap min-h-[44px] transition-colors ${
                     isActive
-                      ? 'bg-[#1A73E8] text-white border border-[#1A73E8]'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
+                      ? 'bg-blue text-white border border-blue'
+                      : 'bg-card text-ink border border-hairline hover:border-hairline'
                   }`}
                 >
                   <span>{tier.label || `Tier ${idx + 1}`}</span>
-                  <span className={`text-xs ${isActive ? 'text-blue-100' : 'text-gray-400'}`}>
+                  <span className={`text-xs ${isActive ? 'text-blue-100' : 'text-muted'}`}>
                     ${tierTotals[idx].toFixed(0)}
                   </span>
                   {isActive && tiers.length < MAX_TIERS && (
@@ -788,7 +788,7 @@ export default function EstimateBuilder() {
               <button
                 type="button"
                 onClick={addTier}
-                className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-dashed border-gray-300 text-gray-500 hover:border-[#1A73E8] hover:text-[#1A73E8] flex items-center gap-1 min-h-[44px]"
+                className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-dashed border-hairline text-muted hover:border-blue hover:text-blue flex items-center gap-1 min-h-[44px]"
               >
                 <Plus size={14} /> Add Option
               </button>
@@ -799,20 +799,20 @@ export default function EstimateBuilder() {
         {/* Active tier label + description editors */}
         {gbbMode && activeTier && (
           <Card>
-            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Option Name</label>
+            <label className="block text-xs font-semibold text-muted uppercase mb-2">Option Name</label>
             <input
               value={activeTier.label}
               onChange={(e) => updateTierLabel(activeTierIdx, e.target.value)}
               placeholder="e.g., Basic, Premium, Best Value"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8] mb-3"
+              className="w-full rounded-xl border border-hairline px-3 py-2.5 min-h-[44px] text-[16px] focus:outline-none focus:ring-2 focus:ring-blue mb-3"
             />
-            <label className="block text-xs font-semibold text-gray-500 uppercase mb-2">Description (optional)</label>
+            <label className="block text-xs font-semibold text-muted uppercase mb-2">Description (optional)</label>
             <textarea
               value={activeTier.description}
               onChange={(e) => updateTier(activeTierIdx, t => ({ ...t, description: e.target.value }))}
               rows={2}
               placeholder="Short pitch shown to the customer for this option"
-              className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
+              className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue resize-none"
             />
           </Card>
         )}
@@ -842,11 +842,11 @@ export default function EstimateBuilder() {
           />
 
           {/* Section subtotal */}
-          <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-600">
+          <div className="border-t border-hairline pt-3 flex items-center justify-between">
+            <span className="text-sm font-semibold text-ink">
               {gbbMode ? `${activeTier?.label || 'Option'} Subtotal` : 'Subtotal'}
             </span>
-            <span className="text-sm font-bold text-gray-900">
+            <span className="text-sm font-bold text-ink">
               ${sectionTotal(activeSection).toFixed(2)}
             </span>
           </div>
@@ -854,32 +854,32 @@ export default function EstimateBuilder() {
 
         {/* Notes */}
         <Card>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+          <label className="block text-sm font-medium text-ink mb-1">Notes</label>
           <textarea
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={3}
             placeholder="Internal notes or customer-facing notes..."
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
+            className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue resize-none"
           />
         </Card>
 
         {/* Terms */}
         <Card>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
+          <label className="block text-sm font-medium text-ink mb-1">Terms & Conditions</label>
           <textarea
             value={terms}
             onChange={e => setTerms(e.target.value)}
             rows={3}
             placeholder="Payment terms, warranty, cancellation policy..."
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
+            className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue resize-none"
           />
         </Card>
 
         {/* Tax */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <span className="font-medium text-gray-900">Apply Tax</span>
+            <span className="font-medium text-ink">Apply Tax</span>
             <Toggle checked={taxEnabled} onChange={(e) => setTaxEnabled(e.target.checked)} />
           </div>
           {taxEnabled && (
@@ -890,7 +890,7 @@ export default function EstimateBuilder() {
         {/* Deposit */}
         <Card>
           <div className="flex items-center justify-between mb-3">
-            <span className="font-medium text-gray-900">Require Deposit</span>
+            <span className="font-medium text-ink">Require Deposit</span>
             <Toggle checked={depositRequired} onChange={(e) => setDepositRequired(e.target.checked)} />
           </div>
           {depositRequired && (
@@ -898,7 +898,7 @@ export default function EstimateBuilder() {
               <Input label="Deposit Amount" type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="0.00" />
               <div className="flex gap-2">
                 {['flat', 'percent'].map((t) => (
-                  <button key={t} type="button" onClick={() => setDepositType(t)} className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors min-h-[44px] ${depositType === t ? 'bg-[#1A73E8] text-white border-[#1A73E8]' : 'bg-white text-gray-600 border-gray-200'}`}>
+                  <button key={t} type="button" onClick={() => setDepositType(t)} className={`flex-1 py-2 rounded-xl text-sm font-medium border transition-colors min-h-[44px] ${depositType === t ? 'bg-blue text-white border-blue' : 'bg-card text-ink border-hairline'}`}>
                     {t === 'flat' ? 'Flat Amount' : 'Percentage'}
                   </button>
                 ))}
@@ -911,15 +911,15 @@ export default function EstimateBuilder() {
         {!gbbMode && (
           <Card>
             <div className="flex items-center justify-between">
-              <span className="font-bold text-gray-900 text-lg">Total</span>
-              <span className="font-bold text-2xl text-[#1A73E8]">${stdTotal.toFixed(2)}</span>
+              <span className="font-bold text-ink text-lg">Total</span>
+              <span className="font-bold text-2xl text-blue">${stdTotal.toFixed(2)}</span>
             </div>
           </Card>
         )}
       </div>
 
       {/* Sticky bottom action buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-2 max-w-3xl mx-auto z-10">
+      <div className="fixed bottom-0 left-0 right-0 bg-card border-t border-hairline p-4 flex gap-2 max-w-3xl mx-auto z-10">
         <Button type="button" variant="outlined" onClick={() => navigate(-1)} className="flex-1">
           Cancel
         </Button>
@@ -944,39 +944,39 @@ export default function EstimateBuilder() {
               <button
                 type="button"
                 onClick={() => setPickerShowAll(false)}
-                className={`px-3 py-1.5 rounded-full font-medium ${!pickerShowAll ? 'bg-[#1A73E8] text-white' : 'bg-gray-100 text-gray-600'}`}
+                className={`px-3 py-1.5 rounded-full font-medium ${!pickerShowAll ? 'bg-blue text-white' : 'bg-background text-ink'}`}
               >
                 {pricebookModal.type === 'material' ? 'Materials' : 'Labor'} only
               </button>
               <button
                 type="button"
                 onClick={() => setPickerShowAll(true)}
-                className={`px-3 py-1.5 rounded-full font-medium ${pickerShowAll ? 'bg-[#1A73E8] text-white' : 'bg-gray-100 text-gray-600'}`}
+                className={`px-3 py-1.5 rounded-full font-medium ${pickerShowAll ? 'bg-blue text-white' : 'bg-background text-ink'}`}
               >
                 Show all
               </button>
             </div>
           )}
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
             <input
               value={pricebookSearch}
               onChange={(e) => setPricebookSearch(e.target.value)}
               placeholder="Search items..."
-              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
+              className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-hairline focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px] text-sm"
             />
           </div>
           {pricebookItems.map((item) => (
             <button
               key={item.id || item._id}
               onClick={() => addFromPricebook(item)}
-              className="w-full text-left p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors flex items-center justify-between"
+              className="w-full text-left p-3 rounded-xl bg-background hover:bg-background transition-colors flex items-center justify-between"
             >
-              <span className="font-medium text-sm text-gray-900">{item.name}</span>
-              <span className="text-sm text-[#1A73E8] font-semibold">${Number(item.price || item.unit_price || 0).toFixed(2)}</span>
+              <span className="font-medium text-sm text-ink">{item.name}</span>
+              <span className="text-sm text-blue font-semibold">${Number(item.price || item.unit_price || 0).toFixed(2)}</span>
             </button>
           ))}
-          {pricebookItems.length === 0 && <p className="text-center text-gray-400 text-sm py-4">No items found.</p>}
+          {pricebookItems.length === 0 && <p className="text-center text-muted text-sm py-4">No items found.</p>}
         </div>
       </Modal>
 

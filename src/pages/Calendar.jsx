@@ -63,11 +63,11 @@ export default function Calendar() {
     <div className="p-4 max-w-3xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <button onClick={() => setCurrentMonth((m) => subMonths(m, 1))} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ChevronLeft size={20} />
         </button>
-        <h2 className="text-lg font-bold text-gray-900">{format(currentMonth, 'MMMM yyyy')}</h2>
-        <button onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600">
+        <h2 className="text-lg font-bold text-ink">{format(currentMonth, 'MMMM yyyy')}</h2>
+        <button onClick={() => setCurrentMonth((m) => addMonths(m, 1))} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <ChevronRight size={20} />
         </button>
       </div>
@@ -75,13 +75,13 @@ export default function Calendar() {
       {/* Day names */}
       <div className="grid grid-cols-7 mb-1">
         {DAY_NAMES.map((d) => (
-          <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
+          <div key={d} className="text-center text-xs font-medium text-muted py-1">{d}</div>
         ))}
       </div>
 
       {/* Calendar grid */}
       <div
-        className="grid grid-cols-7 border border-gray-100 rounded-2xl overflow-hidden"
+        className="grid grid-cols-7 border border-hairline rounded-2xl overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -94,11 +94,11 @@ export default function Calendar() {
             <button
               key={i}
               onClick={() => setSelectedDay(isSameDay(day, selectedDay) ? null : day)}
-              className={`min-h-[52px] p-1.5 flex flex-col items-center border-r border-b border-gray-100 last:border-r-0 transition-colors ${
-                isSelected ? 'bg-blue-50' : isToday ? 'bg-amber-50' : 'bg-white hover:bg-gray-50'
+              className={`min-h-[52px] p-1.5 flex flex-col items-center border-r border-b border-hairline last:border-r-0 transition-colors ${
+                isSelected ? 'bg-blue-50' : isToday ? 'bg-amber-50' : 'bg-card hover:bg-background'
               } ${!isCurrentMonth ? 'opacity-40' : ''}`}
             >
-              <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-[#1A73E8] text-white' : 'text-gray-700'}`}>
+              <span className={`text-xs font-medium w-6 h-6 flex items-center justify-center rounded-full ${isToday ? 'bg-blue text-white' : 'text-ink'}`}>
                 {format(day, 'd')}
               </span>
               {dayJobs.length > 0 && (
@@ -123,7 +123,7 @@ export default function Calendar() {
       >
         <div className="space-y-2">
           {selectedJobs.length === 0 ? (
-            <div className="text-center py-6 text-gray-400">
+            <div className="text-center py-6 text-muted">
               <CalIcon size={32} className="mx-auto mb-2 opacity-50" />
               <p>No jobs scheduled for this day.</p>
             </div>
@@ -131,7 +131,7 @@ export default function Calendar() {
             selectedJobs.map((job) => (
               <div
                 key={job.id || job._id}
-                className="flex items-center gap-2 p-3 rounded-xl bg-gray-50"
+                className="flex items-center gap-2 p-3 rounded-xl bg-background"
               >
                 <button
                   onClick={() => { setSelectedDay(null); navigate(`/jobs/${job.id || job._id}`); }}
@@ -139,11 +139,11 @@ export default function Calendar() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-medium text-gray-900 text-sm">{job.title || job.job_title}</p>
-                      <p className="text-xs text-gray-500">{job.customer_name || job.customer?.name}</p>
+                      <p className="font-medium text-ink text-sm">{job.title || job.job_title}</p>
+                      <p className="text-xs text-muted">{job.customer_name || job.customer?.name}</p>
                       {/* P2.19: scheduled time / arrival window */}
                       {job.scheduled_start && (
-                        <p className="text-xs text-[#1A73E8] font-medium">
+                        <p className="text-xs text-blue font-medium">
                           {job.scheduled_end && job.scheduled_end !== job.scheduled_start
                             ? `${formatInJobZone(job.scheduled_start, job, 'h:mm a')} – ${formatInJobZone(job.scheduled_end, job, 'h:mm a')}`
                             : formatInJobZone(job.scheduled_start, job, 'h:mm a')}
@@ -155,7 +155,7 @@ export default function Calendar() {
                 </button>
                 <button
                   onClick={() => { setSelectedDay(null); navigate(`/jobs/${job.id || job._id}/edit`); }}
-                  className="text-xs text-[#1A73E8] font-medium px-2 py-1 rounded-lg hover:bg-blue-50 min-h-[36px] whitespace-nowrap"
+                  className="text-xs text-blue font-medium px-2 py-1 rounded-lg hover:bg-blue-50 min-h-[36px] whitespace-nowrap"
                 >
                   Edit
                 </button>
@@ -168,7 +168,7 @@ export default function Calendar() {
               setSelectedDay(null);
               navigate(`/jobs/new?date=${dateStr}`);
             }}
-            className="w-full py-3 bg-[#1A73E8] text-white rounded-xl text-sm font-medium min-h-[44px] mt-2"
+            className="w-full py-3 bg-blue text-white rounded-xl text-sm font-medium min-h-[44px] mt-2"
           >
             + New Job on This Day
           </button>

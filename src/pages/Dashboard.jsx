@@ -160,7 +160,7 @@ function JobMap({ jobs, techs }) {
   return (
     <div
       ref={mapRef}
-      className="w-full rounded-2xl overflow-hidden border border-gray-100"
+      className="w-full rounded-2xl overflow-hidden border border-hairline"
       style={{ height: 'clamp(300px, 40vw, 400px)' }}
     />
   );
@@ -292,17 +292,17 @@ export default function Dashboard() {
       {/* Greeting */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-ink">
             Hello, {user?.first_name || 'there'} 👋
           </h2>
-          <p className="text-gray-500 text-sm">Here's what's happening today.</p>
+          <p className="text-muted text-sm">Here's what's happening today.</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={toggleClock}
             disabled={clockLoading}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors text-base disabled:opacity-50 ${
-              clockedIn ? 'bg-[#1A73E8] text-white' : 'bg-gray-200 text-gray-500'
+              clockedIn ? 'bg-blue text-white' : 'bg-gray-200 text-muted'
             }`}
             title={clockedIn ? 'Clock Out' : 'Clock In'}
           >
@@ -310,7 +310,7 @@ export default function Dashboard() {
           </button>
           <button
             onClick={handleRefresh}
-            className="p-2 rounded-xl hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-500"
+            className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-muted"
           >
             <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
           </button>
@@ -339,10 +339,10 @@ export default function Dashboard() {
           <Card>
             <div className="flex flex-col gap-1">
               <div className="p-2 bg-blue-50 rounded-lg w-fit">
-                <Briefcase size={18} className="text-[#1A73E8]" />
+                <Briefcase size={18} className="text-blue" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{totalJobs}</p>
-              <p className="text-xs text-gray-500">Total Jobs</p>
+              <p className="text-2xl font-bold text-ink mt-1">{totalJobs}</p>
+              <p className="text-xs text-muted">Total Jobs</p>
             </div>
           </Card>
           <Card>
@@ -350,8 +350,8 @@ export default function Dashboard() {
               <div className="p-2 bg-green-50 rounded-lg w-fit">
                 <DollarSign size={18} className="text-green-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{formatCurrency(monthRevenue)}</p>
-              <p className="text-xs text-gray-500">This Month</p>
+              <p className="text-2xl font-bold text-ink mt-1">{formatCurrency(monthRevenue)}</p>
+              <p className="text-xs text-muted">This Month</p>
             </div>
           </Card>
           <Card>
@@ -359,8 +359,8 @@ export default function Dashboard() {
               <div className="p-2 bg-purple-50 rounded-lg w-fit">
                 <Receipt size={18} className="text-purple-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{completionRate}%</p>
-              <p className="text-xs text-gray-500">Completion Rate</p>
+              <p className="text-2xl font-bold text-ink mt-1">{completionRate}%</p>
+              <p className="text-xs text-muted">Completion Rate</p>
             </div>
           </Card>
           <Card>
@@ -368,8 +368,8 @@ export default function Dashboard() {
               <div className="p-2 bg-amber-50 rounded-lg w-fit">
                 <Calendar size={18} className="text-amber-600" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{scheduledToday}</p>
-              <p className="text-xs text-gray-500">Scheduled Today</p>
+              <p className="text-2xl font-bold text-ink mt-1">{scheduledToday}</p>
+              <p className="text-xs text-muted">Scheduled Today</p>
             </div>
           </Card>
           <Card onClick={() => navigate('/phone')}>
@@ -377,8 +377,8 @@ export default function Dashboard() {
               <div className="p-2 bg-red-50 rounded-lg w-fit">
                 <Phone size={18} className="text-red-500" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{missedCalls}</p>
-              <p className="text-xs text-gray-500">Missed Calls</p>
+              <p className="text-2xl font-bold text-ink mt-1">{missedCalls}</p>
+              <p className="text-xs text-muted">Missed Calls</p>
             </div>
           </Card>
           <Card onClick={() => navigate('/phone')}>
@@ -386,8 +386,8 @@ export default function Dashboard() {
               <div className="p-2 bg-orange-50 rounded-lg w-fit">
                 <Star size={18} className="text-orange-500" />
               </div>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{secondChance}</p>
-              <p className="text-xs text-gray-500">2nd Chance</p>
+              <p className="text-2xl font-bold text-ink mt-1">{secondChance}</p>
+              <p className="text-xs text-muted">2nd Chance</p>
             </div>
           </Card>
         </div>
@@ -397,13 +397,13 @@ export default function Dashboard() {
       {dueSoon.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">Memberships Due Soon</h3>
-            <button onClick={() => navigate('/settings/membership-plans')} className="text-sm text-[#1A73E8] font-medium">
+            <h3 className="font-semibold text-ink">Memberships Due Soon</h3>
+            <button onClick={() => navigate('/settings/membership-plans')} className="text-sm text-blue font-medium">
               View all
             </button>
           </div>
           <Card>
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-hairline">
               {dueSoon.slice(0, 3).map((m, i) => (
                 <button
                   key={m.id || m._id || i}
@@ -411,14 +411,14 @@ export default function Dashboard() {
                   className="w-full flex items-center justify-between py-3 first:pt-0 last:pb-0 text-left"
                 >
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{`${m.first_name || ''} ${m.last_name || ''}`.trim() || 'No customer'}</p>
-                    <p className="text-xs text-gray-400">{m.plan_name || 'Membership'}</p>
+                    <p className="text-sm font-medium text-ink">{`${m.first_name || ''} ${m.last_name || ''}`.trim() || 'No customer'}</p>
+                    <p className="text-xs text-muted">{m.plan_name || 'Membership'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xs font-semibold text-amber-600">
                       {m.next_job_date ? new Date(m.next_job_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-'}
                     </p>
-                    <ChevronRight size={14} className="text-gray-400 ml-auto mt-0.5" />
+                    <ChevronRight size={14} className="text-muted ml-auto mt-0.5" />
                   </div>
                 </button>
               ))}
@@ -430,17 +430,17 @@ export default function Dashboard() {
       {/* Active Techs */}
       {activeTechs.length > 0 && (
         <div>
-          <h3 className="font-semibold text-gray-900 mb-3">Active Techs</h3>
+          <h3 className="font-semibold text-ink mb-3">Active Techs</h3>
           <div className="flex gap-3 overflow-x-auto pb-2">
             {activeTechs.map((tech, i) => {
               const name = `${tech.first_name || ''} ${tech.last_name || ''}`.trim() || tech.name || 'Tech';
               return (
-                <div key={tech.id || tech._id || i} className="flex-shrink-0 bg-white rounded-2xl shadow px-4 py-3 min-w-[140px]">
-                  <div className="w-8 h-8 rounded-full bg-[#1A73E8] text-white flex items-center justify-center text-sm font-semibold mb-2">
+                <div key={tech.id || tech._id || i} className="flex-shrink-0 bg-card rounded-2xl shadow px-4 py-3 min-w-[140px]">
+                  <div className="w-8 h-8 rounded-full bg-blue text-white flex items-center justify-center text-sm font-semibold mb-2">
                     {name[0]?.toUpperCase() || '?'}
                   </div>
-                  <p className="font-medium text-sm text-gray-900 truncate">{name}</p>
-                  {tech.current_job_title && <p className="text-xs text-gray-400 truncate">{tech.current_job_title}</p>}
+                  <p className="font-medium text-sm text-ink truncate">{name}</p>
+                  {tech.current_job_title && <p className="text-xs text-muted truncate">{tech.current_job_title}</p>}
                   {tech.last_updated && <p className="text-xs text-gray-300 mt-0.5">Updated {tech.last_updated}</p>}
                 </div>
               );
@@ -453,8 +453,8 @@ export default function Dashboard() {
       {mapsReady && activeJobs.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-900">Job Map</h3>
-            <button onClick={() => navigate('/live-map')} className="text-sm text-[#1A73E8] font-medium">
+            <h3 className="font-semibold text-ink">Job Map</h3>
+            <button onClick={() => navigate('/live-map')} className="text-sm text-blue font-medium">
               Full Map
             </button>
           </div>
@@ -465,8 +465,8 @@ export default function Dashboard() {
       {/* Active Jobs */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">Active Jobs</h3>
-          <button onClick={() => navigate('/jobs')} className="text-sm text-[#1A73E8] font-medium">
+          <h3 className="font-semibold text-ink">Active Jobs</h3>
+          <button onClick={() => navigate('/jobs')} className="text-sm text-blue font-medium">
             View all
           </button>
         </div>
@@ -484,14 +484,14 @@ export default function Dashboard() {
               <Card key={job.id || job._id} onClick={() => navigate(`/jobs/${job.id || job._id}`)}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-gray-900 truncate">
+                    <p className="font-medium text-ink truncate">
                       {job.title || job.job_title || 'Untitled Job'}
                     </p>
-                    <p className="text-sm text-gray-500 truncate">
+                    <p className="text-sm text-muted truncate">
                       {`${job.cust_first || ''} ${job.cust_last || ''}`.trim() || 'No customer'}
                     </p>
                     {(job.address || job.service_address) && (
-                      <p className="text-xs text-gray-400 truncate mt-0.5">
+                      <p className="text-xs text-muted truncate mt-0.5">
                         {job.address || job.service_address}
                       </p>
                     )}
@@ -507,7 +507,7 @@ export default function Dashboard() {
       {/* Paste Ticket FAB */}
       <button
         onClick={handlePasteTicket}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-[#1A73E8] text-white rounded-2xl shadow-lg flex items-center gap-2 px-5 h-14 hover:bg-blue-700 transition-colors z-10 font-semibold"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-blue text-white rounded-2xl shadow-lg flex items-center gap-2 px-5 h-14 hover:bg-blue-ink transition-colors z-10 font-semibold"
       >
         <ClipboardList size={20} /><span className="hidden sm:inline">Paste Ticket</span>
       </button>
@@ -525,13 +525,13 @@ export default function Dashboard() {
         }
       >
         <div className="space-y-3">
-          <p className="text-sm text-gray-500">Paste any job ticket, email, or work order. AI will extract job details automatically.</p>
+          <p className="text-sm text-muted">Paste any job ticket, email, or work order. AI will extract job details automatically.</p>
           <textarea
             value={pasteText}
             onChange={e => setPasteText(e.target.value)}
             rows={8}
             placeholder="Paste any job ticket text here, emails, screenshots OCR, etc."
-            className="w-full rounded-xl border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8] resize-none"
+            className="w-full rounded-xl border border-hairline px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue resize-none"
             autoFocus
           />
           {pasteError && (

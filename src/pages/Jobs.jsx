@@ -159,11 +159,11 @@ export default function Jobs() {
   return (
     <div className="p-4 max-w-5xl mx-auto pb-24">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-gray-900">Jobs</h1>
+        <h1 className="text-xl font-bold text-ink">Jobs</h1>
         <button
           onClick={() => { setPage(1); fetchJobs(1); }}
           disabled={loading}
-          className="text-blue-600 text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
+          className="text-blue text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
         >
           {loading ? '⟳ Loading...' : '⟳ Refresh'}
         </button>
@@ -171,16 +171,16 @@ export default function Jobs() {
 
       {/* Search */}
       <div className="relative mb-3">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
         <input
           type="text"
           placeholder="Search jobs..."
           value={searchInput}
           onChange={handleSearchChange}
-          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8] min-h-[44px] text-sm"
+          className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-hairline bg-card focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px] text-sm"
         />
         {searchInput && (
-          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button onClick={clearSearch} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted min-h-[44px] min-w-[44px] flex items-center justify-center">
             <X size={16} />
           </button>
         )}
@@ -198,7 +198,7 @@ export default function Jobs() {
                 key={id}
                 onClick={() => pickDateChip(id)}
                 className={`px-3 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-colors min-h-[36px] flex-shrink-0 ${
-                  selected ? 'bg-[#1A73E8] text-white' : 'bg-white text-gray-600 border border-gray-200'
+                  selected ? 'bg-blue text-white' : 'bg-card text-ink border border-hairline'
                 }`}
               >
                 {displayLabel}
@@ -208,12 +208,12 @@ export default function Jobs() {
         </div>
         <button
           onClick={() => setShowFilterDialog(true)}
-          className="relative p-2.5 rounded-full bg-white border border-gray-200 min-h-[44px] min-w-[44px] flex items-center justify-center text-gray-600"
+          className="relative p-2.5 rounded-full bg-card border border-hairline min-h-[44px] min-w-[44px] flex items-center justify-center text-ink"
           aria-label="Filters"
         >
           <Filter size={18} />
           {activeFilterCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-[#1A73E8] text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            <span className="absolute -top-1 -right-1 bg-blue text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
@@ -239,17 +239,17 @@ export default function Jobs() {
           </div>
 
           {/* Desktop table */}
-          <div className="hidden md:block bg-white rounded-2xl shadow overflow-hidden">
+          <div className="hidden md:block bg-card rounded-2xl shadow overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-gray-100 bg-gray-50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Job #</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Customer</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Type</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Scheduled</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Address</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tech</th>
+                <tr className="border-b border-hairline bg-background">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Job #</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Customer</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Type</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Status</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Scheduled</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Address</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Tech</th>
                 </tr>
               </thead>
               <tbody>
@@ -259,21 +259,21 @@ export default function Jobs() {
                     <tr
                       key={job.id || job._id}
                       onClick={() => navigate(`/jobs/${job.id || job._id}`)}
-                      className={`cursor-pointer hover:bg-gray-50 transition-colors ${i !== jobs.length - 1 ? 'border-b border-gray-100' : ''}`}
+                      className={`cursor-pointer hover:bg-background transition-colors ${i !== jobs.length - 1 ? 'border-b border-hairline' : ''}`}
                     >
-                      <td className="px-4 py-3 text-sm text-gray-500 font-medium">#{job.job_number || (job.id || '').slice(0, 8)}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                      <td className="px-4 py-3 text-sm text-muted font-medium">#{job.job_number || (job.id || '').slice(0, 8)}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-ink">
                         {[job.cust_first, job.cust_last].filter(Boolean).join(' ') || '—'}
                         {job.membership_id && <span className="ml-1 text-amber-500">⭐</span>}
                         {job.sent_by_company_id && <span className="ml-1 text-xs text-green-600">📥</span>}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">{(job.type || 'service').replace(/^\w/, c => c.toUpperCase())}</td>
+                      <td className="px-4 py-3 text-sm text-ink">{(job.type || 'service').replace(/^\w/, c => c.toUpperCase())}</td>
                       <td className="px-4 py-3"><Badge status={job.status} label={job.status?.replace(/_/g, ' ')} /></td>
-                      <td className="px-4 py-3 text-sm text-gray-500">{humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-500 truncate max-w-[200px]">
+                      <td className="px-4 py-3 text-sm text-muted">{humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end)}</td>
+                      <td className="px-4 py-3 text-sm text-muted truncate max-w-[200px]">
                         {[job.address, job.cust_city || job.city].filter(Boolean).join(', ') || '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">{tech || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-muted">{tech || '—'}</td>
                     </tr>
                   );
                 })}
@@ -285,7 +285,7 @@ export default function Jobs() {
           {!loading && hasMore && (
             <button
               onClick={() => setPage(p => p + 1)}
-              className="w-full py-3 text-[#1A73E8] font-medium mt-3 min-h-[44px]"
+              className="w-full py-3 text-blue font-medium mt-3 min-h-[44px]"
             >
               Load more jobs...
             </button>
@@ -296,7 +296,7 @@ export default function Jobs() {
       {/* FAB */}
       <button
         onClick={() => navigate('/jobs/new')}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-[#1A73E8] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-700 transition-colors z-10"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-ink transition-colors z-10"
       >
         <Plus size={24} />
       </button>
@@ -304,34 +304,34 @@ export default function Jobs() {
       {/* Custom date dialog */}
       {showCustomDialog && (
         <div className="fixed inset-0 z-30 flex items-end md:items-center justify-center bg-black/40" onClick={() => setShowCustomDialog(false)}>
-          <div className="bg-white rounded-t-2xl md:rounded-2xl shadow-lg w-full md:max-w-md p-5" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Custom Date Range</h2>
+          <div className="bg-card rounded-t-2xl md:rounded-2xl shadow-lg w-full md:max-w-md p-5" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-ink mb-4">Custom Date Range</h2>
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">From</label>
+                <label className="text-xs font-semibold text-muted uppercase tracking-wide">From</label>
                 <input
                   type="date"
                   value={customDraftFrom}
                   onChange={e => setCustomDraftFrom(e.target.value)}
-                  className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                  className="w-full mt-1 border border-hairline rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue"
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide">To</label>
+                <label className="text-xs font-semibold text-muted uppercase tracking-wide">To</label>
                 <input
                   type="date"
                   value={customDraftTo}
                   onChange={e => setCustomDraftTo(e.target.value)}
-                  className="w-full mt-1 border border-gray-300 rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
+                  className="w-full mt-1 border border-hairline rounded-lg px-3 py-2 text-sm min-h-[44px] focus:outline-none focus:ring-2 focus:ring-blue"
                 />
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setShowCustomDialog(false)} className="px-4 py-2 text-sm text-gray-600 min-h-[44px]">Cancel</button>
+              <button onClick={() => setShowCustomDialog(false)} className="px-4 py-2 text-sm text-ink min-h-[44px]">Cancel</button>
               <button
                 onClick={applyCustomDate}
                 disabled={!customDraftFrom || !customDraftTo}
-                className="px-4 py-2 text-sm font-medium bg-[#1A73E8] text-white rounded-lg min-h-[44px] disabled:opacity-50"
+                className="px-4 py-2 text-sm font-medium bg-blue text-white rounded-lg min-h-[44px] disabled:opacity-50"
               >
                 Apply
               </button>
@@ -343,10 +343,10 @@ export default function Jobs() {
       {/* Status + Tech filter dialog */}
       {showFilterDialog && (
         <div className="fixed inset-0 z-30 flex items-end md:items-center justify-center bg-black/40" onClick={() => setShowFilterDialog(false)}>
-          <div className="bg-white rounded-t-2xl md:rounded-2xl shadow-lg w-full md:max-w-md p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Filters</h2>
+          <div className="bg-card rounded-t-2xl md:rounded-2xl shadow-lg w-full md:max-w-md p-5 max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-ink mb-4">Filters</h2>
 
-            <p className="text-xs font-bold uppercase tracking-wider text-[#1A73E8] mb-2">Status</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-blue mb-2">Status</p>
             <div className="space-y-1 mb-4">
               {STATUS_OPTIONS.map(({ id, label }) => (
                 <label key={id} className="flex items-center gap-3 cursor-pointer min-h-[36px]">
@@ -357,7 +357,7 @@ export default function Jobs() {
                     className="w-4 h-4"
                   />
                   <span className="w-2 h-2 rounded-full" style={{ background: statusColor(id) }} />
-                  <span className="text-sm text-gray-700">{label}</span>
+                  <span className="text-sm text-ink">{label}</span>
                 </label>
               ))}
               <label className="flex items-center gap-3 cursor-pointer min-h-[36px]">
@@ -368,14 +368,14 @@ export default function Jobs() {
                   className="w-4 h-4"
                 />
                 <Inbox size={14} className="text-green-600" />
-                <span className="text-sm text-gray-700">Received (from partners)</span>
+                <span className="text-sm text-ink">Received (from partners)</span>
               </label>
             </div>
 
-            <p className="text-xs font-bold uppercase tracking-wider text-[#1A73E8] mb-2">Technician</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-blue mb-2">Technician</p>
             <div className="space-y-1 mb-4">
               {techs.length === 0 ? (
-                <p className="text-sm text-gray-500 py-1">No technicians</p>
+                <p className="text-sm text-muted py-1">No technicians</p>
               ) : (
                 techs.map(t => {
                   const name = `${t.first_name || ''} ${t.last_name || ''}`.trim() || t.email || (t.id || '').slice(0, 8);
@@ -387,7 +387,7 @@ export default function Jobs() {
                         onChange={() => toggleTech(t.id)}
                         className="w-4 h-4"
                       />
-                      <span className="text-sm text-gray-700">{name}</span>
+                      <span className="text-sm text-ink">{name}</span>
                     </label>
                   );
                 })
@@ -396,7 +396,7 @@ export default function Jobs() {
 
             {jobTypes.length > 0 && (
               <>
-                <p className="text-xs font-bold uppercase tracking-wider text-[#1A73E8] mb-2">Job Type</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-blue mb-2">Job Type</p>
                 <div className="space-y-1 mb-4">
                   {jobTypes.map(t => (
                     <label key={t.key} className="flex items-center gap-3 cursor-pointer min-h-[36px]">
@@ -406,19 +406,19 @@ export default function Jobs() {
                         onChange={() => toggleType(t.key)}
                         className="w-4 h-4"
                       />
-                      <span className="text-sm text-gray-700">{t.label}</span>
+                      <span className="text-sm text-ink">{t.label}</span>
                     </label>
                   ))}
                 </div>
               </>
             )}
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-              <button onClick={clearAllFilters} className="px-4 py-2 text-sm text-gray-600 min-h-[44px]">Clear All</button>
-              <button onClick={() => setShowFilterDialog(false)} className="px-4 py-2 text-sm text-gray-600 min-h-[44px]">Cancel</button>
+            <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
+              <button onClick={clearAllFilters} className="px-4 py-2 text-sm text-ink min-h-[44px]">Clear All</button>
+              <button onClick={() => setShowFilterDialog(false)} className="px-4 py-2 text-sm text-ink min-h-[44px]">Cancel</button>
               <button
                 onClick={() => setShowFilterDialog(false)}
-                className="px-4 py-2 text-sm font-medium bg-[#1A73E8] text-white rounded-lg min-h-[44px]"
+                className="px-4 py-2 text-sm font-medium bg-blue text-white rounded-lg min-h-[44px]"
               >
                 Apply
               </button>
@@ -460,7 +460,7 @@ function JobCard({ job, onClick }) {
 
           {/* Row 1: number + type chip + (priority/archived right) */}
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-gray-500">#{job.job_number}</span>
+            <span className="text-xs font-bold text-muted">#{job.job_number}</span>
             <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">
               {(job.type || 'service').replace(/^\w/, c => c.toUpperCase())}
             </span>
@@ -475,7 +475,7 @@ function JobCard({ job, onClick }) {
 
           {/* Row 2: customer + member */}
           <div className="flex items-center gap-2">
-            <p className="font-semibold text-gray-900 text-base truncate flex-1">{customer}</p>
+            <p className="font-semibold text-ink text-base truncate flex-1">{customer}</p>
             {job.membership_id && (
               <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium whitespace-nowrap">
                 ⭐ Member
@@ -485,7 +485,7 @@ function JobCard({ job, onClick }) {
 
           {/* Row 3: address */}
           {addrParts.length > 0 && (
-            <div className="flex items-center gap-1 text-xs text-gray-500">
+            <div className="flex items-center gap-1 text-xs text-muted">
               <MapPin size={12} />
               <span className="truncate">{addrParts.join(', ')}</span>
             </div>
@@ -493,8 +493,8 @@ function JobCard({ job, onClick }) {
 
           {/* Row 4: scheduled + status + tech */}
           <div className="flex items-center gap-2 text-xs">
-            <CalendarIcon size={12} className="text-gray-400 flex-shrink-0" />
-            <span className={`truncate ${humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end) === 'Unscheduled' ? 'text-gray-400' : 'text-gray-700 font-medium'}`}>
+            <CalendarIcon size={12} className="text-muted flex-shrink-0" />
+            <span className={`truncate ${humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end) === 'Unscheduled' ? 'text-muted' : 'text-ink font-medium'}`}>
               {humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end)}
             </span>
             <span className="flex-1" />
@@ -502,7 +502,7 @@ function JobCard({ job, onClick }) {
             <span style={{ color: accentColor }} className="font-medium whitespace-nowrap">
               {(job.status === 'holding' ? 'Holding' : job.status?.replace(/_/g, ' ').replace(/^\w/, c => c.toUpperCase())) || ''}
             </span>
-            {tech && <span className="text-gray-400 truncate">· {tech}</span>}
+            {tech && <span className="text-muted truncate">· {tech}</span>}
           </div>
         </div>
       </div>
