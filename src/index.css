@@ -108,3 +108,37 @@ input, select, textarea {
 * {
   -webkit-overflow-scrolling: touch;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   P3.1b [3/3] — dark-mode pale-tint fix (David/Fable ruling 2026-07-13).
+   The status/data palette (red/green/amber/blue …) was intentionally kept as raw
+   Tailwind classes, so the pale bg-*-50/-100 SURFACES never flipped with the token
+   system — static tint islands stayed bright on the dark canvas. Under dark they
+   get hue-tinted DARK surface equivalents, dark enough that the existing deep
+   (-600/-700/-800) label text still reads. These target the BARE utility class
+   only, so `hover:bg-*-50` (the blue-button hover-lighten) is left intact per the
+   ruling. Unlayered → wins over Tailwind's @layer utilities without !important.
+   Light mode is untouched; the fixed pearl button (bg-pearl / text-[#DC2626]) is
+   unaffected because it uses none of these classes. */
+@media (prefers-color-scheme: dark) {
+  .bg-blue-50    { background-color: #182437; }
+  .bg-blue-100   { background-color: #1E2C45; }
+  .bg-red-50     { background-color: #2E1719; }
+  .bg-red-100    { background-color: #3A1C1F; }
+  .bg-green-50   { background-color: #14271C; }
+  .bg-green-100  { background-color: #193122; }
+  .bg-amber-50   { background-color: #2A2210; }
+  .bg-amber-100  { background-color: #342915; }
+  .bg-orange-50  { background-color: #2C1B11; }
+  .bg-orange-100 { background-color: #351F13; }
+  .bg-purple-50  { background-color: #201830; }
+  .bg-purple-100 { background-color: #281E3C; }
+  .bg-indigo-100 { background-color: #1C1E3A; }
+  .bg-gray-50    { background-color: #1D1D24; }
+  .bg-gray-100   { background-color: #25252E; }
+
+  /* Blue islands (the named case) pair a pale-blue surface with deep-blue text and
+     a light-blue border — lift both so they read on the dark-blue surface. */
+  .text-blue-600, .text-blue-700, .text-blue-800, .text-blue-900 { color: #9FC2F2; }
+  .border-blue-200 { border-color: #2E4468; }
+}
