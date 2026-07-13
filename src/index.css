@@ -1,13 +1,88 @@
 @import "tailwindcss";
 
+/* ───────────────────────────────────────────────────────────────────────────
+   P3.1b — Pearl/Brass design tokens (Fable, David-approved 2026-07-13).
+   Semantic CSS variables. The browser's prefers-color-scheme IS the switch
+   (David's ruling — no toggle machinery). Light values at :root, dark values
+   under @media (prefers-color-scheme: dark).
+
+   Two families:
+   • FLIPPING tokens (--c-*): adapt to light/dark — cards, inputs, chips, text.
+   • FIXED pearl-island tokens (--p-*): the signature pearl button stays pearl in
+     BOTH modes, so its face/ink/brass/blue never flip.
+   ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  --color-navy: #0D1B2A;
+  /* Tailwind color utilities → semantic vars (flip via @media below) */
+  --color-background:   var(--c-background);
+  --color-card:         var(--c-card);
+  --color-hairline:     var(--c-hairline);
+  --color-ink:          var(--c-ink);
+  --color-muted:        var(--c-muted);
+  --color-blue:         var(--c-blue);
+  --color-blue-ink:     var(--c-blue-ink);
+  --color-brass-text:   var(--c-brass-text);
+  --color-brass-border: var(--c-brass-border);
+  --color-brass-deep:   var(--c-brass-deep);
+  --color-brass-bright: var(--c-brass-bright);
+  --color-chip:         var(--c-chip);
+
+  /* FIXED pearl-island utilities (button signature — identical in both modes) */
+  --color-pearl:              #FDFCF8;
+  --color-pearl-ink:          #1D1C18;
+  --color-pearl-brass:        #A9812E;
+  --color-pearl-brass-border: #C9A25C;
+  --color-pearl-blue:         #2D6FC2;
+
+  /* legacy tokens (referenced by skills/ui-design-system.md; unused in JSX) */
+  --color-navy:  #0D1B2A;
   --color-brand: #1A73E8;
-  --color-gold: #F5A623;
+  --color-gold:  #F5A623;
 }
 
+/* LIGHT (default) */
 :root {
   --nav-height: 56px;
+
+  --c-background:   #F6F3EC;
+  --c-card:         #FFFFFF;
+  --c-hairline:     #E4DFD2;
+  --c-ink:          #1D1C18;
+  --c-muted:        #7A7466;
+  --c-blue:         #2D6FC2;
+  --c-blue-ink:     #1E4E8C;
+  --c-brass-text:   #A9812E;
+  --c-brass-border: #C9A25C;
+  --c-brass-deep:   #8A6A3B;
+  --c-brass-bright: #E7CE99;
+  --c-chip:         #FDFCF8;   /* chip fill: pearlFace in light */
+
+  /* Brand hairline / accents — the shine gradient (CSS) */
+  --shine: linear-gradient(100deg, #8A6A3B 0%, #C9A25C 28%, #F0D9A6 50%, #C9A25C 72%, #8A6A3B 100%);
+}
+
+/* DARK — browser preference is the switch */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --c-background:   #141419;
+    --c-card:         #1D1D24;
+    --c-hairline:     #2B2B33;
+    --c-ink:          #F2EEE4;
+    --c-muted:        #A29C8E;
+    --c-blue:         #4C8BE0;
+    --c-blue-ink:     #9FC2F2;
+    --c-brass-text:   #D8B87C;
+    --c-brass-border: #D8B87C;
+    --c-brass-deep:   #8A6A3B;
+    --c-brass-bright: #E7CE99;
+    --c-chip:         #1D1D24;   /* chip fill: card in dark */
+  }
+}
+
+/* Brand hairline (shine gradient, 2px) — utility for headers (used in the sweep). */
+.brand-hairline {
+  height: 2px;
+  background: var(--shine);
+  border: 0;
 }
 
 body {

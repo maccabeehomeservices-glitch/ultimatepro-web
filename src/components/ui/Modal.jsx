@@ -37,15 +37,15 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
       />
       {/* Modal panel */}
       <div
-        className={`relative bg-white w-full md:${sizeClasses[size] || sizeClasses.md} rounded-t-2xl md:rounded-2xl shadow-xl max-h-[90vh] flex flex-col overflow-hidden transition-transform`}
+        className={`relative bg-card w-full md:${sizeClasses[size] || sizeClasses.md} rounded-t-[14px] md:rounded-[14px] border-[0.5px] border-hairline shadow-xl max-h-[90vh] flex flex-col overflow-hidden transition-transform`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
-          {title && <h2 className="text-lg font-semibold text-gray-900">{title}</h2>}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-hairline flex-shrink-0">
+          {title && <h2 className="text-[17px] font-medium text-ink">{title}</h2>}
           <button
             onClick={onClose}
-            className="ml-auto p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="ml-auto p-1.5 rounded-lg text-muted hover:text-ink hover:bg-hairline min-h-[44px] min-w-[44px] flex items-center justify-center"
           >
             <X size={20} />
           </button>
@@ -56,7 +56,7 @@ export default function Modal({ isOpen, onClose, title, children, footer, size =
         </div>
         {/* Footer */}
         {footer && (
-          <div className="flex-shrink-0 px-4 py-3 border-t border-gray-100 flex gap-2 justify-end">
+          <div className="flex-shrink-0 px-4 py-3 border-t border-hairline flex gap-2 justify-end">
             {footer}
           </div>
         )}

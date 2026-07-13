@@ -1,3 +1,6 @@
+// ── P3.1b — Input (tokens) ────────────────────────────────────────────────────
+// card fill · hairline border · ink text · muted label + placeholder · blue focus
+// ring · radius 11 · min-h 44. Error state keeps status-red.
 export default function Input({
   label,
   error,
@@ -16,7 +19,7 @@ export default function Input({
   return (
     <div className={`w-full ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-[12px] font-medium text-muted mb-1">
           {label}
         </label>
       )}
@@ -31,9 +34,9 @@ export default function Input({
         onFocus={onFocus}
         onBlur={onBlur}
         readOnly={readOnly}
-        className={`w-full rounded-xl border px-3 py-2.5 min-h-[44px] text-gray-900 placeholder-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:border-transparent disabled:bg-gray-50 disabled:cursor-not-allowed ${error ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'}`}
+        className={`w-full rounded-[11px] border px-3 py-2.5 min-h-[44px] text-ink placeholder-muted bg-card transition-colors focus:outline-none focus:ring-2 focus:ring-blue focus:border-transparent disabled:opacity-60 disabled:cursor-not-allowed ${error ? 'border-[#DC2626]' : 'border-hairline'}`}
       />
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+      {error && <p className="mt-1 text-xs text-[#DC2626]">{error}</p>}
     </div>
   );
 }

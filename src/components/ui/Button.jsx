@@ -1,21 +1,23 @@
 import { Loader2 } from 'lucide-react';
 
-const variantClasses = {
-  primary: 'bg-[#1A73E8] text-white hover:bg-blue-700 disabled:bg-blue-300',
-  outlined: 'border border-[#1A73E8] text-[#1A73E8] bg-transparent hover:bg-blue-50 disabled:opacity-50',
-  danger: 'bg-red-500 text-white hover:bg-red-600 disabled:bg-red-300',
-  ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 disabled:opacity-50',
-};
-
-const sizeClasses = {
-  sm: 'px-3 py-2 text-sm min-h-[44px]',
-  md: 'px-4 py-2.5 text-base min-h-[44px]',
-  lg: 'px-6 py-3 text-lg min-h-[44px]',
+// ── P3.1b — ONE button: the pearl inlay ───────────────────────────────────────
+// pearlFace face · 2.5px BLUE outer border · 2.5px BRASS inner ring flush (inset
+// shadow) · radius 11 · height >=44 · ink label (14-16, w500) · brass icon.
+// It is a signature element that stays pearl in BOTH light + dark (fixed pearl-*
+// tokens, never flips). The `variant`/`size` props are RETAINED so existing call
+// sites keep working (law 1 — edit, don't recreate); every variant uses the same
+// shell. `danger` tints the label/icon to status-red to preserve the destructive
+// signal. (ghost/outlined emphasis + per-call-site icon sizing → unknowns ledger.)
+const labelByVariant = {
+  primary:  'text-pearl-ink',
+  outlined: 'text-pearl-ink',
+  ghost:    'text-pearl-ink',
+  danger:   'text-[#DC2626]',
 };
 
 export default function Button({
   variant = 'primary',
-  size = 'md',
+  size = 'md', // retained for API compat; height is uniform >=44 per spec
   loading = false,
   disabled = false,
   onClick,
@@ -28,9 +30,9 @@ export default function Button({
       type={type}
       onClick={onClick}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 font-medium rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-[#1A73E8] focus:ring-offset-1 disabled:cursor-not-allowed ${variantClasses[variant] || variantClasses.primary} ${sizeClasses[size] || sizeClasses.md} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-4 text-[15px] font-medium rounded-[11px] bg-pearl border-[2.5px] border-pearl-blue [box-shadow:inset_0_0_0_2.5px_var(--color-pearl-brass-border)] transition-colors focus:outline-none focus:ring-2 focus:ring-pearl-blue focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-60 ${labelByVariant[variant] || labelByVariant.primary} ${className}`}
     >
-      {loading && <Loader2 size={16} className="animate-spin" />}
+      {loading && <Loader2 size={18} className="animate-spin text-pearl-brass" />}
       {children}
     </button>
   );

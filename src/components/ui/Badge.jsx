@@ -1,29 +1,35 @@
-const statusStyles = {
-  unscheduled: 'bg-gray-100 text-gray-600',
-  scheduled: 'bg-blue-100 text-blue-700',
-  en_route: 'bg-indigo-100 text-indigo-700',
-  in_progress: 'bg-orange-100 text-orange-700',
-  completed: 'bg-green-100 text-green-700',
-  cancelled: 'bg-red-100 text-red-700',
-  holding: 'bg-amber-100 text-amber-700',
-  deleted: 'bg-gray-100 text-gray-500',
-  draft: 'bg-gray-100 text-gray-600',
-  sent: 'bg-blue-100 text-blue-700',
-  approved: 'bg-green-100 text-green-700',
-  paid: 'bg-green-100 text-green-700',
-  unpaid: 'bg-red-100 text-red-700',
-  overdue: 'bg-red-100 text-red-700',
-  active: 'bg-green-100 text-green-700',
-  inactive: 'bg-gray-100 text-gray-500',
+import { statusColor } from '../../lib/api';
+
+// ── P3.1b — Chip/status ───────────────────────────────────────────────────────
+// pearlFace (light) / card (dark) fill via the `chip` token · 1px border + text in
+// the status's canonical color family · radius full · 11px w500.
+// Job statuses come straight from lib/api.js statusColor() (the single source of
+// truth, in lockstep with android AppColors + ui-design-system.md §1). Non-job
+// statuses (invoice/estimate/membership/generic) map to the matching family.
+// NOTE: this corrects the prior Badge drift — en_route was indigo, in_progress was
+// orange — to the canonical Orange / Sky (law 4: fix drift to the Android values).
+const extraColor = {
+  draft: '#6B7280', sent: '#2563EB', approved: '#16A34A', paid: '#16A34A',
+  unpaid: '#DC2626', overdue: '#DC2626', active: '#16A34A', inactive: '#9CA3AF',
+  partial: '#F97316', void: '#6B7280',
 };
+const JOB_STATUSES = new Set([
+  'unscheduled', 'scheduled', 'en_route', 'in_progress', 'holding',
+  'completed', 'cancelled', 'deleted',
+]);
 
 export default function Badge({ status, label, variant, className = '' }) {
   const key = (status || variant || '').toLowerCase().replace(/ /g, '_');
-  const styles = statusStyles[key] || 'bg-gray-100 text-gray-600';
+  const color = JOB_STATUSES.has(key)
+    ? statusColor(key)
+    : (extraColor[key] || '#7A7466');
   const displayLabel = label || status || variant || '';
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles} ${className}`}>
+    <span
+      className={`inline-flex items-center bg-chip px-2.5 py-0.5 rounded-full text-[11px] font-medium border ${className}`}
+      style={{ color, borderColor: color }}
+    >
       {displayLabel}
     </span>
   );
