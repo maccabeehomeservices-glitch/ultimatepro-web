@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { UpBack } from '../../components/ui/icons';
 import { Card } from '../../components/ui';
 import { Toggle } from '../../components/ui';
 import { useSnackbar } from '../../components/ui/Snackbar';
@@ -54,7 +54,7 @@ export default function Notifications() {
           onClick={() => navigate('/settings')}
           className="p-2 text-muted hover:text-ink min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink">Notifications</h1>
       </div>

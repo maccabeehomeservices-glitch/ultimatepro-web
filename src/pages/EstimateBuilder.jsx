@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Search, UserCheck, X, Copy } from 'lucide-react';
+import { Trash2, Search, UserCheck, X, Copy } from 'lucide-react';
+import { UpBack, UpPlus } from '../components/ui/icons';
 import { estimatesApi, customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, Toggle, StepperInput, Modal, LoadingSpinner } from '../components/ui';
@@ -502,7 +503,7 @@ export default function EstimateBuilder() {
               onClick={() => setter(prev => ({ ...prev, [sectionKey]: [...prev[sectionKey], emptyItem(itemType)] }))}
               className="flex items-center gap-0.5 text-xs text-blue font-medium min-h-[44px]"
             >
-              <Plus size={12} /> Add
+              <UpPlus size={12} /> Add
             </button>
           </div>
         </div>
@@ -666,7 +667,7 @@ export default function EstimateBuilder() {
     <div className="p-4 max-w-3xl mx-auto pb-32">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink">{isEdit ? 'Edit Estimate' : 'New Estimate'}</h1>
       </div>
@@ -709,14 +710,14 @@ export default function EstimateBuilder() {
                       ))}
                       <button type="button" onClick={() => { setShowCustomerDropdown(false); setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
                         className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue font-medium flex items-center gap-2">
-                        <Plus size={14} /> Create new customer
+                        <UpPlus size={14} /> Create new customer
                       </button>
                     </div>
                   )}
                   {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
                     <button type="button" onClick={() => { setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
                       className="mt-1.5 text-sm text-blue font-medium flex items-center gap-1 min-h-[36px]">
-                      <Plus size={14} /> Create new customer
+                      <UpPlus size={14} /> Create new customer
                     </button>
                   )}
                 </div>
@@ -790,7 +791,7 @@ export default function EstimateBuilder() {
                 onClick={addTier}
                 className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-dashed border-hairline text-muted hover:border-blue hover:text-blue flex items-center gap-1 min-h-[44px]"
               >
-                <Plus size={14} /> Add Option
+                <UpPlus size={14} /> Add Option
               </button>
             )}
           </div>

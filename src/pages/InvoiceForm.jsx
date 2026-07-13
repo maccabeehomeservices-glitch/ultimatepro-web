@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Search } from 'lucide-react';
+import { Trash2, Search } from 'lucide-react';
+import { UpBack, UpPlus } from '../components/ui/icons';
 import { invoicesApi, customersApi } from '../lib/api';
 import api from '../lib/api';
 import { Button, Input, Card, Modal, LoadingSpinner } from '../components/ui';
@@ -172,7 +173,7 @@ export default function InvoiceForm() {
     <div className="p-4 max-w-3xl mx-auto pb-32">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink">New Invoice</h1>
       </div>
@@ -223,7 +224,7 @@ export default function InvoiceForm() {
                 className="text-xs text-blue font-medium min-h-[36px]">Pricebook</button>
               <button type="button" onClick={addItem}
                 className="flex items-center gap-1 text-xs text-blue font-medium min-h-[36px]">
-                <Plus size={12} /> Add
+                <UpPlus size={12} /> Add
               </button>
             </div>
           </div>

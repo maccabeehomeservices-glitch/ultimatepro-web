@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, CreditCard } from 'lucide-react';
+import { UpBack, UpSend, UpCard } from '../components/ui/icons';
 import { reportsApi, formatMoney } from '../lib/api';
 import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -112,7 +112,7 @@ export default function TeamReport() {
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-blue text-sm mb-3 min-h-[44px]"
       >
-        <ArrowLeft size={16} />
+        <UpBack size={16} />
         Back
       </button>
 
@@ -132,7 +132,7 @@ export default function TeamReport() {
             onClick={() => setSendOpen(true)}
             className="px-3 py-2 bg-blue text-white rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-ink min-h-[44px]"
           >
-            <Send size={16} />
+            <UpSend size={16} />
             Send Report
           </button>
         </div>
@@ -167,7 +167,7 @@ export default function TeamReport() {
         <LoadingSpinner />
       ) : !report ? (
         <EmptyState
-          icon={CreditCard}
+          icon={UpCard}
           title="Report unavailable"
           description="No data for this tech in the selected period."
         />

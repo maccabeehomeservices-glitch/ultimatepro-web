@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Briefcase, Receipt, FileText, Calendar, Trash2, CheckCheck } from 'lucide-react';
+import { Briefcase, Receipt, FileText, Trash2, CheckCheck } from 'lucide-react';
+import { UpBell, UpCalendar } from '../components/ui/icons';
 import { notificationsApi } from '../lib/api';
 import { Card, EmptyState, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -31,8 +32,8 @@ function TypeIcon({ type, entity_type }) {
   if (t.includes('job')) return <Briefcase size={16} className="text-blue-500" />;
   if (t.includes('invoice') || t.includes('payment')) return <Receipt size={16} className="text-green-500" />;
   if (t.includes('estimate')) return <FileText size={16} className="text-purple-500" />;
-  if (t.includes('booking')) return <Calendar size={16} className="text-orange-500" />;
-  return <Bell size={16} className="text-muted" />;
+  if (t.includes('booking')) return <UpCalendar size={16} className="text-orange-500" />;
+  return <UpBell size={16} className="text-muted" />;
 }
 
 export default function Notifications() {
@@ -106,7 +107,7 @@ export default function Notifications() {
       {loading ? (
         <LoadingSpinner />
       ) : notifications.length === 0 ? (
-        <EmptyState icon={Bell} title="No notifications" description="You're all caught up!" />
+        <EmptyState icon={UpBell} title="No notifications" description="You're all caught up!" />
       ) : (
         <div className="space-y-2">
           {notifications.map(n => {

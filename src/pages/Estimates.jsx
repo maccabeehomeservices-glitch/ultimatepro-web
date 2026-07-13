@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, FileText, Search, X } from 'lucide-react';
+import { Search, X } from 'lucide-react';
+import { UpPlus, UpEstimate } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
 
@@ -88,7 +89,7 @@ export default function Estimates() {
       {loading ? (
         <LoadingSpinner />
       ) : estimates.length === 0 ? (
-        <EmptyState icon={FileText} title="No estimates found" description="Create your first estimate to get started." />
+        <EmptyState icon={UpEstimate} title="No estimates found" description="Create your first estimate to get started." />
       ) : (
         <div className="space-y-2">
           {estimates.map((est) => {
@@ -127,7 +128,7 @@ export default function Estimates() {
         onClick={() => navigate('/estimates/new')}
         className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-ink transition-colors z-10"
       >
-        <Plus size={24} />
+        <UpPlus size={24} />
       </button>
     </div>
   );

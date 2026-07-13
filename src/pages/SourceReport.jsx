@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Briefcase } from 'lucide-react';
+import { Briefcase } from 'lucide-react';
+import { UpBack, UpSend } from '../components/ui/icons';
 import { reportsApi, formatMoney } from '../lib/api';
 import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -85,7 +86,7 @@ export default function SourceReport() {
         onClick={() => navigate(-1)}
         className="flex items-center gap-1 text-blue text-sm mb-3 min-h-[44px]"
       >
-        <ArrowLeft size={16} />
+        <UpBack size={16} />
         Back
       </button>
 
@@ -108,7 +109,7 @@ export default function SourceReport() {
             onClick={() => setSendOpen(true)}
             className="px-3 py-2 bg-blue text-white rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-ink min-h-[44px]"
           >
-            <Send size={16} />
+            <UpSend size={16} />
             Send Report
           </button>
         </div>

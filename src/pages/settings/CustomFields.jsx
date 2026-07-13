@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Pencil, Trash2, X } from 'lucide-react';
+import { UpBack, UpPlus } from '../../components/ui/icons';
 import { companyApi } from '../../lib/api';
 import { Button, Input, Card, LoadingSpinner } from '../../components/ui';
 import { useSnackbar } from '../../components/ui/Snackbar';
@@ -147,14 +148,14 @@ export default function CustomFields() {
           onClick={() => navigate('/settings')}
           className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink"
         >
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink flex-1">Custom Fields</h1>
         <button
           onClick={openAdd}
           className="flex items-center gap-1.5 bg-blue text-white text-sm font-medium px-4 py-2 rounded-xl min-h-[44px]"
         >
-          <Plus size={16} /> Add Field
+          <UpPlus size={16} /> Add Field
         </button>
       </div>
 

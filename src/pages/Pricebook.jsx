@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Plus, BookOpen, Upload, Search, Edit2, Trash2, X } from 'lucide-react';
+import { BookOpen, Upload, Search, Edit2, Trash2, X } from 'lucide-react';
+import { UpPlus } from '../components/ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Modal, Input, Button, Select, Toggle } from '../components/ui';
@@ -181,7 +182,7 @@ export default function Pricebook() {
               onClick={() => { setCatName(''); setAddCatModal(true); }}
               className="flex items-center gap-1.5 text-sm bg-blue text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
             >
-              <Plus size={14} /> Category
+              <UpPlus size={14} /> Category
             </button>
           )}
         </div>
@@ -239,7 +240,7 @@ export default function Pricebook() {
               onClick={openAddItem}
               className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px]"
             >
-              <Plus size={16} /> Add Item
+              <UpPlus size={16} /> Add Item
             </button>
             )}
           </div>

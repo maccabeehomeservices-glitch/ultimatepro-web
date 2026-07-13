@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, addMonths, subMonths, isSameMonth, isSameDay, parseISO } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar as CalIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { UpCalendar } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
 import { Modal, LoadingSpinner, Badge } from '../components/ui';
 import { statusColor } from '../lib/api';
@@ -124,7 +125,7 @@ export default function Calendar() {
         <div className="space-y-2">
           {selectedJobs.length === 0 ? (
             <div className="text-center py-6 text-muted">
-              <CalIcon size={32} className="mx-auto mb-2 opacity-50" />
+              <UpCalendar size={32} className="mx-auto mb-2 opacity-50" />
               <p>No jobs scheduled for this day.</p>
             </div>
           ) : (

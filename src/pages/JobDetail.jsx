@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import {
-  ArrowLeft, Edit, Send, MapPin, Camera, X, ChevronLeft, ChevronRight,
-  Plus, ChevronDown, Trash2, Navigation, CheckCircle,
+  Edit, Camera, X, ChevronLeft, ChevronRight,
+  Trash2, Navigation, CheckCircle,
 } from 'lucide-react';
+import { UpBack, UpSend, UpPin, UpChevronDown } from '../components/ui/icons';
 import { useGet, useMutation } from '../hooks/useApi';
 import { useAuth } from '../hooks/useAuth';
 import api, { formatDate, formatTime, jobsApi } from '../lib/api';
@@ -750,7 +751,7 @@ export default function JobDetail() {
         <div className="flex items-center gap-3 flex-wrap flex-1 min-w-0">
           <button onClick={() => navigate(-1)}
             className="p-2 -ml-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-            <ArrowLeft size={20} />
+            <UpBack size={20} />
           </button>
           <h1 className="text-xl font-bold text-ink">
             #{jobData.job_number || jobData.id?.slice(0,8)}
@@ -986,7 +987,7 @@ export default function JobDetail() {
                   </div>
                 )}
                 <div className="flex items-start gap-3">
-                  <MapPin size={18} className="text-blue mt-0.5 shrink-0" />
+                  <UpPin size={18} className="text-blue mt-0.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-muted font-medium uppercase mb-0.5">Job Site</p>
                     <p className="text-sm text-ink">
@@ -1296,7 +1297,7 @@ export default function JobDetail() {
                   : toggleHistSection(key)}
                   className="w-full flex items-center justify-between min-h-[44px]">
                   <span className="font-semibold text-ink text-sm">{label}</span>
-                  <ChevronDown size={16} className={`text-muted transition-transform ${histOpen[key] ? 'rotate-180' : ''}`} />
+                  <UpChevronDown size={16} className={`text-muted transition-transform ${histOpen[key] ? 'rotate-180' : ''}`} />
                 </button>
                 {histOpen[key] && (
                   <div className="mt-3 pt-3 border-t border-hairline">
@@ -1423,7 +1424,7 @@ export default function JobDetail() {
                   className="flex-1 rounded-full border border-hairline px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]" />
                 <button type="submit" disabled={sendingMsg || !messageBody.trim()}
                   className="w-11 h-11 bg-blue text-white rounded-full flex items-center justify-center disabled:opacity-50">
-                  <Send size={18} />
+                  <UpSend size={18} />
                 </button>
               </form>
             ) : (

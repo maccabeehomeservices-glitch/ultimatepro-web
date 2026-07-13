@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Trash2, Copy, Share2, X } from 'lucide-react';
+import { Trash2, Copy, Share2, X } from 'lucide-react';
+import { UpBack, UpPlus } from '../../components/ui/icons';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { Card, LoadingSpinner, Button, Input, Toggle, Select } from '../../components/ui';
@@ -159,7 +160,7 @@ export default function OnlineBooking() {
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink flex-1">Online Booking</h1>
       </div>
@@ -263,7 +264,7 @@ export default function OnlineBooking() {
                   <input type="range" min={1} max={100} value={newRadius} onChange={e => setNewRadius(Number(e.target.value))} className="w-full" />
                 </div>
                 <button onClick={addArea} className="p-2 rounded-xl bg-blue text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <Plus size={18} />
+                  <UpPlus size={18} />
                 </button>
               </div>
               <Input value={newLabel} onChange={e => setNewLabel(e.target.value)} placeholder="Label (optional, e.g. Virginia Beach)" className="mt-2" />
@@ -286,7 +287,7 @@ export default function OnlineBooking() {
               <div className="flex gap-2 mt-3">
                 <Input value={newService} onChange={e => setNewService(e.target.value)} placeholder="Add a service type" />
                 <button onClick={addService} className="p-2 rounded-xl bg-blue text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
-                  <Plus size={18} />
+                  <UpPlus size={18} />
                 </button>
               </div>
             </Card>

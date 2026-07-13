@@ -5,8 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { Card, Badge, LoadingSpinner, EmptyState, Modal, Button } from '../components/ui';
 import api, { timesheetsApi, jobsApi, statusColor, statusLabel } from '../lib/api';
-import { Briefcase, DollarSign, Receipt, Calendar, Phone, Star, Users, ChevronRight } from 'lucide-react';
-import { UpRefresh, UpPasteTicket } from '../components/ui/icons';
+import { DollarSign, Receipt, Star, ChevronRight } from 'lucide-react';
+import { UpRefresh, UpPasteTicket, UpJobs, UpCalendar, UpPhone } from '../components/ui/icons';
 
 const MAPS_KEY = 'AIzaSyDtSGWBuiTFR5BbomG8ZFNYeiwUszkJiNQ';
 
@@ -340,7 +340,7 @@ export default function Dashboard() {
           <Card>
             <div className="flex flex-col gap-1">
               <div className="p-2 bg-blue-50 rounded-lg w-fit">
-                <Briefcase size={18} className="text-blue" />
+                <UpJobs size={18} className="text-blue" />
               </div>
               <p className="text-2xl font-bold text-ink mt-1">{totalJobs}</p>
               <p className="text-xs text-muted">Total Jobs</p>
@@ -367,7 +367,7 @@ export default function Dashboard() {
           <Card>
             <div className="flex flex-col gap-1">
               <div className="p-2 bg-amber-50 rounded-lg w-fit">
-                <Calendar size={18} className="text-amber-600" />
+                <UpCalendar size={18} className="text-amber-600" />
               </div>
               <p className="text-2xl font-bold text-ink mt-1">{scheduledToday}</p>
               <p className="text-xs text-muted">Scheduled Today</p>
@@ -376,7 +376,7 @@ export default function Dashboard() {
           <Card onClick={() => navigate('/phone')}>
             <div className="flex flex-col gap-1">
               <div className="p-2 bg-red-50 rounded-lg w-fit">
-                <Phone size={18} className="text-red-500" />
+                <UpPhone size={18} className="text-red-500" />
               </div>
               <p className="text-2xl font-bold text-ink mt-1">{missedCalls}</p>
               <p className="text-xs text-muted">Missed Calls</p>
@@ -475,7 +475,7 @@ export default function Dashboard() {
           <LoadingSpinner />
         ) : activeJobs.length === 0 ? (
           <EmptyState
-            icon={Briefcase}
+            icon={UpJobs}
             title="No active jobs"
             description="Jobs that are scheduled or in progress will appear here."
           />

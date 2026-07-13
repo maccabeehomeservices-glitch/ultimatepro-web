@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, X, Filter, MapPin, Calendar as CalendarIcon, Inbox } from 'lucide-react';
-import { UpNewJob } from '../components/ui/icons';
+import { Search, X, Filter, Inbox } from 'lucide-react';
+import { UpNewJob, UpPin, UpCalendar } from '../components/ui/icons';
 import { jobsApi, usersApi, companyApi, statusColor } from '../lib/api';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -487,14 +487,14 @@ function JobCard({ job, onClick }) {
           {/* Row 3: address */}
           {addrParts.length > 0 && (
             <div className="flex items-center gap-1 text-xs text-muted">
-              <MapPin size={12} />
+              <UpPin size={12} />
               <span className="truncate">{addrParts.join(', ')}</span>
             </div>
           )}
 
           {/* Row 4: scheduled + status + tech */}
           <div className="flex items-center gap-2 text-xs">
-            <CalendarIcon size={12} className="text-muted flex-shrink-0" />
+            <UpCalendar size={12} className="text-muted flex-shrink-0" />
             <span className={`truncate ${humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end) === 'Unscheduled' ? 'text-muted' : 'text-ink font-medium'}`}>
               {humanizeScheduled(job.scheduled_start, job.effective_timezone, job.scheduled_end)}
             </span>

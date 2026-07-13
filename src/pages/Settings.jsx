@@ -7,11 +7,10 @@ import {
   Globe,
   Tag,
   Wrench,
-  CreditCard,
   UserCheck,
-  Bell,
   ChevronRight,
 } from 'lucide-react';
+import { UpCard, UpBell } from '../components/ui/icons';
 
 const settingsItems = [
   { to: '/settings/company', icon: Building2, label: 'Company Profile' },
@@ -21,8 +20,8 @@ const settingsItems = [
   { to: '/settings/online-booking', icon: Globe, label: 'Online Booking' },
   { to: '/settings/job-sources', icon: Tag, label: 'Job Sources' },
   { to: '/settings/job-types', icon: Wrench, label: 'Job Types' },
-  { to: '/settings/membership-plans', icon: CreditCard, label: 'Membership Plans' },
-  { to: '/settings/notifications', icon: Bell, label: 'Notifications' },
+  { to: '/settings/membership-plans', icon: UpCard, label: 'Membership Plans' },
+  { to: '/settings/notifications', icon: UpBell, label: 'Notifications' },
 ];
 
 const emojiSettingsItems = [

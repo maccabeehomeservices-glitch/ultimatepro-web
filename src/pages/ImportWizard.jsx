@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Upload, Check, AlertCircle } from 'lucide-react';
+import { Upload, AlertCircle } from 'lucide-react';
+import { UpBack, UpCheck } from '../components/ui/icons';
 import api from '../lib/api';
 import { Card, Button, LoadingSpinner, Select } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -118,7 +119,7 @@ export default function ImportWizard() {
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(backTo)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink">
           Import {type === 'pricebook' ? 'Pricebook' : 'Customers'}
@@ -249,7 +250,7 @@ export default function ImportWizard() {
       {step === 4 && result && (
         <div className="text-center space-y-4">
           <div className="w-20 h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto">
-            <Check size={40} className="text-green-600" />
+            <UpCheck size={40} className="text-green-600" />
           </div>
           <h2 className="text-xl font-bold text-ink">Import Complete!</h2>
           <div className="grid grid-cols-2 gap-3">

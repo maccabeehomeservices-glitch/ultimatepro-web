@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Copy, Check, Handshake, Search } from 'lucide-react';
+import { Copy, Handshake, Search } from 'lucide-react';
+import { UpCheck } from '../components/ui/icons';
 import { useGet, useMutation } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Badge, Button, Input, Modal } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -236,7 +237,7 @@ export default function Network() {
             disabled={!ucmId}
             className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px] px-3 rounded-lg hover:bg-blue-50 transition-colors"
           >
-            {copied ? <Check size={16} /> : <Copy size={16} />}
+            {copied ? <UpCheck size={16} /> : <Copy size={16} />}
             {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
@@ -354,7 +355,7 @@ export default function Network() {
                       onClick={() => copyPartnerUcm(partnerUcmId)}
                       className="text-xs text-blue font-medium min-h-[36px] px-2 flex items-center gap-1"
                     >
-                      {ucmCopied ? <Check size={14} /> : <Copy size={14} />}
+                      {ucmCopied ? <UpCheck size={14} /> : <Copy size={14} />}
                       {ucmCopied ? 'Copied' : 'Copy'}
                     </button>
                   </div>

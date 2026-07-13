@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Link, CheckCircle, XCircle, RefreshCw, Unlink } from 'lucide-react';
+import { Link, CheckCircle, XCircle, Unlink } from 'lucide-react';
+import { UpBack, UpRefresh } from '../../components/ui/icons';
 import { quickbooksApi } from '../../lib/api';
 import { Card, LoadingSpinner } from '../../components/ui';
 import { useSnackbar } from '../../components/ui/Snackbar';
@@ -94,7 +95,7 @@ export default function Integrations() {
           onClick={() => navigate(-1)}
           className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink"
         >
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink">Integrations</h1>
       </div>
@@ -141,7 +142,7 @@ export default function Integrations() {
                   disabled={syncing}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue text-white font-medium min-h-[44px] hover:bg-blue-ink transition-colors disabled:opacity-50"
                 >
-                  <RefreshCw size={16} className={syncing ? 'animate-spin' : ''} />
+                  <UpRefresh size={16} className={syncing ? 'animate-spin' : ''} />
                   {syncing ? 'Syncing...' : 'Sync All to QuickBooks'}
                 </button>
 

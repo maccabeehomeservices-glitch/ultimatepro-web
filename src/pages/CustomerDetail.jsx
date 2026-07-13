@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Edit, Briefcase, FileText, Receipt, Phone, Mail, MapPin, MessageSquare, Send, Copy, Check, Plus, X } from 'lucide-react';
+import { Edit, Briefcase, FileText, Receipt, Phone, Mail, Copy, X } from 'lucide-react';
+import { UpBack, UpPin, UpMessage, UpSend, UpCheck, UpPlus } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
 import api, { customersApi, formatMoney } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Tabs, EmptyState, Modal, Input, Select } from '../components/ui';
@@ -206,7 +207,7 @@ export default function CustomerDetail() {
       {/* Header */}
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="font-bold text-ink text-lg flex-1 truncate">{name}</h1>
         <button
@@ -214,7 +215,7 @@ export default function CustomerDetail() {
           className="p-2 rounded-xl hover:bg-blue-50 min-h-[44px] min-w-[44px] flex items-center justify-center text-blue"
           title="Add Job"
         >
-          <Plus size={20} />
+          <UpPlus size={20} />
         </button>
         <button onClick={() => navigate(`/customers/${id}/edit`)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
           <Edit size={20} />
@@ -323,7 +324,7 @@ export default function CustomerDetail() {
             </div>
           ) : (
             <button onClick={() => setShowAddPhone(true)} className="flex items-center gap-1 text-sm text-blue font-medium mb-2 min-h-[36px]">
-              <Plus size={14} /> Add Phone
+              <UpPlus size={14} /> Add Phone
             </button>
           )}
           {contacts.filter(c => c.type === 'email').length > 0 && (
@@ -364,7 +365,7 @@ export default function CustomerDetail() {
             </div>
           ) : (
             <button onClick={() => setShowAddEmail(true)} className="flex items-center gap-1 text-sm text-blue font-medium min-h-[36px]">
-              <Plus size={14} /> Add Email
+              <UpPlus size={14} /> Add Email
             </button>
           )}
         </Card>
@@ -374,7 +375,7 @@ export default function CustomerDetail() {
       {hasAddress && (
         <Card className="mb-4">
           <div className="flex items-start gap-3">
-            <MapPin size={18} className="text-blue mt-0.5 flex-shrink-0" />
+            <UpPin size={18} className="text-blue mt-0.5 flex-shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted font-medium uppercase mb-0.5">Address</p>
               <p className="text-sm text-ink">
@@ -399,7 +400,7 @@ export default function CustomerDetail() {
             onClick={() => setAddMembershipModal(true)}
             className="flex items-center gap-1 text-xs text-blue font-semibold min-h-[44px] px-2"
           >
-            <Plus size={14} /> Add
+            <UpPlus size={14} /> Add
           </button>
         </div>
         {memberships.length === 0 ? (
@@ -450,7 +451,7 @@ export default function CustomerDetail() {
               onClick={() => handleCopyPortal(portalUrl)}
               className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
             >
-              {portalCopied ? <Check size={14} /> : <Copy size={14} />}
+              {portalCopied ? <UpCheck size={14} /> : <Copy size={14} />}
               {portalCopied ? 'Copied' : 'Copy Link'}
             </button>
             {typeof navigator !== 'undefined' && navigator.share && (
@@ -458,7 +459,7 @@ export default function CustomerDetail() {
                 onClick={() => navigator.share({ title: `${name}'s Portal`, url: portalUrl }).catch(() => {})}
                 className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
               >
-                <Send size={14} /> Share
+                <UpSend size={14} /> Share
               </button>
             )}
             <a
@@ -551,7 +552,7 @@ export default function CustomerDetail() {
                 <LoadingSpinner />
               ) : messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <MessageSquare size={40} className="text-gray-200 mb-3" />
+                  <UpMessage size={40} className="text-gray-200 mb-3" />
                   <p className="text-muted text-sm">No messages with this customer yet.</p>
                 </div>
               ) : (
@@ -587,7 +588,7 @@ export default function CustomerDetail() {
                   disabled={sendingMsg || !messageBody.trim()}
                   className="w-11 h-11 bg-blue text-white rounded-full flex items-center justify-center disabled:opacity-50"
                 >
-                  <Send size={18} />
+                  <UpSend size={18} />
                 </button>
               </form>
             ) : (

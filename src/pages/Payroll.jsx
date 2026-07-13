@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { CreditCard, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { UpCard } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
 import Modal from '../components/ui/Modal';
@@ -160,7 +161,7 @@ export default function Payroll() {
       {loading ? (
         <LoadingSpinner />
       ) : techs.length === 0 ? (
-        <EmptyState icon={CreditCard} title="No payroll data" description="Payroll summary will appear here." />
+        <EmptyState icon={UpCard} title="No payroll data" description="Payroll summary will appear here." />
       ) : (
         <>
           <div className="space-y-2 mb-4">

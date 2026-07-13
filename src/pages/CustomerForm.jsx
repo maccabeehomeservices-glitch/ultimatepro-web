@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { UpBack, UpPlus } from '../components/ui/icons';
 import { customersApi } from '../lib/api';
 import { useGet } from '../hooks/useApi';
 import { Button, Input, Card, LoadingSpinner } from '../components/ui';
@@ -133,7 +134,7 @@ export default function CustomerForm() {
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink">{isEdit ? 'Edit Customer' : 'New Customer'}</h1>
       </div>
@@ -197,7 +198,7 @@ export default function CustomerForm() {
               onClick={() => setExtraPhones(p => [...p, ''])}
               className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px]"
             >
-              <Plus size={14} /> Add Phone
+              <UpPlus size={14} /> Add Phone
             </button>
 
             {/* Primary email */}
@@ -229,7 +230,7 @@ export default function CustomerForm() {
               onClick={() => setExtraEmails(p => [...p, ''])}
               className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px]"
             >
-              <Plus size={14} /> Add Email
+              <UpPlus size={14} /> Add Email
             </button>
           </div>
         </Card>

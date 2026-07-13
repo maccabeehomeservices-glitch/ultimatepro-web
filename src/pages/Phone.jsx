@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MessageSquare, PhoneCall, Phone as PhoneIcon } from 'lucide-react';
+import { PhoneCall, Phone as PhoneIcon } from 'lucide-react';
+import { UpMessage } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Tabs } from '../components/ui';
 import { format } from 'date-fns';
@@ -58,7 +59,7 @@ export default function Phone() {
         {activeTab === 'messages' && (
           convLoading ? <LoadingSpinner /> :
           conversations.length === 0 ? (
-            <EmptyState icon={MessageSquare} title="No conversations" description="SMS conversations will appear here." />
+            <EmptyState icon={UpMessage} title="No conversations" description="SMS conversations will appear here." />
           ) : (
             <div className="space-y-2">
               {conversations.map((conv) => {
@@ -67,7 +68,7 @@ export default function Phone() {
                   <Card key={id} onClick={() => navigate(`/phone/thread/${id}`)}>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center flex-shrink-0">
-                        <MessageSquare size={18} className="text-muted" />
+                        <UpMessage size={18} className="text-muted" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, Trash2, Edit } from 'lucide-react';
+import { Trash2, Edit } from 'lucide-react';
+import { UpBack, UpPlus } from '../../components/ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { useGet, useMutation } from '../../hooks/useApi';
 import { Card, LoadingSpinner, EmptyState, Button, Modal, Input } from '../../components/ui';
@@ -66,14 +67,14 @@ export default function RosterTechs() {
     <div className="p-4 max-w-2xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate('/settings')} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink flex-1">Roster Technicians</h1>
-        <Button onClick={openAdd}><Plus size={16} /> Add</Button>
+        <Button onClick={openAdd}><UpPlus size={16} /> Add</Button>
       </div>
 
       {loading ? <LoadingSpinner /> : techs.length === 0 ? (
-        <EmptyState icon={Plus} title="No technicians" description="Add your first roster tech." action={<Button onClick={openAdd}>Add Tech</Button>} />
+        <EmptyState icon={UpPlus} title="No technicians" description="Add your first roster tech." action={<Button onClick={openAdd}>Add Tech</Button>} />
       ) : (
         <div className="space-y-2">
           {techs.map(t => (

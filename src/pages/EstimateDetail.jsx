@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { UpBack } from '../components/ui/icons';
 import { useGet, useMutation } from '../hooks/useApi';
 import api, { estimatesApi, customersApi, uploadsApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
@@ -434,7 +434,7 @@ export default function EstimateDetail() {
           }}
           className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink"
         >
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <div className="flex-1">
           <h1 className="font-bold text-ink text-lg">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Send, Mail, MessageSquare } from 'lucide-react';
+import { Mail } from 'lucide-react';
+import { UpSend, UpMessage } from './ui/icons';
 import { reportsApi } from '../lib/api';
 import { useSnackbar } from './ui/Snackbar';
 import { Modal, Button } from './ui';
@@ -80,7 +81,7 @@ export default function SendReportModal({
   const formatOptions = ['pdf', 'html', 'csv'];
   const viaOptions = [
     { id: 'email', label: 'Email', icon: Mail },
-    { id: 'sms',   label: 'SMS',   icon: MessageSquare },
+    { id: 'sms',   label: 'SMS',   icon: UpMessage },
     { id: 'both',  label: 'Both',  icon: null },
   ];
 
@@ -95,7 +96,7 @@ export default function SendReportModal({
             Cancel
           </Button>
           <Button loading={sending} onClick={handleSend}>
-            <Send size={16} className="inline mr-1" />
+            <UpSend size={16} className="inline mr-1" />
             Send Report
           </Button>
         </>

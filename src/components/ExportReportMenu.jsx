@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, ChevronDown } from 'lucide-react';
+import { UpExport, UpChevronDown } from './ui/icons';
 import { useSnackbar } from './ui/Snackbar';
 
 // P2.10: fall back to localhost (matches src/lib/api.js), not a hardcoded prod URL,
@@ -99,9 +99,9 @@ export default function ExportReportMenu({ actorType, actorId, period }) {
         disabled={downloading}
         className="px-3 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
       >
-        <Download size={16} />
+        <UpExport size={16} />
         {downloading ? 'Exporting…' : 'Export'}
-        <ChevronDown size={14} />
+        <UpChevronDown size={14} />
       </button>
 
       {open && (

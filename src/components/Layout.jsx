@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, Outlet } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { UpBell } from './ui/icons';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from './Sidebar';
 import BottomNav from './BottomNav';
@@ -76,7 +76,7 @@ export default function Layout() {
           </span>
         </div>
         <Link to="/notifications" className="relative p-2 text-muted hover:text-blue transition-colors">
-          <Bell size={20} />
+          <UpBell size={20} />
           {unreadCount > 0 && (
             <span className="absolute top-1 right-1 bg-red-500 text-white text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center leading-none">
               {unreadCount > 9 ? '9+' : unreadCount}

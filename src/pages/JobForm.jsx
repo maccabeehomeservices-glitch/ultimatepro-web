@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Plus, X, ClipboardList, UserCheck } from 'lucide-react';
+import { X, UserCheck } from 'lucide-react';
+import { UpBack, UpPlus, UpPasteTicket } from '../components/ui/icons';
 import { jobsApi, customersApi, sourcesApi, companyApi, rosterTechsApi } from '../lib/api';
 import { formatInJobZone } from '../lib/timezone';
 import { useGet } from '../hooks/useApi';
@@ -641,12 +642,12 @@ export default function JobForm() {
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate(-1)}
           className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink flex-1">{isEdit ? 'Edit Job' : 'New Job'}</h1>
         <button type="button" onClick={handlePasteFromClipboard}
           className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50">
-          <ClipboardList size={16} />
+          <UpPasteTicket size={16} />
           <span className="hidden sm:inline">Paste Ticket</span>
         </button>
       </div>
@@ -824,7 +825,7 @@ export default function JobForm() {
                   <button type="button"
                     onClick={() => { setShowCustomerDropdown(false); setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
                     className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue font-medium flex items-center gap-2">
-                    <Plus size={14} /> Create new customer
+                    <UpPlus size={14} /> Create new customer
                   </button>
                 </div>
               )}
@@ -832,7 +833,7 @@ export default function JobForm() {
                 <button type="button"
                   onClick={() => { setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
                   className="mt-1.5 text-sm text-blue font-medium flex items-center gap-1 min-h-[36px]">
-                  <Plus size={14} /> Create new customer
+                  <UpPlus size={14} /> Create new customer
                 </button>
               )}
             </div>
@@ -852,7 +853,7 @@ export default function JobForm() {
           ))}
           <button type="button" onClick={() => setExtraPhones(prev => [...prev, ''])}
             className="mt-2 text-sm text-blue font-medium min-h-[36px] flex items-center gap-1">
-            <Plus size={14} /> Add phone
+            <UpPlus size={14} /> Add phone
           </button>
 
           {/* Extra emails */}
@@ -868,7 +869,7 @@ export default function JobForm() {
           ))}
           <button type="button" onClick={() => setExtraEmails(prev => [...prev, ''])}
             className="mt-2 text-sm text-blue font-medium min-h-[36px] flex items-center gap-1">
-            <Plus size={14} /> Add email
+            <UpPlus size={14} /> Add email
           </button>
         </Card>
 

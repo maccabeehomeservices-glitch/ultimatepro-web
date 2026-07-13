@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react';
+import { UpChevronDown } from './icons';
 
 export default function Select({
   label,
@@ -33,7 +33,7 @@ export default function Select({
             </option>
           ))}
         </select>
-        <ChevronDown
+        <UpChevronDown
           size={16}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none"
         />

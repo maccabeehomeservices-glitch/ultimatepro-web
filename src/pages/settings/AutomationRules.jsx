@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { UpBack } from '../../components/ui/icons';
 import { companyApi } from '../../lib/api';
 import { Card, LoadingSpinner } from '../../components/ui';
 import { useSnackbar } from '../../components/ui/Snackbar';
@@ -156,7 +157,7 @@ export default function AutomationRules() {
           onClick={() => navigate('/settings')}
           className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink"
         >
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <div>
           <h1 className="text-xl font-bold text-ink">⚡ Ailot</h1>

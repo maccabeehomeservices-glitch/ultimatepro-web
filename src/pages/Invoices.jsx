@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Receipt, Search, X, Plus } from 'lucide-react';
+import { Receipt, Search, X } from 'lucide-react';
+import { UpPlus } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
 
@@ -55,7 +56,7 @@ export default function Invoices() {
             onClick={() => navigate('/invoices/new')}
             className="flex items-center gap-1.5 text-sm bg-blue text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
           >
-            <Plus size={14} /> New
+            <UpPlus size={14} /> New
           </button>
         </div>
       </div>

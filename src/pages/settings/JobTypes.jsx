@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ArrowLeft, Plus, X } from 'lucide-react';
+import { X } from 'lucide-react';
+import { UpBack, UpPlus } from '../../components/ui/icons';
 import { useNavigate } from 'react-router-dom';
 import { useGet, useMutation } from '../../hooks/useApi';
 import { Card, LoadingSpinner, Button, Input } from '../../components/ui';
@@ -42,7 +43,7 @@ export default function JobTypes() {
   return (
     <div className="max-w-2xl mx-auto pb-10">
       <div className="flex items-center gap-3 mb-4">
-        <button onClick={() => navigate('/settings')} className="p-2 -ml-2 text-muted hover:text-ink"><ArrowLeft size={20} /></button>
+        <button onClick={() => navigate('/settings')} className="p-2 -ml-2 text-muted hover:text-ink"><UpBack size={20} /></button>
         <h1 className="text-xl font-bold text-ink">Job Types</h1>
       </div>
 
@@ -76,7 +77,7 @@ export default function JobTypes() {
                       className={`px-3 py-1.5 rounded-full text-sm font-medium border min-h-[36px] flex items-center gap-1 ${
                         added ? 'bg-green-50 text-green-700 border-green-200 cursor-default' : 'bg-card text-ink border-hairline hover:bg-background'
                       }`}>
-                      {!added && <Plus size={14} />}{label}{added && ' ✓'}
+                      {!added && <UpPlus size={14} />}{label}{added && ' ✓'}
                     </button>
                   );
                 })}

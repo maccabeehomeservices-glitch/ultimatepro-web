@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
+import { UpBack, UpPlus } from '../components/ui/icons';
 import { useGet, useMutation } from '../hooks/useApi';
 import api, { invoicesApi, paymentsApi, customersApi } from '../lib/api';
 import { Card, Badge, Button, LoadingSpinner, Modal, Input, Select } from '../components/ui';
@@ -493,7 +494,7 @@ export default function InvoiceDetail() {
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center gap-3 mb-4">
         <button onClick={() => navigate(-1)} className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-ink">
-          <ArrowLeft size={20} />
+          <UpBack size={20} />
         </button>
         <div className="flex-1">
           <h1 className="font-bold text-ink text-lg">
@@ -639,7 +640,7 @@ export default function InvoiceDetail() {
               onClick={addEditItem}
               className="flex items-center gap-1 text-xs font-semibold text-blue hover:bg-blue-50 px-2 py-2 rounded-lg mt-2 min-h-[40px]"
             >
-              <Plus size={14} /> Add item
+              <UpPlus size={14} /> Add item
             </button>
             <div className="mt-3 pt-3 border-t border-hairline flex justify-between items-center">
               <p className="font-bold">Total</p>
