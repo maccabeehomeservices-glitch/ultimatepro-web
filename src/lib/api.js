@@ -31,7 +31,7 @@ export default api;
 // and android AppColors.jobStatus() in Theme.kt.
 export const statusColor = (status) => ({
   unscheduled: '#6B7280',
-  scheduled:   '#2563EB',
+  scheduled:   '#2D6FC2',
   en_route:    '#F97316',
   in_progress: '#0EA5E9',
   holding:     '#D97706',

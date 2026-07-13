@@ -9,7 +9,7 @@ import { statusColor } from '../../lib/api';
 // NOTE: this corrects the prior Badge drift — en_route was indigo, in_progress was
 // orange — to the canonical Orange / Sky (law 4: fix drift to the Android values).
 const extraColor = {
-  draft: '#6B7280', sent: '#2563EB', approved: '#16A34A', paid: '#16A34A',
+  draft: '#6B7280', sent: '#2D6FC2', approved: '#16A34A', paid: '#16A34A',
   unpaid: '#DC2626', overdue: '#DC2626', active: '#16A34A', inactive: '#9CA3AF',
   partial: '#F97316', void: '#6B7280',
 };

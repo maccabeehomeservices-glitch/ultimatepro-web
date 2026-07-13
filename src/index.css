@@ -60,21 +60,25 @@
   --shine: linear-gradient(100deg, #8A6A3B 0%, #C9A25C 28%, #F0D9A6 50%, #C9A25C 72%, #8A6A3B 100%);
 }
 
-/* DARK — browser preference is the switch */
+/* DARK — GATED (David 2026-07-13, ruling #2): dark tokens currently = LIGHT values so a
+   dark-browser user sees the intact light UI — "phased must never be visibly broken."
+   The primitives flip, but screens still use raw Tailwind, so real dark would be
+   dark-on-dark until the screen sweep re-tokenizes them. UN-GATE at the end of the sweep
+   by swapping each value below for the real-dark value in its comment. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --c-background:   #141419;
-    --c-card:         #1D1D24;
-    --c-hairline:     #2B2B33;
-    --c-ink:          #F2EEE4;
-    --c-muted:        #A29C8E;
-    --c-blue:         #4C8BE0;
-    --c-blue-ink:     #9FC2F2;
-    --c-brass-text:   #D8B87C;
-    --c-brass-border: #D8B87C;
-    --c-brass-deep:   #8A6A3B;
-    --c-brass-bright: #E7CE99;
-    --c-chip:         #1D1D24;   /* chip fill: card in dark */
+    --c-background:   #F6F3EC;   /* real dark: #141419 */
+    --c-card:         #FFFFFF;   /* real dark: #1D1D24 */
+    --c-hairline:     #E4DFD2;   /* real dark: #2B2B33 */
+    --c-ink:          #1D1C18;   /* real dark: #F2EEE4 */
+    --c-muted:        #7A7466;   /* real dark: #A29C8E */
+    --c-blue:         #2D6FC2;   /* real dark: #4C8BE0 */
+    --c-blue-ink:     #1E4E8C;   /* real dark: #9FC2F2 */
+    --c-brass-text:   #A9812E;   /* real dark: #D8B87C */
+    --c-brass-border: #C9A25C;   /* real dark: #D8B87C */
+    --c-brass-deep:   #8A6A3B;   /* real dark: #8A6A3B */
+    --c-brass-bright: #E7CE99;   /* real dark: #E7CE99 */
+    --c-chip:         #FDFCF8;   /* real dark: #1D1D24 */
   }
 }
 
