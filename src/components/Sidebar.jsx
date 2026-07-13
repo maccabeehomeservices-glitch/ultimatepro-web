@@ -58,7 +58,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
   const bellButton = (
     <button
       onClick={() => navigate('/notifications')}
-      className="relative p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+      className="relative p-1.5 rounded-lg text-pearl/60 hover:text-pearl hover:bg-[#1D1D24] transition-colors flex-shrink-0"
       aria-label="Notifications"
       title={collapsed ? 'Notifications' : undefined}
     >
@@ -74,7 +74,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
   const toggleButton = (
     <button
       onClick={onToggle}
-      className="p-1.5 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+      className="p-1.5 rounded-lg text-pearl/60 hover:text-pearl hover:bg-[#1D1D24] transition-colors flex-shrink-0"
       aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
       title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
     >
@@ -86,21 +86,21 @@ export default function Sidebar({ collapsed = false, onToggle }) {
     <div
       className={`hidden md:flex flex-col fixed left-0 top-0 bottom-0 ${
         collapsed ? 'w-[64px]' : 'w-[240px]'
-      } bg-[#0D1B2A] text-white z-20 overflow-hidden transition-[width] duration-200 ease-in-out`}
+      } bg-[#141419] text-pearl z-20 overflow-hidden transition-[width] duration-200 ease-in-out`}
     >
       {/* Logo / Brand + Bell + Toggle */}
       {collapsed ? (
         <div className="px-2 py-3 border-b border-white/10 flex flex-col items-center gap-2">
-          <div className="w-9 h-9 rounded-md bg-white/10 flex items-center justify-center font-bold text-white text-base">U</div>
+          <div className="w-9 h-9 rounded-md bg-white/10 flex items-center justify-center font-bold text-pearl text-base">U</div>
           {bellButton}
           {toggleButton}
         </div>
       ) : (
         <div className="px-5 py-5 border-b border-white/10 flex items-start justify-between">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold text-white">UltimatePro</h1>
+            <h1 className="text-xl font-bold text-pearl">UltimatePro</h1>
             {company && (
-              <p className="text-xs text-white/50 mt-0.5 truncate">{company.name}</p>
+              <p className="text-xs text-pearl/50 mt-0.5 truncate">{company.name}</p>
             )}
           </div>
           <div className="flex items-center gap-1 ml-2">
@@ -122,13 +122,13 @@ export default function Sidebar({ collapsed = false, onToggle }) {
                 collapsed
                   ? `justify-center px-2 py-3 ${
                       isActive
-                        ? 'text-white bg-white/10 border-l-4 border-[#2D6FC2]'
-                        : 'text-white/60 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
+                        ? 'text-[#C9A25C] bg-[#1D1D24] border-l-4 border-[#C9A25C]'
+                        : 'text-pearl/55 hover:text-pearl hover:bg-[#1D1D24] border-l-4 border-transparent'
                     }`
                   : `gap-3 px-4 py-2.5 ${
                       isActive
-                        ? 'text-white bg-white/10 border-l-4 border-[#2D6FC2]'
-                        : 'text-white/60 hover:text-white hover:bg-white/5 border-l-4 border-transparent'
+                        ? 'text-[#C9A25C] bg-[#1D1D24] border-l-4 border-[#C9A25C]'
+                        : 'text-pearl/55 hover:text-pearl hover:bg-[#1D1D24] border-l-4 border-transparent'
                     }`
               }`
             }
@@ -147,7 +147,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
           </div>
           <button
             onClick={logout}
-            className="p-2 rounded-md text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+            className="p-2 rounded-md text-pearl/60 hover:text-pearl hover:bg-[#1D1D24] transition-colors"
             aria-label="Sign Out"
             title="Sign Out"
           >
@@ -159,15 +159,15 @@ export default function Sidebar({ collapsed = false, onToggle }) {
           <div className="flex items-center gap-3 mb-3">
             <Avatar name={userName} size="sm" color="#2D6FC2" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">
+              <p className="text-sm font-medium text-pearl truncate">
                 {user?.first_name} {user?.last_name}
               </p>
-              <p className="text-xs text-white/40 truncate">{user?.email}</p>
+              <p className="text-xs text-pearl/40 truncate">{user?.email}</p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-2 w-full text-sm text-white/60 hover:text-white py-2 transition-colors"
+            className="flex items-center gap-2 w-full text-sm text-pearl/60 hover:text-pearl py-2 transition-colors"
           >
             <LogOut size={16} />
             Sign Out
