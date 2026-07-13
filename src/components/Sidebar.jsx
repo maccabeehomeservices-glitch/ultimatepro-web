@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  Briefcase,
-  Users,
-  Calendar,
-  FileText,
+  UpDashboard, UpJobs, UpCustomers, UpCalendar, UpEstimate, UpCard, UpPhone, UpBell,
+} from './ui/icons';
+import {
   Receipt,
-  DollarSign,
-  Phone,
   BarChart2,
   CreditCard,
   BookOpen,
@@ -17,7 +13,6 @@ import {
   Settings,
   LogOut,
   ClipboardList,
-  Bell,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -26,15 +21,15 @@ import Avatar from './ui/Avatar';
 import { notificationsApi } from '../lib/api';
 
 const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/jobs', icon: Briefcase, label: 'Jobs' },
-  { to: '/customers', icon: Users, label: 'Customers' },
+  { to: '/dashboard', icon: UpDashboard, label: 'Dashboard' },
+  { to: '/jobs', icon: UpJobs, label: 'Jobs' },
+  { to: '/customers', icon: UpCustomers, label: 'Customers' },
   { to: '/leads', icon: ClipboardList, label: 'Leads' },
-  { to: '/calendar', icon: Calendar, label: 'Calendar' },
-  { to: '/estimates', icon: FileText, label: 'Estimates' },
+  { to: '/calendar', icon: UpCalendar, label: 'Calendar' },
+  { to: '/estimates', icon: UpEstimate, label: 'Estimates' },
   { to: '/invoices', icon: Receipt, label: 'Invoices' },
-  { to: '/payments', icon: DollarSign, label: 'Payments', section: 'payments_refunds' },
-  { to: '/phone', icon: Phone, label: 'Phone / SMS' },
+  { to: '/payments', icon: UpCard, label: 'Payments', section: 'payments_refunds' },
+  { to: '/phone', icon: UpPhone, label: 'Phone / SMS' },
   { to: '/reports', icon: BarChart2, label: 'Reports', section: 'reports' },
   { to: '/payroll', icon: CreditCard, label: 'Payroll', section: 'accounting_earnings' },
   { to: '/pricebook', icon: BookOpen, label: 'Pricebook' },
@@ -67,7 +62,7 @@ export default function Sidebar({ collapsed = false, onToggle }) {
       aria-label="Notifications"
       title={collapsed ? 'Notifications' : undefined}
     >
-      <Bell size={18} />
+      <UpBell size={18} />
       {unreadCount > 0 && (
         <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[9px] font-bold rounded-full w-4 h-4 flex items-center justify-center leading-none">
           {unreadCount > 99 ? '!' : unreadCount}

@@ -5,7 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { Card, Badge, LoadingSpinner, EmptyState, Modal, Button } from '../components/ui';
 import api, { timesheetsApi, jobsApi, statusColor, statusLabel } from '../lib/api';
-import { Briefcase, DollarSign, Receipt, Calendar, ClipboardList, Phone, Star, Users, ChevronRight, RefreshCw } from 'lucide-react';
+import { Briefcase, DollarSign, Receipt, Calendar, Phone, Star, Users, ChevronRight } from 'lucide-react';
+import { UpRefresh, UpPasteTicket } from '../components/ui/icons';
 
 const MAPS_KEY = 'AIzaSyDtSGWBuiTFR5BbomG8ZFNYeiwUszkJiNQ';
 
@@ -312,7 +313,7 @@ export default function Dashboard() {
             onClick={handleRefresh}
             className="p-2 rounded-xl hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center text-muted"
           >
-            <RefreshCw size={20} className={refreshing ? 'animate-spin' : ''} />
+            <UpRefresh size={20} className={refreshing ? 'animate-spin' : ''} />
           </button>
         </div>
       </div>
@@ -509,7 +510,7 @@ export default function Dashboard() {
         onClick={handlePasteTicket}
         className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-blue text-white rounded-2xl shadow-lg flex items-center gap-2 px-5 h-14 hover:bg-blue-ink transition-colors z-10 font-semibold"
       >
-        <ClipboardList size={20} /><span className="hidden sm:inline">Paste Ticket</span>
+        <UpPasteTicket size={20} /><span className="hidden sm:inline">Paste Ticket</span>
       </button>
 
       {/* Paste Ticket Modal */}

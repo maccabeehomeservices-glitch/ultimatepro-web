@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
+// Fable up-* icons where a family equivalent exists; lucide kept elsewhere (redesign-only).
 import {
-  LayoutDashboard,
-  Briefcase,
-  Users,
-  Phone,
-  MoreHorizontal,
-  Calendar,
-  FileText,
+  UpDashboard, UpJobs, UpCustomers, UpPhone, UpMore, UpBell, UpCalendar, UpEstimate, UpCard,
+} from './ui/icons';
+import {
   Receipt,
-  DollarSign,
   BarChart2,
   CreditCard,
   BookOpen,
@@ -18,25 +14,24 @@ import {
   Settings,
   X,
   ClipboardList,
-  Bell,
 } from 'lucide-react';
 import { notificationsApi } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 
 const mainItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-  { to: '/jobs', icon: Briefcase, label: 'Jobs' },
-  { to: '/customers', icon: Users, label: 'Customers' },
+  { to: '/dashboard', icon: UpDashboard, label: 'Home' },
+  { to: '/jobs', icon: UpJobs, label: 'Jobs' },
+  { to: '/customers', icon: UpCustomers, label: 'Customers' },
 ];
 
 // section-gated items mirror the Sidebar (P2.1h): hide from users the backend would 403.
 const moreItems = [
-  { to: '/phone', icon: Phone, label: 'Phone' },
+  { to: '/phone', icon: UpPhone, label: 'Phone' },
   { to: '/leads', icon: ClipboardList, label: 'Leads' },
-  { to: '/calendar', icon: Calendar, label: 'Calendar' },
-  { to: '/estimates', icon: FileText, label: 'Estimates' },
+  { to: '/calendar', icon: UpCalendar, label: 'Calendar' },
+  { to: '/estimates', icon: UpEstimate, label: 'Estimates' },
   { to: '/invoices', icon: Receipt, label: 'Invoices' },
-  { to: '/payments', icon: DollarSign, label: 'Payments', section: 'payments_refunds' },
+  { to: '/payments', icon: UpCard, label: 'Payments', section: 'payments_refunds' },
   { to: '/reports', icon: BarChart2, label: 'Reports', section: 'reports' },
   { to: '/payroll', icon: CreditCard, label: 'Payroll', section: 'accounting_earnings' },
   { to: '/pricebook', icon: BookOpen, label: 'Pricebook' },
@@ -66,12 +61,12 @@ export default function BottomNav() {
       {showMore && (
         <div className="fixed inset-0 z-40">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowMore(false)} />
-          <div className="absolute bottom-[56px] left-0 right-0 bg-white rounded-t-2xl shadow-xl p-4 pb-6 z-50">
+          <div className="absolute bottom-[56px] left-0 right-0 bg-card rounded-t-2xl shadow-xl p-4 pb-6 z-50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-800">More</h3>
+              <h3 className="font-semibold text-ink">More</h3>
               <button
                 onClick={() => setShowMore(false)}
-                className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 rounded-lg text-muted hover:bg-background min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X size={20} />
               </button>
@@ -84,7 +79,7 @@ export default function BottomNav() {
                   onClick={() => setShowMore(false)}
                   className={({ isActive }) =>
                     `flex flex-col items-center gap-1 p-2 rounded-xl min-h-[64px] justify-center text-center transition-colors ${
-                      isActive ? 'text-[#1A73E8] bg-blue-50' : 'text-gray-500 hover:bg-gray-50'
+                      isActive ? 'text-blue bg-blue-50' : 'text-muted hover:bg-background'
                     }`
                   }
                 >
@@ -98,14 +93,14 @@ export default function BottomNav() {
       )}
 
       {/* Bottom nav bar */}
-      <div className="fixed bottom-0 left-0 right-0 h-[56px] bg-white border-t border-gray-200 flex items-center z-30 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="fixed bottom-0 left-0 right-0 h-[56px] bg-card border-t border-hairline flex items-center z-30 md:hidden" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
         {mainItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
               `flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-center transition-colors ${
-                isActive ? 'text-[#1A73E8]' : 'text-gray-400'
+                isActive ? 'text-blue' : 'text-muted'
               }`
             }
           >
@@ -117,12 +112,12 @@ export default function BottomNav() {
           to="/notifications"
           className={({ isActive }) =>
             `flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-center transition-colors ${
-              isActive ? 'text-[#1A73E8]' : 'text-gray-400'
+              isActive ? 'text-blue' : 'text-muted'
             }`
           }
         >
           <div className="relative">
-            <Bell size={22} />
+            <UpBell size={22} />
             {unreadCount > 0 && (
               <span className="absolute -top-1.5 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
                 {unreadCount > 99 ? '!' : unreadCount}
@@ -133,9 +128,9 @@ export default function BottomNav() {
         </NavLink>
         <button
           onClick={() => setShowMore(!showMore)}
-          className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-center transition-colors ${showMore ? 'text-[#1A73E8]' : 'text-gray-400'}`}
+          className={`flex-1 flex flex-col items-center justify-center gap-0.5 h-full text-center transition-colors ${showMore ? 'text-blue' : 'text-muted'}`}
         >
-          <MoreHorizontal size={22} />
+          <UpMore size={22} />
           <span className="text-[10px] font-medium">More</span>
         </button>
       </div>

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, X, Filter, MapPin, Calendar as CalendarIcon, Inbox } from 'lucide-react';
+import { Search, X, Filter, MapPin, Calendar as CalendarIcon, Inbox } from 'lucide-react';
+import { UpNewJob } from '../components/ui/icons';
 import { jobsApi, usersApi, companyApi, statusColor } from '../lib/api';
 import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -298,7 +299,7 @@ export default function Jobs() {
         onClick={() => navigate('/jobs/new')}
         className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-ink transition-colors z-10"
       >
-        <Plus size={24} />
+        <UpNewJob size={24} />
       </button>
 
       {/* Custom date dialog */}
