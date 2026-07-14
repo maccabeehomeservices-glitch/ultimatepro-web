@@ -68,8 +68,8 @@ export default function Layout() {
       {/* Desktop sidebar (auto-hidden below md via internal class) */}
       <Sidebar collapsed={collapsed} onToggle={toggle} />
 
-      {/* Mobile top bar — unchanged */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-12 bg-card border-b border-hairline flex items-center px-4 z-20">
+      {/* Mobile top bar — P3.1d: brass shine hairline instead of a plain border */}
+      <div className="md:hidden fixed top-0 left-0 right-0 h-12 bg-card flex items-center px-4 z-20">
         <div className="flex-1 flex items-center justify-center">
           <span className="font-semibold text-ink text-base">
             {company?.name || 'UltimatePro'}
@@ -84,6 +84,8 @@ export default function Layout() {
           )}
         </Link>
       </div>
+      {/* Shine hairline under the mobile top bar (flag b) */}
+      <div className="md:hidden fixed top-12 left-0 right-0 h-0.5 z-20" style={{ background: 'var(--shine)' }} />
 
       {/* Main content — margin-left animates with sidebar width on desktop */}
       <div
