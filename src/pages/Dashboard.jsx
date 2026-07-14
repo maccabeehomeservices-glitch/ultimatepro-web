@@ -303,7 +303,7 @@ export default function Dashboard() {
             onClick={toggleClock}
             disabled={clockLoading}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors text-base disabled:opacity-50 ${
-              clockedIn ? 'bg-blue text-white' : 'bg-gray-200 text-muted'
+              clockedIn ? 'bg-blue text-white' : 'bg-hairline text-muted'
             }`}
             title={clockedIn ? 'Clock Out' : 'Clock In'}
           >
@@ -506,12 +506,9 @@ export default function Dashboard() {
       </div>
 
       {/* Paste Ticket FAB */}
-      <button
-        onClick={handlePasteTicket}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 bg-blue text-white rounded-2xl shadow-lg flex items-center gap-2 px-5 h-14 hover:bg-blue-ink transition-colors z-10 font-semibold"
-      >
+      <Button onClick={handlePasteTicket} className="fixed bottom-20 md:bottom-6 right-4 md:right-6 shadow-lg z-10">
         <UpPasteTicket size={20} /><span className="hidden sm:inline">Paste Ticket</span>
-      </button>
+      </Button>
 
       {/* Paste Ticket Modal */}
       <Modal

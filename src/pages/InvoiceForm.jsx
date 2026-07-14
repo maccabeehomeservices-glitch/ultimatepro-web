@@ -220,12 +220,10 @@ export default function InvoiceForm() {
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-ink">Line Items</p>
             <div className="flex gap-2">
-              <button type="button" onClick={() => { setPbModal(true); setPbSearch(''); setPbResults([]); }}
-                className="text-xs text-blue font-medium min-h-[36px]">Pricebook</button>
-              <button type="button" onClick={addItem}
-                className="flex items-center gap-1 text-xs text-blue font-medium min-h-[36px]">
+              <Button type="button" variant="ghost" onClick={() => { setPbModal(true); setPbSearch(''); setPbResults([]); }}>Pricebook</Button>
+              <Button type="button" variant="ghost" onClick={addItem}>
                 <UpPlus size={12} /> Add
-              </button>
+              </Button>
             </div>
           </div>
           <div className="space-y-3">

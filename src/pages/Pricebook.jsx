@@ -171,12 +171,12 @@ export default function Pricebook() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-ink">Pricebook</h1>
         <div className="flex gap-2">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => navigate('/import?type=pricebook')}
-            className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
           >
             <Upload size={14} /> Import
-          </button>
+          </Button>
           {!selectedCategory && (
             <Button onClick={() => { setCatName(''); setAddCatModal(true); }}>
               <UpPlus size={14} /> Category
@@ -233,12 +233,12 @@ export default function Pricebook() {
             </button>
             <h2 className="font-semibold text-ink flex-1">{selectedCategory.name}</h2>
             {can('pricebook','edit_self') && (
-            <button
+            <Button
+              variant="ghost"
               onClick={openAddItem}
-              className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px]"
             >
               <UpPlus size={16} /> Add Item
-            </button>
+            </Button>
             )}
           </div>
 
@@ -416,7 +416,7 @@ export default function Pricebook() {
                 <input type="file" accept="image/*" className="hidden" disabled={uploadingImg} onChange={handleImageUpload} />
               </label>
               {itemForm.image_url && (
-                <button type="button" onClick={() => setItemForm(prev => ({ ...prev, image_url: '' }))} className="text-sm text-muted hover:text-red-500 min-h-[44px]">Remove</button>
+                <Button type="button" variant="ghost-danger" onClick={() => setItemForm(prev => ({ ...prev, image_url: '' }))}>Remove</Button>
               )}
             </div>
           </div>

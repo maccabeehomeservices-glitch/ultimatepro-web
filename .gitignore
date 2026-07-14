@@ -27,3 +27,4 @@ dist-ssr
 /tests/e2e/.auth/
 /blob-report/
 /playwright/.cache/
+crawl/

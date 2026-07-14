@@ -149,15 +149,15 @@ export default function ReviewPlatforms() {
           <p className="text-xs font-bold text-blue uppercase tracking-wider mb-2">QUICK ADD</p>
           <div className="flex flex-wrap gap-2">
             {availableTemplates.map(t => (
-              <button
+              <Button
                 key={t.name}
+                variant="ghost"
                 onClick={() => openTemplate(t)}
-                className="flex items-center gap-2 px-4 py-2 bg-card border border-hairline rounded-full text-sm font-medium text-ink hover:bg-background hover:border-blue min-h-[44px]"
               >
                 <span>{t.icon}</span>
                 <span>{t.name}</span>
                 <span className="text-blue">+</span>
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -217,12 +217,12 @@ export default function ReviewPlatforms() {
 
                   {/* Set default */}
                   {!platform.is_default && platform.is_active !== false && (
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => setAsDefault(platform)}
-                      className="text-xs text-blue font-semibold px-2 min-h-[44px] hover:underline"
                     >
                       Default
-                    </button>
+                    </Button>
                   )}
 
                   {/* Edit */}
@@ -275,12 +275,13 @@ export default function ReviewPlatforms() {
               />
             </div>
             <div className="flex gap-3 mt-6">
-              <button
+              <Button
+                variant="ghost-muted"
                 onClick={() => setShowForm(false)}
-                className="flex-1 py-3 border border-hairline rounded-xl text-ink font-medium min-h-[44px]"
+                className="flex-1"
               >
                 Cancel
-              </button>
+              </Button>
               <Button
                 onClick={handleSave}
                 disabled={saving}
@@ -309,12 +310,13 @@ export default function ReviewPlatforms() {
               Receipts will no longer include a review link from this platform.
             </p>
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="ghost-muted"
                 onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1 py-3 border border-hairline rounded-xl font-medium text-ink min-h-[44px]"
+                className="flex-1"
               >
                 Cancel
-              </button>
+              </Button>
               <Button
                 onClick={() => handleDelete(showDeleteConfirm.id)}
                 variant="danger"

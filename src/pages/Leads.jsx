@@ -134,7 +134,7 @@ export default function Leads() {
       proposal: 'bg-purple-100 text-purple-700',
       won: 'bg-green-100 text-green-700',
       lost: 'bg-red-100 text-red-700',
-    }[s] || 'bg-gray-100 text-gray-700')
+    }[s] || 'bg-gray-100 text-muted')
   }
 
   return (
@@ -215,35 +215,32 @@ export default function Leads() {
                 {lead.status !== 'won' && lead.status !== 'lost' && (
                   <>
                     {lead.status === 'new' && (
-                      <button onClick={() => quickStatusChange(lead, 'contacted')}
-                        className="px-3 py-1 text-xs border border-indigo-300 text-indigo-600 rounded-full min-h-[36px]">
+                      <Button variant="ghost" onClick={() => quickStatusChange(lead, 'contacted')}
+                        className="text-indigo-600 hover:bg-indigo-50">
                         Mark Contacted
-                      </button>
+                      </Button>
                     )}
                     {lead.status === 'contacted' && (
-                      <button onClick={() => quickStatusChange(lead, 'qualified')}
-                        className="px-3 py-1 text-xs border border-amber-300 text-amber-600 rounded-full min-h-[36px]">
+                      <Button variant="ghost" onClick={() => quickStatusChange(lead, 'qualified')}
+                        className="text-amber-600 hover:bg-amber-50">
                         Qualify
-                      </button>
+                      </Button>
                     )}
-                    <button onClick={() => convertToJob(lead)}
-                      className="px-3 py-1 text-xs border border-green-300 text-green-600 rounded-full min-h-[36px]">
+                    <Button variant="ghost" onClick={() => convertToJob(lead)}
+                      className="text-green-600 hover:bg-green-50">
                       → Convert to Job
-                    </button>
-                    <button onClick={() => quickStatusChange(lead, 'lost')}
-                      className="px-3 py-1 text-xs border border-red-300 text-red-600 rounded-full min-h-[36px]">
+                    </Button>
+                    <Button variant="ghost-danger" onClick={() => quickStatusChange(lead, 'lost')}>
                       Lost
-                    </button>
+                    </Button>
                   </>
                 )}
-                <button onClick={() => openEdit(lead)}
-                  className="px-3 py-1 text-xs border border-hairline text-ink rounded-full min-h-[36px]">
+                <Button variant="ghost-muted" onClick={() => openEdit(lead)}>
                   Edit
-                </button>
-                <button onClick={() => handleDelete(lead)}
-                  className="px-3 py-1 text-xs border border-red-300 text-red-600 rounded-full min-h-[36px]">
+                </Button>
+                <Button variant="ghost-danger" onClick={() => handleDelete(lead)}>
                   Delete
-                </button>
+                </Button>
               </div>
             </div>
           ))}
@@ -340,10 +337,9 @@ export default function Leads() {
             />
           </div>
           <div className="flex gap-3 pt-2">
-            <button onClick={() => setShowForm(false)}
-              className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]">
+            <Button variant="ghost-muted" onClick={() => setShowForm(false)} className="flex-1">
               Cancel
-            </button>
+            </Button>
             <Button onClick={handleSave} className="flex-1">
               {editingLead ? 'Save' : 'Create Lead'}
             </Button>

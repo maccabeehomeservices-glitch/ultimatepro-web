@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { PhoneCall, Phone as PhoneIcon } from 'lucide-react';
 import { UpMessage } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
-import { Card, LoadingSpinner, EmptyState, Tabs } from '../components/ui';
+import { Card, Button, LoadingSpinner, EmptyState, Tabs } from '../components/ui';
 import { format } from 'date-fns';
 
 const tabList = [
@@ -44,13 +44,13 @@ export default function Phone() {
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-ink">Phone / SMS</h1>
-        <button
+        <Button
+          variant="ghost"
           onClick={() => activeRefetch()}
           disabled={activeLoading}
-          className="text-blue text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
         >
           {activeLoading ? '⟳ Loading...' : '⟳ Refresh'}
-        </button>
+        </Button>
       </div>
 
       <Tabs tabs={tabList} active={activeTab} onChange={setActiveTab} />

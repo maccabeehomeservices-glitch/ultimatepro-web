@@ -122,12 +122,12 @@ export default function CompanyProfile() {
             <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">ULTIMATEPRO ID</label>
             <div className="flex items-center gap-3">
               <span className="text-xl font-bold text-blue">{ucmId}</span>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => { navigator.clipboard.writeText(ucmId); showSnack('Copied!') }}
-                className="text-xs text-blue border border-blue rounded-lg px-3 py-1 hover:bg-blue-100 min-h-[36px]"
               >
                 Copy
-              </button>
+              </Button>
             </div>
             <p className="text-xs text-blue mt-1">Share with contractors to connect on the network</p>
           </div>
@@ -151,20 +151,20 @@ export default function CompanyProfile() {
                 className="hidden"
                 onChange={handleLogoChange}
               />
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => logoInputRef.current?.click()}
                 disabled={logoUploading}
-                className="px-4 py-2 border border-hairline rounded-xl text-ink text-sm font-medium hover:bg-background disabled:opacity-50 min-h-[44px]"
               >
                 {logoUploading ? '⏳ Uploading...' : '📷 Upload Logo'}
-              </button>
+              </Button>
               {(logoUrl || logoPreview) && (
-                <button
+                <Button
+                  variant="ghost-danger"
                   onClick={handleRemoveLogo}
-                  className="px-4 py-2 border border-red-200 rounded-xl text-red-500 text-sm font-medium hover:bg-red-50 min-h-[44px]"
                 >
                   Remove Logo
-                </button>
+                </Button>
               )}
             </div>
           </div>

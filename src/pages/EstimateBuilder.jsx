@@ -485,8 +485,9 @@ export default function EstimateBuilder() {
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs font-semibold text-muted uppercase">{label}</p>
           <div className="flex gap-2">
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => {
                 const modal = gbbMode
                   ? { tierIdx: activeTierIdx, type: itemType }
@@ -494,17 +495,16 @@ export default function EstimateBuilder() {
                 setPricebookModal(modal);
                 setPricebookSearch('');
               }}
-              className="text-xs text-blue font-medium"
             >
               Pricebook
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => setter(prev => ({ ...prev, [sectionKey]: [...prev[sectionKey], emptyItem(itemType)] }))}
-              className="flex items-center gap-0.5 text-xs text-blue font-medium min-h-[44px]"
             >
               <UpPlus size={12} /> Add
-            </button>
+            </Button>
           </div>
         </div>
         {items.length === 0 && (
@@ -708,17 +708,17 @@ export default function EstimateBuilder() {
                           {c.phone && <span className="text-muted text-xs">{c.phone}</span>}
                         </button>
                       ))}
-                      <button type="button" onClick={() => { setShowCustomerDropdown(false); setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
-                        className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue font-medium flex items-center gap-2">
+                      <Button type="button" variant="ghost" onClick={() => { setShowCustomerDropdown(false); setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
+                        className="w-full justify-start text-left px-4 py-3">
                         <UpPlus size={14} /> Create new customer
-                      </button>
+                      </Button>
                     </div>
                   )}
                   {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
-                    <button type="button" onClick={() => { setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
-                      className="mt-1.5 text-sm text-blue font-medium flex items-center gap-1 min-h-[36px]">
+                    <Button type="button" variant="ghost" onClick={() => { setShowQuickCreate(true); setQuickCreatePrefill({ first_name: customerSearch }); }}
+                      className="mt-1.5 justify-start">
                       <UpPlus size={14} /> Create new customer
-                    </button>
+                    </Button>
                   )}
                 </div>
               )}
@@ -759,40 +759,39 @@ export default function EstimateBuilder() {
                     ${tierTotals[idx].toFixed(0)}
                   </span>
                   {isActive && tiers.length < MAX_TIERS && (
-                    <span
-                      role="button"
-                      tabIndex={0}
+                    <Button
+                      type="button"
+                      variant="ghost"
                       onClick={(e) => { e.stopPropagation(); duplicateTier(idx); }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); duplicateTier(idx); } }}
-                      className="ml-1 w-5 h-5 rounded-full flex items-center justify-center hover:bg-white/20 cursor-pointer"
+                      className="ml-1 w-5 h-5 min-h-0 px-0 rounded-full hover:bg-white/20"
                       title="Duplicate this option"
                     >
                       <Copy size={12} />
-                    </span>
+                    </Button>
                   )}
                   {isActive && tiers.length > MIN_TIERS && (
-                    <span
-                      role="button"
-                      tabIndex={0}
+                    <Button
+                      type="button"
+                      variant="ghost"
                       onClick={(e) => { e.stopPropagation(); removeTier(idx); }}
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); removeTier(idx); } }}
-                      className="ml-1 -mr-1 w-5 h-5 rounded-full flex items-center justify-center hover:bg-white/20 cursor-pointer"
+                      className="ml-1 -mr-1 w-5 h-5 min-h-0 px-0 rounded-full hover:bg-white/20"
                       title="Remove this option"
                     >
                       <X size={12} />
-                    </span>
+                    </Button>
                   )}
                 </button>
               );
             })}
             {tiers.length < MAX_TIERS && (
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={addTier}
-                className="px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap border border-dashed border-hairline text-muted hover:border-blue hover:text-blue flex items-center gap-1 min-h-[44px]"
+                className="whitespace-nowrap"
               >
                 <UpPlus size={14} /> Add Option
-              </button>
+              </Button>
             )}
           </div>
         )}

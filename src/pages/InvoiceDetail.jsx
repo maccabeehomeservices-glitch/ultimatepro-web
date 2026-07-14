@@ -551,12 +551,12 @@ export default function InvoiceDetail() {
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs text-muted uppercase font-medium">Line Items</p>
           {editItems === null && !isPaid && invoice.status !== 'void' && can('estimates_invoices', 'edit_self') && (
-            <button
+            <Button
+              variant="ghost"
               onClick={startEditItems}
-              className="flex items-center gap-1 text-xs font-semibold text-blue hover:bg-blue-50 px-2 py-1.5 rounded-lg min-h-[36px]"
             >
               <Pencil size={14} /> Edit items
-            </button>
+            </Button>
           )}
         </div>
 
@@ -636,12 +636,13 @@ export default function InvoiceDetail() {
                 </button>
               </div>
             ))}
-            <button
+            <Button
+              variant="ghost"
               onClick={addEditItem}
-              className="flex items-center gap-1 text-xs font-semibold text-blue hover:bg-blue-50 px-2 py-2 rounded-lg mt-2 min-h-[40px]"
+              className="mt-2"
             >
               <UpPlus size={14} /> Add item
-            </button>
+            </Button>
             <div className="mt-3 pt-3 border-t border-hairline flex justify-between items-center">
               <p className="font-bold">Total</p>
               <p className="font-bold text-xl text-blue">
@@ -774,12 +775,13 @@ export default function InvoiceDetail() {
         </div>
       )}
       <div className="mb-4">
-        <button
+        <Button
+          variant="ghost"
           onClick={() => setShowSignature(true)}
-          className="w-full py-3 border-2 border-blue text-blue rounded-xl font-semibold min-h-[44px]"
+          className="w-full"
         >
           ✍️ Capture Signature
-        </button>
+        </Button>
       </div>
 
       {/* P2.27 #3: overpayment confirm — shown when the payment exceeds the balance */}
@@ -858,8 +860,8 @@ export default function InvoiceDetail() {
               <span className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin inline-block" />
               Waiting for payment…
             </div>
-            <button onClick={() => copyLink(scanpayQr.payment_url)} className="w-full py-2.5 border border-hairline text-ink rounded-xl text-sm font-medium min-h-[44px]">📋 Copy Link</button>
-            <button onClick={() => setScanpayQr(null)} className="w-full py-2.5 text-muted text-sm min-h-[44px]">Cancel</button>
+            <Button variant="ghost" onClick={() => copyLink(scanpayQr.payment_url)} className="w-full">📋 Copy Link</Button>
+            <Button variant="ghost-muted" onClick={() => setScanpayQr(null)} className="w-full">Cancel</Button>
           </div>
         )}
       </Modal>
@@ -883,7 +885,7 @@ export default function InvoiceDetail() {
               <span className="w-4 h-4 border-2 border-blue border-t-transparent rounded-full animate-spin inline-block" />
               Waiting for payment…
             </div>
-            <button onClick={() => setScanpayLink(null)} className="w-full py-2.5 text-muted text-sm min-h-[44px]">Cancel</button>
+            <Button variant="ghost-muted" onClick={() => setScanpayLink(null)} className="w-full">Cancel</Button>
           </div>
         )}
       </Modal>

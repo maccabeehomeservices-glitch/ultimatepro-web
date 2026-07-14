@@ -15,7 +15,7 @@ function methodBadgeClass(method) {
     check: 'bg-blue-100 text-blue-700',
     credit_card: 'bg-purple-100 text-purple-700',
     ach: 'bg-indigo-100 text-indigo-700',
-  }[method] || 'bg-gray-100 text-gray-600');
+  }[method] || 'bg-gray-100 text-muted');
 }
 
 export default function Payments() {

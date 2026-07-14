@@ -249,7 +249,8 @@ export default function Reports() {
           revenueLoading ? <LoadingSpinner /> : (
             <div className="space-y-4">
               <div className="flex justify-end">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={async () => {
                     try {
                       setExporting(true);
@@ -260,10 +261,9 @@ export default function Reports() {
                     finally { setExporting(false); }
                   }}
                   disabled={exporting}
-                  className="px-4 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
                 >
                   {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
-                </button>
+                </Button>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <Card>
@@ -327,7 +327,8 @@ export default function Reports() {
           ) : (
             <div className="space-y-2">
               <div className="flex justify-end mb-2">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={async () => {
                     try {
                       setExporting(true);
@@ -338,10 +339,9 @@ export default function Reports() {
                     finally { setExporting(false); }
                   }}
                   disabled={exporting}
-                  className="px-4 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
                 >
                   {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
-                </button>
+                </Button>
               </div>
               {allSources.map((s, i) => (
                 <Card key={i}>
@@ -420,7 +420,7 @@ export default function Reports() {
                   {/* Net balance headline — mirrors the settlement PDF */}
                   <div className={`rounded-xl px-4 py-3 mb-3 ${net < 0 ? 'bg-red-50 border border-red-200' : net > 0 ? 'bg-green-50 border border-green-200' : 'bg-gray-50 border border-gray-200'}`}>
                     <p className="text-xs uppercase font-medium text-muted">{net < 0 ? 'You Owe Them' : net > 0 ? 'They Owe You' : 'Settled'}</p>
-                    <p className={`text-2xl font-bold ${net < 0 ? 'text-red-600' : net > 0 ? 'text-green-700' : 'text-gray-700'}`}>{formatCurrency(Math.abs(net))}</p>
+                    <p className={`text-2xl font-bold ${net < 0 ? 'text-red-600' : net > 0 ? 'text-green-700' : 'text-ink'}`}>{formatCurrency(Math.abs(net))}</p>
                   </div>
                   <p className="text-xs text-muted mb-3">{totalJobs} settled job{totalJobs === 1 ? '' : 's'}</p>
                   {weSent.length > 0 && (
@@ -437,12 +437,13 @@ export default function Reports() {
                     >
                       📧 Send Report
                     </Button>
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={handleExportPartner}
-                      className="flex-1 py-2 border border-blue text-blue rounded-xl text-sm font-medium hover:bg-blue-50 min-h-[44px]"
+                      className="flex-1"
                     >
                       📥 Export CSV
-                    </button>
+                    </Button>
                   </div>
                 </Card>
                 );
@@ -460,7 +461,8 @@ export default function Reports() {
                   <Select value={techFilter} onChange={e => setTechFilter(e.target.value)} options={techOptions} />
                 </div>
               )}
-              <button
+              <Button
+                variant="ghost"
                 onClick={async () => {
                   try {
                     setExporting(true);
@@ -471,10 +473,9 @@ export default function Reports() {
                   finally { setExporting(false); }
                 }}
                 disabled={exporting}
-                className="px-4 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
               >
                 {exporting ? '⟳ Exporting...' : '📥 Export CSV'}
-              </button>
+              </Button>
             </div>
             {tsLoading ? <LoadingSpinner /> : (
               <>

@@ -214,12 +214,12 @@ export default function Inventory() {
                         >
                           Save
                         </Button>
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={() => openTransfer(item)}
-                          className="flex items-center gap-1 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
                         >
                           <ArrowRight size={14} /> Truck
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </Card>

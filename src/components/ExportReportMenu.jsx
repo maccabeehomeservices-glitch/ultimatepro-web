@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { UpExport, UpChevronDown } from './ui/icons';
 import { useSnackbar } from './ui/Snackbar';
+import { Button } from './ui';
 
 // P2.10: fall back to localhost (matches src/lib/api.js), not a hardcoded prod URL,
 // so staging/self-host builds never leak to prod for report-export downloads.
@@ -93,40 +94,43 @@ export default function ExportReportMenu({ actorType, actorId, period }) {
 
   return (
     <div className="relative" ref={menuRef}>
-      <button
+      <Button
         type="button"
+        variant="ghost"
         onClick={() => setOpen((o) => !o)}
         disabled={downloading}
-        className="px-3 py-2 border border-blue text-blue rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-50 disabled:opacity-50 min-h-[44px]"
       >
         <UpExport size={16} />
         {downloading ? 'Exporting…' : 'Export'}
         <UpChevronDown size={14} />
-      </button>
+      </Button>
 
       {open && (
         <div className="absolute right-0 top-full mt-1 bg-card border border-hairline rounded-xl shadow-lg z-20 min-w-[160px] overflow-hidden">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => download('pdf')}
-            className="w-full px-4 py-3 text-left hover:bg-background text-sm min-h-[44px]"
+            className="w-full justify-start text-left px-4 py-3"
           >
             Download PDF
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => download('csv')}
-            className="w-full px-4 py-3 text-left hover:bg-background text-sm min-h-[44px] border-t border-hairline"
+            className="w-full justify-start text-left px-4 py-3 border-t border-hairline"
           >
             Download CSV
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={() => download('html')}
-            className="w-full px-4 py-3 text-left hover:bg-background text-sm min-h-[44px] border-t border-hairline"
+            className="w-full justify-start text-left px-4 py-3 border-t border-hairline"
           >
             View HTML
-          </button>
+          </Button>
         </div>
       )}
     </div>

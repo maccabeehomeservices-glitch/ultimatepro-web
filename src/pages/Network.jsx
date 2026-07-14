@@ -232,14 +232,14 @@ export default function Network() {
         <p className="text-xs text-muted uppercase font-medium mb-2">Your UCM ID</p>
         <div className="flex items-center gap-3">
           <p className="font-mono font-bold text-lg text-ink flex-1">{ucmId || 'Loading...'}</p>
-          <button
+          <Button
+            variant="ghost"
             onClick={handleCopy}
             disabled={!ucmId}
-            className="flex items-center gap-1.5 text-sm text-blue font-medium min-h-[44px] px-3 rounded-lg hover:bg-blue-50 transition-colors"
           >
             {copied ? <UpCheck size={16} /> : <Copy size={16} />}
             {copied ? 'Copied' : 'Copy'}
-          </button>
+          </Button>
         </div>
         <p className="text-xs text-muted mt-1">Share your UCM ID to receive work from network partners.</p>
       </Card>
@@ -351,13 +351,13 @@ export default function Network() {
                 {partnerUcmId && (
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-muted font-mono flex-1">{partnerUcmId}</p>
-                    <button
+                    <Button
+                      variant="ghost"
                       onClick={() => copyPartnerUcm(partnerUcmId)}
-                      className="text-xs text-blue font-medium min-h-[36px] px-2 flex items-center gap-1"
                     >
                       {ucmCopied ? <UpCheck size={14} /> : <Copy size={14} />}
                       {ucmCopied ? 'Copied' : 'Copy'}
-                    </button>
+                    </Button>
                   </div>
                 )}
                 {(conn?.city || conn?.state) && (
@@ -385,13 +385,14 @@ export default function Network() {
                     >
                       {responding ? '...' : 'Accept'}
                     </Button>
-                    <button
+                    <Button
+                      variant="ghost-danger"
                       onClick={() => handleRespondConnection('decline')}
                       disabled={responding}
-                      className="flex-1 py-2.5 border border-red-300 text-red-600 rounded-xl font-semibold text-sm min-h-[44px] disabled:opacity-50"
+                      className="flex-1"
                     >
                       {responding ? '...' : 'Decline'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -470,19 +471,21 @@ export default function Network() {
                   📋 Propose Agreement
                 </Button>
               )}
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => { setReportData(null); setDetailView('report'); }}
-                className="w-full py-3 border border-hairline text-ink rounded-xl text-sm font-semibold min-h-[44px]"
+                className="w-full"
               >
                 📊 View Report
-              </button>
+              </Button>
               {conn?.status !== 'paused' && (
-                <button
+                <Button
+                  variant="ghost-danger"
                   onClick={() => setDetailView('pause')}
-                  className="w-full py-3 border border-red-300 text-red-600 rounded-xl text-sm font-semibold min-h-[44px]"
+                  className="w-full"
                 >
                   ⏸ Pause Partnership
-                </button>
+                </Button>
               )}
             </div>
           </div>
@@ -528,12 +531,13 @@ export default function Network() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <button
+              <Button
+                variant="ghost-muted"
                 onClick={() => setDetailView('main')}
-                className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]"
+                className="flex-1"
               >
                 Cancel
-              </button>
+              </Button>
               <Button
                 onClick={handlePropose}
                 disabled={proposing}
@@ -551,12 +555,13 @@ export default function Network() {
               You can resume it at any time.
             </p>
             <div className="flex gap-3">
-              <button
+              <Button
+                variant="ghost-muted"
                 onClick={() => setDetailView('main')}
-                className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]"
+                className="flex-1"
               >
                 Cancel
-              </button>
+              </Button>
               <Button
                 variant="danger"
                 onClick={handlePause}
@@ -634,12 +639,13 @@ export default function Network() {
               </div>
             )}
 
-            <button
+            <Button
+              variant="ghost-muted"
               onClick={() => setDetailView('main')}
-              className="w-full py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]"
+              className="w-full"
             >
               Back
-            </button>
+            </Button>
           </div>
         ) : null}
       </Modal>

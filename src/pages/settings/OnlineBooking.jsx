@@ -183,9 +183,9 @@ export default function OnlineBooking() {
             <p className="text-xs font-semibold text-blue uppercase tracking-wider mb-2">Your Booking Link</p>
             <div className="bg-background rounded-xl p-3 text-xs text-ink break-all mb-3 font-mono">{bookingUrl}</div>
             <div className="flex gap-2">
-              <button onClick={copyLink} className="flex-1 py-2.5 border border-hairline text-ink rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2 hover:bg-background">
+              <Button variant="ghost" onClick={copyLink} className="flex-1">
                 <Copy size={16} /> Copy
-              </button>
+              </Button>
               <Button onClick={shareLink} className="flex-1">
                 <Share2 size={16} /> Share
               </Button>
@@ -263,7 +263,7 @@ export default function OnlineBooking() {
                   <label className="block text-xs text-muted mb-1">Radius: {newRadius} mi</label>
                   <input type="range" min={1} max={100} value={newRadius} onChange={e => setNewRadius(Number(e.target.value))} className="w-full" />
                 </div>
-                <button onClick={addArea} className="p-2 rounded-xl bg-blue text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <button onClick={addArea} className="p-2 rounded-xl bg-[#A9812E] text-pearl hover:bg-[#8A6A3B] min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <UpPlus size={18} />
                 </button>
               </div>
@@ -286,7 +286,7 @@ export default function OnlineBooking() {
               ))}
               <div className="flex gap-2 mt-3">
                 <Input value={newService} onChange={e => setNewService(e.target.value)} placeholder="Add a service type" />
-                <button onClick={addService} className="p-2 rounded-xl bg-blue text-white min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <button onClick={addService} className="p-2 rounded-xl bg-[#A9812E] text-pearl hover:bg-[#8A6A3B] min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <UpPlus size={18} />
                 </button>
               </div>

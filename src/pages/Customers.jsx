@@ -78,19 +78,19 @@ export default function Customers() {
       <div className="flex items-center justify-between mb-4 gap-2">
         <h1 className="text-xl font-bold text-ink">Customers</h1>
         <div className="flex items-center gap-2 flex-wrap">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => { setPage(1); fetchCustomers(1); }}
             disabled={loading}
-            className="text-blue text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
           >
             {loading ? '⟳ Loading...' : '⟳ Refresh'}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="ghost"
             onClick={() => navigate('/import?type=customers')}
-            className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
           >
             <Upload size={14} /> Import
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -183,12 +183,13 @@ export default function Customers() {
           })}
           {loading && customers.length > 0 && <LoadingSpinner />}
           {!loading && hasMore && (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setPage(p => p + 1)}
-              className="w-full py-3 text-blue font-medium mt-3 min-h-[44px]"
+              className="w-full mt-3"
             >
               Load more customers...
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -196,7 +197,7 @@ export default function Customers() {
       {/* FAB */}
       <button
         onClick={() => navigate('/customers/new')}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-ink transition-colors z-10"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-[#A9812E] text-pearl rounded-full shadow-lg flex items-center justify-center hover:bg-[#8A6A3B] transition-colors z-10"
       >
         <UpPlus size={24} />
       </button>

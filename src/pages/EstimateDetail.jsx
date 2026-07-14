@@ -607,13 +607,13 @@ export default function EstimateDetail() {
           ref={photoInputRef}
           onChange={handlePhotoUpload}
         />
-        <button
+        <Button
+          variant="ghost"
           onClick={() => photoInputRef.current?.click()}
           disabled={uploadingPhoto}
-          className="px-4 py-2 border border-hairline rounded-xl text-ink text-sm min-h-[44px] disabled:opacity-50"
         >
           {uploadingPhoto ? 'Uploading...' : '📎 Attach Photo'}
-        </button>
+        </Button>
       </div>
 
       {/* Actions */}
@@ -628,17 +628,18 @@ export default function EstimateDetail() {
             Send for Signature
           </Button>
         )}
-        <button
+        <Button
+          variant="ghost"
           onClick={() => {
             // GBB money guard: a tier must be selected before signing (select-tier
             // sets the estimate total). Route to the picker if none chosen yet.
             if (isGbb && !estimate.selected_tier_id) openTierSelect();
             else setShowSignature(true);
           }}
-          className="w-full py-3 border-2 border-blue text-blue rounded-xl font-semibold min-h-[44px]"
+          className="w-full"
         >
           ✍️ Get Signature
-        </button>
+        </Button>
         {showConvert && (
           <Button onClick={handleConvert} loading={acting} className="w-full">
             Convert to Invoice
@@ -774,7 +775,7 @@ export default function EstimateDetail() {
                 <span className="inline-block w-3 h-3 rounded-full border-2 border-blue border-t-transparent animate-spin" />
                 Waiting for payment…
               </div>
-              <button type="button" className="text-xs text-blue underline" onClick={() => navigator.clipboard?.writeText(depQr.payment_url)}>Copy payment link</button>
+              <Button variant="ghost" onClick={() => navigator.clipboard?.writeText(depQr.payment_url)}>Copy payment link</Button>
             </div>
           ) : depLink ? (
             <div className="flex flex-col items-center gap-3 py-2 text-center">
@@ -783,7 +784,7 @@ export default function EstimateDetail() {
                 <span className="inline-block w-3 h-3 rounded-full border-2 border-blue border-t-transparent animate-spin" />
                 Waiting for payment…
               </div>
-              <button type="button" className="text-xs text-blue underline" onClick={() => navigator.clipboard?.writeText(depLink.payment_url)}>Copy payment link</button>
+              <Button variant="ghost" onClick={() => navigator.clipboard?.writeText(depLink.payment_url)}>Copy payment link</Button>
             </div>
           ) : (
             <>

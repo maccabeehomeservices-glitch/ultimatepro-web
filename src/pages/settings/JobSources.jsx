@@ -384,12 +384,13 @@ export default function JobSources() {
                 ))}
               </div>
               {can('job_sources_commissions','full') && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => { setEditingChannel(null); setChannelName(''); setShowChannelForm(true); }}
-                className="w-full py-3 border-2 border-dashed border-hairline rounded-xl text-muted hover:border-blue hover:text-blue font-medium text-sm min-h-[44px]"
+                className="w-full"
               >
                 + Add Custom Channel
-              </button>
+              </Button>
               )}
             </div>
           )}
@@ -432,12 +433,12 @@ export default function JobSources() {
                           </button>
                         </>
                       ) : (
-                        <button
+                        <Button
+                          variant="ghost"
                           onClick={openSetDefault}
-                          className="px-3 py-2 text-sm text-blue font-semibold border border-blue rounded-lg hover:bg-blue-50 min-h-[44px]"
                         >
                           Set Default
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </div>

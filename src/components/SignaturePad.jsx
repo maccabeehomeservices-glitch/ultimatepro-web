@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
+import { Button } from './ui'
 
 export default function SignaturePad({ onSave, onCancel }) {
   const canvasRef = useRef(null)
@@ -115,19 +116,21 @@ export default function SignaturePad({ onSave, onCancel }) {
         onTouchEnd={endDraw}
       />
       <div className="flex gap-3">
-        <button
+        <Button
+          variant="ghost-muted"
           onClick={clear}
-          className="flex-1 py-2 border border-hairline rounded-xl text-ink font-medium hover:bg-background min-h-[44px]"
+          className="flex-1"
         >
           Clear
-        </button>
+        </Button>
         {onCancel && (
-          <button
+          <Button
+            variant="ghost-muted"
             onClick={onCancel}
-            className="flex-1 py-2 border border-hairline rounded-xl text-ink font-medium hover:bg-background min-h-[44px]"
+            className="flex-1"
           >
             Cancel
-          </button>
+          </Button>
         )}
         <button
           onClick={save}

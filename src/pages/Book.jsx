@@ -21,7 +21,7 @@ export default function Book() {
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: 'system-ui, sans-serif',
-      color: '#0D1B2A',
+      color: 'var(--color-ink)',
       padding: '24px',
       textAlign: 'center',
     }}>

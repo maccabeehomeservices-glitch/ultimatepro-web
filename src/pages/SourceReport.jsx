@@ -29,7 +29,7 @@ function KPI({ label, value, accent }) {
       <p className="text-xs text-muted uppercase">{label}</p>
       <p
         className="text-xl font-bold mt-1"
-        style={accent ? { color: accent } : { color: '#111827' }}
+        style={accent ? { color: accent } : { color: 'var(--color-ink)' }}
       >
         {value}
       </p>

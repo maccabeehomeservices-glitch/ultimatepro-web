@@ -35,7 +35,7 @@ const STATUS_COLORS = {
 };
 
 const PRIORITY_COLORS = {
-  low:    'bg-gray-100 text-gray-600',
+  low:    'bg-gray-100 text-muted',
   medium: 'bg-blue-100 text-blue-700',
   high:   'bg-orange-100 text-orange-700',
   urgent: 'bg-red-100 text-red-700',
@@ -712,7 +712,7 @@ export default function JobDetail() {
   const lineItemsTotal = lineItems.reduce((s, item) => s + Number(item.total || item.amount || 0), 0);
   const statusColor  = STATUS_COLORS[jobData.status] || 'bg-gray-500';
   const priorityLabel = jobData.priority ? (jobData.priority.charAt(0).toUpperCase() + jobData.priority.slice(1)) : null;
-  const priorityStyle = PRIORITY_COLORS[jobData.priority] || 'bg-gray-100 text-gray-600';
+  const priorityStyle = PRIORITY_COLORS[jobData.priority] || 'bg-gray-100 text-muted';
 
   // ── History role-gate (mirrors Android JobScreens.kt:1437-1438) ──
   // isTech = role not in [owner, admin, manager]; default-allow unless view_history is explicitly false.
@@ -828,10 +828,9 @@ export default function JobDetail() {
             <div className="mt-2">
               <p className="text-xs text-blue-700 mb-1">Partner marked this <strong>{jobData.partner_status}</strong> — review:</p>
               <div className="flex gap-2">
-                <button onClick={() => handlePartnerStatus('confirm')} disabled={partnerActing}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-green-500 text-green-700 font-medium min-h-[32px] hover:bg-green-50 disabled:opacity-50">Confirm</button>
-                <button onClick={() => handlePartnerStatus('dispute')} disabled={partnerActing}
-                  className="text-xs px-3 py-1.5 rounded-lg border border-red-400 text-red-600 font-medium min-h-[32px] hover:bg-red-50 disabled:opacity-50">Dispute</button>
+                <Button variant="ghost" onClick={() => handlePartnerStatus('confirm')} disabled={partnerActing}
+                  className="text-green-700 hover:bg-green-50">Confirm</Button>
+                <Button variant="ghost-danger" onClick={() => handlePartnerStatus('dispute')} disabled={partnerActing}>Dispute</Button>
               </div>
             </div>
           )}
@@ -996,10 +995,9 @@ export default function JobDetail() {
                       {jobData.zip ? ` ${jobData.zip}` : ''}
                     </p>
                   </div>
-                  <button onClick={handleNavigate}
-                    className="text-sm text-blue font-semibold min-h-[44px] flex items-center px-2">
+                  <Button variant="ghost" onClick={handleNavigate}>
                     Navigate
-                  </button>
+                  </Button>
                 </div>
               </Card>
             )}
@@ -1242,17 +1240,19 @@ export default function JobDetail() {
                 <p className="text-sm text-muted text-center py-3 bg-background rounded-xl mb-3">No parts added</p>
               )}
               <div className="flex gap-3">
-                <button
+                <Button
+                  variant="ghost"
                   onClick={() => { setPartsModal(true); setPartForm({ name: '', cost: '', provider: 'company' }); }}
-                  className="flex-1 py-3 border border-hairline text-ink rounded-xl font-semibold text-sm min-h-[48px]">
+                  className="flex-1">
                   🔩 Add Parts
-                </button>
+                </Button>
                 {jobInvoice && jobInvoice.status !== 'paid' && can('payments_refunds','edit_self') && (
-                  <button
+                  <Button
+                    variant="ghost"
                     onClick={() => setDepositModal(true)}
-                    className="flex-1 py-3 border border-hairline text-ink rounded-xl font-semibold text-sm min-h-[48px]">
+                    className="flex-1">
                     💳 Charge Payment
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -1263,17 +1263,17 @@ export default function JobDetail() {
                 📧 Send Receipt
               </Button>
               {!isDeletedOrCancelled && (
-                <Button variant="outlined" onClick={handleCancelJob} className="flex-1 text-sm border-red-300 text-red-600 hover:bg-red-50 min-h-[48px]">
+                <Button variant="danger" onClick={handleCancelJob} className="flex-1 text-sm min-h-[48px]">
                   Cancel Job
                 </Button>
               )}
               {jobData.status === 'deleted' && (
-                <Button onClick={handleRestoreJob} className="flex-1 bg-amber-500 hover:bg-amber-600 text-sm min-h-[48px]">
+                <Button variant="warning" onClick={handleRestoreJob} className="flex-1 text-sm min-h-[48px]">
                   ♻️ Restore
                 </Button>
               )}
-              <Button onClick={() => setShowComplete(true)}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-sm min-h-[48px]">
+              <Button variant="success" onClick={() => setShowComplete(true)}
+                className="flex-1 text-sm min-h-[48px]">
                 ✅ Completed
               </Button>
             </div>
@@ -1422,7 +1422,7 @@ export default function JobDetail() {
                   placeholder="Type a message..."
                   className="flex-1 rounded-full border border-hairline px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue min-h-[44px]" />
                 <button type="submit" disabled={sendingMsg || !messageBody.trim()}
-                  className="w-11 h-11 bg-blue text-white rounded-full flex items-center justify-center disabled:opacity-50">
+                  className="w-11 h-11 bg-[#A9812E] text-pearl hover:bg-[#8A6A3B] rounded-full flex items-center justify-center disabled:opacity-50">
                   <UpSend size={18} />
                 </button>
               </form>
@@ -1606,7 +1606,7 @@ export default function JobDetail() {
         footer={
           <>
             <Button variant="outlined" onClick={() => setShowComplete(false)}>Cancel</Button>
-            <Button loading={completing} onClick={handleCompleteJob} className="bg-green-600 hover:bg-green-700">Complete Job</Button>
+            <Button variant="success" loading={completing} onClick={handleCompleteJob}>Complete Job</Button>
           </>
         }>
         <div className="space-y-4">
@@ -1795,8 +1795,7 @@ export default function JobDetail() {
               The job will be moved to deleted jobs and can be retrieved from job search. Estimates and invoices will be kept.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 py-3 border border-hairline rounded-xl text-ink font-medium min-h-[44px]">Cancel</button>
+              <Button variant="ghost-muted" onClick={() => setShowDeleteConfirm(false)} className="flex-1">Cancel</Button>
               <Button onClick={handleDeleteJob} variant="danger" className="flex-1">Archive</Button>
             </div>
           </div>

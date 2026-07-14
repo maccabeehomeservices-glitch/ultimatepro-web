@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, X } from 'lucide-react';
 import { UpPlus, UpEstimate } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
-import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
+import { Card, Badge, Button, LoadingSpinner, EmptyState } from '../components/ui';
 
 const filters = [
   { id: '', label: 'All' },
@@ -45,13 +45,13 @@ export default function Estimates() {
     <div className="p-4 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-ink">Estimates</h1>
-        <button
+        <Button
+          variant="ghost"
           onClick={() => refetch()}
           disabled={loading}
-          className="text-blue text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
         >
           {loading ? '⟳ Loading...' : '⟳ Refresh'}
-        </button>
+        </Button>
       </div>
 
       {/* Search */}
@@ -126,7 +126,7 @@ export default function Estimates() {
       {/* FAB */}
       <button
         onClick={() => navigate('/estimates/new')}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-ink transition-colors z-10"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-[#A9812E] text-pearl rounded-full shadow-lg flex items-center justify-center hover:bg-[#8A6A3B] transition-colors z-10"
       >
         <UpPlus size={24} />
       </button>

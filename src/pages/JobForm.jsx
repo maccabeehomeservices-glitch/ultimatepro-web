@@ -645,11 +645,10 @@ export default function JobForm() {
           <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink flex-1">{isEdit ? 'Edit Job' : 'New Job'}</h1>
-        <button type="button" onClick={handlePasteFromClipboard}
-          className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50">
+        <Button type="button" variant="ghost" onClick={handlePasteFromClipboard}>
           <UpPasteTicket size={16} />
           <span className="hidden sm:inline">Paste Ticket</span>
-        </button>
+        </Button>
       </div>
 
       <form onSubmit={e => handleSubmit(e, false)} className="space-y-4">
@@ -822,19 +821,19 @@ export default function JobForm() {
                       {c.phone && <span className="text-muted text-xs">{c.phone}</span>}
                     </button>
                   ))}
-                  <button type="button"
+                  <Button type="button" variant="ghost"
                     onClick={() => { setShowCustomerDropdown(false); setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
-                    className="w-full text-left px-4 py-3 hover:bg-blue-50 text-sm text-blue font-medium flex items-center gap-2">
+                    className="w-full justify-start text-left px-4 py-3">
                     <UpPlus size={14} /> Create new customer
-                  </button>
+                  </Button>
                 </div>
               )}
               {!showCustomerDropdown && customerSearch.length > 1 && !selectedCustomer && (
-                <button type="button"
+                <Button type="button" variant="ghost"
                   onClick={() => { setQuickCreatePrefill({ first_name: customerSearch, phone: '' }); setShowQuickCreate(true); }}
-                  className="mt-1.5 text-sm text-blue font-medium flex items-center gap-1 min-h-[36px]">
+                  className="mt-1.5 justify-start">
                   <UpPlus size={14} /> Create new customer
-                </button>
+                </Button>
               )}
             </div>
           )}
@@ -851,10 +850,10 @@ export default function JobForm() {
                 className="p-2 text-muted hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
             </div>
           ))}
-          <button type="button" onClick={() => setExtraPhones(prev => [...prev, ''])}
-            className="mt-2 text-sm text-blue font-medium min-h-[36px] flex items-center gap-1">
+          <Button type="button" variant="ghost" onClick={() => setExtraPhones(prev => [...prev, ''])}
+            className="mt-2 justify-start">
             <UpPlus size={14} /> Add phone
-          </button>
+          </Button>
 
           {/* Extra emails */}
           {extraEmails.map((em, idx) => (
@@ -867,10 +866,10 @@ export default function JobForm() {
                 className="p-2 text-muted hover:text-red-500 min-w-[44px] flex items-center justify-center"><X size={16} /></button>
             </div>
           ))}
-          <button type="button" onClick={() => setExtraEmails(prev => [...prev, ''])}
-            className="mt-2 text-sm text-blue font-medium min-h-[36px] flex items-center gap-1">
+          <Button type="button" variant="ghost" onClick={() => setExtraEmails(prev => [...prev, ''])}
+            className="mt-2 justify-start">
             <UpPlus size={14} /> Add email
-          </button>
+          </Button>
         </Card>
 
         {/* ── ADDRESS ────────────────────────────────────────────────────── */}

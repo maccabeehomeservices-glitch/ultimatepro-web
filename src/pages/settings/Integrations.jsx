@@ -162,8 +162,9 @@ export default function Integrations() {
                     { label: 'Invoices',  fn: quickbooksApi.syncInvoices },
                     { label: 'Payments',  fn: quickbooksApi.syncPayments },
                   ].map(({ label, fn }) => (
-                    <button
+                    <Button
                       key={label}
+                      variant="ghost"
                       disabled={syncing}
                       onClick={async () => {
                         setSyncing(true);
@@ -176,22 +177,23 @@ export default function Integrations() {
                           setSyncing(false);
                         }
                       }}
-                      className="py-2 px-3 rounded-xl border border-hairline text-sm text-ink font-medium min-h-[44px] hover:bg-background transition-colors disabled:opacity-50"
+                      className="w-full"
                     >
                       {label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
 
                 {/* Disconnect */}
-                <button
+                <Button
+                  variant="ghost-danger"
                   onClick={handleDisconnect}
                   disabled={disconnecting}
-                  className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-red-200 text-red-600 font-medium text-sm min-h-[44px] hover:bg-red-50 transition-colors disabled:opacity-50"
+                  className="w-full"
                 >
                   <Unlink size={14} />
                   {disconnecting ? 'Disconnecting...' : 'Disconnect QuickBooks'}
-                </button>
+                </Button>
               </div>
             ) : (
               <button

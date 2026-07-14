@@ -161,13 +161,13 @@ export default function Jobs() {
     <div className="p-4 max-w-5xl mx-auto pb-24">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-ink">Jobs</h1>
-        <button
+        <Button
+          variant="ghost"
           onClick={() => { setPage(1); fetchJobs(1); }}
           disabled={loading}
-          className="text-blue text-sm font-medium flex items-center gap-1 min-h-[44px] px-2"
         >
           {loading ? '⟳ Loading...' : '⟳ Refresh'}
-        </button>
+        </Button>
       </div>
 
       {/* Search */}
@@ -284,12 +284,13 @@ export default function Jobs() {
 
           {loading && jobs.length > 0 && <LoadingSpinner />}
           {!loading && hasMore && (
-            <button
+            <Button
+              variant="ghost"
               onClick={() => setPage(p => p + 1)}
-              className="w-full py-3 text-blue font-medium mt-3 min-h-[44px]"
+              className="w-full mt-3"
             >
               Load more jobs...
-            </button>
+            </Button>
           )}
         </>
       )}
@@ -297,7 +298,7 @@ export default function Jobs() {
       {/* FAB */}
       <button
         onClick={() => navigate('/jobs/new')}
-        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-blue text-white rounded-full shadow-lg flex items-center justify-center hover:bg-blue-ink transition-colors z-10"
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 w-14 h-14 bg-[#A9812E] text-pearl rounded-full shadow-lg flex items-center justify-center hover:bg-[#8A6A3B] transition-colors z-10"
       >
         <UpNewJob size={24} />
       </button>
@@ -328,7 +329,7 @@ export default function Jobs() {
               </div>
             </div>
             <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setShowCustomDialog(false)} className="px-4 py-2 text-sm text-ink min-h-[44px]">Cancel</button>
+              <Button variant="ghost-muted" onClick={() => setShowCustomDialog(false)}>Cancel</Button>
               <Button
                 onClick={applyCustomDate}
                 disabled={!customDraftFrom || !customDraftTo}
@@ -414,8 +415,8 @@ export default function Jobs() {
             )}
 
             <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
-              <button onClick={clearAllFilters} className="px-4 py-2 text-sm text-ink min-h-[44px]">Clear All</button>
-              <button onClick={() => setShowFilterDialog(false)} className="px-4 py-2 text-sm text-ink min-h-[44px]">Cancel</button>
+              <Button variant="ghost" onClick={clearAllFilters}>Clear All</Button>
+              <Button variant="ghost-muted" onClick={() => setShowFilterDialog(false)}>Cancel</Button>
               <Button
                 onClick={() => setShowFilterDialog(false)}
               >

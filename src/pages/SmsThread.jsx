@@ -82,7 +82,7 @@ export default function SmsThread() {
         <button
           type="submit"
           disabled={sending || !body.trim()}
-          className="w-11 h-11 bg-blue text-white rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-blue-ink transition-colors flex-shrink-0"
+          className="w-11 h-11 bg-[#A9812E] text-pearl rounded-full flex items-center justify-center disabled:opacity-50 hover:bg-[#8A6A3B] transition-colors flex-shrink-0"
         >
           <UpSend size={18} />
         </button>

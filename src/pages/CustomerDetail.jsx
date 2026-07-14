@@ -320,12 +320,12 @@ export default function CustomerDetail() {
                 }}
               />
               <Button onClick={() => handleAddContact('phone', addPhoneInput)} disabled={savingContact || !addPhoneInput.trim()}>Add</Button>
-              <button onClick={() => setShowAddPhone(false)} className="px-3 rounded-xl border border-hairline text-sm min-h-[44px]">Cancel</button>
+              <Button variant="ghost-muted" onClick={() => setShowAddPhone(false)}>Cancel</Button>
             </div>
           ) : (
-            <button onClick={() => setShowAddPhone(true)} className="flex items-center gap-1 text-sm text-blue font-medium mb-2 min-h-[36px]">
+            <Button variant="ghost" onClick={() => setShowAddPhone(true)} className="mb-2">
               <UpPlus size={14} /> Add Phone
-            </button>
+            </Button>
           )}
           {contacts.filter(c => c.type === 'email').length > 0 && (
             <div className="mb-2">
@@ -361,12 +361,12 @@ export default function CustomerDetail() {
                 }}
               />
               <Button onClick={() => handleAddContact('email', addEmailInput)} disabled={savingContact || !addEmailInput.trim()}>Add</Button>
-              <button onClick={() => setShowAddEmail(false)} className="px-3 rounded-xl border border-hairline text-sm min-h-[44px]">Cancel</button>
+              <Button variant="ghost-muted" onClick={() => setShowAddEmail(false)}>Cancel</Button>
             </div>
           ) : (
-            <button onClick={() => setShowAddEmail(true)} className="flex items-center gap-1 text-sm text-blue font-medium min-h-[36px]">
+            <Button variant="ghost" onClick={() => setShowAddEmail(true)}>
               <UpPlus size={14} /> Add Email
-            </button>
+            </Button>
           )}
         </Card>
       )}
@@ -382,12 +382,9 @@ export default function CustomerDetail() {
                 {[customer.address, customer.city, customer.state, customer.zip].filter(Boolean).join(', ')}
               </p>
             </div>
-            <button
-              onClick={handleNavigate}
-              className="text-sm text-blue font-semibold min-h-[44px] flex items-center px-2"
-            >
+            <Button variant="ghost" onClick={handleNavigate}>
               Navigate
-            </button>
+            </Button>
           </div>
         </Card>
       )}
@@ -396,12 +393,9 @@ export default function CustomerDetail() {
       <Card className="mb-4">
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs text-muted font-medium uppercase">Memberships</p>
-          <button
-            onClick={() => setAddMembershipModal(true)}
-            className="flex items-center gap-1 text-xs text-blue font-semibold min-h-[44px] px-2"
-          >
+          <Button variant="ghost" onClick={() => setAddMembershipModal(true)}>
             <UpPlus size={14} /> Add
-          </button>
+          </Button>
         </div>
         {memberships.length === 0 ? (
           <p className="text-sm text-muted">No active memberships.</p>
@@ -416,7 +410,7 @@ export default function CustomerDetail() {
                   )}
                 </div>
                 <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                  m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-muted'
                 }`}>
                   {m.status || 'active'}
                 </span>
@@ -447,26 +441,26 @@ export default function CustomerDetail() {
           <p className="text-xs font-semibold text-blue uppercase mb-2">Customer Portal</p>
           <p className="text-xs text-blue truncate mb-3">{portalUrl}</p>
           <div className="flex gap-2 flex-wrap">
-            <button
+            <Button
+              variant="ghost"
               onClick={() => handleCopyPortal(portalUrl)}
-              className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
             >
               {portalCopied ? <UpCheck size={14} /> : <Copy size={14} />}
               {portalCopied ? 'Copied' : 'Copy Link'}
-            </button>
+            </Button>
             {typeof navigator !== 'undefined' && navigator.share && (
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => navigator.share({ title: `${name}'s Portal`, url: portalUrl }).catch(() => {})}
-                className="flex items-center gap-1.5 text-sm text-blue font-medium px-3 py-2 rounded-xl border border-blue min-h-[44px] hover:bg-blue-50 transition-colors"
               >
                 <UpSend size={14} /> Share
-              </button>
+              </Button>
             )}
             <a
               href={portalUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-sm text-white bg-blue font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
+              className="inline-flex items-center justify-center gap-2 text-sm font-medium min-h-[44px] px-3 rounded-[11px] text-blue hover:bg-blue-50 transition-colors"
             >
               Open Portal
             </a>
@@ -586,7 +580,7 @@ export default function CustomerDetail() {
                 <button
                   type="submit"
                   disabled={sendingMsg || !messageBody.trim()}
-                  className="w-11 h-11 bg-blue text-white rounded-full flex items-center justify-center disabled:opacity-50"
+                  className="w-11 h-11 bg-[#A9812E] text-pearl hover:bg-[#8A6A3B] rounded-full flex items-center justify-center disabled:opacity-50"
                 >
                   <UpSend size={18} />
                 </button>

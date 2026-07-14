@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Briefcase, Receipt, FileText, Trash2, CheckCheck } from 'lucide-react';
 import { UpBell, UpCalendar } from '../components/ui/icons';
 import { notificationsApi } from '../lib/api';
-import { Card, EmptyState, LoadingSpinner } from '../components/ui';
+import { Card, Button, EmptyState, LoadingSpinner } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 
 function timeAgo(dateStr) {
@@ -94,13 +94,13 @@ export default function Notifications() {
           )}
         </div>
         {unreadCount > 0 && (
-          <button
+          <Button
+            variant="ghost"
             onClick={handleMarkAllRead}
-            className="flex items-center gap-1.5 text-sm text-blue hover:underline font-medium"
           >
             <CheckCheck size={15} />
             Mark all read
-          </button>
+          </Button>
         )}
       </div>
 
