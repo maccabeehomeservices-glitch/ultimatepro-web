@@ -89,6 +89,12 @@
 
 body {
   background: var(--color-background);
+  /* Default text color = tokenized ink so any element WITHOUT an explicit text-*
+     class still flips light↔dark instead of falling back to UA black (the root of
+     the black-on-black class: light ink ≈ black so light mode is unchanged, dark
+     ink is light so untokened text becomes readable). Form controls don't inherit
+     this, so the input/select/textarea rule above sets it on them explicitly. */
+  color: var(--color-ink);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   margin: 0;
@@ -102,6 +108,51 @@ body {
 /* Prevent iOS zoom on inputs */
 input, select, textarea {
   font-size: 16px !important;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   P3.1d REOPEN (David 2026-07-14) — dark-mode INPUT text tokens. The defect
+   class David still saw: typed VALUES render black-on-black in dark. Cause: many
+   raw <input>/<textarea>/<select> (not the Input primitive) set no text color, so
+   they inherit the UA default BLACK — invisible on the dark surface. A route
+   screenshot never shows it (empty fields). Fix once, app-wide, in @layer base so
+   any explicit text- or bg- utility on a specific field still WINS over these
+   defaults; only fields that set nothing pick these up. Covers the cases a
+   per-element class can't reach: browser autofill (forces its own colors) and
+   native <select> option menus. Tokens flip with prefers-color-scheme. */
+@layer base {
+  input, select, textarea {
+    color: var(--color-ink);
+    caret-color: var(--color-ink);
+  }
+  /* Text-bearing fields get the card surface; skip native toggles/pickers
+     (checkbox/radio/file/range/color) which draw their own control chrome. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]):not([type="color"]),
+  select, textarea {
+    background-color: var(--color-card);
+  }
+  input::placeholder, textarea::placeholder {
+    color: var(--color-muted);
+    opacity: 1; /* Firefox dims placeholders by default */
+  }
+  /* Native select drop-down menu items (OS-rendered) — keep readable in dark. */
+  select option {
+    color: var(--color-ink);
+    background-color: var(--color-card);
+  }
+  /* Autofill: Chrome/Safari paint a fixed light bg + dark text via an internal
+     shadow; override so autofilled values stay readable and don't flash a bright
+     box on the dark canvas. */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  textarea:-webkit-autofill,
+  select:-webkit-autofill {
+    -webkit-text-fill-color: var(--color-ink);
+    -webkit-box-shadow: 0 0 0 1000px var(--color-card) inset;
+    caret-color: var(--color-ink);
+    transition: background-color 9999s ease-in-out 0s;
+  }
 }
 
 /* Smooth scrolling on all lists */
