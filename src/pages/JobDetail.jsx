@@ -23,17 +23,6 @@ const JOB_STATUSES = [
   { value: 'cancelled',   label: 'Cancelled'    },
 ];
 
-const STATUS_COLORS = {
-  unscheduled: 'bg-gray-500',
-  scheduled:   'bg-blue-600',
-  en_route:    'bg-indigo-600',
-  in_progress: 'bg-amber-500',
-  completed:   'bg-green-600',
-  holding:     'bg-orange-500',
-  cancelled:   'bg-red-500',
-  deleted:     'bg-gray-400',
-};
-
 const PRIORITY_COLORS = {
   low:    'bg-gray-100 text-muted',
   medium: 'bg-blue-100 text-blue-700',
@@ -710,7 +699,6 @@ export default function JobDetail() {
   const address      = jobData.address || jobData.service_address || '';
   const lineItems    = jobData.line_items || jobData.charges || [];
   const lineItemsTotal = lineItems.reduce((s, item) => s + Number(item.total || item.amount || 0), 0);
-  const statusColor  = STATUS_COLORS[jobData.status] || 'bg-gray-500';
   const priorityLabel = jobData.priority ? (jobData.priority.charAt(0).toUpperCase() + jobData.priority.slice(1)) : null;
   const priorityStyle = PRIORITY_COLORS[jobData.priority] || 'bg-gray-100 text-muted';
 
@@ -757,9 +745,8 @@ export default function JobDetail() {
             #{jobData.job_number || jobData.id?.slice(0,8)}
           </h1>
           {/* Status badge */}
-          <button onClick={() => setStatusModal(true)}
-            className={`${statusColor} text-white text-xs font-bold px-3 py-1.5 rounded-full min-h-[36px] uppercase`}>
-            {(jobData.status||'').replace(/_/g,' ')}
+          <button onClick={() => setStatusModal(true)} className="min-h-[36px] flex items-center">
+            <Badge status={jobData.status} label={(jobData.status||'').replace(/_/g,' ')} className="uppercase" />
           </button>
           {/* Priority chip */}
           {priorityLabel && jobData.priority !== 'none' && (

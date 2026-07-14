@@ -25,15 +25,16 @@ const routes = [
   ['inventory', '/inventory'],
   ['notifications', '/notifications'],
   ['settings', '/settings'],
-  ['settings-company', '/settings/company-profile'],
+  ['settings-company', '/settings/company'],
 ];
 
-// list route → screenshot, then click the first row/card to reach a DETAIL screen and shot it.
+// list route → click the first list CARD to reach a DETAIL screen and shot it.
+// seg = the plural route segment used in the detail URL (/jobs/:id, /customers/:id, …).
 const details = [
-  ['job-detail', '/jobs', 'job'],
-  ['customer-detail', '/customers', 'customer'],
-  ['estimate-detail', '/estimates', 'estimate'],
-  ['invoice-detail', '/invoices', 'invoice'],
+  ['job-detail', '/jobs', 'jobs'],
+  ['customer-detail', '/customers', 'customers'],
+  ['estimate-detail', '/estimates', 'estimates'],
+  ['invoice-detail', '/invoices', 'invoices'],
 ];
 
 async function settle(page) {
@@ -49,17 +50,23 @@ for (const scheme of ['dark', 'light']) {
       await settle(page);
       await page.screenshot({ path: `crawl/${name}-${scheme}.png`, fullPage: true });
     }
-    for (const [name, listRoute] of details) {
+    for (const [name, listRoute, seg] of details) {
       await page.goto(listRoute);
       await settle(page);
-      // first clickable card that navigates into a detail (a card link or a row button)
-      const card = page.locator('a[href*="/"], [role="button"]').filter({ hasText: /\w/ });
-      const clickable = page.locator('div.cursor-pointer, a.block, button').first();
+      // Click the FIRST real, VISIBLE list card inside the content region. Every list
+      // renders its rows as <Card onClick=navigate> → div.cursor-pointer; scoping to <main>
+      // skips the sidebar/header (the old generic selector landed on the Notifications bell).
+      // The `:visible` filter is essential for /jobs: at desktop the mobile JobCards
+      // (md:hidden → display:none) come FIRST in the DOM, so a plain .first() grabbed a
+      // hidden card and the click hung until timeout. Then we ASSERT the URL became a detail
+      // route before shooting, so a mis-click can't silently screenshot the wrong screen.
+      const card = page.locator('main .cursor-pointer:visible').first();
       try {
-        await clickable.click({ timeout: 4000 });
+        await card.click({ timeout: 6000 });
+        await page.waitForURL(new RegExp(`/${seg}/[^/]+$`), { timeout: 12000 });
         await settle(page);
         await page.screenshot({ path: `crawl/${name}-${scheme}.png`, fullPage: true });
-      } catch { /* no detail row seeded — skip */ }
+      } catch { /* no detail row seeded, or nav didn't reach a detail — skip */ }
     }
   });
 }

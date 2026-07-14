@@ -249,9 +249,7 @@ export default function CustomerDetail() {
       <Card className="mb-4">
         <div className="space-y-2">
           {customer.customer_type && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue">
-              {customer.customer_type}
-            </span>
+            <Badge status={customer.customer_type} label={customer.customer_type} />
           )}
           {customer.phone && (
             <div className="flex items-center gap-2 text-sm text-ink">
@@ -409,11 +407,7 @@ export default function CustomerDetail() {
                     <p className="text-xs text-muted">Renews {m.renewal_date}</p>
                   )}
                 </div>
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  m.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-muted'
-                }`}>
-                  {m.status || 'active'}
-                </span>
+                <Badge status={m.status || 'active'} label={m.status || 'active'} />
               </div>
             ))}
           </div>
