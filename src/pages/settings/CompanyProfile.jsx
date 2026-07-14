@@ -2,9 +2,21 @@ import { useState, useEffect, useRef } from 'react'
 import { companyApi } from '../../lib/api'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '../../components/ui'
+import { useAuth } from '../../hooks/useAuth'
+
+// P3.10 — friendly text for each availability-check `reason` the API can return.
+const ALIAS_REASON_TEXT = {
+  required: 'Enter a name',
+  length: '3–32 characters',
+  format: 'lowercase letters, numbers, dots or dashes only',
+  reserved: 'That name is reserved',
+  taken: 'Already taken',
+  cooldown: 'Recently released. Available again after a cooldown',
+}
 
 export default function CompanyProfile() {
   const navigate = useNavigate()
+  const { can } = useAuth()
   const logoInputRef = useRef(null)
   const [form, setForm] = useState({
     name: '', phone: '', email: '', address: '',
@@ -19,9 +31,104 @@ export default function CompanyProfile() {
   const [saving, setSaving] = useState(false)
   const [snack, setSnack] = useState(null)
 
+  // P3.10 — branded email alias (<slug>@ultimatepro.pro)
+  const [alias, setAlias] = useState(null)          // current claimed slug, or null
+  const [aliasAddress, setAliasAddress] = useState(null)
+  const [aliasDomain, setAliasDomain] = useState('ultimatepro.pro')
+  const [editingAlias, setEditingAlias] = useState(false)
+  const [slugInput, setSlugInput] = useState('')
+  const [aliasCheck, setAliasCheck] = useState({ status: 'idle' }) // idle|checking|available|unavailable|error
+  const [claimingAlias, setClaimingAlias] = useState(false)
+  const [removingAlias, setRemovingAlias] = useState(false)
+  const [showRemoveAlias, setShowRemoveAlias] = useState(false)
+
+  const canEditAlias = can('team_settings', 'full')
+  const trimmedSlug = slugInput.trim().toLowerCase()
+  const isCurrentSlug = !!alias && trimmedSlug === alias
+  const canClaimAlias = canEditAlias && aliasCheck.status === 'available' && !isCurrentSlug && !claimingAlias
+
   function showSnack(msg, type = 'success') {
     setSnack({ msg, type })
     setTimeout(() => setSnack(null), 3000)
+  }
+
+  async function loadAlias() {
+    try {
+      const r = await companyApi.getEmailAlias()
+      setAlias(r.data.alias || null)
+      setAliasAddress(r.data.address || null)
+      if (r.data.domain) setAliasDomain(r.data.domain)
+    } catch {
+      // non-fatal — the section just falls back to the claim state
+    }
+  }
+
+  // Debounced live availability check while typing a new/changed alias.
+  useEffect(() => {
+    if (!editingAlias) return
+    if (!trimmedSlug) { setAliasCheck({ status: 'idle' }); return }
+    if (isCurrentSlug) { setAliasCheck({ status: 'idle' }); return } // no need to check your own name
+    setAliasCheck({ status: 'checking' })
+    const t = setTimeout(async () => {
+      try {
+        const r = await companyApi.checkEmailAlias(trimmedSlug)
+        if (r.data.available) setAliasCheck({ status: 'available', address: r.data.address })
+        else setAliasCheck({ status: 'unavailable', reason: r.data.reason })
+      } catch {
+        setAliasCheck({ status: 'error' })
+      }
+    }, 400)
+    return () => clearTimeout(t)
+  }, [trimmedSlug, editingAlias, isCurrentSlug])
+
+  function startEditAlias() {
+    setSlugInput(alias || '')
+    setAliasCheck({ status: 'idle' })
+    setEditingAlias(true)
+  }
+
+  function cancelEditAlias() {
+    setEditingAlias(false)
+    setSlugInput('')
+    setAliasCheck({ status: 'idle' })
+  }
+
+  async function handleClaimAlias() {
+    setClaimingAlias(true)
+    try {
+      const r = await companyApi.setEmailAlias(trimmedSlug)
+      setAlias(r.data.alias || null)
+      setAliasAddress(r.data.address || null)
+      if (r.data.domain) setAliasDomain(r.data.domain)
+      setEditingAlias(false)
+      setSlugInput('')
+      setAliasCheck({ status: 'idle' })
+      showSnack('Branded email saved!')
+    } catch (err) {
+      const reason = err.response?.data?.reason
+      showSnack(ALIAS_REASON_TEXT[reason] || err.response?.data?.error || 'Could not claim that name', 'error')
+      await loadAlias()
+    } finally {
+      setClaimingAlias(false)
+    }
+  }
+
+  async function handleRemoveAlias() {
+    setRemovingAlias(true)
+    try {
+      await companyApi.deleteEmailAlias()
+      setAlias(null)
+      setAliasAddress(null)
+      setShowRemoveAlias(false)
+      setEditingAlias(false)
+      setSlugInput('')
+      setAliasCheck({ status: 'idle' })
+      showSnack('Branded email removed')
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Could not remove', 'error')
+    } finally {
+      setRemovingAlias(false)
+    }
   }
 
   useEffect(() => {
@@ -45,6 +152,7 @@ export default function CompanyProfile() {
       })
       .catch(() => showSnack('Failed to load', 'error'))
       .finally(() => setLoading(false))
+    loadAlias()
   }, [])
 
   async function handleLogoChange(e) {
@@ -210,6 +318,80 @@ export default function CompanyProfile() {
           />
         </div>
 
+        {/* P3.10 — Branded Email alias */}
+        <div className="border border-hairline rounded-xl p-4 bg-card">
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">BRANDED EMAIL</label>
+          <p className="text-xs text-muted mb-3">
+            Claim a name in the shared <span className="font-mono text-ink">@{aliasDomain}</span> space so your
+            estimates and invoices send from your own brand. Customer replies come back to your company inbox.
+          </p>
+
+          {alias && !editingAlias ? (
+            /* Current alias — read view */
+            <div>
+              <div className="text-lg font-bold text-ink break-all">{aliasAddress}</div>
+              <p className="text-xs text-muted mt-1">Customer replies land in your company inbox.</p>
+              {canEditAlias && (
+                <div className="flex gap-2 mt-3">
+                  <Button variant="ghost" onClick={startEditAlias}>Change</Button>
+                  <Button variant="ghost-danger" onClick={() => setShowRemoveAlias(true)}>Remove</Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Claim / edit input */
+            <div>
+              <div className="flex items-stretch rounded-xl border border-hairline bg-card overflow-hidden focus-within:ring-2 focus-within:ring-blue">
+                <input
+                  className="flex-1 min-w-0 px-4 py-3 text-base text-ink bg-card placeholder-muted focus:outline-none disabled:opacity-60"
+                  value={slugInput}
+                  onChange={e => setSlugInput(e.target.value.toLowerCase())}
+                  placeholder="yourbrand"
+                  disabled={!canEditAlias || claimingAlias}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                <span className="flex items-center px-3 text-sm text-muted whitespace-nowrap border-l border-hairline bg-card">
+                  @{aliasDomain}
+                </span>
+              </div>
+
+              {/* live status */}
+              <div className="min-h-[20px] mt-2 text-xs">
+                {isCurrentSlug
+                  ? <span className="text-muted">This is your current address</span>
+                  : aliasCheck.status === 'checking'
+                    ? <span className="text-muted">Checking availability…</span>
+                    : aliasCheck.status === 'available'
+                      ? <span className="text-[#16A34A] font-medium">Available ✓</span>
+                      : aliasCheck.status === 'unavailable'
+                        ? <span className="text-[#DC2626]">{ALIAS_REASON_TEXT[aliasCheck.reason] || 'Not available'}</span>
+                        : aliasCheck.status === 'error'
+                          ? <span className="text-muted">Couldn't check right now, try again</span>
+                          : null}
+              </div>
+
+              <p className="text-xs text-muted mt-1">
+                Lowercase letters, numbers, and single dots or dashes. 3–32 characters.
+              </p>
+
+              {canEditAlias && (
+                <div className="flex gap-2 mt-3">
+                  <Button onClick={handleClaimAlias} disabled={!canClaimAlias} loading={claimingAlias}>
+                    {alias ? 'Save' : 'Claim'}
+                  </Button>
+                  {alias && (
+                    <Button variant="ghost-muted" onClick={cancelEditAlias} disabled={claimingAlias}>
+                      Cancel
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
         <div>
           <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">WEBSITE</label>
           <input type="url"
@@ -270,6 +452,43 @@ export default function CompanyProfile() {
           {saving ? 'Saving...' : 'Save Company Profile'}
         </Button>
       </div>
+
+      {/* P3.10 — remove branded email confirm */}
+      {showRemoveAlias && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowRemoveAlias(false)}
+        >
+          <div
+            className="bg-card rounded-2xl p-6 max-w-sm w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-ink mb-2">Remove branded email?</h3>
+            <p className="text-ink mb-6 text-sm">
+              <strong className="break-all">{aliasAddress}</strong> will be released. There is a cooldown
+              period before that name can be claimed again by anyone, including you.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="ghost-muted"
+                onClick={() => setShowRemoveAlias(false)}
+                className="flex-1"
+                disabled={removingAlias}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleRemoveAlias}
+                loading={removingAlias}
+                className="flex-1"
+              >
+                Remove
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {snack && (
         <div

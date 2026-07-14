@@ -879,6 +879,15 @@ export const companyApi = {
     api.put(`/company/joby-rules/${id}`, data),
   uploadLogo: (formData) =>
     api.post('/company/logo', formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
+  // P3.10 Tier 1 — branded email alias in the shared <slug>@ultimatepro.pro namespace.
+  getEmailAlias: () =>
+    api.get('/company/email-alias'),
+  checkEmailAlias: (slug) =>
+    api.get('/company/email-alias/check', { params: { slug } }),
+  setEmailAlias: (slug) =>
+    api.put('/company/email-alias', { slug }),
+  deleteEmailAlias: () =>
+    api.delete('/company/email-alias'),
 };
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────
