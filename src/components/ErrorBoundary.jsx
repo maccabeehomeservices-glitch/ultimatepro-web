@@ -1,4 +1,5 @@
 import { Component } from 'react'
+import { Button } from './ui'
 
 export default class ErrorBoundary extends Component {
   state = { hasError: false, error: null }
@@ -15,12 +16,11 @@ export default class ErrorBoundary extends Component {
           <h2 className="text-xl font-semibold text-ink mb-2">Something went wrong</h2>
           <p className="text-muted mb-6 max-w-sm">This page hit an error. Your data is safe.</p>
           <div className="flex gap-3">
-            <button
+            <Button
               onClick={() => { this.setState({ hasError: false, error: null }); window.history.back() }}
-              className="px-6 py-2 bg-blue text-white rounded-lg min-h-[44px]"
             >
               Go Back
-            </button>
+            </Button>
             <button
               onClick={() => window.location.href = '/dashboard'}
               className="px-6 py-2 border border-hairline rounded-lg min-h-[44px]"

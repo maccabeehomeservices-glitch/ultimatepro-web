@@ -431,12 +431,12 @@ export default function Reports() {
                   )}
                   {totalJobs === 0 && <p className="text-sm text-muted mb-3">No confirmed partner jobs in this range.</p>}
                   <div className="flex gap-2 pt-2 border-t border-hairline">
-                    <button
+                    <Button
                       onClick={() => { setSendRecipient(''); setShowSendModal(true); }}
-                      className="flex-1 py-2 bg-blue text-white rounded-xl text-sm font-medium hover:bg-blue-ink min-h-[44px]"
+                      className="flex-1"
                     >
                       📧 Send Report
-                    </button>
+                    </Button>
                     <button
                       onClick={handleExportPartner}
                       className="flex-1 py-2 border border-blue text-blue rounded-xl text-sm font-medium hover:bg-blue-50 min-h-[44px]"

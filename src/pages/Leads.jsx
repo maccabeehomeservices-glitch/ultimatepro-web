@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { leadsApi, formatDate, formatMoney } from '../lib/api'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../components/ui/Modal'
+import { Button } from '../components/ui'
 
 const STATUSES = [
   { key: '', label: 'All' },
@@ -140,10 +141,9 @@ export default function Leads() {
     <div className="max-w-4xl mx-auto p-4 pb-24">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-ink">Lead Pipeline</h1>
-        <button onClick={openAdd}
-          className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]">
+        <Button onClick={openAdd}>
           + New Lead
-        </button>
+        </Button>
       </div>
 
       {/* Search */}
@@ -344,10 +344,9 @@ export default function Leads() {
               className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]">
               Cancel
             </button>
-            <button onClick={handleSave}
-              className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold min-h-[44px]">
+            <Button onClick={handleSave} className="flex-1">
               {editingLead ? 'Save' : 'Create Lead'}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

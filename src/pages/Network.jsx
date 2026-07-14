@@ -378,13 +378,13 @@ export default function Network() {
                     {conn?.partner_name || conn?.company_name || 'This contractor'} invited you to connect.
                   </p>
                   <div className="flex gap-2">
-                    <button
+                    <Button
                       onClick={() => handleRespondConnection('accept')}
                       disabled={responding}
-                      className="flex-1 py-2.5 bg-blue text-white rounded-xl font-semibold text-sm min-h-[44px] disabled:opacity-50"
+                      className="flex-1"
                     >
                       {responding ? '...' : 'Accept'}
-                    </button>
+                    </Button>
                     <button
                       onClick={() => handleRespondConnection('decline')}
                       disabled={responding}
@@ -440,20 +440,21 @@ export default function Network() {
                     <p className="text-xs text-muted italic">{pendingAgreement.notes}</p>
                   )}
                   <div className="flex gap-2 pt-1">
-                    <button
+                    <Button
                       onClick={() => handleRespond(pendingAgreement.id || pendingAgreement._id, 'accept')}
                       disabled={responding}
-                      className="flex-1 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50 min-h-[44px]"
+                      className="flex-1"
                     >
                       {responding ? '...' : 'Accept'}
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="danger"
                       onClick={() => handleRespond(pendingAgreement.id || pendingAgreement._id, 'decline')}
                       disabled={responding}
-                      className="flex-1 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold disabled:opacity-50 min-h-[44px]"
+                      className="flex-1"
                     >
                       {responding ? '...' : 'Decline'}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -462,12 +463,12 @@ export default function Network() {
             {/* Action buttons */}
             <div className="space-y-2 pt-2">
               {!activeAgreement && !pendingAgreement && (
-                <button
+                <Button
                   onClick={() => setDetailView('propose')}
-                  className="w-full py-3 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]"
+                  className="w-full"
                 >
                   📋 Propose Agreement
-                </button>
+                </Button>
               )}
               <button
                 onClick={() => { setReportData(null); setDetailView('report'); }}
@@ -533,13 +534,13 @@ export default function Network() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={handlePropose}
                 disabled={proposing}
-                className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1"
               >
                 {proposing ? 'Sending...' : 'Send Proposal'}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -556,13 +557,14 @@ export default function Network() {
               >
                 Cancel
               </button>
-              <button
+              <Button
+                variant="danger"
                 onClick={handlePause}
                 disabled={pausing}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1"
               >
                 {pausing ? 'Pausing...' : 'Pause Partnership'}
-              </button>
+              </Button>
             </div>
           </div>
 
@@ -591,13 +593,13 @@ export default function Network() {
               </div>
             </div>
 
-            <button
+            <Button
               onClick={handleRunReport}
               disabled={reportLoading}
-              className="w-full py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+              className="w-full"
             >
               {reportLoading ? 'Loading...' : 'Run Report'}
-            </button>
+            </Button>
 
             {reportData && (
               <div className="bg-background rounded-xl p-4 space-y-3">

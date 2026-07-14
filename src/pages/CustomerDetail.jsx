@@ -319,7 +319,7 @@ export default function CustomerDetail() {
                   }
                 }}
               />
-              <button onClick={() => handleAddContact('phone', addPhoneInput)} disabled={savingContact || !addPhoneInput.trim()} className="px-3 rounded-xl bg-blue text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
+              <Button onClick={() => handleAddContact('phone', addPhoneInput)} disabled={savingContact || !addPhoneInput.trim()}>Add</Button>
               <button onClick={() => setShowAddPhone(false)} className="px-3 rounded-xl border border-hairline text-sm min-h-[44px]">Cancel</button>
             </div>
           ) : (
@@ -360,7 +360,7 @@ export default function CustomerDetail() {
                   }
                 }}
               />
-              <button onClick={() => handleAddContact('email', addEmailInput)} disabled={savingContact || !addEmailInput.trim()} className="px-3 rounded-xl bg-blue text-white text-sm min-h-[44px] disabled:opacity-50">Add</button>
+              <Button onClick={() => handleAddContact('email', addEmailInput)} disabled={savingContact || !addEmailInput.trim()}>Add</Button>
               <button onClick={() => setShowAddEmail(false)} className="px-3 rounded-xl border border-hairline text-sm min-h-[44px]">Cancel</button>
             </div>
           ) : (

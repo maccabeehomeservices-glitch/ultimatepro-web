@@ -751,20 +751,18 @@ export default function InvoiceDetail() {
             Charge Payment
           </Button>
           <div className="grid grid-cols-2 gap-2">
-            <button
+            <Button
               onClick={handleScanpayQr}
               disabled={scanpayLoading}
-              className="py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 disabled:opacity-50 min-h-[44px] text-sm"
             >
               {scanpayLoading ? '…' : '📲 ScanPay QR'}
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={openLinkModal}
               disabled={scanpayLoading}
-              className="py-3 bg-blue text-white rounded-xl font-semibold hover:bg-blue-ink disabled:opacity-50 min-h-[44px] text-sm"
             >
               {scanpayLoading ? '…' : '🔗 Send Payment Link'}
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -186,9 +186,9 @@ export default function OnlineBooking() {
               <button onClick={copyLink} className="flex-1 py-2.5 border border-hairline text-ink rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2 hover:bg-background">
                 <Copy size={16} /> Copy
               </button>
-              <button onClick={shareLink} className="flex-1 py-2.5 bg-blue text-white rounded-xl font-semibold text-sm min-h-[44px] flex items-center justify-center gap-2">
+              <Button onClick={shareLink} className="flex-1">
                 <Share2 size={16} /> Share
-              </button>
+              </Button>
             </div>
           </Card>
         )}

@@ -178,12 +178,9 @@ export default function Pricebook() {
             <Upload size={14} /> Import
           </button>
           {!selectedCategory && (
-            <button
-              onClick={() => { setCatName(''); setAddCatModal(true); }}
-              className="flex items-center gap-1.5 text-sm bg-blue text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
-            >
+            <Button onClick={() => { setCatName(''); setAddCatModal(true); }}>
               <UpPlus size={14} /> Category
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { companyApi } from '../../lib/api'
 import { useNavigate } from 'react-router-dom'
+import { Button } from '../../components/ui'
 
 export default function CompanyProfile() {
   const navigate = useNavigate()
@@ -261,13 +262,13 @@ export default function CompanyProfile() {
           <p className="text-xs text-muted mt-1">Auto-filled into new estimates &amp; invoices. Editing an individual document's terms only affects that document.</p>
         </div>
 
-        <button
+        <Button
           onClick={handleSave}
           disabled={saving}
-          className="w-full py-3 bg-blue text-white rounded-xl font-semibold hover:bg-blue-ink disabled:opacity-50 mt-6 min-h-[44px]"
+          className="w-full mt-6"
         >
           {saving ? 'Saving...' : 'Save Company Profile'}
-        </button>
+        </Button>
       </div>
 
       {snack && (

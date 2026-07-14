@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Link, CheckCircle, XCircle, Unlink } from 'lucide-react';
 import { UpBack, UpRefresh } from '../../components/ui/icons';
 import { quickbooksApi } from '../../lib/api';
-import { Card, LoadingSpinner } from '../../components/ui';
+import { Card, LoadingSpinner, Button } from '../../components/ui';
 import { useSnackbar } from '../../components/ui/Snackbar';
 
 function SyncResult({ label, result }) {
@@ -137,14 +137,14 @@ export default function Integrations() {
             {status?.connected ? (
               <div className="space-y-3">
                 {/* Sync All */}
-                <button
+                <Button
                   onClick={handleSyncAll}
                   disabled={syncing}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue text-white font-medium min-h-[44px] hover:bg-blue-ink transition-colors disabled:opacity-50"
+                  className="w-full"
                 >
                   <UpRefresh size={16} className={syncing ? 'animate-spin' : ''} />
                   {syncing ? 'Syncing...' : 'Sync All to QuickBooks'}
-                </button>
+                </Button>
 
                 {syncResults && (
                   <div className="bg-background rounded-xl p-3 space-y-1">

@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { ChevronRight } from 'lucide-react';
 import { UpCard } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
-import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState, Avatar, Button } from '../components/ui';
 import Modal from '../components/ui/Modal';
 import { reportsApi, payrollApi } from '../lib/api';
 import { useSnackbar } from '../components/ui/Snackbar';
@@ -119,12 +119,9 @@ export default function Payroll() {
         <h1 className="text-xl font-bold text-ink">Payroll</h1>
         <div className="flex gap-2">
           {can('accounting_earnings','full') && (
-          <button
-            onClick={() => setShowMarkPaid(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-green-700 min-h-[44px]"
-          >
+          <Button onClick={() => setShowMarkPaid(true)}>
             ✓ Mark Paid
-          </button>
+          </Button>
           )}
           <button
             onClick={async () => {
@@ -255,10 +252,9 @@ export default function Payroll() {
             className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]">
             Cancel
           </button>
-          <button onClick={handleMarkPaid} disabled={marking}
-            className="flex-1 py-3 bg-green-600 text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]">
+          <Button onClick={handleMarkPaid} disabled={marking} className="flex-1">
             {marking ? 'Marking…' : 'Mark Paid'}
-          </button>
+          </Button>
         </div>
       </Modal>
     </div>

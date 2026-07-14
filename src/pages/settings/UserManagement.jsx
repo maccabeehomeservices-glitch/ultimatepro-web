@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import api, { usersApi } from '../../lib/api'
 import { useNavigate } from 'react-router-dom'
 import Modal from '../../components/ui/Modal'
+import { Button } from '../../components/ui'
 import { useAuth } from '../../hooks/useAuth'
 
 // Display labels for the permission grid (model lives in backend/utils/permissions.js,
@@ -196,10 +197,9 @@ export default function UserManagement() {
           <h1 className="text-xl font-bold text-ink">Team Members</h1>
         </div>
         {can('team_settings','full') && (
-        <button onClick={openAdd}
-          className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]">
+        <Button onClick={openAdd}>
           + Add Team Member
-        </button>
+        </Button>
         )}
       </div>
 
@@ -357,10 +357,9 @@ export default function UserManagement() {
               className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]">
               Cancel
             </button>
-            <button onClick={handleSave} disabled={saving}
-              className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]">
+            <Button onClick={handleSave} disabled={saving} className="flex-1">
               {saving ? 'Saving...' : editingUser ? 'Save Changes' : 'Create Team Member'}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>
@@ -379,10 +378,9 @@ export default function UserManagement() {
             className="flex-1 py-3 border border-hairline rounded-xl font-semibold text-ink min-h-[44px]">
             Cancel
           </button>
-          <button onClick={handleDelete}
-            className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]">
+          <Button onClick={handleDelete} variant="danger" className="flex-1">
             Deactivate
-          </button>
+          </Button>
         </div>
       </Modal>
 

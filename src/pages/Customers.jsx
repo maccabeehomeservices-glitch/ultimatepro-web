@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Users, Upload, X } from 'lucide-react';
 import { UpPlus } from '../components/ui/icons';
 import { customersApi } from '../lib/api';
-import { Card, LoadingSpinner, EmptyState } from '../components/ui';
+import { Card, Button, LoadingSpinner, EmptyState } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { useAuth } from '../hooks/useAuth';
 
@@ -135,12 +135,9 @@ export default function Customers() {
           title="No customers found"
           description="Add your first customer to get started."
           action={can('customers','edit_self') ? (
-            <button
-              onClick={() => navigate('/customers/new')}
-              className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-medium min-h-[44px]"
-            >
+            <Button onClick={() => navigate('/customers/new')}>
               Add Customer
-            </button>
+            </Button>
           ) : null}
         />
       ) : (

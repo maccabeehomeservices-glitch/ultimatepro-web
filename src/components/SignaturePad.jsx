@@ -132,7 +132,7 @@ export default function SignaturePad({ onSave, onCancel }) {
         <button
           onClick={save}
           disabled={!hasDrawn}
-          className="flex-1 py-2 bg-blue text-white rounded-xl font-medium hover:bg-blue-ink disabled:opacity-40 min-h-[44px]"
+          className="flex-1 py-2 min-h-[44px] rounded-[11px] bg-pearl [box-shadow:inset_0_0_0_2.5px_var(--color-pearl-blue),inset_0_0_0_5px_var(--color-pearl-brass-border)] text-pearl-ink font-medium disabled:opacity-40"
         >
           Save Signature
         </button>

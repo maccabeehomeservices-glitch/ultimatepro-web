@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Receipt, Search, X } from 'lucide-react';
 import { UpPlus } from '../components/ui/icons';
 import { useGet } from '../hooks/useApi';
-import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
+import { Card, Badge, Button, LoadingSpinner, EmptyState } from '../components/ui';
 
 const filters = [
   { id: '', label: 'All' },
@@ -52,12 +52,9 @@ export default function Invoices() {
           >
             {loading ? '⟳ Loading...' : '⟳ Refresh'}
           </button>
-          <button
-            onClick={() => navigate('/invoices/new')}
-            className="flex items-center gap-1.5 text-sm bg-blue text-white font-medium px-3 py-2 rounded-xl min-h-[44px] hover:bg-blue-ink transition-colors"
-          >
+          <Button onClick={() => navigate('/invoices/new')}>
             <UpPlus size={14} /> New
-          </button>
+          </Button>
         </div>
       </div>
 

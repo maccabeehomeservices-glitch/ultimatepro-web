@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, X, Filter, Inbox } from 'lucide-react';
 import { UpNewJob, UpPin, UpCalendar } from '../components/ui/icons';
 import { jobsApi, usersApi, companyApi, statusColor } from '../lib/api';
-import { Card, Badge, LoadingSpinner, EmptyState } from '../components/ui';
+import { Card, Badge, Button, LoadingSpinner, EmptyState } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import { dateBoundsFor, sortFor, humanizeScheduled, DATE_CHIPS, STATUS_OPTIONS } from '../lib/dateRanges';
 
@@ -329,13 +329,12 @@ export default function Jobs() {
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setShowCustomDialog(false)} className="px-4 py-2 text-sm text-ink min-h-[44px]">Cancel</button>
-              <button
+              <Button
                 onClick={applyCustomDate}
                 disabled={!customDraftFrom || !customDraftTo}
-                className="px-4 py-2 text-sm font-medium bg-blue text-white rounded-lg min-h-[44px] disabled:opacity-50"
               >
                 Apply
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -417,12 +416,11 @@ export default function Jobs() {
             <div className="flex justify-end gap-2 pt-2 border-t border-hairline">
               <button onClick={clearAllFilters} className="px-4 py-2 text-sm text-ink min-h-[44px]">Clear All</button>
               <button onClick={() => setShowFilterDialog(false)} className="px-4 py-2 text-sm text-ink min-h-[44px]">Cancel</button>
-              <button
+              <Button
                 onClick={() => setShowFilterDialog(false)}
-                className="px-4 py-2 text-sm font-medium bg-blue text-white rounded-lg min-h-[44px]"
               >
                 Apply
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sourcesApi } from '../../lib/api';
+import { Button } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
 
 const TABS = ['Contacts', 'Ad Channels', 'Commission'];
@@ -277,21 +278,15 @@ export default function JobSources() {
         <h1 className="text-xl font-bold text-ink flex-1">Job Sources</h1>
         {activeTab === 0 && (
           can('job_sources_commissions','full') && (
-          <button
-            onClick={openAddContact}
-            className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]"
-          >
+          <Button onClick={openAddContact}>
             + Add
-          </button>
+          </Button>
           )
         )}
         {activeTab === 2 && can('job_sources_commissions','full') && (
-          <button
-            onClick={openAddRule}
-            className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]"
-          >
+          <Button onClick={openAddRule}>
             + Add Rule
-          </button>
+          </Button>
         )}
       </div>
 
@@ -601,13 +596,13 @@ export default function JobSources() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={saveContact}
                 disabled={saving}
-                className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1"
               >
                 {saving ? 'Saving...' : editingContact ? 'Save Changes' : 'Add Contact'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -631,12 +626,13 @@ export default function JobSources() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={doDeleteContact}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+                variant="danger"
+                className="flex-1"
               >
                 Remove
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -666,13 +662,13 @@ export default function JobSources() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={saveChannel}
                 disabled={saving || !channelName.trim()}
-                className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1"
               >
                 {saving ? 'Saving...' : editingChannel ? 'Save' : 'Add'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -763,13 +759,13 @@ export default function JobSources() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={saveRule}
                 disabled={saving}
-                className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1"
               >
                 {saving ? 'Saving...' : editingRule ? 'Save Changes' : 'Add Rule'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -791,12 +787,13 @@ export default function JobSources() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={doDeleteRule}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+                variant="danger"
+                className="flex-1"
               >
                 Remove
-              </button>
+              </Button>
             </div>
           </div>
         </div>

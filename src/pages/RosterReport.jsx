@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { UpBack, UpSend, UpCard } from '../components/ui/icons';
 import { reportsApi, formatMoney } from '../lib/api';
-import { Card, LoadingSpinner, EmptyState, Avatar } from '../components/ui';
+import { Card, LoadingSpinner, EmptyState, Avatar, Button } from '../components/ui';
 import { useSnackbar } from '../components/ui/Snackbar';
 import SendReportModal from '../components/SendReportModal';
 import ExportReportMenu from '../components/ExportReportMenu';
@@ -118,13 +118,10 @@ export default function RosterReport() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <ExportReportMenu actorType="roster" actorId={rosterId} period={period} />
-          <button
-            onClick={() => setSendOpen(true)}
-            className="px-3 py-2 bg-blue text-white rounded-xl text-sm font-medium flex items-center gap-1 hover:bg-blue-ink min-h-[44px]"
-          >
+          <Button onClick={() => setSendOpen(true)}>
             <UpSend size={16} />
             Send Report
-          </button>
+          </Button>
         </div>
       </div>
 

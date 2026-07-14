@@ -810,10 +810,9 @@ export default function JobDetail() {
             </p>
           </div>
           {canApproveEarnings && (
-            <button onClick={handleApproveEarnings} disabled={approvingEarnings}
-              className="shrink-0 bg-orange-600 hover:bg-orange-700 text-white text-sm font-semibold px-4 rounded-xl min-h-[44px] disabled:opacity-50">
+            <Button onClick={handleApproveEarnings} disabled={approvingEarnings} className="shrink-0">
               {approvingEarnings ? 'Approving…' : 'Approve Earnings'}
-            </button>
+            </Button>
           )}
         </div>
       )}
@@ -1798,8 +1797,7 @@ export default function JobDetail() {
             <div className="flex gap-3">
               <button onClick={() => setShowDeleteConfirm(false)}
                 className="flex-1 py-3 border border-hairline rounded-xl text-ink font-medium min-h-[44px]">Cancel</button>
-              <button onClick={handleDeleteJob}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]">Archive</button>
+              <Button onClick={handleDeleteJob} variant="danger" className="flex-1">Archive</Button>
             </div>
           </div>
         </div>

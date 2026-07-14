@@ -151,12 +151,9 @@ export default function CustomFields() {
           <UpBack size={20} />
         </button>
         <h1 className="text-xl font-bold text-ink flex-1">Custom Fields</h1>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-1.5 bg-blue text-white text-sm font-medium px-4 py-2 rounded-xl min-h-[44px]"
-        >
+        <Button onClick={openAdd}>
           <UpPlus size={16} /> Add Field
-        </button>
+        </Button>
       </div>
 
       {loading ? (
@@ -301,12 +298,13 @@ export default function CustomFields() {
             <p className="text-sm text-muted mb-5">This field will be hidden from all forms. Existing data is preserved.</p>
             <div className="flex gap-3">
               <Button variant="outlined" onClick={() => setConfirmDelete(null)} className="flex-1">Cancel</Button>
-              <button
+              <Button
                 onClick={() => handleDelete(confirmDelete)}
-                className="flex-1 bg-red-500 text-white font-medium rounded-xl py-2.5 min-h-[44px]"
+                variant="danger"
+                className="flex-1"
               >
                 Remove
-              </button>
+              </Button>
             </div>
           </div>
         </div>

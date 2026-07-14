@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { settingsApi } from '../../lib/api';
+import { Button } from '../../components/ui';
 import { useAuth } from '../../hooks/useAuth';
 
 const PLATFORM_TEMPLATES = [
@@ -136,12 +137,9 @@ export default function ReviewPlatforms() {
         </button>
         <h1 className="text-xl font-bold text-ink flex-1">Review Platforms</h1>
         {can('team_settings','full') && (
-        <button
-          onClick={openAdd}
-          className="px-4 py-2 bg-blue text-white rounded-xl text-sm font-semibold min-h-[44px]"
-        >
+        <Button onClick={openAdd}>
           + Add
-        </button>
+        </Button>
         )}
       </div>
 
@@ -283,13 +281,13 @@ export default function ReviewPlatforms() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 py-3 bg-blue text-white rounded-xl font-semibold disabled:opacity-50 min-h-[44px]"
+                className="flex-1"
               >
                 {saving ? 'Saving...' : editingPlatform ? 'Save Changes' : 'Add Platform'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -317,12 +315,13 @@ export default function ReviewPlatforms() {
               >
                 Cancel
               </button>
-              <button
+              <Button
                 onClick={() => handleDelete(showDeleteConfirm.id)}
-                className="flex-1 py-3 bg-red-600 text-white rounded-xl font-semibold min-h-[44px]"
+                variant="danger"
+                className="flex-1"
               >
                 Remove
-              </button>
+              </Button>
             </div>
           </div>
         </div>
