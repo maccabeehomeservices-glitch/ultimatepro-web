@@ -63,9 +63,10 @@ export default function CompanyProfile() {
     }
   }
 
-  // Debounced live availability check while typing a new/changed alias.
+  // Debounced live availability check whenever the claim/change INPUT is showing (a fresh
+  // claim has no alias yet + editingAlias=false, so guard on "read view showing", not editing).
   useEffect(() => {
-    if (!editingAlias) return
+    if (alias && !editingAlias) return // read view is showing — nothing to check
     if (!trimmedSlug) { setAliasCheck({ status: 'idle' }); return }
     if (isCurrentSlug) { setAliasCheck({ status: 'idle' }); return } // no need to check your own name
     setAliasCheck({ status: 'checking' })
@@ -79,7 +80,7 @@ export default function CompanyProfile() {
       }
     }, 400)
     return () => clearTimeout(t)
-  }, [trimmedSlug, editingAlias, isCurrentSlug])
+  }, [trimmedSlug, alias, editingAlias, isCurrentSlug])
 
   function startEditAlias() {
     setSlugInput(alias || '')
