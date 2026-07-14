@@ -411,11 +411,11 @@ Each action carries: label · section · actors · purpose · visibility · prec
 - **status_note:** `tech_id` accepted but ignored by `notify-tech`; recipient is always the job's currently-assigned actor.
 
 ### `job-detail.estimates`
-- **label:** Create Estimate / + Add Another / estimate cards
+- **label:** Create Estimate / + Add Estimate / estimate cards
 - **section:** estimates
 - **actors:** owner, office, tech-user
 - **purpose:** Build estimates from the job; view existing ones.
-- **visibility:** "Create" when none; cards + "Add Another" when ≥1
+- **visibility:** "Create" when none; cards + "+ Add Estimate" when ≥1. Android (P3.1d): when estimates exist, "+ Add Estimate" is a pearl `AppButton` (no longer a ghost text link) paired on ONE row with "View Invoice" — Add Estimate left `weight(1f)`, View Invoice right `weight(1f)`; when no invoice, Add Estimate fills the row (JobScreens.kt:2029). Mirrors the empty-state "Create Estimate / View Invoice" row above it.
 - **precondition:** n/a
 - **confirm:** n/a
 - **route_chain:** load `GET /estimates?job_id=`; create = navigate (Android `estimates/build/{jobId}`, web `/estimates/new?job_id=`)
