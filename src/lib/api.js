@@ -897,6 +897,19 @@ export const companyApi = {
     api.get('/company/sender-email/status'),
   deleteSenderEmail: () =>
     api.delete('/company/sender-email'),
+  // P3.5 — self-serve dedicated phone number (Twilio). Search → select → platform-approved purchase.
+  getPhoneProvisioning: () =>
+    api.get('/provisioning/phone'),
+  createPhoneSubaccount: () =>
+    api.post('/provisioning/phone/subaccount'),
+  searchPhoneNumbers: (area_code) =>
+    api.get('/provisioning/phone/search', { params: { area_code } }),
+  selectPhoneNumber: (phone_number) =>
+    api.post('/provisioning/phone/select', { phone_number }),
+  resetPhoneSelection: () =>
+    api.delete('/provisioning/phone/select'),
+  getPhoneUsage: () =>
+    api.get('/provisioning/phone/usage'),
 };
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────

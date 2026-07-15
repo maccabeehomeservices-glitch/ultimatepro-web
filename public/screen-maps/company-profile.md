@@ -13,14 +13,14 @@
 | `display_name` | Company Profile |
 | `surfaces` | android, web |
 | `route_android` | `CompanyProfileScreen` + `CompanyProfileViewModel` (CompanyProfileScreen.kt) |
-| `route_web` | `/settings/company` → `CompanyProfile` (CompanyProfile.jsx, 690 lines) |
+| `route_web` | `/settings/company` → `CompanyProfile` (CompanyProfile.jsx, 887 lines) |
 | `manages_table` | `companies` (the single tenant row, keyed by `req.companyId`) |
 | `primary_actors` | owner, admin |
 | `purpose` | Edit the company's identity used across the app/print: name, tagline, contact, address, and logo. Logo is uploaded to Cloudinary; everything else is a single `PUT /company`. The UltimatePro network ID is shown read-only. |
 | `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
 
 ### load_sequence
-Both surfaces: `GET /company` → the full `companies` row; map into the form. Web also reads `logo_url` + `ultimatecrm_id`; Android the same. **P3.10 (web + android):** on mount also fires `GET /company/email-alias` to populate the Branded Email section (`{ alias, address, domain }`; alias/address null if unclaimed). Web fires it in parallel with the company load; Android's `CompanyProfileViewModel.init` launches `load()` and `loadAlias()` together (the latter also resolves `team_settings:full` from stored role/perms to gate the manage controls). **P3.10 Tier 2 (web, 2026-07-14):** the web page ALSO fires `GET /company/sender-email` in parallel on mount to populate the "Or use your own email address" (BYO) block inside the Branded Email section (`{ email, name, verified, status }`, status `none|pending|verified`). Android does not yet have Tier 2.
+Both surfaces: `GET /company` → the full `companies` row; map into the form. Web also reads `logo_url` + `ultimatecrm_id`; Android the same. **P3.10 (web + android):** on mount also fires `GET /company/email-alias` to populate the Branded Email section (`{ alias, address, domain }`; alias/address null if unclaimed). Web fires it in parallel with the company load; Android's `CompanyProfileViewModel.init` launches `load()` and `loadAlias()` together (the latter also resolves `team_settings:full` from stored role/perms to gate the manage controls). **P3.10 Tier 2 (web, 2026-07-14):** the web page ALSO fires `GET /company/sender-email` in parallel on mount to populate the "Or use your own email address" (BYO) block inside the Branded Email section (`{ email, name, verified, status }`, status `none|pending|verified`). Android does not yet have Tier 2. **P3.5 (web only, 2026-07-14):** the web page ALSO fires `GET /provisioning/phone` in parallel on mount to populate the "PHONE NUMBER" section (`{ status, subaccount, number, selected_number, a2p_status, configured }`, status `none|subaccount|number_selected|active`). When `configured===false` the section shows a muted "Phone provisioning isn't available yet." and stops. When `status==='active'` it chains a second read, `GET /provisioning/phone/usage`, for the usage line. Android does not have phone provisioning.
 
 ### gating
 `GET /company` = any authenticated user. **`PUT /company` and `POST /company/logo` are `ownerOrAdmin`** (company.js:38,68). A manager/dispatcher/technician can open the page and type, but Save / logo upload will **403**.
@@ -219,6 +219,64 @@ Both surfaces: `GET /company` → the full `companies` row; map into the form. W
 - **parity:** WEB ONLY (P3.10 Tier 2).
 - **status:** OK
 - **status_note:** n/a
+### `company-profile.phone-search`
+- **label:** Search for a phone number by area code (P3.5, web only)
+- **section:** edit
+- **actors:** owner, admin (any `team_settings: full`)
+- **purpose:** Find available dedicated (Twilio) numbers for a 3-digit US area code.
+- **visibility:** web only, in the "PHONE NUMBER" section while status is `none`/`subaccount` (no selection yet). Hidden when `configured===false`.
+- **precondition:** `team_settings: full`; a 3-digit area code (the input strips non-digits and caps at 3; Search is disabled until length===3).
+- **route_chain:** `GET /provisioning/phone/search?area_code=<ddd>` → `{ numbers:[{ phoneNumber, friendlyName, locality, region }], monthly_price_usd }` | 400 `{ reason:'area_code' }`.
+- **request_body:** n/a (query param `area_code`).
+- **side_effects:** read-only.
+- **end_state:** each result renders as a row (`friendlyName` + `locality, region`) with a Select button; a "**$X.XX/mo** + usage" line shows `monthly_price_usd`. Empty list → "No numbers found for that area code. Try another."
+- **failure_modes:** 400 `area_code` (or client pre-check) → red snack "Enter a 3-digit area code"; other errors → response `error` fallback snack.
+- **parity:** WEB ONLY (P3.5). Android has no phone provisioning.
+- **status:** OK
+- **status_note:** Controls hidden unless `can('team_settings','full')` (same gate as the alias block).
+### `company-profile.phone-select`
+- **label:** Request this number (P3.5, web only)
+- **section:** persist
+- **actors:** owner, admin (any `team_settings: full`)
+- **purpose:** Reserve a chosen number for platform-approved purchase. **No money is spent from this UI** — it ends at "Requested — pending activation".
+- **visibility:** web only, the "Select" button on each search-result row.
+- **precondition:** `team_settings: full`; a number picked from search results.
+- **route_chain:** `POST /provisioning/phone/subaccount` first (ensure the subaccount — success `{ subaccount:true, status:'subaccount' }`, ignore the "already exists" case; 503 `{ reason:'not_configured' }` aborts), then `POST /provisioning/phone/select` body `{ phone_number }` → `{ selected_number, monthly_price_usd, status:'number_selected', message }` | 400 | 403 → then refetch `GET /provisioning/phone`.
+- **request_body:** subaccount: none; select: `{ "phone_number": "+1757…" }`.
+- **side_effects:** creates the Twilio subaccount if missing; records the selected (pending) number server-side. The actual purchase is done later by the UltimatePro team, NOT here.
+- **end_state:** section flips to the `number_selected` state ("Requested **{selected_number}** — {price}/mo. Pending activation by the UltimatePro team."); success/`message` snack.
+- **failure_modes:** subaccount 503 `not_configured` → "Phone provisioning isn't available yet." (aborts, no select); select 400/403/other → response `error` fallback snack. While one row is being requested, all Select buttons are disabled.
+- **parity:** WEB ONLY (P3.5).
+- **status:** OK
+- **status_note:** n/a
+### `company-profile.phone-reset`
+- **label:** Choose a different number (P3.5, web only)
+- **section:** persist
+- **actors:** owner, admin (any `team_settings: full`)
+- **purpose:** Clear a pending selection and return to search.
+- **visibility:** web only, in the `number_selected` state.
+- **route_chain:** `DELETE /provisioning/phone/select` → `{ selected_number:null, status:'reset' }` → then refetch `GET /provisioning/phone`.
+- **request_body:** n/a
+- **side_effects:** clears the pending selection server-side; UI returns to the search state.
+- **end_state:** search input reappears; "Selection cleared — search for a different number" snack.
+- **failure_modes:** error → response `error` fallback snack.
+- **parity:** WEB ONLY (P3.5).
+- **status:** OK
+- **status_note:** No confirm modal (nothing was purchased — it's just a pending reservation).
+### `company-profile.phone-usage`
+- **label:** Dedicated number usage line (P3.5, web only)
+- **section:** load
+- **actors:** owner, admin
+- **purpose:** Show the live number + a compact month-to-date usage summary once a number is active.
+- **visibility:** web only, in the `active` state (chained after the mount status load).
+- **route_chain:** `GET /provisioning/phone/usage` → `{ subaccount, sms, calls, cost_usd }`.
+- **request_body:** n/a
+- **side_effects:** read-only.
+- **end_state:** number shown prominently; muted line "{sms} texts · {calls} calls · ${cost_usd} this month" (line omitted if the usage read fails — non-fatal).
+- **failure_modes:** usage read error → line hidden; the number still shows.
+- **parity:** WEB ONLY (P3.5).
+- **status:** OK
+- **status_note:** n/a
 ### `company-profile.back`
 - **label:** Back
 - **section:** nav
@@ -243,5 +301,6 @@ Both surfaces: `GET /company` → the full `companies` row; map into the form. W
 - **Logo upload & removal persist immediately**, independent of the main Save button (each is its own server write). Removing a logo clears the URL but does **not** delete the Cloudinary asset.
 - **Branded Email alias — web + Android (P3.10 Tier 1; web 2026-07-14, Android 2026-07-14).** A "BRANDED EMAIL" section on **both** surfaces lets an owner claim/change/remove a slug in the shared `<slug>@ultimatepro.pro` namespace via `GET/PUT/DELETE /company/email-alias` (+ debounced `GET /company/email-alias/check`). Android placed the section right after CONTACT (`CompanyProfileScreen.kt`), wired through `ApiService` (`getEmailAlias`/`checkEmailAlias`/`setEmailAlias`/`deleteEmailAlias`) → `CrmRepository` → `CompanyProfileViewModel`. Unlike the identity fields (which the whole page loads for any authenticated user but blocks writes at 403), the alias write controls are **hidden** unless `can('team_settings','full')` (Android: `canUi(role, perms, "team_settings", "full")`), matching ReviewPlatforms — so there is no discover-the-403-on-save surprise here. Minor Android-vs-web gaps: Android runs the availability check even when the typed slug equals the current one (no "own current slug" shortcut), and on a PUT 4xx it shows the response `error` string rather than a `reason`-mapped message (the `reason` mapping runs on the check). Backend was pre-built; both clients only added the client + UI.
 - **Branded Email Tier 2 "use your own email" (BYO) — web only (P3.10 Tier 2, 2026-07-14).** Beneath the Tier 1 alias claim, the web Branded Email section now has an "Or use your own email address" block that verifies a company-owned address as the sending identity via SendGrid single-sender verification: `GET /company/sender-email` (mount load), `POST /company/sender-email` (start → SendGrid confirmation email, `status: pending`), `GET /company/sender-email/status` (manual "Refresh status" poll → flips to `verified` when the emailed link is clicked), `DELETE /company/sender-email` (revert to the branded alias/default). Three UI states — `none` (email input + "Verify this address"), `pending` (sent-to note + reassurance that nothing breaks until confirmed + Refresh/Remove), `verified` (green "✓ Verified…" + Remove). Client methods added to `companyApi` (`getSenderEmail`/`setSenderEmail`/`getSenderEmailStatus`/`deleteSenderEmail`). Backend was pre-built; web only added the client + UI. Controls gated behind `can('team_settings','full')` (same as the alias block). **Android does not yet have Tier 2.**
+- **Dedicated phone number (Twilio) — web only (P3.5, 2026-07-14).** A "PHONE NUMBER" section (labeled block, mirroring BRANDED EMAIL) lets an owner self-serve a dedicated calls+texts number via `provisioning/phone/*`: `GET /provisioning/phone` (mount load; `configured===false` → muted "Phone provisioning isn't available yet." and stop), search by 3-digit area code (`GET /provisioning/phone/search?area_code=`), pick a number → ensure subaccount (`POST /provisioning/phone/subaccount`) then reserve it (`POST /provisioning/phone/select`), reset a pending pick (`DELETE /provisioning/phone/select`), and a usage line when active (`GET /provisioning/phone/usage`). Four UI states — `none`/`subaccount` (intro + area-code input + Search + result rows with per-row Select and a "$X.XX/mo + usage" line), `number_selected` ("Requested {number} — {price}/mo. Pending activation by the UltimatePro team." + "Choose a different number"), `active` (number shown prominently + "{sms} texts · {calls} calls · ${cost_usd} this month"). **The actual purchase is platform-approved and happens outside this UI — no money is spent here; the flow ends at the "Requested — pending activation" state.** All write actions gated behind `can('team_settings','full')` (same as the alias/sender blocks). Client methods added to `companyApi` (`getPhoneProvisioning`/`createPhoneSubaccount`/`searchPhoneNumbers`/`selectPhoneNumber`/`resetPhoneSelection`/`getPhoneUsage`). Backend was pre-built; web only added the client + UI. **Android does not have phone provisioning.**
 - **Gating asymmetry:** the page loads for any authenticated user (`GET` is `auth` only), but Save and logo upload are `ownerOrAdmin`, a non-admin can edit the form and only discover the 403 on Save.
 - **Cloudinary credentials are hard-coded as fallbacks** in `company.js:8–12` (cloud_name/api_key/api_secret literals). Security follow-up (out of scope for this map; flagged).

@@ -14,6 +14,9 @@ const ALIAS_REASON_TEXT = {
   cooldown: 'Recently released. Available again after a cooldown',
 }
 
+// P3.5 — format a monthly price (dollars) as "$X.XX", or null when unknown.
+const fmtPhonePrice = (p) => (p == null ? null : `$${Number(p).toFixed(2)}`)
+
 export default function CompanyProfile() {
   const navigate = useNavigate()
   const { can } = useAuth()
@@ -50,6 +53,19 @@ export default function CompanyProfile() {
   const [refreshingSender, setRefreshingSender] = useState(false)
   const [removingSender, setRemovingSender] = useState(false)
   const [showRemoveSender, setShowRemoveSender] = useState(false)
+
+  // P3.5 — self-serve dedicated phone number (Twilio)
+  const [phoneConfigured, setPhoneConfigured] = useState(true) // false → provisioning unavailable
+  const [phoneStatus, setPhoneStatus] = useState('none')       // none|subaccount|number_selected|active
+  const [phoneNumber, setPhoneNumber] = useState(null)         // the active (live) number
+  const [phoneSelected, setPhoneSelected] = useState(null)     // the selected (pending) number
+  const [phonePrice, setPhonePrice] = useState(null)           // monthly_price_usd, once known
+  const [phoneUsage, setPhoneUsage] = useState(null)           // { sms, calls, cost_usd }
+  const [areaCode, setAreaCode] = useState('')
+  const [phoneResults, setPhoneResults] = useState(null)       // null = not searched; [] = searched, none
+  const [searchingPhone, setSearchingPhone] = useState(false)
+  const [selectingPhone, setSelectingPhone] = useState(null)   // phoneNumber of the row being requested
+  const [resettingPhone, setResettingPhone] = useState(false)
 
   const canEditAlias = can('team_settings', 'full')
   const trimmedSlug = slugInput.trim().toLowerCase()
@@ -211,6 +227,86 @@ export default function CompanyProfile() {
     }
   }
 
+  // P3.5 — dedicated phone number (Twilio) ────────────────────────────────────
+  async function loadPhone() {
+    try {
+      const r = await companyApi.getPhoneProvisioning()
+      const d = r.data || {}
+      setPhoneConfigured(d.configured !== false)
+      setPhoneStatus(d.status || 'none')
+      setPhoneNumber(d.number || null)
+      setPhoneSelected(d.selected_number || null)
+      if (d.configured !== false && d.status === 'active') {
+        try {
+          const u = await companyApi.getPhoneUsage()
+          setPhoneUsage(u.data || null)
+        } catch { /* usage line is non-fatal */ }
+      }
+    } catch {
+      // non-fatal — leave the section in its default (search) state
+    }
+  }
+
+  async function handleSearchPhone() {
+    const ac = areaCode.trim()
+    if (!/^\d{3}$/.test(ac)) { showSnack('Enter a 3-digit area code', 'error'); return }
+    setSearchingPhone(true)
+    try {
+      const r = await companyApi.searchPhoneNumbers(ac)
+      setPhoneResults(r.data.numbers || [])
+      if (r.data.monthly_price_usd != null) setPhonePrice(r.data.monthly_price_usd)
+    } catch (err) {
+      const reason = err.response?.data?.reason
+      if (reason === 'area_code') showSnack('Enter a 3-digit area code', 'error')
+      else showSnack(err.response?.data?.error || 'Could not search numbers', 'error')
+    } finally {
+      setSearchingPhone(false)
+    }
+  }
+
+  async function handleSelectPhone(phone_number) {
+    setSelectingPhone(phone_number)
+    try {
+      // Ensure the subaccount exists first (idempotent — ignore "already"); a 503
+      // means provisioning isn't configured, so stop there.
+      try {
+        await companyApi.createPhoneSubaccount()
+      } catch (e) {
+        if (e.response?.data?.reason === 'not_configured') {
+          showSnack("Phone provisioning isn't available yet.", 'error')
+          return
+        }
+        // otherwise assume the subaccount already exists — proceed to select
+      }
+      const r = await companyApi.selectPhoneNumber(phone_number)
+      if (r.data?.monthly_price_usd != null) setPhonePrice(r.data.monthly_price_usd)
+      setPhoneResults(null)
+      setAreaCode('')
+      await loadPhone()
+      showSnack(r.data?.message || 'Number requested — pending activation')
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Could not request that number', 'error')
+    } finally {
+      setSelectingPhone(null)
+    }
+  }
+
+  async function handleResetPhone() {
+    setResettingPhone(true)
+    try {
+      await companyApi.resetPhoneSelection()
+      setPhoneSelected(null)
+      setPhoneResults(null)
+      setAreaCode('')
+      await loadPhone()
+      showSnack('Selection cleared — search for a different number')
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Could not reset', 'error')
+    } finally {
+      setResettingPhone(false)
+    }
+  }
+
   useEffect(() => {
     companyApi.get()
       .then(r => {
@@ -234,6 +330,7 @@ export default function CompanyProfile() {
       .finally(() => setLoading(false))
     loadAlias()
     loadSenderEmail()
+    loadPhone()
   }, [])
 
   async function handleLogoChange(e) {
@@ -548,6 +645,98 @@ export default function CompanyProfile() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* P3.5 — Dedicated phone number (Twilio) */}
+        <div className="border border-hairline rounded-xl p-4 bg-card">
+          <label className="block text-xs font-semibold text-blue uppercase tracking-wider mb-1">PHONE NUMBER</label>
+
+          {!phoneConfigured ? (
+            <p className="text-xs text-muted">Phone provisioning isn't available yet.</p>
+          ) : phoneStatus === 'active' ? (
+            /* Active — a live dedicated number */
+            <div>
+              <p className="text-xs text-muted mb-2">Your dedicated number for calls and texts.</p>
+              <div className="text-lg font-bold text-ink break-all">{phoneNumber}</div>
+              {phoneUsage && (
+                <p className="text-xs text-muted mt-1">
+                  {phoneUsage.sms ?? 0} texts · {phoneUsage.calls ?? 0} calls · ${Number(phoneUsage.cost_usd ?? 0).toFixed(2)} this month
+                </p>
+              )}
+            </div>
+          ) : phoneStatus === 'number_selected' ? (
+            /* Requested — pending platform activation (no money spent here) */
+            <div>
+              <div className="text-sm text-ink">
+                Requested <strong className="break-all">{phoneSelected}</strong>
+                {fmtPhonePrice(phonePrice) ? <> — {fmtPhonePrice(phonePrice)}/mo.</> : '.'} Pending activation by the UltimatePro team.
+              </div>
+              <p className="text-xs text-muted mt-1">We'll activate it shortly — nothing is charged until it's live.</p>
+              {canEditAlias && (
+                <div className="flex gap-2 mt-3">
+                  <Button variant="ghost" onClick={handleResetPhone} loading={resettingPhone}>
+                    Choose a different number
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            /* none / subaccount — search by area code, then pick a number */
+            <div>
+              <p className="text-xs text-muted mb-3">Get a dedicated number for calls and texts.</p>
+              <div className="flex items-stretch gap-2">
+                <input
+                  className="w-32 rounded-xl border border-hairline px-4 py-3 text-base text-ink bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue disabled:opacity-60"
+                  value={areaCode}
+                  onChange={e => setAreaCode(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                  placeholder="Area code"
+                  inputMode="numeric"
+                  disabled={!canEditAlias || searchingPhone}
+                />
+                {canEditAlias && (
+                  <Button onClick={handleSearchPhone} loading={searchingPhone} disabled={areaCode.length !== 3}>
+                    Search
+                  </Button>
+                )}
+              </div>
+
+              {phoneResults && (
+                <div className="mt-3">
+                  {phoneResults.length === 0 ? (
+                    <p className="text-xs text-muted">No numbers found for that area code. Try another.</p>
+                  ) : (
+                    <>
+                      <p className="text-xs text-muted mb-2">
+                        <span className="font-bold text-ink">{fmtPhonePrice(phonePrice) || '$—'}/mo</span> + usage
+                      </p>
+                      <div className="space-y-2">
+                        {phoneResults.map(n => (
+                          <div key={n.phoneNumber} className="flex items-center justify-between gap-3 rounded-xl border border-hairline p-3">
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-ink break-all">{n.friendlyName}</div>
+                              <div className="text-xs text-muted">
+                                {[n.locality, n.region].filter(Boolean).join(', ') || '—'}
+                              </div>
+                            </div>
+                            {canEditAlias && (
+                              <Button
+                                variant="ghost"
+                                onClick={() => handleSelectPhone(n.phoneNumber)}
+                                loading={selectingPhone === n.phoneNumber}
+                                disabled={!!selectingPhone}
+                              >
+                                Select
+                              </Button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div>

@@ -26,6 +26,14 @@ for (const scheme of ['dark', 'light']) {
       await byo.pressSequentially('owner@myrealco.com', { delay: 40 });
       await page.waitForTimeout(400);
     }
+    // P3.5 phone section — enter an area code + Search so the number results render (live Twilio).
+    const ac = page.locator('input[placeholder="Area code"]');
+    if (await ac.isVisible().catch(() => false)) {
+      await ac.click();
+      await ac.pressSequentially('757', { delay: 40 });
+      await page.getByRole('button', { name: 'Search' }).first().click().catch(() => {});
+      await page.waitForTimeout(2500); // let the live number search resolve
+    }
     await page.screenshot({ path: `crawl-alias/branded-email-${scheme}.png`, fullPage: true });
   });
 }
