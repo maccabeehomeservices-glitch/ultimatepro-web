@@ -888,6 +888,15 @@ export const companyApi = {
     api.put('/company/email-alias', { slug }),
   deleteEmailAlias: () =>
     api.delete('/company/email-alias'),
+  // P3.10 Tier 2 — verify the company's OWN existing email as the sending identity (BYO).
+  getSenderEmail: () =>
+    api.get('/company/sender-email'),
+  setSenderEmail: (email, name) =>
+    api.post('/company/sender-email', name ? { email, name } : { email }),
+  getSenderEmailStatus: () =>
+    api.get('/company/sender-email/status'),
+  deleteSenderEmail: () =>
+    api.delete('/company/sender-email'),
 };
 
 // ─── NOTIFICATIONS ───────────────────────────────────────────────────────────

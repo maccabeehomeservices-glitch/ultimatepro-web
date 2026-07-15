@@ -42,6 +42,15 @@ export default function CompanyProfile() {
   const [removingAlias, setRemovingAlias] = useState(false)
   const [showRemoveAlias, setShowRemoveAlias] = useState(false)
 
+  // P3.10 Tier 2 — verify your OWN existing email as the sending identity (BYO)
+  const [senderEmail, setSenderEmail] = useState(null)     // the address on file, or null
+  const [senderStatus, setSenderStatus] = useState('none') // none|pending|verified
+  const [senderInput, setSenderInput] = useState('')
+  const [verifyingSender, setVerifyingSender] = useState(false)
+  const [refreshingSender, setRefreshingSender] = useState(false)
+  const [removingSender, setRemovingSender] = useState(false)
+  const [showRemoveSender, setShowRemoveSender] = useState(false)
+
   const canEditAlias = can('team_settings', 'full')
   const trimmedSlug = slugInput.trim().toLowerCase()
   const isCurrentSlug = !!alias && trimmedSlug === alias
@@ -132,6 +141,76 @@ export default function CompanyProfile() {
     }
   }
 
+  // P3.10 Tier 2 — sender-email (BYO) ────────────────────────────────────────
+  const SENDER_REASON_TEXT = {
+    format: 'Enter a valid email',
+    address_required: 'Add your company street + city above first',
+    sendgrid: "Couldn't start verification, try again",
+  }
+
+  async function loadSenderEmail() {
+    try {
+      const r = await companyApi.getSenderEmail()
+      setSenderEmail(r.data.email || null)
+      setSenderStatus(r.data.status || 'none')
+    } catch {
+      // non-fatal — section just falls back to the "none" (add) state
+    }
+  }
+
+  async function handleVerifySender() {
+    const email = senderInput.trim()
+    if (!email) return
+    setVerifyingSender(true)
+    try {
+      const r = await companyApi.setSenderEmail(email)
+      setSenderEmail(r.data.email || email)
+      setSenderStatus(r.data.status || 'pending')
+      setSenderInput('')
+      showSnack(r.data.message || 'Verification email sent!')
+    } catch (err) {
+      const data = err.response?.data
+      if (data?.reason === 'no_key') {
+        showSnack("Email verification isn't set up — contact support", 'error')
+      } else {
+        showSnack(SENDER_REASON_TEXT[data?.reason] || data?.error || 'Could not start verification', 'error')
+      }
+    } finally {
+      setVerifyingSender(false)
+    }
+  }
+
+  async function handleRefreshSender() {
+    setRefreshingSender(true)
+    try {
+      const r = await companyApi.getSenderEmailStatus()
+      setSenderEmail(r.data.email || senderEmail)
+      setSenderStatus(r.data.status || 'pending')
+      if (r.data.status === 'verified') showSnack('Verified! Your emails now send from your own address.')
+      else showSnack('Still waiting — click the link in the email, then Refresh again.', 'error')
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Could not check status', 'error')
+    } finally {
+      setRefreshingSender(false)
+    }
+  }
+
+  async function handleRemoveSender() {
+    setRemovingSender(true)
+    try {
+      await companyApi.deleteSenderEmail()
+      setSenderEmail(null)
+      setSenderStatus('none')
+      setSenderInput('')
+      setShowRemoveSender(false)
+      showSnack('Sending address removed')
+    } catch (err) {
+      showSnack(err.response?.data?.error || 'Could not remove', 'error')
+    } finally {
+      setRemovingSender(false)
+    }
+  }
+
   useEffect(() => {
     companyApi.get()
       .then(r => {
@@ -154,6 +233,7 @@ export default function CompanyProfile() {
       .catch(() => showSnack('Failed to load', 'error'))
       .finally(() => setLoading(false))
     loadAlias()
+    loadSenderEmail()
   }, [])
 
   async function handleLogoChange(e) {
@@ -391,6 +471,75 @@ export default function CompanyProfile() {
               )}
             </div>
           )}
+
+          {/* P3.10 Tier 2 — verify your OWN email as the sending identity (BYO) */}
+          <div className="border-t border-hairline mt-4 pt-4">
+            <div className="text-sm font-semibold text-ink mb-1">Or use your own email address</div>
+            <p className="text-xs text-muted mb-3">
+              Verify an email you already own so estimates and invoices send From that exact address.
+              We'll email you a confirmation link to click.
+            </p>
+
+            {senderStatus === 'verified' ? (
+              /* Verified */
+              <div>
+                <div className="text-sm font-medium text-[#16A34A] break-all">
+                  ✓ Verified — your emails now send from {senderEmail}.
+                </div>
+                {canEditAlias && (
+                  <div className="flex gap-2 mt-3">
+                    <Button variant="ghost-danger" onClick={() => setShowRemoveSender(true)}>Remove</Button>
+                  </div>
+                )}
+              </div>
+            ) : senderStatus === 'pending' ? (
+              /* Pending verification */
+              <div>
+                <div className="text-sm text-ink break-all">
+                  Verification sent to <strong>{senderEmail}</strong> — check that inbox, click the SendGrid
+                  link, then Refresh.
+                </div>
+                <p className="text-xs text-muted mt-2">
+                  Until you confirm, emails keep sending from your branded alias (or the default) with replies
+                  going to <span className="break-all">{senderEmail}</span> — nothing breaks.
+                </p>
+                {canEditAlias && (
+                  <div className="flex gap-2 mt-3">
+                    <Button variant="ghost" onClick={handleRefreshSender} loading={refreshingSender}>
+                      Refresh status
+                    </Button>
+                    <Button variant="ghost-danger" onClick={() => setShowRemoveSender(true)}>Remove</Button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              /* None — add + verify */
+              <div>
+                <input
+                  type="email"
+                  className="w-full rounded-xl border border-hairline px-4 py-3 text-base text-ink bg-card placeholder-muted focus:outline-none focus:ring-2 focus:ring-blue disabled:opacity-60"
+                  value={senderInput}
+                  onChange={e => setSenderInput(e.target.value)}
+                  placeholder="you@yourcompany.com"
+                  disabled={!canEditAlias || verifyingSender}
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                />
+                {canEditAlias && (
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      onClick={handleVerifySender}
+                      disabled={!senderInput.trim() || verifyingSender}
+                      loading={verifyingSender}
+                    >
+                      Verify this address
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -482,6 +631,43 @@ export default function CompanyProfile() {
                 variant="danger"
                 onClick={handleRemoveAlias}
                 loading={removingAlias}
+                className="flex-1"
+              >
+                Remove
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* P3.10 Tier 2 — remove sender-email confirm */}
+      {showRemoveSender && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowRemoveSender(false)}
+        >
+          <div
+            className="bg-card rounded-2xl p-6 max-w-sm w-full"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-ink mb-2">Remove sending address?</h3>
+            <p className="text-ink mb-6 text-sm">
+              <strong className="break-all">{senderEmail}</strong> will no longer be used as your From
+              address. Your emails go back to sending from your branded alias (or the default).
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="ghost-muted"
+                onClick={() => setShowRemoveSender(false)}
+                className="flex-1"
+                disabled={removingSender}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleRemoveSender}
+                loading={removingSender}
                 className="flex-1"
               >
                 Remove

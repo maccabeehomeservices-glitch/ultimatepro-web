@@ -19,6 +19,13 @@ for (const scheme of ['dark', 'light']) {
       await slug.pressSequentially('seasidedemo', { delay: 60 }); // real keystrokes → React onChange + debounce
       await page.waitForTimeout(2500); // let the ~400ms debounce + staging round-trip resolve
     }
+    // Tier 2 BYO email input (type=email) — type a value so its state renders.
+    const byo = page.locator('input[type="email"]').last();
+    if (await byo.isVisible().catch(() => false)) {
+      await byo.click();
+      await byo.pressSequentially('owner@myrealco.com', { delay: 40 });
+      await page.waitForTimeout(400);
+    }
     await page.screenshot({ path: `crawl-alias/branded-email-${scheme}.png`, fullPage: true });
   });
 }

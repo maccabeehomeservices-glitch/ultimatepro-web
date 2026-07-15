@@ -13,14 +13,14 @@
 | `display_name` | Company Profile |
 | `surfaces` | android, web |
 | `route_android` | `CompanyProfileScreen` + `CompanyProfileViewModel` (CompanyProfileScreen.kt) |
-| `route_web` | `/settings/company` → `CompanyProfile` (CompanyProfile.jsx, 503 lines) |
+| `route_web` | `/settings/company` → `CompanyProfile` (CompanyProfile.jsx, 690 lines) |
 | `manages_table` | `companies` (the single tenant row, keyed by `req.companyId`) |
 | `primary_actors` | owner, admin |
 | `purpose` | Edit the company's identity used across the app/print: name, tagline, contact, address, and logo. Logo is uploaded to Cloudinary; everything else is a single `PUT /company`. The UltimatePro network ID is shown read-only. |
 | `last_verified` | 2026-05-31 · Stage-1 read-only audit · commit: 6147cd1 |
 
 ### load_sequence
-Both surfaces: `GET /company` → the full `companies` row; map into the form. Web also reads `logo_url` + `ultimatecrm_id`; Android the same. **P3.10 (web + android):** on mount also fires `GET /company/email-alias` to populate the Branded Email section (`{ alias, address, domain }`; alias/address null if unclaimed). Web fires it in parallel with the company load; Android's `CompanyProfileViewModel.init` launches `load()` and `loadAlias()` together (the latter also resolves `team_settings:full` from stored role/perms to gate the manage controls).
+Both surfaces: `GET /company` → the full `companies` row; map into the form. Web also reads `logo_url` + `ultimatecrm_id`; Android the same. **P3.10 (web + android):** on mount also fires `GET /company/email-alias` to populate the Branded Email section (`{ alias, address, domain }`; alias/address null if unclaimed). Web fires it in parallel with the company load; Android's `CompanyProfileViewModel.init` launches `load()` and `loadAlias()` together (the latter also resolves `team_settings:full` from stored role/perms to gate the manage controls). **P3.10 Tier 2 (web, 2026-07-14):** the web page ALSO fires `GET /company/sender-email` in parallel on mount to populate the "Or use your own email address" (BYO) block inside the Branded Email section (`{ email, name, verified, status }`, status `none|pending|verified`). Android does not yet have Tier 2.
 
 ### gating
 `GET /company` = any authenticated user. **`PUT /company` and `POST /company/logo` are `ownerOrAdmin`** (company.js:38,68). A manager/dispatcher/technician can open the page and type, but Save / logo upload will **403**.
@@ -175,6 +175,50 @@ Both surfaces: `GET /company` → the full `companies` row; map into the form. W
 - **status:** OK
 - **status_note:** Releasing enters a cooldown; a later re-claim of the same slug can come back as `reason: cooldown` from the check endpoint.
 
+### `company-profile.sender-email-verify`
+- **label:** Verify your own email (BYO) — start (P3.10 Tier 2, web only)
+- **section:** persist
+- **actors:** owner, admin (any `team_settings: full`)
+- **purpose:** Verify a company-owned email as the sending identity so estimates/invoices send From that exact address (via SendGrid single-sender verification).
+- **visibility:** web only, inside the Branded Email section's "Or use your own email address" block, while `status: none` (email input + "Verify this address").
+- **precondition:** `team_settings: full`; a non-empty email; company street + city already saved (server requires the physical address for SendGrid).
+- **route_chain:** `POST /company/sender-email` body `{ email, name? }` → 200 `{ email, verified:false, status:'pending', message }` | 400 `{ error, reason }` (`format` | `address_required` | `sendgrid`) | 503 `{ reason:'no_key' }` | 403.
+- **request_body:** `{ "email": "you@yourcompany.com" }` (trimmed client-side; `name` omitted).
+- **side_effects:** SendGrid sends the owner a confirmation link; server records the pending sender. Nothing changes in the actual From address until the link is clicked.
+- **end_state:** section flips to the pending state; "Verification email sent!" (or the server `message`) snack.
+- **failure_modes:** 400 `address_required` → "Add your company street + city above first"; 400 `format` → "Enter a valid email"; 503 `no_key` → "Email verification isn't set up — contact support"; other → response `error` fallback. All shown as a red snack.
+- **parity:** WEB ONLY (P3.10 Tier 2). Android has no BYO sender yet.
+- **status:** OK
+- **status_note:** Controls hidden entirely unless `can('team_settings','full')`, same gate as the alias block.
+### `company-profile.sender-email-refresh`
+- **label:** Refresh verification status (P3.10 Tier 2, web only)
+- **section:** load
+- **actors:** owner, admin (any `team_settings: full`)
+- **purpose:** Poll whether the owner has clicked the SendGrid confirmation link yet.
+- **visibility:** web only, in the pending state ("Refresh status" button).
+- **route_chain:** `GET /company/sender-email/status` → `{ email, verified, status }`; flips to `verified` once the link is clicked.
+- **request_body:** n/a
+- **side_effects:** read-only.
+- **end_state:** on `verified` → green "✓ Verified — your emails now send from <email>." + success snack; still pending → "Still waiting — click the link in the email, then Refresh again." (red snack).
+- **failure_modes:** error → red snack (response `error` fallback).
+- **parity:** WEB ONLY (P3.10 Tier 2).
+- **status:** OK
+- **status_note:** Manual poll (button), not an interval; the user refreshes after clicking the emailed link.
+### `company-profile.sender-email-remove`
+- **label:** Remove sending address (P3.10 Tier 2, web only)
+- **section:** persist
+- **actors:** owner, admin (any `team_settings: full`)
+- **purpose:** Drop the BYO sender so emails revert to the branded alias (or default).
+- **visibility:** web only, "Remove" button in both the pending and verified states.
+- **confirm:** modal — warns the address will no longer be the From address; emails revert to the branded alias (or default).
+- **route_chain:** `DELETE /company/sender-email` → `{ email:null, status:'none' }`.
+- **request_body:** n/a
+- **side_effects:** clears the sender server-side; section resets to the `none` (add) state.
+- **end_state:** "Sending address removed" snack; input reappears.
+- **failure_modes:** error → red snack.
+- **parity:** WEB ONLY (P3.10 Tier 2).
+- **status:** OK
+- **status_note:** n/a
 ### `company-profile.back`
 - **label:** Back
 - **section:** nav
@@ -198,5 +242,6 @@ Both surfaces: `GET /company` → the full `companies` row; map into the form. W
 - **Backend-supported columns with no input on either surface:** `PUT /company` also accepts `country`, `timezone`, `currency`, `tax_rate`, and `settings` (JSONB), but **no field on web or Android captures them**. (The Batch-E task's hypothesised `tax_label`, `default_tax_rate`, and `profile_mode` still do not exist; `terms`/`default_terms` now DOES — see the flag above.)
 - **Logo upload & removal persist immediately**, independent of the main Save button (each is its own server write). Removing a logo clears the URL but does **not** delete the Cloudinary asset.
 - **Branded Email alias — web + Android (P3.10 Tier 1; web 2026-07-14, Android 2026-07-14).** A "BRANDED EMAIL" section on **both** surfaces lets an owner claim/change/remove a slug in the shared `<slug>@ultimatepro.pro` namespace via `GET/PUT/DELETE /company/email-alias` (+ debounced `GET /company/email-alias/check`). Android placed the section right after CONTACT (`CompanyProfileScreen.kt`), wired through `ApiService` (`getEmailAlias`/`checkEmailAlias`/`setEmailAlias`/`deleteEmailAlias`) → `CrmRepository` → `CompanyProfileViewModel`. Unlike the identity fields (which the whole page loads for any authenticated user but blocks writes at 403), the alias write controls are **hidden** unless `can('team_settings','full')` (Android: `canUi(role, perms, "team_settings", "full")`), matching ReviewPlatforms — so there is no discover-the-403-on-save surprise here. Minor Android-vs-web gaps: Android runs the availability check even when the typed slug equals the current one (no "own current slug" shortcut), and on a PUT 4xx it shows the response `error` string rather than a `reason`-mapped message (the `reason` mapping runs on the check). Backend was pre-built; both clients only added the client + UI.
+- **Branded Email Tier 2 "use your own email" (BYO) — web only (P3.10 Tier 2, 2026-07-14).** Beneath the Tier 1 alias claim, the web Branded Email section now has an "Or use your own email address" block that verifies a company-owned address as the sending identity via SendGrid single-sender verification: `GET /company/sender-email` (mount load), `POST /company/sender-email` (start → SendGrid confirmation email, `status: pending`), `GET /company/sender-email/status` (manual "Refresh status" poll → flips to `verified` when the emailed link is clicked), `DELETE /company/sender-email` (revert to the branded alias/default). Three UI states — `none` (email input + "Verify this address"), `pending` (sent-to note + reassurance that nothing breaks until confirmed + Refresh/Remove), `verified` (green "✓ Verified…" + Remove). Client methods added to `companyApi` (`getSenderEmail`/`setSenderEmail`/`getSenderEmailStatus`/`deleteSenderEmail`). Backend was pre-built; web only added the client + UI. Controls gated behind `can('team_settings','full')` (same as the alias block). **Android does not yet have Tier 2.**
 - **Gating asymmetry:** the page loads for any authenticated user (`GET` is `auth` only), but Save and logo upload are `ownerOrAdmin`, a non-admin can edit the form and only discover the 403 on Save.
 - **Cloudinary credentials are hard-coded as fallbacks** in `company.js:8–12` (cloud_name/api_key/api_secret literals). Security follow-up (out of scope for this map; flagged).
