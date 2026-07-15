@@ -496,12 +496,14 @@ export default function CompanyProfile() {
               /* Pending verification */
               <div>
                 <div className="text-sm text-ink break-all">
-                  Verification sent to <strong>{senderEmail}</strong> — check that inbox, click the SendGrid
-                  link, then Refresh.
+                  Verification sent to <strong>{senderEmail}</strong>. Open it, click the SendGrid
+                  <strong> Verify Single Sender</strong> button, then tap Refresh status below. If a login
+                  page appears after clicking, close it — no SendGrid account is needed.
                 </div>
                 <p className="text-xs text-muted mt-2">
-                  Until you confirm, emails keep sending from your branded alias (or the default) with replies
-                  going to <span className="break-all">{senderEmail}</span> — nothing breaks.
+                  Even before you confirm, your estimates and invoices already send with replies going to
+                  <span className="break-all"> {senderEmail}</span> — so nothing is blocked. Confirming just
+                  lets them send <em>from</em> that address too.
                 </p>
                 {canEditAlias && (
                   <div className="flex gap-2 mt-3">
@@ -526,6 +528,12 @@ export default function CompanyProfile() {
                   autoCorrect="off"
                   spellCheck={false}
                 />
+                <p className="text-xs text-muted mt-2">
+                  You'll get a confirmation email from SendGrid. Open it and click the
+                  <strong className="text-ink"> Verify Single Sender</strong> button. If a login page
+                  appears afterward, just close it — you don't need a SendGrid account. Then tap
+                  <strong className="text-ink"> Refresh status</strong> here.
+                </p>
                 {canEditAlias && (
                   <div className="flex gap-2 mt-3">
                     <Button
